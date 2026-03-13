@@ -46,7 +46,7 @@ jobs:
 
           destination="$(
             xcodebuild -project RediM8.xcodeproj -scheme RediM8 -showdestinations 2>/dev/null \
-              | grep -m1 'platform:iOS Simulator' \
+              | grep -m1 'platform:iOS Simulator,.*name:iPhone' \
               | sed -E 's/.*id:([^,}]+).*/platform=iOS Simulator,id=\1/'
           )"
 
