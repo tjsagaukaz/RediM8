@@ -40,53 +40,25 @@ jobs:
           CODE_SIGNING_ALLOWED=NO
           build
 
-      - name: Select simulator destination
-        id: simulator
+      - name: Test
         run: |
           set -euo pipefail
 
           destination="$(
-            python3 - <<'PY'
-import json
-import subprocess
-
-data = json.loads(
-    subprocess.check_output(
-        ["xcrun", "simctl", "list", "devices", "available", "-j"],
-        text=True
-    )
-)
-
-candidates = []
-for runtime_identifier, devices in data["devices"].items():
-    if "SimRuntime.iOS" not in runtime_identifier:
-        continue
-
-    for device in devices:
-        if device.get("isAvailable") and device["name"].startswith("iPhone"):
-            candidates.append((runtime_identifier, device["name"], device["udid"]))
-
-if not candidates:
-    raise SystemExit("No available iPhone simulator found")
-
-def runtime_key(candidate):
-    runtime_identifier, device_name, _ = candidate
-    version = runtime_identifier.split("iOS-")[-1].replace("-", ".")
-    parts = tuple(int(part) for part in version.split(".") if part.isdigit())
-    return (parts, device_name)
-
-_, _, udid = sorted(candidates, key=runtime_key, reverse=True)[0]
-print(f"platform=iOS Simulator,id={udid}")
-PY
+            xcodebuild -project RediM8.xcodeproj -scheme RediM8 -showdestinations 2>/dev/null \
+              | grep -m1 'platform:iOS Simulator' \
+              | sed -E 's/.*id:([^,}]+).*/platform=iOS Simulator,id=\1/'
           )"
 
-          echo "destination=$destination" >> "$GITHUB_OUTPUT"
+          if [ -z "$destination" ]; then
+            echo "No iOS Simulator destination found"
+            exit 1
+          fi
+
           echo "Using simulator destination: $destination"
 
-      - name: Test
-        run: >
-          xcodebuild test
-          -project RediM8.xcodeproj
-          -scheme RediM8
-          -destination '${{ steps.simulator.outputs.destination }}'
-          CODE_SIGNING_ALLOWED=NO
+          xcodebuild test \
+            -project RediM8.xcodeproj \
+            -scheme RediM8 \
+            -destination "$destination" \
+            CODE_SIGNING_ALLOWED=NO
