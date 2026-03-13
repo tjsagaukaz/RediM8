@@ -1,0 +1,131 @@
+{
+  "lastUpdated" : "2026-06-01T00:00:00Z",
+  "waterPoints" : [
+    {
+      "coordinate" : {
+        "latitude" : -27.282,
+        "longitude" : 152.641
+      },
+      "id" : "wivenhoe_campground_tap",
+      "kind" : "campgroundWater",
+      "name" : "Wivenhoe Campground Tap",
+      "notes" : "Potable campground tap near day-use area. Availability can change during closures.",
+      "packIDs" : [
+        "brisbane_region",
+        "queensland"
+      ],
+      "quality" : "drinkingWater",
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "coordinate" : {
+        "latitude" : -27.302,
+        "longitude" : 152.786
+      },
+      "id" : "mt_glorious_rain_tank",
+      "kind" : "rainwaterTank",
+      "name" : "Mount Glorious Rainwater Tank",
+      "notes" : "Rainwater catchment used by local campground infrastructure. Treat before drinking.",
+      "packIDs" : [
+        "brisbane_region",
+        "queensland"
+      ],
+      "quality" : "unknownQuality",
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "coordinate" : {
+        "latitude" : -12.719,
+        "longitude" : 143.32
+      },
+      "id" : "bramwell_bore",
+      "kind" : "boreWater",
+      "name" : "Bramwell Bore Water",
+      "notes" : "Bore-fed point often used by remote travellers. Confirm treatment before drinking.",
+      "packIDs" : [
+        "cape_york",
+        "queensland"
+      ],
+      "quality" : "unknownQuality",
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "coordinate" : {
+        "latitude" : -12.552,
+        "longitude" : 143.057
+      },
+      "id" : "ott_creek_crossing",
+      "kind" : "riverCreek",
+      "name" : "Canal Creek Crossing",
+      "notes" : "Surface water only. Seasonal flow and water quality vary substantially.",
+      "packIDs" : [
+        "cape_york",
+        "queensland"
+      ],
+      "quality" : "seasonal",
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "coordinate" : {
+        "latitude" : -16.368,
+        "longitude" : 126.407
+      },
+      "id" : "silent_grove_tap",
+      "kind" : "communityTap",
+      "name" : "Silent Grove Community Tap",
+      "notes" : "Community-access tap near the campground area. Availability may change during the wet season.",
+      "packIDs" : [
+        "kimberley"
+      ],
+      "quality" : "drinkingWater",
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "coordinate" : {
+        "latitude" : -15.367,
+        "longitude" : 126.767
+      },
+      "id" : "drysdale_stock_tank",
+      "kind" : "waterTank",
+      "name" : "Drysdale Station Water Tank",
+      "notes" : "Station tank. Non-potable unless treated.",
+      "packIDs" : [
+        "kimberley"
+      ],
+      "quality" : "nonPotable",
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "coordinate" : {
+        "latitude" : -23.624,
+        "longitude" : 132.73
+      },
+      "id" : "ormiston_gorge_tank",
+      "kind" : "waterTank",
+      "name" : "Ormiston Gorge Tank",
+      "notes" : "Tank water near visitor facilities. Treatment advice can change by season.",
+      "packIDs" : [
+        "central_australia",
+        "northern_territory"
+      ],
+      "quality" : "unknownQuality",
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "coordinate" : {
+        "latitude" : -23.724,
+        "longitude" : 132.347
+      },
+      "id" : "mereenie_bore",
+      "kind" : "boreWater",
+      "name" : "Mereenie Bore",
+      "notes" : "Remote bore point with untreated water. Boil or filter before drinking.",
+      "packIDs" : [
+        "central_australia",
+        "northern_territory"
+      ],
+      "quality" : "nonPotable",
+      "source" : "Bundled OSM-derived starter dataset"
+    }
+  ]
+}

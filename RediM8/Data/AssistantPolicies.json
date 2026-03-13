@@ -1,0 +1,363 @@
+{
+  "last_updated" : "2026-03-12T00:00:00Z",
+  "policies" : [
+    {
+      "id" : "snake_bite",
+      "intent" : "snake_bite",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "deterministic_step_card",
+      "guide_ids" : [
+        "snake_bite_first_aid"
+      ],
+      "trust_label" : "verified",
+      "last_reviewed" : "2026-03-01T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : "Seek urgent medical help and call emergency services for suspected venomous snake bites.",
+      "match_phrases" : [
+        "snake bite",
+        "snakebite",
+        "venom bite",
+        "venomous bite",
+        "pressure immobilisation",
+        "pressure immobilization"
+      ],
+      "token_groups" : [
+        ["snake", "bite"],
+        ["snake", "venom"]
+      ],
+      "base_confidence" : 0.72,
+      "minimum_confidence" : 0.62
+    },
+    {
+      "id" : "cpr",
+      "intent" : "cpr",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "deterministic_step_card",
+      "guide_ids" : [
+        "cpr_basics"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-02-20T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : "Call emergency services immediately for collapse or absent breathing.",
+      "match_phrases" : [
+        "cpr",
+        "not breathing",
+        "no pulse",
+        "cardiac arrest",
+        "resuscitation"
+      ],
+      "token_groups" : [
+        ["not", "breathing"],
+        ["no", "breathing"],
+        ["no", "pulse"]
+      ],
+      "base_confidence" : 0.74,
+      "minimum_confidence" : 0.62
+    },
+    {
+      "id" : "major_bleeding",
+      "intent" : "major_bleeding",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "deterministic_step_card",
+      "guide_ids" : [
+        "major_bleeding_control"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-02-20T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : "Call emergency services if bleeding is severe, spurting, or not controlled quickly.",
+      "match_phrases" : [
+        "major bleeding",
+        "severe bleeding",
+        "heavy bleeding",
+        "bleeding heavily",
+        "wont stop bleeding",
+        "won t stop bleeding",
+        "haemorrhage",
+        "hemorrhage"
+      ],
+      "token_groups" : [
+        ["severe", "bleeding"],
+        ["heavy", "bleeding"],
+        ["major", "bleeding"]
+      ],
+      "base_confidence" : 0.72,
+      "minimum_confidence" : 0.62
+    },
+    {
+      "id" : "burns",
+      "intent" : "burns",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "deterministic_step_card",
+      "guide_ids" : [
+        "burns_first_aid"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-02-20T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : "Seek urgent medical care for serious burns, burns to the face, hands, feet, genitals, or breathing problems after smoke or flames.",
+      "match_phrases" : [
+        "burn first aid",
+        "treat a burn",
+        "burns first aid",
+        "scald burn",
+        "flame burn"
+      ],
+      "token_groups" : [
+        ["treat", "burn"],
+        ["burn", "first", "aid"],
+        ["scald"]
+      ],
+      "base_confidence" : 0.68,
+      "minimum_confidence" : 0.62
+    },
+    {
+      "id" : "heat_illness",
+      "intent" : "heat_illness",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "deterministic_step_card",
+      "guide_ids" : [
+        "heat_exhaustion_vs_heatstroke",
+        "prevent_dehydration_in_extreme_heat"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-02-22T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : "Call emergency services if someone has heat-stroke signs such as confusion, collapse, seizure, or loss of consciousness.",
+      "match_phrases" : [
+        "heat stroke",
+        "heatstroke",
+        "heat exhaustion",
+        "overheating",
+        "hot and confused"
+      ],
+      "token_groups" : [
+        ["heat", "stroke"],
+        ["heat", "exhaustion"]
+      ],
+      "base_confidence" : 0.70,
+      "minimum_confidence" : 0.62
+    },
+    {
+      "id" : "bushfire_evacuation",
+      "intent" : "bushfire_evacuation",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "deterministic_step_card",
+      "guide_ids" : [
+        "bushfire_leave_early_plan",
+        "household_evacuation_quick_start",
+        "official_warning_monitoring"
+      ],
+      "trust_label" : "verified",
+      "last_reviewed" : "2026-03-05T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : "Follow official warnings immediately and call emergency services if you are trapped or in immediate danger.",
+      "match_phrases" : [
+        "bushfire evacuation",
+        "bushfire warning",
+        "leave early",
+        "leave now",
+        "ember attack"
+      ],
+      "token_groups" : [
+        ["bushfire", "evacuation"],
+        ["bushfire", "leave"],
+        ["ember", "attack"]
+      ],
+      "base_confidence" : 0.72,
+      "minimum_confidence" : 0.62
+    },
+    {
+      "id" : "flood_safety",
+      "intent" : "flood_safety",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "deterministic_step_card",
+      "guide_ids" : [
+        "flood_evacuation_timing",
+        "turn_around_dont_drown"
+      ],
+      "trust_label" : "verified",
+      "last_reviewed" : "2026-03-03T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : "Do not enter floodwater by foot or vehicle. Contact emergency services if escape routes are cut off.",
+      "match_phrases" : [
+        "flood evacuation",
+        "rising floodwater",
+        "flood water crossing",
+        "drive through flood water",
+        "turn around dont drown",
+        "turn around don t drown"
+      ],
+      "token_groups" : [
+        ["flood", "evacuation"],
+        ["flood", "water", "drive"],
+        ["flood", "crossing"]
+      ],
+      "base_confidence" : 0.70,
+      "minimum_confidence" : 0.62
+    },
+    {
+      "id" : "asthma_attack",
+      "intent" : "asthma_attack",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "deterministic_step_card",
+      "guide_ids" : [
+        "asthma_attack_response"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-02-22T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : "Call emergency services if breathing difficulty is severe, worsening, or not improving quickly.",
+      "match_phrases" : [
+        "asthma attack",
+        "wheezing attack",
+        "cant breathe asthma",
+        "can t breathe asthma"
+      ],
+      "token_groups" : [
+        ["asthma", "attack"],
+        ["asthma", "breathe"]
+      ],
+      "base_confidence" : 0.69,
+      "minimum_confidence" : 0.62
+    },
+    {
+      "id" : "water_purification",
+      "intent" : "water_purification",
+      "risk_band" : "advisory",
+      "answer_mode" : "summarized_retrieval",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "boil_filter_disinfect_water",
+        "collect_rainwater_safely",
+        "after_flood_drinking_water_checks"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-02-18T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "purify water",
+        "clean water",
+        "safe drinking water",
+        "boil water",
+        "filter water",
+        "disinfect water"
+      ],
+      "token_groups" : [
+        ["purify", "water"],
+        ["boil", "water"],
+        ["filter", "water"],
+        ["disinfect", "water"]
+      ],
+      "base_confidence" : 0.61,
+      "minimum_confidence" : 0.58
+    },
+    {
+      "id" : "water_planning",
+      "intent" : "water_planning",
+      "risk_band" : "advisory",
+      "answer_mode" : "summarized_retrieval",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "ration_water_without_dehydration",
+        "store_water_safely_in_heat",
+        "prevent_dehydration_in_extreme_heat"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-02-18T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "how much water",
+        "water for 3 days",
+        "store water",
+        "ration water",
+        "water storage",
+        "dehydration planning"
+      ],
+      "token_groups" : [
+        ["water", "days"],
+        ["store", "water"],
+        ["ration", "water"],
+        ["water", "storage"]
+      ],
+      "base_confidence" : 0.59,
+      "minimum_confidence" : 0.57
+    },
+    {
+      "id" : "route_planning",
+      "intent" : "route_planning",
+      "risk_band" : "advisory",
+      "answer_mode" : "summarized_retrieval",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "route_planning_without_gps",
+        "navigate_with_map_and_compass",
+        "set_simple_rally_points"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-02-15T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "route planning",
+        "without gps",
+        "map and compass",
+        "rally point",
+        "meeting point",
+        "navigate offline"
+      ],
+      "token_groups" : [
+        ["route", "planning"],
+        ["without", "gps"],
+        ["map", "compass"],
+        ["rally", "point"],
+        ["meeting", "point"]
+      ],
+      "base_confidence" : 0.60,
+      "minimum_confidence" : 0.58
+    },
+    {
+      "id" : "preparedness_planning",
+      "intent" : "preparedness_planning",
+      "risk_band" : "advisory",
+      "answer_mode" : "summarized_retrieval",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "assemble_family_medications",
+        "protect_devices_and_documents_before_storm",
+        "vehicle_trip_check_in_routine"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-02-12T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "family plan",
+        "go bag",
+        "vehicle kit",
+        "protect documents",
+        "emergency documents",
+        "trip check in"
+      ],
+      "token_groups" : [
+        ["family", "plan"],
+        ["go", "bag"],
+        ["vehicle", "kit"],
+        ["protect", "documents"]
+      ],
+      "base_confidence" : 0.58,
+      "minimum_confidence" : 0.56
+    }
+  ]
+}

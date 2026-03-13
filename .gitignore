@@ -1,0 +1,18 @@
+.DS_Store
+
+# Xcode user data
+*.xcuserstate
+xcuserdata/
+
+# Build products
+build/
+.build-device/
+DerivedData/
+
+# SwiftPM local state
+.swiftpm/
+.build/
+
+# Temporary files
+*.moved-aside
+*.orig

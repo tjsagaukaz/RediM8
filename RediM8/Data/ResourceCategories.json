@@ -1,0 +1,52 @@
+{
+  "categories": [
+    {
+      "id": "hospital",
+      "icon": "cross.case.fill",
+      "color": "#2E86DE",
+      "description": "Hospitals and urgent care locations for advanced treatment when local clinics are closed or overwhelmed."
+    },
+    {
+      "id": "fuel",
+      "icon": "fuelpump.fill",
+      "color": "#E67E22",
+      "description": "Fuel outlets that may support evacuation, generator use, or essential travel when supply is constrained."
+    },
+    {
+      "id": "supermarket",
+      "icon": "cart.fill",
+      "color": "#D4A017",
+      "description": "Food and household supply points that may support replenishment before or after an event."
+    },
+    {
+      "id": "pharmacy",
+      "icon": "pills.fill",
+      "color": "#16A085",
+      "description": "Pharmacies for prescriptions, first aid restock, and basic medical supplies."
+    },
+    {
+      "id": "hardware_store",
+      "icon": "hammer.fill",
+      "color": "#8E5A2B",
+      "description": "Hardware outlets for repairs, sandbags, tools, tarps, batteries, and emergency building supplies."
+    },
+    {
+      "id": "police_station",
+      "icon": "shield.fill",
+      "color": "#27AE60",
+      "description": "Police stations and service counters that may assist with safety information and incident reporting."
+    },
+    {
+      "id": "water_source",
+      "icon": "drop.fill",
+      "color": "#3498DB",
+      "description": "Water collection or potable water support points that may be relevant when mains supply is disrupted."
+    },
+    {
+      "id": "shelter",
+      "icon": "house.fill",
+      "color": "#1F8F55",
+      "description": "Shelter and refuge locations that may support temporary relocation during an active emergency."
+    }
+  ]
+}

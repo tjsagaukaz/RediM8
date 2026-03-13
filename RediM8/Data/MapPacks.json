@@ -1,0 +1,142 @@
+{
+  "lastUpdated" : "2026-06-01T00:00:00Z",
+  "packs" : [
+    {
+      "center" : {
+        "latitude" : -27.3811,
+        "longitude" : 152.8667
+      },
+      "coverageSummary" : "Brisbane hinterland starter data with forestry roads, fire access trails and campground water.",
+      "id" : "brisbane_region",
+      "isBundledByDefault" : true,
+      "kind" : "regional",
+      "lastUpdated" : "2026-06-01T00:00:00Z",
+      "latitudeDelta" : 1.2,
+      "longitudeDelta" : 1.2,
+      "name" : "Brisbane Region",
+      "sizeMB" : 24,
+      "subtitle" : "Moreton Bay, Somerset and hinterland access",
+      "supportedLayers" : [
+        "resources",
+        "waterPoints",
+        "dirtRoads",
+        "fireTrails",
+        "evacuationPoints"
+      ]
+    },
+    {
+      "center" : {
+        "latitude" : -12.722,
+        "longitude" : 143.282
+      },
+      "coverageSummary" : "Cape York starter pack focused on remote 4WD travel, creek crossings and station water points.",
+      "id" : "cape_york",
+      "isBundledByDefault" : false,
+      "kind" : "regional",
+      "lastUpdated" : "2026-06-01T00:00:00Z",
+      "latitudeDelta" : 4.8,
+      "longitudeDelta" : 4.8,
+      "name" : "Cape York",
+      "sizeMB" : 62,
+      "subtitle" : "Old Telegraph Track and northern access routes",
+      "supportedLayers" : [
+        "resources",
+        "waterPoints",
+        "dirtRoads",
+        "fireTrails",
+        "evacuationPoints"
+      ]
+    },
+    {
+      "center" : {
+        "latitude" : -16.692,
+        "longitude" : 126.686
+      },
+      "coverageSummary" : "Kimberley starter pack with major 4WD corridors, station tracks and remote water points.",
+      "id" : "kimberley",
+      "isBundledByDefault" : false,
+      "kind" : "regional",
+      "lastUpdated" : "2026-06-01T00:00:00Z",
+      "latitudeDelta" : 5.5,
+      "longitudeDelta" : 5.5,
+      "name" : "Kimberley",
+      "sizeMB" : 58,
+      "subtitle" : "Gibb River Road and nearby station access",
+      "supportedLayers" : [
+        "resources",
+        "waterPoints",
+        "dirtRoads",
+        "evacuationPoints"
+      ]
+    },
+    {
+      "center" : {
+        "latitude" : -24.145,
+        "longitude" : 133.431
+      },
+      "coverageSummary" : "Central Australia starter pack for outback access routes, fire access trails and water points.",
+      "id" : "central_australia",
+      "isBundledByDefault" : false,
+      "kind" : "regional",
+      "lastUpdated" : "2026-06-01T00:00:00Z",
+      "latitudeDelta" : 6.2,
+      "longitudeDelta" : 6.2,
+      "name" : "Central Australia",
+      "sizeMB" : 55,
+      "subtitle" : "Alice Springs corridor and remote access routes",
+      "supportedLayers" : [
+        "resources",
+        "waterPoints",
+        "dirtRoads",
+        "fireTrails",
+        "evacuationPoints"
+      ]
+    },
+    {
+      "center" : {
+        "latitude" : -20.5,
+        "longitude" : 142.0
+      },
+      "coverageSummary" : "Queensland overview pack for remote road coverage between regional centres.",
+      "id" : "queensland",
+      "isBundledByDefault" : false,
+      "kind" : "state",
+      "lastUpdated" : "2026-06-01T00:00:00Z",
+      "latitudeDelta" : 14.0,
+      "longitudeDelta" : 14.0,
+      "name" : "Queensland",
+      "sizeMB" : 118,
+      "subtitle" : "Statewide starter coverage for rural travel planning",
+      "supportedLayers" : [
+        "resources",
+        "waterPoints",
+        "dirtRoads",
+        "fireTrails",
+        "evacuationPoints"
+      ]
+    },
+    {
+      "center" : {
+        "latitude" : -25.3,
+        "longitude" : 133.2
+      },
+      "coverageSummary" : "Northern Territory overview pack covering major outback access and water points.",
+      "id" : "northern_territory",
+      "isBundledByDefault" : false,
+      "kind" : "state",
+      "lastUpdated" : "2026-06-01T00:00:00Z",
+      "latitudeDelta" : 16.0,
+      "longitudeDelta" : 16.0,
+      "name" : "Northern Territory",
+      "sizeMB" : 122,
+      "subtitle" : "Statewide starter coverage for remote driving",
+      "supportedLayers" : [
+        "resources",
+        "waterPoints",
+        "dirtRoads",
+        "fireTrails",
+        "evacuationPoints"
+      ]
+    }
+  ]
+}

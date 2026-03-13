@@ -1,0 +1,660 @@
+{
+  "gear": [
+    {
+      "id": "water_jerry_can",
+      "name": "20L water jerry can",
+      "category": "water",
+      "description": "A durable container for transporting and storing bulk water at home or in a vehicle.",
+      "recommended_scenarios": [
+        "bushfires",
+        "cyclones",
+        "remoteTravel",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "collapsible_water_container",
+      "name": "Collapsible water container",
+      "category": "water",
+      "description": "A fold-flat backup container that can be packed in go-bags, cars, or camping kits.",
+      "recommended_scenarios": [
+        "campingOffGrid",
+        "remoteTravel",
+        "floods"
+      ]
+    },
+    {
+      "id": "bottled_water_case",
+      "name": "Sealed bottled water case",
+      "category": "water",
+      "description": "Immediate drinking water that is easy to issue per person and rotate through normal use.",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "powerOutages",
+        "extremeHeat"
+      ]
+    },
+    {
+      "id": "water_filter_straw",
+      "name": "Personal water filter straw",
+      "category": "water",
+      "description": "A compact last-line option for treating natural water sources when mains or stored water is exhausted.",
+      "recommended_scenarios": [
+        "campingOffGrid",
+        "remoteTravel",
+        "floods"
+      ]
+    },
+    {
+      "id": "gravity_water_filter",
+      "name": "Gravity water filter",
+      "category": "water",
+      "description": "A low-effort group filter suited to households sheltering for days without safe tap water.",
+      "recommended_scenarios": [
+        "floods",
+        "extendedInfrastructureDisruption",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "purification_tablets",
+      "name": "Water purification tablets",
+      "category": "water",
+      "description": "A lightweight backup treatment option for travel kits, vehicles, and flood response supplies.",
+      "recommended_scenarios": [
+        "floods",
+        "remoteTravel",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "shelf_stable_meal_kit",
+      "name": "Shelf-stable meal kit",
+      "category": "food",
+      "description": "Ready-to-eat meals and simple pantry staples that support a 72-hour plan without refrigeration.",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "powerOutages",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "canned_protein",
+      "name": "Canned protein supply",
+      "category": "food",
+      "description": "Tuna, beans, or similar protein options that store well and can be eaten without cooking.",
+      "recommended_scenarios": [
+        "powerOutages",
+        "floods",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "high_energy_snack_pack",
+      "name": "High-energy snack pack",
+      "category": "food",
+      "description": "Compact snacks that travel well in vehicles and go-bags for long queues or detours.",
+      "recommended_scenarios": [
+        "fuelShortages",
+        "remoteTravel",
+        "bushfires"
+      ]
+    },
+    {
+      "id": "manual_can_opener",
+      "name": "Manual can opener",
+      "category": "food",
+      "description": "A basic but essential tool for accessing stored food when power is unavailable.",
+      "recommended_scenarios": [
+        "powerOutages",
+        "cyclones",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "camp_stove",
+      "name": "Portable camp stove",
+      "category": "food",
+      "description": "A controlled backup cooking option for outdoor or well-ventilated use when mains power is lost.",
+      "recommended_scenarios": [
+        "powerOutages",
+        "campingOffGrid",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "insulated_cooler",
+      "name": "Insulated cooler",
+      "category": "food",
+      "description": "Helps protect chilled medicine and food for a limited period when refrigeration is interrupted.",
+      "recommended_scenarios": [
+        "extremeHeat",
+        "powerOutages",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "comprehensive_first_aid_kit",
+      "name": "Comprehensive first aid kit",
+      "category": "medical",
+      "description": "A stocked kit for cuts, burns, sprains, and immediate casualty care at home or on the road.",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "remoteTravel",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "burn_dressing_pack",
+      "name": "Burn dressing pack",
+      "category": "medical",
+      "description": "Specialised dressings suited to cooking, generator, and radiant heat incidents.",
+      "recommended_scenarios": [
+        "bushfires",
+        "campingOffGrid",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "oral_rehydration_salts",
+      "name": "Oral rehydration salts",
+      "category": "medical",
+      "description": "Useful for dehydration, gastro illness, and recovery during heat or contaminated-water events.",
+      "recommended_scenarios": [
+        "extremeHeat",
+        "floods",
+        "remoteTravel"
+      ]
+    },
+    {
+      "id": "prescription_copy_wallet_card",
+      "name": "Prescription copy wallet card",
+      "category": "medical",
+      "description": "A compact record of medications and dosages that helps with refills or emergency treatment.",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "extendedInfrastructureDisruption",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "trauma_shears",
+      "name": "Trauma shears",
+      "category": "medical",
+      "description": "Safe cutting shears for bandage work, clothing access, and medical kit use.",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "earthquake",
+        "remoteTravel"
+      ]
+    },
+    {
+      "id": "spare_glasses_kit",
+      "name": "Spare glasses kit",
+      "category": "medical",
+      "description": "Backup glasses with case and cleaning cloth to protect mobility and communication.",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "remoteTravel",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "power_bank_20000",
+      "name": "20,000 mAh power bank",
+      "category": "power",
+      "description": "A high-capacity battery bank that can recharge phones, lights, and some radios multiple times.",
+      "recommended_scenarios": [
+        "powerOutages",
+        "cyclones",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "solar_panel_charger",
+      "name": "Small solar panel charger",
+      "category": "power",
+      "description": "A portable recharging option for extended outages or off-grid travel.",
+      "recommended_scenarios": [
+        "campingOffGrid",
+        "remoteTravel",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "aa_aaa_battery_pack",
+      "name": "AA/AAA battery pack",
+      "category": "power",
+      "description": "Fresh batteries for torches, lanterns, and radios stored in common emergency kits.",
+      "recommended_scenarios": [
+        "powerOutages",
+        "cyclones",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "usb_car_charger",
+      "name": "USB car charger",
+      "category": "power",
+      "description": "Lets the vehicle support phone and light charging during outages or evacuation travel.",
+      "recommended_scenarios": [
+        "fuelShortages",
+        "remoteTravel",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "generator_extension_lead",
+      "name": "Outdoor-rated generator lead",
+      "category": "power",
+      "description": "An outdoor-rated extension lead for safe generator use with essential appliances.",
+      "recommended_scenarios": [
+        "cyclones",
+        "severeStorm",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "appliance_surge_protector",
+      "name": "Appliance surge protector",
+      "category": "power",
+      "description": "Helps protect chargers and sensitive electronics when unstable power returns.",
+      "recommended_scenarios": [
+        "severeStorm",
+        "cyclones",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "battery_radio",
+      "name": "Battery-powered emergency radio",
+      "category": "communication",
+      "description": "Receives official warnings and updates when mobile networks or internet access are unreliable.",
+      "recommended_scenarios": [
+        "powerOutages",
+        "cyclones",
+        "bushfires"
+      ]
+    },
+    {
+      "id": "hand_crank_radio",
+      "name": "Hand-crank radio",
+      "category": "communication",
+      "description": "A self-powered backup radio suited to prolonged outages when batteries are limited.",
+      "recommended_scenarios": [
+        "powerOutages",
+        "severeStorm",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "whistle",
+      "name": "Emergency whistle",
+      "category": "communication",
+      "description": "A simple signalling tool for regrouping, attracting help, or marking location in poor visibility.",
+      "recommended_scenarios": [
+        "campingOffGrid",
+        "earthquake",
+        "floods"
+      ]
+    },
+    {
+      "id": "laminated_contact_sheet",
+      "name": "Laminated contact sheet",
+      "category": "communication",
+      "description": "A waterproof sheet with key names, numbers, addresses, and emergency frequencies.",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "extendedInfrastructureDisruption",
+        "remoteTravel"
+      ]
+    },
+    {
+      "id": "signal_mirror",
+      "name": "Signal mirror",
+      "category": "communication",
+      "description": "A lightweight backup tool for attracting attention when travelling beyond coverage.",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "backup_feature_phone",
+      "name": "Backup feature phone",
+      "category": "communication",
+      "description": "A simple secondary phone with long battery life that can be kept charged for outages.",
+      "recommended_scenarios": [
+        "powerOutages",
+        "fuelShortages",
+        "extremeHeat"
+      ]
+    },
+    {
+      "id": "fire_blanket",
+      "name": "Fire blanket",
+      "category": "fireSafety",
+      "description": "Rapid suppression equipment for small cooking fires and immediate flame contact incidents.",
+      "recommended_scenarios": [
+        "bushfires",
+        "generalEmergencies",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "abc_fire_extinguisher",
+      "name": "ABC fire extinguisher",
+      "category": "fireSafety",
+      "description": "A multi-purpose extinguisher for home, garage, and vehicle fire response.",
+      "recommended_scenarios": [
+        "bushfires",
+        "generalEmergencies",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "p2_mask_pack",
+      "name": "P2 mask pack",
+      "category": "fireSafety",
+      "description": "Helps reduce smoke and ash inhalation during bushfire or heavy cleanup conditions.",
+      "recommended_scenarios": [
+        "bushfires",
+        "severeStorm",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "leather_work_gloves",
+      "name": "Leather work gloves",
+      "category": "fireSafety",
+      "description": "Protective gloves for ember patrol, cleanup, handling debris, and hot equipment.",
+      "recommended_scenarios": [
+        "bushfires",
+        "severeStorm",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "metal_rake_or_shovel",
+      "name": "Metal rake or shovel",
+      "category": "fireSafety",
+      "description": "Useful for clearing small ember starts, moving debris, or shaping drainage flow.",
+      "recommended_scenarios": [
+        "bushfires",
+        "floods",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "hose_fittings_kit",
+      "name": "Spare hose fittings kit",
+      "category": "fireSafety",
+      "description": "Keeps hoses operational for cooling, spot fires, or cleanup if a connector fails.",
+      "recommended_scenarios": [
+        "bushfires",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "multi_tool",
+      "name": "Multi-tool",
+      "category": "tools",
+      "description": "A compact tool covering cutting, gripping, and small repairs for travel or household emergencies.",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "campingOffGrid",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "heavy_duty_duct_tape",
+      "name": "Heavy-duty duct tape",
+      "category": "tools",
+      "description": "Useful for temporary repairs, sealing, splinting, and weatherproofing damaged items.",
+      "recommended_scenarios": [
+        "severeStorm",
+        "floods",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "tarpaulin",
+      "name": "Tarpaulin",
+      "category": "tools",
+      "description": "A fast weather barrier for damaged roofs, equipment, and temporary shelter needs.",
+      "recommended_scenarios": [
+        "cyclones",
+        "severeStorm",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "folding_shovel",
+      "name": "Folding shovel",
+      "category": "tools",
+      "description": "Supports digging drainage, recovery work, and camp or vehicle tasks when space is limited.",
+      "recommended_scenarios": [
+        "floods",
+        "remoteTravel",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "adjustable_spanner",
+      "name": "Adjustable spanner",
+      "category": "tools",
+      "description": "Useful for shutting utilities, tightening fittings, and basic recovery tasks.",
+      "recommended_scenarios": [
+        "earthquake",
+        "floods",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "waterproof_document_pouch",
+      "name": "Waterproof document pouch",
+      "category": "tools",
+      "description": "Protects IDs, insurance, medical notes, and cash in a single grab-and-go pack.",
+      "recommended_scenarios": [
+        "floods",
+        "cyclones",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "jump_starter_pack",
+      "name": "Jump starter pack",
+      "category": "vehicle",
+      "description": "A portable battery booster for starting a flat vehicle without another car.",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "fuelShortages",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "spare_fuel_container",
+      "name": "Approved spare fuel container",
+      "category": "vehicle",
+      "description": "Provides a safe way to hold a limited fuel reserve for evacuation or isolated travel.",
+      "recommended_scenarios": [
+        "fuelShortages",
+        "remoteTravel",
+        "bushfires"
+      ]
+    },
+    {
+      "id": "tyre_repair_kit",
+      "name": "Tyre repair kit",
+      "category": "vehicle",
+      "description": "Supports basic puncture management and helps avoid being stranded far from assistance.",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "fuelShortages",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "recovery_strap",
+      "name": "Recovery strap",
+      "category": "vehicle",
+      "description": "A basic recovery aid for soft ground and remote route travel when used correctly.",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "campingOffGrid",
+        "floods"
+      ]
+    },
+    {
+      "id": "window_breaker_tool",
+      "name": "Window breaker and seatbelt cutter",
+      "category": "vehicle",
+      "description": "A rescue tool that should be stored within reach of the driver.",
+      "recommended_scenarios": [
+        "floods",
+        "severeStorm",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "reflective_warning_triangle",
+      "name": "Reflective warning triangle",
+      "category": "vehicle",
+      "description": "Improves roadside visibility if you are stopped during poor weather or low light.",
+      "recommended_scenarios": [
+        "severeStorm",
+        "fuelShortages",
+        "remoteTravel"
+      ]
+    },
+    {
+      "id": "led_torch",
+      "name": "LED torch",
+      "category": "lighting",
+      "description": "A simple primary handheld light for blackouts, inspections, and moving safely indoors.",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "powerOutages",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "headlamp",
+      "name": "Headlamp",
+      "category": "lighting",
+      "description": "Hands-free light for first aid, cleanup, and walking in the dark.",
+      "recommended_scenarios": [
+        "campingOffGrid",
+        "earthquake",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "led_lantern",
+      "name": "LED lantern",
+      "category": "lighting",
+      "description": "Provides broader room lighting for sheltering, meal prep, and family movement at night.",
+      "recommended_scenarios": [
+        "powerOutages",
+        "cyclones",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "glow_stick_pack",
+      "name": "Glow stick pack",
+      "category": "lighting",
+      "description": "A low-risk lighting fallback for children, tents, or marking exits in the dark.",
+      "recommended_scenarios": [
+        "powerOutages",
+        "campingOffGrid",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "rechargeable_work_light",
+      "name": "Rechargeable work light",
+      "category": "lighting",
+      "description": "A brighter light source for repairs, cleanup, and garage or outdoor work.",
+      "recommended_scenarios": [
+        "severeStorm",
+        "earthquake",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "bedside_torch",
+      "name": "Bedside torch",
+      "category": "lighting",
+      "description": "A dedicated bedside light to reduce falls during sudden night-time outages.",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "powerOutages",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "paper_state_map",
+      "name": "Paper state map",
+      "category": "navigation",
+      "description": "A broad-area paper map for alternate routing if devices fail or roads change quickly.",
+      "recommended_scenarios": [
+        "fuelShortages",
+        "remoteTravel",
+        "bushfires"
+      ]
+    },
+    {
+      "id": "local_topographic_map",
+      "name": "Local topographic map",
+      "category": "navigation",
+      "description": "Useful for understanding terrain, creek lines, and remote access routes.",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "campingOffGrid",
+        "floods"
+      ]
+    },
+    {
+      "id": "baseplate_compass",
+      "name": "Baseplate compass",
+      "category": "navigation",
+      "description": "A reliable navigation backup that works without batteries or network access.",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "offline_gps_device",
+      "name": "Offline GPS device",
+      "category": "navigation",
+      "description": "A dedicated navigation tool with preloaded maps for remote or no-service travel.",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "grease_pencil_notebook",
+      "name": "Grease pencil and notebook",
+      "category": "navigation",
+      "description": "Useful for writing routes, marking maps, and leaving waterproof notes.",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "severeStorm",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "route_marker_tape",
+      "name": "Route marker tape",
+      "category": "navigation",
+      "description": "Helps mark a path, hazard, or rally point in controlled remote travel situations.",
+      "recommended_scenarios": [
+        "campingOffGrid",
+        "remoteTravel"
+      ]
+    }
+  ]
+}

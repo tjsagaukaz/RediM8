@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>RediM8 uses Bluetooth to find nearby devices for offline emergency messaging.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_redim8mesh._tcp</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>RediM8 uses the camera for Blackout Mode torch access and to scan documents into Secure Vault.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>RediM8 uses the local network to discover nearby users and send emergency messages without internet.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>RediM8 uses your location to center offline resources, share your position with nearby peers, and support compass features.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>RediM8 uses motion data to stabilize compass and blackout tools.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>RediM8 lets you import photos of IDs, insurance, and medical documents into Secure Vault for offline emergency access.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>Default Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).RediM8SceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>bolt.fill</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Open the emergency dashboard</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Blackout Mode</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>blackout_mode</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>antenna.radiowaves.left.and.right</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Open local mesh communication</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Signal Nearby</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>signal_nearby</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>cross.case.fill</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Open first aid guides offline</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Emergency Guides</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>emergency_guides</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>eye.slash.fill</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Hide this device and reduce signals</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Stealth Mode</string>
+			<key>UIApplicationShortcutItemType</key>
+			<string>stealth_mode</string>
+		</dict>
+	</array>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchScreen</key>
+	<dict/>
+</dict>
+</plist>

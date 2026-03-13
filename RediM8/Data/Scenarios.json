@@ -1,0 +1,472 @@
+{
+  "scenarios": [
+    {
+      "id": "bushfires",
+      "name": "Bushfire",
+      "description": "Fast-moving fire, ember attack, smoke, and sudden evacuation pressure.",
+      "tasks": [
+        "clear_gutters_and_roof_valleys",
+        "trim_fuel_around_home",
+        "stage_go_bags_by_exit",
+        "store_drinking_water_case",
+        "keep_small_grab_bottles",
+        "review_local_fire_danger_ratings",
+        "move_flammables_away_from_house",
+        "refuel_vehicle_at_half_tank",
+        "save_emergency_contacts_offline",
+        "set_pet_evacuation_plan"
+      ],
+      "gear": [
+        "fire_blanket",
+        "abc_fire_extinguisher",
+        "p2_mask_pack",
+        "battery_radio",
+        "led_torch",
+        "water_jerry_can",
+        "leather_work_gloves",
+        "waterproof_document_pouch"
+      ],
+      "guides": [
+        "bushfire_leave_early_plan",
+        "ember_attack_home_actions",
+        "smoke_exposure_reduction",
+        "official_warning_monitoring",
+        "burns_first_aid"
+      ],
+      "priority_categories": [
+        "water",
+        "evacuation",
+        "communication"
+      ]
+    },
+    {
+      "id": "floods",
+      "name": "Flood",
+      "description": "Rising water, contaminated supplies, isolation, and road closure risk.",
+      "tasks": [
+        "move_valuables_above_flood_line",
+        "mark_safe_high_ground_route",
+        "store_sandbags_and_plastic_sheeting",
+        "learn_mains_power_shutdown_for_floods",
+        "avoid_driving_through_floodwater",
+        "protect_documents_in_waterproof_bag",
+        "pack_cleanup_disinfectant_and_gloves",
+        "check_water_quality_after_flood",
+        "copy_documents_to_waterproof_pouch",
+        "fill_food_grade_containers"
+      ],
+      "gear": [
+        "gravity_water_filter",
+        "purification_tablets",
+        "waterproof_document_pouch",
+        "led_lantern",
+        "laminated_contact_sheet",
+        "reflective_warning_triangle",
+        "tarpaulin",
+        "folding_shovel"
+      ],
+      "guides": [
+        "flood_evacuation_timing",
+        "turn_around_dont_drown",
+        "after_flood_drinking_water_checks",
+        "mould_and_contamination_cleanup",
+        "utility_shutoff_safety"
+      ],
+      "priority_categories": [
+        "water",
+        "evacuation",
+        "communication"
+      ]
+    },
+    {
+      "id": "cyclones",
+      "name": "Cyclone",
+      "description": "Wind damage, roof failure, flooding, and prolonged outages after landfall.",
+      "tasks": [
+        "fill_food_grade_containers",
+        "build_seven_day_pantry",
+        "charge_power_banks_before_risk_days",
+        "secure_outdoor_items_before_heavy_rain",
+        "identify_local_shelter_options",
+        "practice_short_status_messages",
+        "store_sandbags_and_plastic_sheeting",
+        "refuel_vehicle_at_half_tank",
+        "plan_refrigeration_backup",
+        "keep_headlamps_beside_beds"
+      ],
+      "gear": [
+        "battery_radio",
+        "hand_crank_radio",
+        "power_bank_20000",
+        "aa_aaa_battery_pack",
+        "led_lantern",
+        "tarpaulin",
+        "water_jerry_can",
+        "camp_stove"
+      ],
+      "guides": [
+        "cyclone_pre_landfall_actions",
+        "severe_storm_room_setup",
+        "generator_safety_after_storm",
+        "official_warning_monitoring",
+        "utility_shutoff_safety"
+      ],
+      "priority_categories": [
+        "power",
+        "communication",
+        "water"
+      ]
+    },
+    {
+      "id": "powerOutages",
+      "name": "Power Outage",
+      "description": "Loss of lighting, refrigeration, charging, and network reliability for hours or days.",
+      "tasks": [
+        "build_three_day_food_supply",
+        "store_no_cook_meals",
+        "charge_power_banks_before_risk_days",
+        "keep_spare_batteries_sorted",
+        "test_torches_monthly",
+        "plan_refrigeration_backup",
+        "keep_backup_cooking_method",
+        "save_emergency_contacts_offline",
+        "practice_blackout_evening",
+        "label_all_device_chargers_and_cables"
+      ],
+      "gear": [
+        "power_bank_20000",
+        "battery_radio",
+        "hand_crank_radio",
+        "led_torch",
+        "led_lantern",
+        "camp_stove",
+        "usb_car_charger",
+        "aa_aaa_battery_pack"
+      ],
+      "guides": [
+        "shelter_in_place_steps",
+        "cool_home_without_power",
+        "generator_safety_after_storm",
+        "official_warning_monitoring",
+        "utility_shutoff_safety"
+      ],
+      "priority_categories": [
+        "power",
+        "food",
+        "communication"
+      ]
+    },
+    {
+      "id": "extremeHeat",
+      "name": "Extreme Heat",
+      "description": "Dehydration, heat illness, and medicine spoilage during hot days and warm nights.",
+      "tasks": [
+        "protect_water_from_heat",
+        "pack_pain_relief_and_ors",
+        "check_medicine_storage_temperature",
+        "set_household_water_ration",
+        "plan_refrigeration_backup",
+        "choose_neighbour_support_contact",
+        "store_pet_water",
+        "store_quick_hydration_snacks",
+        "review_plan_every_season",
+        "reduce_nonessential_power_draw"
+      ],
+      "gear": [
+        "bottled_water_case",
+        "oral_rehydration_salts",
+        "insulated_cooler",
+        "power_bank_20000",
+        "battery_radio",
+        "water_jerry_can",
+        "led_lantern",
+        "backup_feature_phone"
+      ],
+      "guides": [
+        "prevent_dehydration_in_extreme_heat",
+        "heat_exhaustion_vs_heatstroke",
+        "protect_medicines_from_heat",
+        "cool_home_without_power",
+        "recognise_heat_risk_in_children_and_older_adults"
+      ],
+      "priority_categories": [
+        "water",
+        "medical",
+        "power"
+      ]
+    },
+    {
+      "id": "fuelShortages",
+      "name": "Fuel Shortage",
+      "description": "Restricted transport, long queues, and reduced access to work, shops, and support networks.",
+      "tasks": [
+        "keep_cash_in_small_notes",
+        "refuel_vehicle_at_half_tank",
+        "pack_vehicle_water_and_food",
+        "keep_two_route_options_for_key_trips",
+        "store_car_usb_chargers",
+        "build_seven_day_pantry",
+        "maintain_contact_card_for_each_member",
+        "store_drinking_water_case",
+        "agree_out_of_area_contact",
+        "keep_paper_map_in_vehicle"
+      ],
+      "gear": [
+        "spare_fuel_container",
+        "jump_starter_pack",
+        "paper_state_map",
+        "high_energy_snack_pack",
+        "bottled_water_case",
+        "backup_feature_phone",
+        "reflective_warning_triangle",
+        "usb_car_charger"
+      ],
+      "guides": [
+        "route_planning_without_gps",
+        "vehicle_trip_check_in_routine",
+        "household_evacuation_quick_start",
+        "official_warning_monitoring",
+        "set_simple_rally_points"
+      ],
+      "priority_categories": [
+        "food",
+        "communication",
+        "evacuation"
+      ]
+    },
+    {
+      "id": "remoteTravel",
+      "name": "Remote Travel",
+      "description": "Long distances, delayed rescue, and self-reliance during breakdowns or injury.",
+      "tasks": [
+        "stage_vehicle_water_cache",
+        "pack_vehicle_rations",
+        "keep_vehicle_serviced_for_evacuation",
+        "store_spare_tyre_and_tools",
+        "carry_recovery_strap_remote_routes",
+        "keep_paper_map_in_vehicle",
+        "log_remote_trip_intentions",
+        "save_emergency_contacts_offline",
+        "keep_whistle_signal_plan",
+        "maintain_vehicle_first_aid_kit"
+      ],
+      "gear": [
+        "water_jerry_can",
+        "jump_starter_pack",
+        "tyre_repair_kit",
+        "recovery_strap",
+        "baseplate_compass",
+        "offline_gps_device",
+        "comprehensive_first_aid_kit",
+        "led_torch"
+      ],
+      "guides": [
+        "navigate_with_map_and_compass",
+        "vehicle_trip_check_in_routine",
+        "boil_filter_disinfect_water",
+        "major_bleeding_control",
+        "safe_tarp_shelter_setup"
+      ],
+      "priority_categories": [
+        "water",
+        "communication",
+        "medical"
+      ]
+    },
+    {
+      "id": "campingOffGrid",
+      "name": "Camping / Off-Grid",
+      "description": "Limited utilities, reduced communications, and safe water and navigation needs.",
+      "tasks": [
+        "keep_water_treatment_backup",
+        "store_no_cook_meals",
+        "stage_solar_charger",
+        "keep_backup_cooking_method",
+        "plan_safe_cooking_in_outage",
+        "keep_whistle_signal_plan",
+        "practice_short_status_messages",
+        "keep_small_grab_bottles",
+        "pack_pain_relief_and_ors",
+        "save_emergency_contacts_offline"
+      ],
+      "gear": [
+        "collapsible_water_container",
+        "water_filter_straw",
+        "camp_stove",
+        "solar_panel_charger",
+        "led_lantern",
+        "headlamp",
+        "baseplate_compass",
+        "multi_tool"
+      ],
+      "guides": [
+        "safe_tarp_shelter_setup",
+        "campfire_safety_without_mains",
+        "boil_filter_disinfect_water",
+        "improvised_signal_methods",
+        "navigate_with_map_and_compass"
+      ],
+      "priority_categories": [
+        "water",
+        "food",
+        "power"
+      ]
+    },
+    {
+      "id": "severeStorm",
+      "name": "Severe Storm",
+      "description": "Damaging wind, flash flooding, outages, and dangerous debris after impact.",
+      "tasks": [
+        "fill_food_grade_containers",
+        "secure_outdoor_items_before_heavy_rain",
+        "inspect_drains_and_grates_before_storm",
+        "charge_power_banks_before_risk_days",
+        "choose_primary_evacuation_route",
+        "protect_documents_in_waterproof_bag",
+        "check_windscreen_wipers_before_storm",
+        "practice_short_status_messages",
+        "store_sandbags_and_plastic_sheeting",
+        "keep_headlamps_beside_beds"
+      ],
+      "gear": [
+        "hand_crank_radio",
+        "power_bank_20000",
+        "led_lantern",
+        "tarpaulin",
+        "reflective_warning_triangle",
+        "waterproof_document_pouch",
+        "aa_aaa_battery_pack",
+        "battery_radio"
+      ],
+      "guides": [
+        "severe_storm_room_setup",
+        "downed_powerline_safety",
+        "flood_evacuation_timing",
+        "protect_devices_and_documents_before_storm",
+        "official_warning_monitoring"
+      ],
+      "priority_categories": [
+        "power",
+        "communication",
+        "evacuation"
+      ]
+    },
+    {
+      "id": "earthquake",
+      "name": "Earthquake",
+      "description": "Structural damage, falling debris, injuries, and aftershocks with little warning.",
+      "tasks": [
+        "learn_home_water_isolation",
+        "record_medical_conditions",
+        "learn_cpr_and_bleeding_control",
+        "copy_documents_to_waterproof_pouch",
+        "choose_secondary_evacuation_route",
+        "keep_headlamps_beside_beds",
+        "store_window_breaker_and_seatbelt_cutter",
+        "maintain_contact_card_for_each_member",
+        "update_family_photo_for_identification",
+        "practice_short_status_messages"
+      ],
+      "gear": [
+        "comprehensive_first_aid_kit",
+        "led_torch",
+        "headlamp",
+        "whistle",
+        "window_breaker_tool",
+        "waterproof_document_pouch",
+        "multi_tool",
+        "leather_work_gloves"
+      ],
+      "guides": [
+        "fracture_immobilisation",
+        "major_bleeding_control",
+        "utility_shutoff_safety",
+        "shelter_in_place_steps",
+        "set_simple_rally_points"
+      ],
+      "priority_categories": [
+        "medical",
+        "evacuation",
+        "communication"
+      ]
+    },
+    {
+      "id": "extendedInfrastructureDisruption",
+      "name": "Extended Infrastructure Disruption",
+      "description": "Multi-day failure of power, communications, transport, or supply chains.",
+      "tasks": [
+        "build_seven_day_pantry",
+        "set_household_water_ration",
+        "keep_water_treatment_backup",
+        "plan_refrigeration_backup",
+        "reduce_nonessential_power_draw",
+        "keep_backup_cooking_method",
+        "practice_blackout_evening",
+        "stock_prescription_buffer",
+        "save_emergency_contacts_offline",
+        "set_family_check_in_schedule"
+      ],
+      "gear": [
+        "gravity_water_filter",
+        "shelf_stable_meal_kit",
+        "power_bank_20000",
+        "solar_panel_charger",
+        "battery_radio",
+        "manual_can_opener",
+        "led_lantern",
+        "waterproof_document_pouch"
+      ],
+      "guides": [
+        "shelter_in_place_steps",
+        "boil_filter_disinfect_water",
+        "hygiene_when_water_is_limited",
+        "official_warning_monitoring",
+        "cool_home_without_power"
+      ],
+      "priority_categories": [
+        "water",
+        "food",
+        "power"
+      ]
+    },
+    {
+      "id": "generalEmergencies",
+      "name": "General Emergency",
+      "description": "A baseline preparedness profile for households facing common disruptions.",
+      "tasks": [
+        "store_drinking_water_case",
+        "build_three_day_food_supply",
+        "assemble_first_aid_kit",
+        "save_emergency_contacts_offline",
+        "assign_household_roles",
+        "stage_go_bags_by_exit",
+        "keep_cash_in_small_notes",
+        "test_smoke_alarms_monthly",
+        "practice_blackout_evening",
+        "review_plan_every_season"
+      ],
+      "gear": [
+        "comprehensive_first_aid_kit",
+        "battery_radio",
+        "led_torch",
+        "power_bank_20000",
+        "fire_blanket",
+        "manual_can_opener",
+        "bottled_water_case",
+        "laminated_contact_sheet"
+      ],
+      "guides": [
+        "cpr_basics",
+        "household_evacuation_quick_start",
+        "official_warning_monitoring",
+        "utility_shutoff_safety",
+        "shelter_in_place_steps"
+      ],
+      "priority_categories": [
+        "water",
+        "medical",
+        "communication"
+      ]
+    }
+  ]
+}

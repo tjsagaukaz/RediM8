@@ -1,0 +1,123 @@
+{
+  "lastUpdated" : "2026-06-01T00:00:00Z",
+  "tracks" : [
+    {
+      "id" : "mt_glorious_forest_road",
+      "kind" : "unsealedRoad",
+      "name" : "Mount Glorious Forest Road",
+      "subtitle" : "Hinterland unsealed connector",
+      "surface" : "dirt",
+      "vehicleAdvice" : "twoWheelDrivePossible",
+      "purpose" : "forestryAccess",
+      "notes" : "Unsealed forestry connector with washouts after heavy rain.",
+      "packIDs" : [
+        "brisbane_region",
+        "queensland"
+      ],
+      "points" : [
+        { "latitude" : -27.315, "longitude" : 152.751 },
+        { "latitude" : -27.286, "longitude" : 152.782 },
+        { "latitude" : -27.257, "longitude" : 152.816 }
+      ],
+      "safetyLabels" : [
+        "seasonalAccess"
+      ],
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "id" : "old_telegraph_track",
+      "kind" : "fourWheelDriveTrack",
+      "name" : "Old Telegraph Track",
+      "subtitle" : "Cape York remote 4WD route",
+      "surface" : "dirt",
+      "vehicleAdvice" : "fourWheelDriveOnly",
+      "purpose" : "remoteConnector",
+      "notes" : "Remote Cape York route with creek crossings and variable surface. Do not rely on it as a primary evacuation route without local confirmation.",
+      "packIDs" : [
+        "cape_york",
+        "queensland"
+      ],
+      "points" : [
+        { "latitude" : -12.854, "longitude" : 143.093 },
+        { "latitude" : -12.682, "longitude" : 143.082 },
+        { "latitude" : -12.502, "longitude" : 143.066 }
+      ],
+      "safetyLabels" : [
+        "fourWheelDriveOnly",
+        "seasonalAccess",
+        "unmaintainedTrack"
+      ],
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "id" : "gibb_river_road",
+      "kind" : "unsealedRoad",
+      "name" : "Gibb River Road",
+      "subtitle" : "Kimberley remote unsealed corridor",
+      "surface" : "gravel",
+      "vehicleAdvice" : "fourWheelDriveRecommended",
+      "purpose" : "remoteConnector",
+      "notes" : "Remote unsealed corridor. Road condition changes quickly after rain and during shoulder season.",
+      "packIDs" : [
+        "kimberley"
+      ],
+      "points" : [
+        { "latitude" : -16.213, "longitude" : 124.945 },
+        { "latitude" : -16.512, "longitude" : 126.274 },
+        { "latitude" : -16.806, "longitude" : 127.744 }
+      ],
+      "safetyLabels" : [
+        "seasonalAccess",
+        "confirmLocalAccess"
+      ],
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "id" : "drysdale_station_track",
+      "kind" : "stationTrack",
+      "name" : "Drysdale Station Access Track",
+      "subtitle" : "Station access north of the Gibb",
+      "surface" : "dirt",
+      "vehicleAdvice" : "fourWheelDriveOnly",
+      "purpose" : "stationAccess",
+      "notes" : "Station access alignment used by remote travellers. Gate status and local conditions vary.",
+      "packIDs" : [
+        "kimberley"
+      ],
+      "points" : [
+        { "latitude" : -15.046, "longitude" : 126.38 },
+        { "latitude" : -15.182, "longitude" : 126.512 },
+        { "latitude" : -15.348, "longitude" : 126.686 }
+      ],
+      "safetyLabels" : [
+        "fourWheelDriveOnly",
+        "confirmLocalAccess"
+      ],
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "id" : "mereenie_loop",
+      "kind" : "unsealedRoad",
+      "name" : "Mereenie Loop",
+      "subtitle" : "Alice Springs remote connector",
+      "surface" : "dirt",
+      "vehicleAdvice" : "fourWheelDriveRecommended",
+      "purpose" : "remoteConnector",
+      "notes" : "Remote outback road west of Alice Springs. Check permit and closure requirements before travel.",
+      "packIDs" : [
+        "central_australia",
+        "northern_territory"
+      ],
+      "points" : [
+        { "latitude" : -23.745, "longitude" : 133.371 },
+        { "latitude" : -23.895, "longitude" : 132.808 },
+        { "latitude" : -23.712, "longitude" : 132.365 }
+      ],
+      "safetyLabels" : [
+        "seasonalAccess",
+        "confirmLocalAccess"
+      ],
+      "source" : "Bundled OSM-derived starter dataset"
+    }
+  ]
+}

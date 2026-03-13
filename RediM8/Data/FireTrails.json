@@ -1,0 +1,55 @@
+{
+  "lastUpdated" : "2026-06-01T00:00:00Z",
+  "tracks" : [
+    {
+      "id" : "wivenhoe_fire_trail",
+      "kind" : "fireTrail",
+      "name" : "Wivenhoe Fire Trail",
+      "subtitle" : "Somerset emergency and forestry access",
+      "surface" : "dirt",
+      "vehicleAdvice" : "fourWheelDriveRecommended",
+      "purpose" : "emergencyAccess",
+      "points" : [
+        { "latitude" : -27.305, "longitude" : 152.584 },
+        { "latitude" : -27.288, "longitude" : 152.615 },
+        { "latitude" : -27.261, "longitude" : 152.644 }
+      ],
+      "packIDs" : [
+        "brisbane_region",
+        "queensland"
+      ],
+      "safetyLabels" : [
+        "emergencyVehicleRoute",
+        "seasonalAccess",
+        "confirmLocalAccess"
+      ],
+      "notes" : "Emergency and forestry access trail. Conditions can change quickly after weather and operational closures.",
+      "source" : "Bundled OSM-derived starter dataset"
+    },
+    {
+      "id" : "ormiston_fire_trail",
+      "kind" : "fireTrail",
+      "name" : "Ormiston Fire Trail",
+      "subtitle" : "West MacDonnell emergency track",
+      "surface" : "dirt",
+      "vehicleAdvice" : "fourWheelDriveRecommended",
+      "purpose" : "firebreakAccess",
+      "points" : [
+        { "latitude" : -23.623, "longitude" : 132.741 },
+        { "latitude" : -23.575, "longitude" : 132.694 },
+        { "latitude" : -23.538, "longitude" : 132.648 }
+      ],
+      "packIDs" : [
+        "central_australia",
+        "northern_territory"
+      ],
+      "safetyLabels" : [
+        "emergencyVehicleRoute",
+        "unmaintainedTrack",
+        "confirmLocalAccess"
+      ],
+      "notes" : "Low-maintenance fire access trail. Treat as emergency-service infrastructure, not a guaranteed evacuation exit.",
+      "source" : "Bundled OSM-derived starter dataset"
+    }
+  ]
+}

@@ -1,0 +1,1255 @@
+{
+  "guides": [
+    {
+      "id": "cpr_basics",
+      "title": "CPR Basics",
+      "category": "firstAid",
+      "summary": "Immediate CPR actions for a collapsed person who is not breathing normally.",
+      "steps": [
+        "Check the scene is safe and ask for help immediately.",
+        "Open the airway and check for normal breathing for no more than 10 seconds.",
+        "Start chest compressions at a steady pace in the centre of the chest.",
+        "Continue CPR until the person recovers, help takes over, or you cannot continue."
+      ],
+      "notes": "Call 000 and use an AED if one is available."
+    },
+    {
+      "id": "major_bleeding_control",
+      "title": "Major Bleeding Control",
+      "category": "firstAid",
+      "summary": "How to control severe bleeding while waiting for emergency services.",
+      "steps": [
+        "Apply firm direct pressure to the wound using a clean dressing or cloth.",
+        "Lay the person down if possible and keep them still and warm.",
+        "Bandage the dressing firmly without cutting off circulation.",
+        "Call 000 and monitor for shock until help arrives."
+      ],
+      "notes": "Use firm direct pressure and do not remove soaked dressings; add more on top."
+    },
+    {
+      "id": "burns_first_aid",
+      "title": "Burns First Aid",
+      "category": "firstAid",
+      "summary": "Simple first aid for heat, flame, and scald burns.",
+      "steps": [
+        "Cool the burn under cool running water for 20 minutes as soon as possible.",
+        "Remove jewellery and restrictive clothing unless it is stuck to the burn.",
+        "Cover the burn loosely with a clean non-stick dressing or cling film.",
+        "Seek medical care for larger, deeper, facial, airway, or chemical burns."
+      ],
+      "notes": "Do not apply butter, creams, or ice directly to a burn."
+    },
+    {
+      "id": "fracture_immobilisation",
+      "title": "Fracture Immobilisation",
+      "category": "firstAid",
+      "summary": "Basic steps for suspected fractures after falls, crashes, or structural damage.",
+      "steps": [
+        "Support the injured area and stop the person from using it.",
+        "Immobilise the limb in the position found using padding or a sling if appropriate.",
+        "Apply a cold pack wrapped in cloth to reduce swelling if available.",
+        "Seek urgent medical care, especially for severe pain, deformity, or reduced circulation."
+      ],
+      "notes": "Only move the person if they are in immediate danger."
+    },
+    {
+      "id": "snake_bite_first_aid",
+      "title": "Snake Bite First Aid",
+      "category": "firstAid",
+      "summary": "Pressure immobilisation steps for a suspected venomous snake bite.",
+      "tags": ["snake", "bite", "venom", "pressure bandage", "pressure immobilisation", "diagram"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "quickStart",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "australia",
+      "steps": [
+        "Keep the person still and calm to slow venom spread.",
+        "Apply a firm pressure bandage over the bite site and the whole limb if possible.",
+        "Immobilise the limb with a splint and keep the person lying down.",
+        "Call 000 urgently and do not let the person walk."
+      ],
+      "notes": "Do not wash the bite site because venom traces may assist identification.",
+      "sections": [
+        {
+          "id": "snake-bite-scene",
+          "title": "Immediate Actions",
+          "summary": "The first two minutes matter more than trying to identify the snake.",
+          "steps": [
+            "Move the person only if there is ongoing danger from the snake or the scene.",
+            "Keep them lying down and reassure them so heart rate stays as low as possible.",
+            "Send for help and be ready to call 000 early rather than waiting for symptoms."
+          ]
+        },
+        {
+          "id": "snake-bite-bandage",
+          "title": "Pressure Immobilisation",
+          "summary": "Bandage the entire limb firmly, then splint it so movement stays minimal.",
+          "steps": [
+            "Start at the bite site if visible and wrap a firm pressure bandage over the whole limb.",
+            "Keep toes or fingers visible if practical so circulation can still be checked.",
+            "Apply a splint over the bandage and keep the limb still until medical help arrives."
+          ]
+        }
+      ],
+      "diagrams": [
+        {
+          "id": "snake-pressure-bandage",
+          "title": "Pressure Bandage Wrap",
+          "caption": "Wrap firmly over and above the bite, then continue over the full limb before splinting.",
+          "kind": "pressureBandage"
+        }
+      ],
+      "sources": [
+        {
+          "id": "healthdirect-snake-bites",
+          "title": "Snake bites",
+          "publisher": "Healthdirect Australia",
+          "url": "https://www.healthdirect.gov.au/snake-bites",
+          "kind": "official"
+        },
+        {
+          "id": "redim8-pressure-bandage-diagram",
+          "title": "Original pressure immobilisation line diagram",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["burns_first_aid", "major_bleeding_control"]
+    },
+    {
+      "id": "household_evacuation_quick_start",
+      "title": "Household Evacuation Quick Start",
+      "category": "disasterResponse",
+      "summary": "A fast sequence for leaving home safely when warnings escalate.",
+      "steps": [
+        "Take people, pets, medicines, documents, and go-bags first.",
+        "Shut doors and windows if time allows, and turn off utilities if advised and safe.",
+        "Send one quick status message to your agreed contact when departing.",
+        "Use the planned route and do not stop to collect low-priority items."
+      ],
+      "notes": "Leaving early is usually safer than leaving late into smoke, floodwater, or heavy wind."
+    },
+    {
+      "id": "shelter_in_place_steps",
+      "title": "Shelter-in-Place Steps",
+      "category": "disasterResponse",
+      "summary": "How to set up safely when staying put is the safest option.",
+      "steps": [
+        "Move everyone to the strongest practical part of the building.",
+        "Bring water, food, medicines, lighting, radio, and phone charging options together.",
+        "Limit door openings and keep pets secured near the family group.",
+        "Review exits and what would trigger a move if conditions worsen."
+      ],
+      "notes": "Keep listening to official warnings because a shelter-in-place decision can change."
+    },
+    {
+      "id": "utility_shutoff_safety",
+      "title": "Utility Shutoff Safety",
+      "category": "disasterResponse",
+      "summary": "How to think about shutting off power, gas, and water safely after damage or flooding.",
+      "steps": [
+        "Know where the main switches and valves are before an emergency occurs.",
+        "Turn off power if floodwater or serious wiring damage is present and it is safe to reach the switch.",
+        "Turn off water if broken pipes, contamination, or structural damage are suspected.",
+        "Do not restore utilities until a qualified person or official advice says it is safe."
+      ],
+      "notes": "If you smell gas, leave immediately and contact the utility from a safe distance."
+    },
+    {
+      "id": "safe_cleanup_after_disaster",
+      "title": "Safe Cleanup After Disaster",
+      "category": "disasterResponse",
+      "summary": "Safe priorities for household cleanup after flood, storm, or earthquake damage.",
+      "steps": [
+        "Photograph damage before major cleanup if insurance evidence is needed.",
+        "Check for structural, electrical, chemical, and animal hazards before entering.",
+        "Work in short sessions, ventilate the area, and wash hands frequently.",
+        "Dispose of contaminated food, water-damaged medicines, and unsafe electrical items."
+      ],
+      "notes": "Wear gloves, sturdy shoes, and respiratory protection where dust, mould, or contaminated water are present."
+    },
+    {
+      "id": "official_warning_monitoring",
+      "title": "Official Warning Monitoring",
+      "category": "disasterResponse",
+      "summary": "How to keep warnings flowing when power and connectivity become unreliable.",
+      "steps": [
+        "Identify the main warning sources you trust before an event starts.",
+        "Keep a radio ready as a fallback if mobile data becomes unreliable.",
+        "Check the warning level, location, and timeframe, not just the headline.",
+        "Act on evacuation or shelter instructions early instead of waiting for visual confirmation."
+      ],
+      "notes": "Cross-check information with official agencies when possible and avoid rumours."
+    },
+    {
+      "id": "safe_tarp_shelter_setup",
+      "title": "Safe Tarp Shelter Setup",
+      "category": "bushcraft",
+      "summary": "Basic tarp shelter setup for temporary cover in wind and rain.",
+      "tags": ["tarp", "shelter", "ridgeline", "camp", "diagram", "rain", "wind"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "general",
+      "steps": [
+        "Choose ground that is above obvious runoff and away from overhead hazards.",
+        "Pitch the ridgeline tight and angle the tarp so water runs away from sleeping areas.",
+        "Secure corners low and firm to reduce wind flap and tears.",
+        "Keep cooking and open flames well away from the shelter fabric."
+      ],
+      "notes": "Do not camp under dead branches, unstable slopes, or flood-prone creek beds.",
+      "sections": [
+        {
+          "id": "tarp-site",
+          "title": "Pick the Site",
+          "summary": "A perfect tarp shape cannot compensate for a poor campsite.",
+          "steps": [
+            "Avoid creek beds, drainage lines, widow-makers, and loose rockfall slopes.",
+            "Face the low side of the shelter away from the prevailing wind and runoff.",
+            "Keep enough room for gear, cooking, and a dry entry point."
+          ]
+        },
+        {
+          "id": "tarp-ridgeline",
+          "title": "Build the Ridgeline",
+          "summary": "A tight ridgeline is what makes a tarp feel solid instead of floppy.",
+          "steps": [
+            "Run a line between stable anchors and tension it before clipping or tying the tarp.",
+            "Pull the tarp tight over the ridge so water sheds instead of pooling.",
+            "Peg out the corners low and re-tension once the tarp takes shape."
+          ]
+        }
+      ],
+      "diagrams": [
+        {
+          "id": "tarp-ridgeline",
+          "title": "Ridgeline Shelter",
+          "caption": "Set a taut ridgeline first, then pitch the tarp into the wind with the low side protected.",
+          "kind": "tarpRidgeline"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-tarp-guide",
+          "title": "Original field shelter quick guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        },
+        {
+          "id": "redim8-tarp-diagram",
+          "title": "Original tarp shelter line diagram",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["basic_knot_selection", "campfire_safety_without_mains"]
+    },
+    {
+      "id": "campfire_safety_without_mains",
+      "title": "Campfire Safety Without Mains",
+      "category": "bushcraft",
+      "summary": "Safer fire use when cooking or heating away from normal facilities.",
+      "steps": [
+        "Clear a safe area around the fire or use an approved fire pit.",
+        "Keep water, sand, or a shovel within reach before lighting anything.",
+        "Never leave flames unattended and keep children and pets supervised.",
+        "Extinguish fully until cold before leaving or sleeping."
+      ],
+      "notes": "Observe local fire bans and use a stove instead when conditions are hot, dry, or windy."
+    },
+    {
+      "id": "field_food_hygiene",
+      "title": "Field Food Hygiene",
+      "category": "bushcraft",
+      "summary": "Reducing foodborne illness when kitchens, sinks, or refrigeration are limited.",
+      "steps": [
+        "Keep raw and ready-to-eat food separate.",
+        "Use the coldest practical storage for perishable items and discard anything unsafe.",
+        "Cook food thoroughly and reheat leftovers only if they have remained safe to store.",
+        "Wash hands or use sanitiser before handling meals."
+      ],
+      "notes": "Clean hands and utensils matter more as temperatures rise and water quality becomes uncertain."
+    },
+    {
+      "id": "improvised_signal_methods",
+      "title": "Improvised Signal Methods",
+      "category": "bushcraft",
+      "summary": "Ways to improve your chances of being seen or heard when communications fail.",
+      "steps": [
+        "Use whistle blasts, lights, mirrors, or bright fabric to attract attention.",
+        "Place signals where they can be seen from roads, tracks, or the air.",
+        "Keep signals simple and repeated rather than constantly changing them.",
+        "Stay near a safe, known position unless moving clearly improves your safety."
+      ],
+      "notes": "Only leave markers or fires where they do not create new danger."
+    },
+    {
+      "id": "basic_knot_selection",
+      "title": "Basic Knot Selection",
+      "category": "bushcraft",
+      "summary": "A practical set of knots for shelter, gear retention, and emergency rigging.",
+      "tags": ["knots", "bowline", "clove hitch", "reef knot", "rope", "diagram", "rigging"],
+      "estimatedReadMinutes": 6,
+      "difficulty": "standard",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "general",
+      "steps": [
+        "Use a reef knot for joining similar ropes where a load is stable.",
+        "Use a clove hitch for quick attachment to poles or rails.",
+        "Use a bowline for a fixed loop that is easy to untie later.",
+        "Check every knot under light load before relying on it."
+      ],
+      "notes": "Practice knots before you need them so you can tie them quickly in poor light or bad weather.",
+      "sections": [
+        {
+          "id": "knot-choose",
+          "title": "Choose the Right Knot",
+          "summary": "Use the simplest knot that matches the job instead of forcing one knot to do everything.",
+          "steps": [
+            "Pick a bowline when you need a fixed loop that should still untie easily.",
+            "Pick a clove hitch when you are fastening onto a rail, pole, or stake quickly.",
+            "Pick a reef knot only for joining two similar ends under steady load."
+          ]
+        },
+        {
+          "id": "knot-check",
+          "title": "Check Before Trusting",
+          "summary": "A badly dressed knot can slip even if it is the right type.",
+          "steps": [
+            "Dress the knot neatly so each turn lies flat instead of crossing awkwardly.",
+            "Pull on the loaded sections first, then test the tail ends.",
+            "Leave enough tail length so movement or vibration does not work the knot loose."
+          ]
+        }
+      ],
+      "diagrams": [
+        {
+          "id": "reef-knot",
+          "title": "Reef Knot",
+          "caption": "Use only for joining similar ends with a stable load, not for critical life support.",
+          "kind": "reefKnot"
+        },
+        {
+          "id": "clove-hitch",
+          "title": "Clove Hitch",
+          "caption": "Quick to place on poles, rails, or ridgelines when you need fast attachment.",
+          "kind": "cloveHitch"
+        },
+        {
+          "id": "bowline",
+          "title": "Bowline",
+          "caption": "Creates a fixed loop that is secure under load but still easier to untie later.",
+          "kind": "bowline"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-knot-guide",
+          "title": "Original RediM8 knot selection guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        },
+        {
+          "id": "redim8-knot-diagrams",
+          "title": "Original RediM8 knot line diagrams",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagrams",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["safe_tarp_shelter_setup", "improvised_signal_methods"]
+    },
+    {
+      "id": "navigate_with_map_and_compass",
+      "title": "Navigate with Map and Compass",
+      "category": "navigation",
+      "summary": "Simple map and compass use when GPS is unavailable or unreliable.",
+      "tags": ["map", "compass", "bearing", "navigation", "diagram", "offline route"],
+      "estimatedReadMinutes": 5,
+      "difficulty": "standard",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "general",
+      "steps": [
+        "Orient the map to north using a compass.",
+        "Identify major terrain or road features that match the map.",
+        "Set a simple bearing or route segment to the next clear checkpoint.",
+        "Stop and recheck often rather than pushing on while uncertain."
+      ],
+      "notes": "Navigation is easiest when done early, in good light, before fatigue builds.",
+      "sections": [
+        {
+          "id": "nav-orient",
+          "title": "Orient First",
+          "summary": "Get the map and the ground agreeing before you decide where to walk.",
+          "steps": [
+            "Turn the map until north on the page lines up with the compass needle.",
+            "Find one obvious terrain feature or road that you can confirm visually.",
+            "Use that feature to confirm you are not mirrored or rotated."
+          ]
+        },
+        {
+          "id": "nav-move",
+          "title": "Move in Short Legs",
+          "summary": "Short checkpoints reduce compounding mistakes.",
+          "steps": [
+            "Pick a nearby checkpoint you can clearly identify before moving off.",
+            "Walk to it, stop, and compare the map to the ground again.",
+            "Repeat instead of trying to hold one long uncertain line through difficult country."
+          ]
+        }
+      ],
+      "diagrams": [
+        {
+          "id": "compass-bearing",
+          "title": "Simple Bearing Check",
+          "caption": "Orient the map, set a short bearing, then move checkpoint by checkpoint instead of guessing.",
+          "kind": "compassBearing"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-navigation-guide",
+          "title": "Original offline map and compass quick guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        },
+        {
+          "id": "redim8-bearing-diagram",
+          "title": "Original compass bearing line diagram",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["route_planning_without_gps", "set_simple_rally_points"]
+    },
+    {
+      "id": "set_simple_rally_points",
+      "title": "Set Simple Rally Points",
+      "category": "navigation",
+      "summary": "How to choose easy rally points for families or travel groups.",
+      "steps": [
+        "Pick landmarks that are easy to identify in low light or poor weather.",
+        "Name a primary and backup point before splitting up.",
+        "Tell every member how long to wait at the point before moving.",
+        "Avoid rally points in floodways, near fuel, or under unstable structures."
+      ],
+      "notes": "Choose locations that are obvious, safe, and accessible from more than one direction."
+    },
+    {
+      "id": "route_planning_without_gps",
+      "title": "Route Planning Without GPS",
+      "category": "navigation",
+      "summary": "Planning alternate routes when apps, charging, or coverage are unavailable.",
+      "steps": [
+        "Review the main route and at least one alternate before departure.",
+        "Avoid low crossings, single-access roads, and heavily wooded bottlenecks when hazards increase.",
+        "Mark fuel, shelter, and hospital options along the route.",
+        "Tell a trusted contact which route you expect to use."
+      ],
+      "notes": "Paper maps and local knowledge are often faster than troubleshooting a failing app."
+    },
+    {
+      "id": "night_navigation_safety",
+      "title": "Night Navigation Safety",
+      "category": "navigation",
+      "summary": "Reducing navigation mistakes and injury risk after dark.",
+      "steps": [
+        "Use headlamps or torches that preserve enough peripheral vision to spot hazards.",
+        "Stay on obvious roads, tracks, or marked paths whenever possible.",
+        "Stop regularly to confirm bearings and landmarks instead of guessing.",
+        "Avoid creek crossings, unstable edges, and unfamiliar shortcuts in darkness."
+      ],
+      "notes": "Moving slowly with deliberate checks is safer than trying to maintain daytime pace."
+    },
+    {
+      "id": "vehicle_trip_check_in_routine",
+      "title": "Vehicle Trip Check-In Routine",
+      "category": "navigation",
+      "summary": "A simple communication routine for remote or hazard-season road travel.",
+      "steps": [
+        "Send a departure message with route, destination, and ETA.",
+        "Update the contact if you change route or stop unexpectedly.",
+        "Keep the contact informed if signal is intermittent or battery is low.",
+        "Send a final arrival message so the contact does not continue monitoring."
+      ],
+      "notes": "If the check-in is missed, the contact should know when to escalate concern."
+    },
+    {
+      "id": "boil_filter_disinfect_water",
+      "title": "Boil, Filter, and Disinfect Water",
+      "category": "waterSafety",
+      "summary": "A practical order for making uncertain water safer to drink.",
+      "tags": ["water", "purify", "boil", "filter", "disinfect", "diagram"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "quickStart",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "general",
+      "steps": [
+        "Filter or settle dirty water to remove visible debris.",
+        "Boil water when possible or use the treatment method recommended for your gear.",
+        "Store treated water in a clean container with a lid.",
+        "Keep untreated water separate from treated water to avoid cross-contamination."
+      ],
+      "notes": "Clearer water is easier to disinfect, so settle or pre-filter muddy water first.",
+      "sections": [
+        {
+          "id": "water-clear",
+          "title": "Clear the Water First",
+          "summary": "Treatment works better when the water is less muddy.",
+          "steps": [
+            "Let heavy sediment settle, then pour off the clearer water.",
+            "Strain debris through clean cloth or a pre-filter before using your main treatment method.",
+            "Keep the dirty-water container separate from your treated-water container."
+          ]
+        },
+        {
+          "id": "water-treat",
+          "title": "Treat and Store",
+          "summary": "Choose the treatment method that matches the gear and fuel you still have.",
+          "steps": [
+            "Boil whenever practical because it is the clearest field method when you have heat available.",
+            "If you are using a filter or chemical treatment, follow that gear's directions exactly.",
+            "Seal treated water and label it mentally or physically so it is not mixed with raw water later."
+          ]
+        }
+      ],
+      "diagrams": [
+        {
+          "id": "water-filter",
+          "title": "Settle, Filter, Then Treat",
+          "caption": "Clear debris first, then apply your main treatment method before storing in a clean container.",
+          "kind": "waterFilter"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-water-guide",
+          "title": "Offline water treatment quick guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        },
+        {
+          "id": "redim8-water-filter-diagram",
+          "title": "Original water treatment sequence diagram",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["collect_rainwater_safely", "store_water_safely_in_heat"]
+    },
+    {
+      "id": "store_water_safely_in_heat",
+      "title": "Store Water Safely in Heat",
+      "category": "waterSafety",
+      "summary": "How to reduce spoilage and container damage during hot weather.",
+      "steps": [
+        "Use food-grade containers that seal properly.",
+        "Store water out of direct sun and away from fuel or chemicals.",
+        "Rotate water on a schedule and inspect containers for damage.",
+        "Carry only what your container can handle safely if left in a hot car."
+      ],
+      "notes": "Heat shortens the life of many containers, especially in vehicles and sheds."
+    },
+    {
+      "id": "ration_water_without_dehydration",
+      "title": "Ration Water Without Dehydration",
+      "category": "waterSafety",
+      "summary": "Balancing water conservation with health and safe decision-making.",
+      "steps": [
+        "Set a daily water plan for each person and review it morning and evening.",
+        "Reduce unnecessary activity during the hottest part of the day.",
+        "Use shaded rest periods and lightweight clothing to slow water loss.",
+        "Watch for headache, dizziness, dark urine, and confusion as warning signs."
+      ],
+      "notes": "Children, older adults, and people working in heat often need closer monitoring."
+    },
+    {
+      "id": "collect_rainwater_safely",
+      "title": "Collect Rainwater Safely",
+      "category": "waterSafety",
+      "summary": "Basic rainwater collection practices for emergency household use.",
+      "tags": ["rainwater", "water", "storage", "blackout", "tanks"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "standard",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "general",
+      "steps": [
+        "Use clean containers and collect from the cleanest available surface.",
+        "Discard the first dirty runoff if possible.",
+        "Keep lids on storage containers to reduce contamination.",
+        "Treat collected water before drinking unless you are certain it is safe."
+      ],
+      "notes": "Collection does not guarantee potability, so treat water when safety is uncertain.",
+      "sources": [
+        {
+          "id": "redim8-rainwater-guide",
+          "title": "Offline rainwater collection quick guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        }
+      ],
+      "relatedGuideIDs": ["boil_filter_disinfect_water", "store_water_safely_in_heat"]
+    },
+    {
+      "id": "after_flood_drinking_water_checks",
+      "title": "After-Flood Drinking Water Checks",
+      "category": "waterSafety",
+      "summary": "How to decide when to rely on stored water after flooding.",
+      "steps": [
+        "Use stored drinking water first while supply safety is uncertain.",
+        "Do not drink water that smells unusual, looks dirty, or comes from damaged plumbing.",
+        "Treat suspect water using your backup method if no safer option exists.",
+        "Flush and inspect plumbing only when authorities say conditions are safe."
+      ],
+      "notes": "Use official advice where available because contamination is often not visible."
+    },
+    {
+      "id": "bushfire_leave_early_plan",
+      "title": "Bushfire Leave-Early Plan",
+      "category": "fireSafety",
+      "summary": "A leave-early plan for bushfire days and escalating warnings.",
+      "steps": [
+        "Check weather, fire danger, and local warnings well before the day peaks.",
+        "Load go-bags, water, medicines, pets, and documents before conditions worsen.",
+        "Leave when your trigger point is reached rather than waiting for visible flame or smoke.",
+        "Use the planned route and tell your contact once you are safe."
+      ],
+      "notes": "Road conditions can change quickly, so the safest departure is usually the earliest one."
+    },
+    {
+      "id": "fire_extinguisher_basics",
+      "title": "Fire Extinguisher Basics",
+      "category": "fireSafety",
+      "summary": "When and how to use an extinguisher on a small, manageable fire.",
+      "steps": [
+        "Position yourself with a clear exit behind you.",
+        "Aim at the base of the fire rather than the flames.",
+        "Use short bursts and sweep side to side.",
+        "Stop and leave if the fire does not reduce quickly."
+      ],
+      "notes": "If the fire is growing, smoky, or blocking your escape, leave immediately instead."
+    },
+    {
+      "id": "fire_blanket_use",
+      "title": "Fire Blanket Use",
+      "category": "fireSafety",
+      "summary": "Using a fire blanket on a pan fire or clothing fire.",
+      "steps": [
+        "Pull the blanket tabs and shield your hands behind the top edge.",
+        "Place the blanket over the flames from the near edge away from you.",
+        "Leave the blanket in place until everything is fully cool.",
+        "Call emergency services if the fire spreads or anyone is burned."
+      ],
+      "notes": "Turn off the heat if it is safe to do so and never carry a burning pan."
+    },
+    {
+      "id": "ember_attack_home_actions",
+      "title": "Ember Attack Home Actions",
+      "category": "fireSafety",
+      "summary": "Actions for ember attack around a house when it is still safe to respond.",
+      "steps": [
+        "Move quickly to extinguish spot fires in gutters, decks, and garden edges.",
+        "Keep doors and windows closed to reduce ember entry.",
+        "Wear sturdy clothing, gloves, and respiratory protection if available.",
+        "Continue monitoring the structure for new ignitions after the front passes."
+      ],
+      "notes": "Only take these actions if local advice and your plan say it is safe to remain."
+    },
+    {
+      "id": "smoke_exposure_reduction",
+      "title": "Smoke Exposure Reduction",
+      "category": "fireSafety",
+      "summary": "Reducing smoke exposure during bushfire and heavy-cleanup conditions.",
+      "steps": [
+        "Stay indoors with doors and windows closed when smoke is heavy outside.",
+        "Use a P2 mask if you need to move outdoors and can wear one safely.",
+        "Limit strenuous outdoor activity during dense smoke periods.",
+        "Seek medical advice promptly if breathing symptoms worsen."
+      ],
+      "notes": "People with asthma, heart disease, and other medical conditions may need earlier action."
+    },
+    {
+      "id": "heat_exhaustion_vs_heatstroke",
+      "title": "Heat Exhaustion vs Heat Stroke",
+      "category": "medical",
+      "summary": "How to recognise escalating heat illness and respond early.",
+      "steps": [
+        "Move the person to shade or a cooler place immediately.",
+        "Cool the body with wet cloths, airflow, or cool water if available.",
+        "Give small sips of water only if the person is alert and not vomiting.",
+        "Call 000 urgently if the person is confused, collapses, or becomes hot and dry."
+      ],
+      "notes": "Heat stroke is a medical emergency; call 000 if it is suspected."
+    },
+    {
+      "id": "assemble_family_medications",
+      "title": "Assemble Family Medications",
+      "category": "medical",
+      "summary": "Keeping household medicines organised for rapid movement or sheltering.",
+      "steps": [
+        "List each person\u2019s medications, doses, and prescribing doctor.",
+        "Store medicines in one clearly marked, easy-to-grab pouch or container.",
+        "Include administration items such as spacers, measuring syringes, or sharps disposal if needed.",
+        "Pack the medication pouch into the go-bag first during evacuation."
+      ],
+      "notes": "Check expiry dates and repeat prescriptions before high-risk seasons."
+    },
+    {
+      "id": "hygiene_when_water_is_limited",
+      "title": "Hygiene When Water Is Limited",
+      "category": "medical",
+      "summary": "Simple hygiene priorities when water is scarce or services are disrupted.",
+      "steps": [
+        "Use clean water and soap for critical handwashing when possible.",
+        "Prioritise hand cleaning before food prep, wound care, and eating.",
+        "Use wipes or sanitiser as a backup but clean visible dirt off first where possible.",
+        "Bag waste and dirty items promptly so living areas stay safer."
+      ],
+      "notes": "Protecting hand hygiene around food, wounds, and toileting gives the highest return."
+    },
+    {
+      "id": "wound_cleaning_and_dressing",
+      "title": "Wound Cleaning and Dressing",
+      "category": "medical",
+      "summary": "Basic wound care for cuts and scrapes in dirty conditions.",
+      "steps": [
+        "Wash hands and control bleeding before cleaning the wound.",
+        "Rinse the wound gently with clean water and remove obvious loose dirt.",
+        "Apply an appropriate dressing and secure it without excessive pressure.",
+        "Change the dressing if it becomes wet or dirty and watch for infection signs."
+      ],
+      "notes": "Seek medical help early if the wound is deep, heavily contaminated, or not controllable."
+    },
+    {
+      "id": "asthma_attack_response",
+      "title": "Asthma Attack Response",
+      "category": "medical",
+      "summary": "Immediate action for a suspected asthma attack.",
+      "steps": [
+        "Sit the person upright and stay calm.",
+        "Give reliever puffs through a spacer if available, following the person\u2019s plan.",
+        "Repeat doses as needed while monitoring breathing and speech.",
+        "Seek urgent medical help if the person worsens, cannot speak normally, or blue lips appear."
+      ],
+      "notes": "If symptoms are severe or not improving, call 000 without delay."
+    },
+    {
+      "id": "cool_home_without_power",
+      "title": "Cool a Home Without Power",
+      "category": "heatSafety",
+      "summary": "Practical ways to limit indoor heat load during outages.",
+      "steps": [
+        "Close blinds, curtains, and external doors before the hottest part of the day.",
+        "Use shaded airflow at night and early morning when outdoor air is cooler.",
+        "Move people, pets, and heat-sensitive medicines to the coolest practical room.",
+        "Use cool water, damp cloths, and light clothing to support heat loss."
+      ],
+      "notes": "Focus on the coolest room and reduce unnecessary movement around the house."
+    },
+    {
+      "id": "prevent_dehydration_in_extreme_heat",
+      "title": "Prevent Dehydration in Extreme Heat",
+      "category": "heatSafety",
+      "summary": "Hydration habits that reduce risk during hot weather and smoke events.",
+      "steps": [
+        "Drink regularly through the day rather than waiting until very thirsty.",
+        "Use shade and scheduled rests to slow fluid loss.",
+        "Eat light meals and include salty food if sweating heavily and medically appropriate.",
+        "Check urine colour and how people are feeling during the day."
+      ],
+      "notes": "Older adults, children, and people working outdoors may need closer prompting to drink."
+    },
+    {
+      "id": "protect_medicines_from_heat",
+      "title": "Protect Medicines from Heat",
+      "category": "heatSafety",
+      "summary": "How to keep medicines effective during hot weather and outages.",
+      "steps": [
+        "Check which medicines require strict temperature control.",
+        "Use insulated storage or cooling bricks only if they do not freeze the medicine.",
+        "Move heat-sensitive items out of cars, tin sheds, and window sills.",
+        "Call a pharmacist if the medicine has been exposed to temperatures outside guidance."
+      ],
+      "notes": "Always follow the storage directions on the packaging or pharmacist advice."
+    },
+    {
+      "id": "safe_work_rest_cycles",
+      "title": "Safe Work-Rest Cycles",
+      "category": "heatSafety",
+      "summary": "Balancing urgent jobs with safe recovery in hot conditions.",
+      "steps": [
+        "Do heavy tasks early or late in the day if possible.",
+        "Break work into short blocks with hydration and cooling breaks.",
+        "Watch partners for slowing, confusion, or irritability.",
+        "Stop immediately if dizziness, cramps, or headache develop."
+      ],
+      "notes": "Short, regular breaks are more effective than pushing until exhaustion."
+    },
+    {
+      "id": "recognise_heat_risk_in_children_and_older_adults",
+      "title": "Recognise Heat Risk in Children and Older Adults",
+      "category": "heatSafety",
+      "summary": "Spotting higher heat risk in people who may not self-report early symptoms.",
+      "steps": [
+        "Monitor hydration, alertness, and the temperature of living spaces.",
+        "Dress people in light clothing and keep them in the coolest practical room.",
+        "Offer regular fluids and cooling opportunities throughout the day.",
+        "Escalate early if confusion, weakness, or poor urine output develops."
+      ],
+      "notes": "Check on higher-risk people proactively rather than waiting for them to ask."
+    },
+    {
+      "id": "severe_storm_room_setup",
+      "title": "Severe Storm Room Setup",
+      "category": "stormSafety",
+      "summary": "Setting up a safer internal room before damaging winds arrive.",
+      "steps": [
+        "Choose an internal room away from windows and unsecured outdoor items.",
+        "Move water, lighting, radio, medicines, shoes, and chargers into the room.",
+        "Keep pets, helmets if available, and sturdy clothing nearby.",
+        "Stay inside until official advice says the worst conditions have passed."
+      ],
+      "notes": "Avoid rooms with large windows or lightweight roof structures if stronger options exist."
+    },
+    {
+      "id": "cyclone_pre_landfall_actions",
+      "title": "Cyclone Pre-Landfall Actions",
+      "category": "stormSafety",
+      "summary": "Short actions to take before strong winds and heavy rain arrive.",
+      "steps": [
+        "Secure or bring in outdoor furniture, bins, and loose equipment.",
+        "Top up water containers, fuel, and power banks early.",
+        "Move vehicles under cover or away from trees and flood-prone areas.",
+        "Shelter in your strongest practical room before peak conditions arrive."
+      ],
+      "notes": "Finish outside jobs early; late movement outdoors is where injuries rise quickly."
+    },
+    {
+      "id": "generator_safety_after_storm",
+      "title": "Generator Safety After Storm",
+      "category": "stormSafety",
+      "summary": "Using a generator safely after storms and outages.",
+      "steps": [
+        "Place the generator outdoors in a dry, ventilated position away from openings.",
+        "Use heavy-duty leads suited to the load and protect them from water damage.",
+        "Refuel only when the generator is off and cool.",
+        "Switch appliances on gradually instead of loading everything at once."
+      ],
+      "notes": "Carbon monoxide can kill quickly, so never run a generator indoors or in a garage."
+    },
+    {
+      "id": "protect_devices_and_documents_before_storm",
+      "title": "Protect Devices and Documents Before Storm",
+      "category": "stormSafety",
+      "summary": "Reducing damage to electronics and paperwork before heavy weather.",
+      "steps": [
+        "Charge devices and then unplug non-essential electronics before unstable weather peaks.",
+        "Move important papers into a waterproof pouch or sealed container.",
+        "Store small electronics above floor level and away from likely leaks.",
+        "Photograph the home condition and key items before the event if time allows."
+      ],
+      "notes": "Early packing is easier than trying to protect items during wind or water entry."
+    },
+    {
+      "id": "downed_powerline_safety",
+      "title": "Downed Powerline Safety",
+      "category": "stormSafety",
+      "summary": "Basic safety around fallen powerlines and damaged electrical infrastructure.",
+      "steps": [
+        "Stay well clear of fallen lines, wet ground, and anything touching the line.",
+        "Warn others away without approaching the hazard yourself.",
+        "Report the line to emergency services or the electricity utility promptly.",
+        "Do not drive over or under a fallen line or cordon."
+      ],
+      "notes": "Always assume fallen lines are live and dangerous."
+    },
+    {
+      "id": "flood_evacuation_timing",
+      "title": "Flood Evacuation Timing",
+      "category": "floodSafety",
+      "summary": "Why early movement matters when floodwater is rising or roads are cutting off.",
+      "steps": [
+        "Watch for local warnings, creek rises, and access road closures early.",
+        "Leave while roads are still open and visibility is good.",
+        "Move to higher ground or your planned safe location without stopping for low-priority tasks.",
+        "Tell your contact when you have arrived safely."
+      ],
+      "notes": "If you wait until water is visible at the door, route options may already be gone."
+    },
+    {
+      "id": "turn_around_dont_drown",
+      "title": "Turn Around, Don\u2019t Drown",
+      "category": "floodSafety",
+      "summary": "A reminder of why floodwater crossing by foot or car is so dangerous.",
+      "steps": [
+        "Do not drive into water covering the road, even if another vehicle has crossed.",
+        "Do not walk into moving floodwater because footing can disappear quickly.",
+        "Find another route or wait on safe high ground if the road is cut.",
+        "Call for help if you become trapped rather than taking a risky crossing."
+      ],
+      "notes": "Depth, flow, road damage, and contamination are often impossible to judge accurately."
+    },
+    {
+      "id": "entering_a_water_damaged_home",
+      "title": "Entering a Water-Damaged Home",
+      "category": "floodSafety",
+      "summary": "Safety checks before re-entering a flooded building.",
+      "steps": [
+        "Check the outside for structural movement, sagging, or obvious collapse risk.",
+        "Do not enter until electricity and gas hazards are assessed or isolated.",
+        "Wear protective footwear, gloves, and respiratory protection if mould or sewage is present.",
+        "Ventilate the building and move out unsafe food, medicines, and soft furnishings promptly."
+      ],
+      "notes": "Flood-damaged homes may contain hidden structural, electrical, and contamination hazards."
+    },
+    {
+      "id": "mould_and_contamination_cleanup",
+      "title": "Mould and Contamination Cleanup",
+      "category": "floodSafety",
+      "summary": "Reducing health risks during post-flood cleanup.",
+      "steps": [
+        "Remove wet porous items that cannot be cleaned and dried quickly.",
+        "Clean hard surfaces with detergent and follow local health advice on disinfectants.",
+        "Dry the space as quickly as possible with airflow and dehumidification if available.",
+        "Take breaks and avoid stirring dust or mould without protection."
+      ],
+      "notes": "Large mould contamination or sewage exposure may require professional advice."
+    },
+    {
+      "id": "sandbag_placement_basics",
+      "title": "Sandbag Placement Basics",
+      "category": "floodSafety",
+      "summary": "A simple method for getting better value from limited sandbags.",
+      "steps": [
+        "Clear debris from the doorway or opening first.",
+        "Lay the first row tightly with bag openings tucked under.",
+        "Stagger higher rows like brickwork and press bags together firmly.",
+        "Use plastic sheeting behind the bags when available for a better seal."
+      ],
+      "notes": "Sandbags reduce shallow ingress but do not make a building waterproof."
+    },
+    {
+      "id": "pantry_damper_hotplate_method",
+      "title": "Pantry Damper on a Hotplate",
+      "category": "foodCooking",
+      "summary": "A simple damper method for outages, camps, and basic pantry cooking.",
+      "tags": ["damper", "bread", "flour", "camp cooking", "blackout cooking", "diagram"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "quickStart",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "australia",
+      "steps": [
+        "Mix self-raising flour, a pinch of salt, and enough water to form a soft dough.",
+        "Shape the dough into a thick round and dust lightly so it does not stick.",
+        "Cook it in a covered pan, camp oven, or on a hotplate with gentle heat until the centre is cooked through.",
+        "Let it rest briefly before slicing so the crumb finishes setting."
+      ],
+      "notes": "Keep the heat moderate. Fast, high heat can burn the outside before the middle cooks.",
+      "sections": [
+        {
+          "id": "damper-mix",
+          "title": "Mix a Simple Dough",
+          "summary": "Damper works because the dough stays simple and forgiving.",
+          "steps": [
+            "Start with flour, a pinch of salt, and optional milk powder or a little fat if you have it.",
+            "Add water gradually and stop as soon as the dough comes together without becoming sticky slurry.",
+            "Do not knead hard; just bring it together and shape it."
+          ]
+        },
+        {
+          "id": "damper-cook",
+          "title": "Cook Gently",
+          "summary": "Lower heat and a lid are what make stovetop damper workable.",
+          "steps": [
+            "Preheat the pan or plate gently rather than blasting it with high flame.",
+            "Cover the dough so heat circulates and the centre cooks more evenly.",
+            "Turn once if needed and listen for scorching before it becomes blackened."
+          ]
+        }
+      ],
+      "diagrams": [
+        {
+          "id": "damper-ratio",
+          "title": "Damper Pantry Ratio",
+          "caption": "Keep the dough simple: flour first, water added slowly, and gentle heat with a lid.",
+          "kind": "damperMethod"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-damper-guide",
+          "title": "Original blackout damper quick guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        },
+        {
+          "id": "redim8-damper-diagram",
+          "title": "Original damper ratio diagram",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["blackout_scones_basic_pantry", "skillet_bread_without_oven"]
+    },
+    {
+      "id": "skillet_bread_without_oven",
+      "title": "Skillet Bread Without an Oven",
+      "category": "foodCooking",
+      "summary": "An easy stovetop loaf method when you have a pan, lid, and basic ingredients.",
+      "tags": ["bread", "skillet", "blackout", "camp cooking", "yeast", "diagram"],
+      "estimatedReadMinutes": 5,
+      "difficulty": "standard",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "general",
+      "steps": [
+        "Mix flour, yeast, salt, and water into a sticky dough.",
+        "Let the dough rise until visibly puffed if you have time and warmth.",
+        "Cook in a covered pan over low heat until the base is firm, then turn if needed.",
+        "Rest the loaf before cutting so steam finishes the centre."
+      ],
+      "notes": "If fuel is tight, make smaller flat loaves rather than one thick loaf.",
+      "sections": [
+        {
+          "id": "skillet-bread-mix",
+          "title": "Mix and Rise",
+          "summary": "A wetter dough usually cooks better in a lidded pan than a dry heavy dough.",
+          "steps": [
+            "Mix until no dry flour remains, then cover and let the dough rise if time allows.",
+            "Use the warmest safe place you have so the dough becomes lighter before cooking.",
+            "If you cannot wait for a full rise, flatten the dough thinner to help it cook through."
+          ]
+        },
+        {
+          "id": "skillet-bread-cook",
+          "title": "Cook with a Lid",
+          "summary": "The lid traps heat and does some of the job the oven would normally handle.",
+          "steps": [
+            "Keep the flame or burner low once the pan is hot.",
+            "Rotate or turn the loaf if your stove has hot spots.",
+            "Check the centre before serving and return it to the pan if it is still gummy."
+          ]
+        }
+      ],
+      "diagrams": [
+        {
+          "id": "skillet-bread",
+          "title": "Skillet Bread Setup",
+          "caption": "A covered pan and lower heat help the loaf cook through instead of scorching underneath.",
+          "kind": "skilletBread"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-skillet-bread-guide",
+          "title": "Original stovetop bread quick guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        },
+        {
+          "id": "redim8-skillet-bread-diagram",
+          "title": "Original skillet bread method diagram",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["pantry_damper_hotplate_method", "field_food_hygiene"]
+    },
+    {
+      "id": "blackout_scones_basic_pantry",
+      "title": "Blackout Scones from a Basic Pantry",
+      "category": "foodCooking",
+      "summary": "Quick scones when you need fast food from flour, leavening, and a little fat.",
+      "tags": ["scones", "blackout cooking", "camp cooking", "flour", "diagram"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "quickStart",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "australia",
+      "steps": [
+        "Rub a small amount of butter or oil through flour, then add liquid just until a dough forms.",
+        "Pat the dough thick and cut it into rounds or wedges.",
+        "Bake or cook on a hotplate with moderate heat until risen and lightly browned.",
+        "Serve warm or let them cool fully before packing for later."
+      ],
+      "notes": "Handle the dough lightly. Heavy kneading makes scones dense.",
+      "diagrams": [
+        {
+          "id": "scone-method",
+          "title": "Cut-and-Cook Scones",
+          "caption": "Bring the dough together gently, cut it, then cook with moderate heat rather than hard browning.",
+          "kind": "sconeMethod"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-scone-guide",
+          "title": "Original pantry scone quick guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        },
+        {
+          "id": "redim8-scone-diagram",
+          "title": "Original scone method diagram",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["pantry_damper_hotplate_method", "field_food_hygiene"]
+    },
+    {
+      "id": "grow_salad_greens_fast",
+      "title": "Grow Salad Greens Fast",
+      "category": "foodGrowing",
+      "summary": "A quick-start method for leafy greens when you want edible harvests fast.",
+      "tags": ["lettuce", "salad", "greens", "vegetable garden", "raised bed", "diagram"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "quickStart",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "general",
+      "steps": [
+        "Use a shallow bed, tray, or container with loose potting mix and reliable drainage.",
+        "Sow small amounts often instead of planting one large batch all at once.",
+        "Keep the soil evenly damp while seeds sprout and while leaves stay tender.",
+        "Harvest outer leaves first so the plants keep producing."
+      ],
+      "notes": "Greens bolt quickly in heat, so give them morning sun and afternoon protection when summer arrives.",
+      "sections": [
+        {
+          "id": "greens-layout",
+          "title": "Plant for Repeat Harvest",
+          "summary": "A few small beds or trays usually feed better than one oversized planting.",
+          "steps": [
+            "Leave enough spacing for airflow even when the plants are still tiny.",
+            "Stagger sowing dates so every container does not mature at once.",
+            "Pick outer leaves regularly instead of waiting for one giant harvest."
+          ]
+        }
+      ],
+      "diagrams": [
+        {
+          "id": "raised-bed-layout",
+          "title": "Simple Raised-Bed Layout",
+          "caption": "A spaced-out bed or planter makes watering and repeat harvest easier than overcrowding seedlings.",
+          "kind": "raisedBedLayout"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-greens-guide",
+          "title": "Original fast-greens garden guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        },
+        {
+          "id": "redim8-raised-bed-diagram",
+          "title": "Original raised-bed spacing diagram",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["start_seeds_in_small_spaces", "grow_potatoes_in_bags"]
+    },
+    {
+      "id": "start_seeds_in_small_spaces",
+      "title": "Start Seeds in Small Spaces",
+      "category": "foodGrowing",
+      "summary": "Use trays, recycled containers, and a sunny window to build seedlings before transplanting.",
+      "tags": ["seeds", "seedlings", "trays", "garden", "diagram"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "general",
+      "steps": [
+        "Use clean trays or small containers with drainage holes and a light seed-raising mix.",
+        "Sow shallowly, label the tray, and keep the surface damp but not waterlogged.",
+        "Move seedlings into stronger light as soon as they germinate so they do not stretch weakly.",
+        "Harden them off gradually before planting outdoors."
+      ],
+      "notes": "Overwatering and weak light kill more seedlings than minor cold snaps.",
+      "diagrams": [
+        {
+          "id": "seed-tray",
+          "title": "Seed Tray Layout",
+          "caption": "Keep cells evenly moist and give young seedlings light early so they stay compact and strong.",
+          "kind": "seedTray"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-seed-guide",
+          "title": "Original seed-starting quick guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        },
+        {
+          "id": "redim8-seed-diagram",
+          "title": "Original seed tray diagram",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["grow_salad_greens_fast", "grow_potatoes_in_bags"]
+    },
+    {
+      "id": "grow_potatoes_in_bags",
+      "title": "Grow Potatoes in Bags",
+      "category": "foodGrowing",
+      "summary": "A compact method for producing potatoes when you have little ground space.",
+      "tags": ["potatoes", "grow bag", "garden", "container", "diagram"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "Mar 2026",
+      "regionScope": "general",
+      "steps": [
+        "Start with a deep bag or container that drains well and add a base layer of growing mix.",
+        "Set seed potatoes or cut pieces with healthy eyes on the mix and cover lightly.",
+        "Add more mix as shoots grow so new tubers form higher up the stem.",
+        "Keep the bag evenly watered and harvest once the tops die back."
+      ],
+      "notes": "Do not let the bag dry hard during tuber formation or the crop will stay small.",
+      "diagrams": [
+        {
+          "id": "potato-bag",
+          "title": "Layered Potato Bag",
+          "caption": "Start low, then hill up the growing mix as the stems rise so more potatoes can form.",
+          "kind": "potatoBag"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-potato-guide",
+          "title": "Original grow-bag potato guide",
+          "publisher": "RediM8",
+          "url": "Bundled offline guide",
+          "kind": "redim8"
+        },
+        {
+          "id": "redim8-potato-diagram",
+          "title": "Original potato bag diagram",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ],
+      "relatedGuideIDs": ["grow_salad_greens_fast", "start_seeds_in_small_spaces"]
+    }
+  ]
+}

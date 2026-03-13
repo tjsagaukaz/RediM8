@@ -1,0 +1,115 @@
+{
+  "lastUpdated" : "2026-03-01T00:00:00Z",
+  "resources" : [
+    {
+      "detail" : "Major tertiary hospital in Brisbane.",
+      "id" : "A4E58B47-A647-4B44-9C9D-2A366572A001",
+      "isUserGenerated" : false,
+      "kind" : "hospital",
+      "latitude" : -27.4459,
+      "longitude" : 153.0280,
+      "source" : "Bundled RediM8 dataset",
+      "subtitle" : "Herston, QLD",
+      "title" : "Royal Brisbane and Women's Hospital"
+    },
+    {
+      "detail" : "Fuel station near the CBD corridor.",
+      "id" : "A4E58B47-A647-4B44-9C9D-2A366572A002",
+      "isUserGenerated" : false,
+      "kind" : "fuelStation",
+      "latitude" : -27.4702,
+      "longitude" : 153.0211,
+      "source" : "Bundled RediM8 dataset",
+      "subtitle" : "Brisbane City, QLD",
+      "title" : "Ampol Brisbane Central"
+    },
+    {
+      "detail" : "Community-access pharmacy.",
+      "id" : "A4E58B47-A647-4B44-9C9D-2A366572A003",
+      "isUserGenerated" : false,
+      "kind" : "pharmacy",
+      "latitude" : -33.8674,
+      "longitude" : 151.2067,
+      "source" : "Bundled RediM8 dataset",
+      "subtitle" : "Sydney, NSW",
+      "title" : "City Pharmacy"
+    },
+    {
+      "detail" : "Police station and emergency desk.",
+      "id" : "A4E58B47-A647-4B44-9C9D-2A366572A004",
+      "isUserGenerated" : false,
+      "kind" : "policeStation",
+      "latitude" : -37.8117,
+      "longitude" : 144.9626,
+      "source" : "Bundled RediM8 dataset",
+      "subtitle" : "Melbourne, VIC",
+      "title" : "Melbourne West Police Station"
+    },
+    {
+      "detail" : "Hospital serving inner Adelaide.",
+      "id" : "A4E58B47-A647-4B44-9C9D-2A366572A005",
+      "isUserGenerated" : false,
+      "kind" : "hospital",
+      "latitude" : -34.9212,
+      "longitude" : 138.6057,
+      "source" : "Bundled RediM8 dataset",
+      "subtitle" : "Adelaide, SA",
+      "title" : "Royal Adelaide Hospital"
+    },
+    {
+      "detail" : "Hardware and generator supplies.",
+      "id" : "A4E58B47-A647-4B44-9C9D-2A366572A006",
+      "isUserGenerated" : false,
+      "kind" : "hardwareStore",
+      "latitude" : -31.9509,
+      "longitude" : 115.8605,
+      "source" : "Bundled RediM8 dataset",
+      "subtitle" : "Perth, WA",
+      "title" : "Bunnings Perth Central"
+    },
+    {
+      "detail" : "Major supermarket location.",
+      "id" : "A4E58B47-A647-4B44-9C9D-2A366572A007",
+      "isUserGenerated" : false,
+      "kind" : "supermarket",
+      "latitude" : -12.4638,
+      "longitude" : 130.8456,
+      "source" : "Bundled RediM8 dataset",
+      "subtitle" : "Darwin, NT",
+      "title" : "Woolworths Darwin City"
+    },
+    {
+      "detail" : "Public water refill point.",
+      "id" : "A4E58B47-A647-4B44-9C9D-2A366572A008",
+      "isUserGenerated" : false,
+      "kind" : "waterSource",
+      "latitude" : -42.8821,
+      "longitude" : 147.3272,
+      "source" : "Bundled RediM8 dataset",
+      "subtitle" : "Hobart, TAS",
+      "title" : "Hobart Water Refill Point"
+    },
+    {
+      "detail" : "Regional hospital coverage for north Queensland.",
+      "id" : "A4E58B47-A647-4B44-9C9D-2A366572A009",
+      "isUserGenerated" : false,
+      "kind" : "hospital",
+      "latitude" : -19.2664,
+      "longitude" : 146.8077,
+      "source" : "Bundled RediM8 dataset",
+      "subtitle" : "Townsville, QLD",
+      "title" : "Townsville University Hospital"
+    },
+    {
+      "detail" : "Fuel access on the Stuart Highway corridor.",
+      "id" : "A4E58B47-A647-4B44-9C9D-2A366572A010",
+      "isUserGenerated" : false,
+      "kind" : "fuelStation",
+      "latitude" : -23.7003,
+      "longitude" : 133.8797,
+      "source" : "Bundled RediM8 dataset",
+      "subtitle" : "Alice Springs, NT",
+      "title" : "Alice Springs Roadhouse"
+    }
+  ]
+}

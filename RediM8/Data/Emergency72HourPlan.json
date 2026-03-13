@@ -1,0 +1,156 @@
+{
+  "days": 3,
+  "water_per_person_per_day_litres": 3,
+  "water_per_pet_per_day_litres": 1,
+  "minimum_food_calories_per_day": 2000,
+  "recommended_gear": [
+    "water_jerry_can",
+    "bottled_water_case",
+    "gravity_water_filter",
+    "shelf_stable_meal_kit",
+    "comprehensive_first_aid_kit",
+    "power_bank_20000",
+    "battery_radio",
+    "led_torch",
+    "fire_blanket",
+    "waterproof_document_pouch",
+    "jump_starter_pack",
+    "paper_state_map"
+  ],
+  "essential_tasks": [
+    "store_drinking_water_case",
+    "build_three_day_food_supply",
+    "assemble_first_aid_kit",
+    "save_emergency_contacts_offline",
+    "charge_power_banks_before_risk_days",
+    "stage_go_bags_by_exit",
+    "keep_cash_in_small_notes",
+    "assign_household_roles"
+  ],
+  "checklists": [
+    {
+      "id": "water_food",
+      "title": "Water and Food",
+      "items": [
+        {
+          "id": "check_fill_daily_water",
+          "title": "Confirm 72-hour drinking water is set aside",
+          "detail": "Count sealed bottles and containers so each person has at least three litres per day."
+        },
+        {
+          "id": "check_pack_ready_food",
+          "title": "Pack no-cook or quick-cook meals",
+          "detail": "Favour food that can be eaten cold if power or safe cooking space is lost."
+        },
+        {
+          "id": "check_pet_food_water",
+          "title": "Pack pet food and pet water",
+          "detail": "Do not assume pet needs can be covered from household drinking reserves."
+        },
+        {
+          "id": "check_manual_food_tools",
+          "title": "Place food tools with the pantry",
+          "detail": "Keep the manual can opener, utensils, and paper towels with stored food."
+        },
+        {
+          "id": "check_fridge_plan",
+          "title": "Review the fridge and freezer use plan",
+          "detail": "Know what to use first and when chilled food should be discarded."
+        }
+      ]
+    },
+    {
+      "id": "power_comms",
+      "title": "Power and Communication",
+      "items": [
+        {
+          "id": "check_charge_devices",
+          "title": "Charge phones, radios, and power banks",
+          "detail": "Start any forecast event with the highest possible battery reserve."
+        },
+        {
+          "id": "check_radio_station_list",
+          "title": "Keep the radio station list with the radio",
+          "detail": "Do not rely on memory when stress and outages make simple tasks harder."
+        },
+        {
+          "id": "check_vehicle_chargers",
+          "title": "Place vehicle chargers in the car",
+          "detail": "Keep backup charging available if the car becomes the main power source."
+        },
+        {
+          "id": "check_contact_sheet",
+          "title": "Print or laminate the contact sheet",
+          "detail": "Store one copy in a go-bag and one copy at home."
+        },
+        {
+          "id": "check_offline_maps",
+          "title": "Download or pack offline maps",
+          "detail": "Make sure at least one route reference works without mobile coverage."
+        }
+      ]
+    },
+    {
+      "id": "medical_documents",
+      "title": "Medical and Documents",
+      "items": [
+        {
+          "id": "check_medicine_buffer",
+          "title": "Check medicine buffer and repeats",
+          "detail": "Refill essential prescriptions before high-risk periods if possible."
+        },
+        {
+          "id": "check_first_aid_restock",
+          "title": "Restock the first aid kit",
+          "detail": "Replace used dressings, expired medicines, and flat torch batteries."
+        },
+        {
+          "id": "check_medical_summary",
+          "title": "Update the medical summary",
+          "detail": "List conditions, allergies, medications, and emergency contacts on paper."
+        },
+        {
+          "id": "check_document_pouch",
+          "title": "Place IDs and policies in the document pouch",
+          "detail": "Include copies of licences, insurance, and important account details."
+        },
+        {
+          "id": "check_spare_glasses",
+          "title": "Pack spare glasses and essential aids",
+          "detail": "Store backup glasses, chargers, hearing aid batteries, or mobility items together."
+        }
+      ]
+    },
+    {
+      "id": "movement_shelter",
+      "title": "Movement and Shelter",
+      "items": [
+        {
+          "id": "check_go_bags",
+          "title": "Stage go-bags by the exit",
+          "detail": "Put shoes, clothing, torches, water, and medications where they are easy to grab."
+        },
+        {
+          "id": "check_vehicle_fuel",
+          "title": "Check fuel and tyre condition",
+          "detail": "A safe vehicle is part of the plan even if you intend to shelter first."
+        },
+        {
+          "id": "check_pet_carriers",
+          "title": "Set out pet carriers and leads",
+          "detail": "Do not wait until the last minute to find restraint gear."
+        },
+        {
+          "id": "check_neighbour_plan",
+          "title": "Confirm any neighbour check-in plan",
+          "detail": "Know who may need assistance and how you will check on them safely."
+        },
+        {
+          "id": "check_meeting_points",
+          "title": "Review meeting points and departure triggers",
+          "detail": "Make sure everyone knows where to go and when the plan changes from shelter to move."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1203 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		02D8C81CF1A6973FDCA4ED51 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 169C7C2D1C6EC15F1F48BD8B /* AppSettingsTests.swift */; };
+		046C2AE42865B1B7CBDD2637 /* ReadinessReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DFC88210BCD296072C83AC5 /* ReadinessReportService.swift */; };
+		04EE75149ED5525197EE35FF /* Shelters.json in Resources */ = {isa = PBXBuildFile; fileRef = 9EBF52732BD4B890B5C28B0F /* Shelters.json */; };
+		05A401720DF0CA6F9020F514 /* MonetizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E603FCA37ABA4BB9847700A2 /* MonetizationTests.swift */; };
+		065731F2D1660B851B2CC98D /* SettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8243DD2657E85345628A14F1 /* SettingsViewModel.swift */; };
+		06FBD5A30AD79B2227933004 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CEBB28CBCCD6AA856DBA506 /* StatusBadge.swift */; };
+		0C62D9FBFF361D60E0E55084 /* Emergency72HourView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75A5E28AEF237CB613577605 /* Emergency72HourView.swift */; };
+		111DC98C7BBE4BC67650187A /* TrustLayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57AC746702C41D20910B1626 /* TrustLayerTests.swift */; };
+		112C7CC8D093D181B82075EF /* AssistantIntentClassifierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9764322ABA2173679AB630C9 /* AssistantIntentClassifierTests.swift */; };
+		141AB2CE10C085C6704E8CBB /* PrepScoreResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69469F5BCE71920587819A44 /* PrepScoreResultView.swift */; };
+		159415960755FE05606B1AA8 /* PanelCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071815223F57278E2156263B /* PanelCard.swift */; };
+		1658BE4B0E8DC07A904CB95C /* BlackoutModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5397471111306E53595303A6 /* BlackoutModeView.swift */; };
+		173F17BB1BA1C956D6725042 /* SignalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842342B40549E5CCED6313FE /* SignalView.swift */; };
+		18BF3836EFD4EF6B5F3A2E73 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61A48D4025B9665B9EFE907 /* SettingsView.swift */; };
+		1AA9294C8BAC3088CE2A3CEC /* ColorTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF112E1CF25C3DC8921009C /* ColorTheme.swift */; };
+		1DA513A7CE6F25F96AC86F0D /* WaterPointService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49055EBB0F70AAAFE63B4035 /* WaterPointService.swift */; };
+		224E7BDB9DDE02119AFCC3BE /* NavigationRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E6775085D6C21E5159461E1 /* NavigationRouter.swift */; };
+		2573C98896E612E763C6678F /* Scenarios.json in Resources */ = {isa = PBXBuildFile; fileRef = D1179ED5550123E92173DD0B /* Scenarios.json */; };
+		26247AF2C5CC4AD98DA5D8E0 /* VehicleReadiness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6BB391D0E1FA584D861669 /* VehicleReadiness.swift */; };
+		267D99B8C5272C6B874E0071 /* OfficialAlertServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFF6E3783482BC18EC524739 /* OfficialAlertServiceTests.swift */; };
+		26DFC59CB9892AFB09B93233 /* ChecklistItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112769A170BF2F8C99EA93FD /* ChecklistItem.swift */; };
+		271FE6797214EBD667169DE4 /* PrepService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE268DFF1AE79E9CABB78570 /* PrepService.swift */; };
+		282FE6E74529224E44F17964 /* LeaveNowViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01EEA51ADF6D0F12D9CD3EA6 /* LeaveNowViewModel.swift */; };
+		2A519D0A87956E417D39A6B0 /* RediM8MapStyle.json in Resources */ = {isa = PBXBuildFile; fileRef = 0B8A48B7A8F2D5E78F13584A /* RediM8MapStyle.json */; };
+		2A7D8F57F2CF7031B8CC1800 /* GoBagService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21140D5DDAF55D2FC7F5B61E /* GoBagService.swift */; };
+		2C8CF0417E9DEC6718FD8F19 /* SettingsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4023EDA521F560796F651B2C /* SettingsViewModelTests.swift */; };
+		2CDAEDE539E09DFE3E04EA26 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9385EAD4D22E1A47035B8780 /* UserProfile.swift */; };
+		2D0CBF0D08D32A8AC173EEC6 /* ScenarioEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13D02FCE648689BD2D45FCF5 /* ScenarioEngineTests.swift */; };
+		2EC7C41F2E18B10E173C6FEC /* AppStateSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDF7F44CB63C9A897933748C /* AppStateSettingsTests.swift */; };
+		2FA9D104076531CA0A5CDD52 /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19EF2F45EC3CCC4134B98D27 /* MapView.swift */; };
+		33A86EE17114867B0EF81AA4 /* WaterPointServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D2FF393A28202B0E2A46D /* WaterPointServiceTests.swift */; };
+		37376537EAB158547BCCC428 /* PreparednessDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E77B3511C87A8F7256AB8990 /* PreparednessDataService.swift */; };
+		37585FD12479A694714F6BD2 /* NavigationRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66E79616236ED7E9F4BD37F /* NavigationRouterTests.swift */; };
+		38E3F765770841A167C6BE61 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96B251050AE87CB39544F999 /* LocationService.swift */; };
+		3989F85634EB0B2F30661B72 /* PrepServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 466673E8468097FA4DCBAB28 /* PrepServiceTests.swift */; };
+		3A07BB6B2891E5D24889A840 /* RediM8App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518BCBC3B7E1640382AE6FFA /* RediM8App.swift */; };
+		3B818F3DA86371804516BC71 /* GoBagServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBDC18413AF54CEBE8498AB /* GoBagServiceTests.swift */; };
+		3D8FF9F224312072B003080A /* PrepScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C778AEA37BA9F9ED6481109 /* PrepScore.swift */; };
+		3DC51F68ACF67932F4104C86 /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 2F719DE1CBFA38701FFA67B1 /* MapLibre */; };
+		3E7EB0D7E74776FEC266E129 /* DecisionSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB4F555824E23AAF0BA90491 /* DecisionSupport.swift */; };
+		418EF8BEA2C13E631F0FEC53 /* AppStateBatteryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D11F4F600A9114B7810F61 /* AppStateBatteryTests.swift */; };
+		4321BBE5DF5420553FBD9C21 /* PrepScenario.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96A47EC81EE0DCF41437DACF /* PrepScenario.swift */; };
+		4A562B584ECCB7FAD640358D /* BeaconServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B4850F7DC8DE614600B6648 /* BeaconServiceTests.swift */; };
+		4BD902D2250F1227658A4AC3 /* GearChecklistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BEABD510C52C8FB797AD4CE /* GearChecklistView.swift */; };
+		4D99557B61F2D6D582D904BC /* ResourceMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D0DDB7D31DAACC4331FAB6F /* ResourceMarker.swift */; };
+		50C87DE85B0E599D3EEC2587 /* AssistantIntentClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D9390CC27BE6DB86EC8917 /* AssistantIntentClassifier.swift */; };
+		5177E5B53DB8BCBDC0AED911 /* MapPacks.json in Resources */ = {isa = PBXBuildFile; fileRef = 7ED72C382E5CD03A882195E9 /* MapPacks.json */; };
+		53CF305A775C2115722475F8 /* DocumentVaultService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F438B2933263FF2D679BC8B0 /* DocumentVaultService.swift */; };
+		55F22F5DB1B1678BF8FA0CE3 /* ResourceCategories.json in Resources */ = {isa = PBXBuildFile; fileRef = D6C636829168CE0A05C373B2 /* ResourceCategories.json */; };
+		587BF86F3191AC03C4D90841 /* SignalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3422BA028D17130682664F /* SignalViewModel.swift */; };
+		5986AC39F020A1A68FFD7C27 /* MapAssetIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28278FBD21FCFF427D6F891 /* MapAssetIcon.swift */; };
+		59AEDBE60DDAA9FCC211E484 /* MotionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C1A710B704531E4525896F /* MotionService.swift */; };
+		5C8715855F6140E8CC70B932 /* ShelterServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C21BC8DAEBFE18F27959635 /* ShelterServiceTests.swift */; };
+		5D461DDD59DB4280B50FEDB1 /* PreparednessInsightsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFF1D3D6FDBF2EF158C21FAC /* PreparednessInsightsService.swift */; };
+		5DFF2E7024F369D5D77CDAF3 /* BeaconService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6BBB7952E10233300448F57 /* BeaconService.swift */; };
+		5F52E3687EDF23751A4A281A /* AssistantPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1C901C2331FBE48C5DD0140 /* AssistantPolicy.swift */; };
+		6041C6EC7C24970224729385 /* LeaveNowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06AD4375747BA9F022CFC4E9 /* LeaveNowView.swift */; };
+		60B77E8505029E892BC0E4B2 /* SuppliesSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF0D0EC47248C10E7D95C57 /* SuppliesSetupView.swift */; };
+		62E627AE17B3C411C1BE9535 /* MeshMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5BFB10D99502B3DA7B2654 /* MeshMessage.swift */; };
+		63C04E87E65B74C5D022639E /* ScenarioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B1ABD1691996927E59BA5A3 /* ScenarioEngine.swift */; };
+		6669EDCA6ACC8D0CBF8634C1 /* VehicleReadinessService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF5E6290CE5C572A06801714 /* VehicleReadinessService.swift */; };
+		6690A153E2E1D9C3BACB1AEE /* NearbyWaterSourcesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFAAC6C22196B1D13C55488B /* NearbyWaterSourcesSection.swift */; };
+		677F7A85A4E281A93F6C0F4F /* HiddenModeIndicatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 261BBAAAD0188C1ED68C12A7 /* HiddenModeIndicatorView.swift */; };
+		680263F59728823ABFB8E57C /* MapService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1920FF4CC63CEBF7B94D71DA /* MapService.swift */; };
+		6A27F5D21D8CB80B49BCEE6F /* PreparednessInsightsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33F3951B11ADF4D8123CCB1 /* PreparednessInsightsServiceTests.swift */; };
+		6B782DA9C162CB1B330FCDDA /* WaterRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD5879C13F853644930F081 /* WaterRuntime.swift */; };
+		70360DDF3B9E3E2F4D39D9DD /* VehicleKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC5367C1A1DC55FCD4C0B5C2 /* VehicleKitView.swift */; };
+		704754D9EF5EE2A1510BA052 /* GuideLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EB278CBD2328876D49EFDBC /* GuideLibraryView.swift */; };
+		707E35464647F32ED298380B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 57B6A92B8F5B976FDF84DD1F /* Assets.xcassets */; };
+		7185F5130C8408DE87D024BE /* DocumentVaultServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B2D2F48C11F3758856C7991 /* DocumentVaultServiceTests.swift */; };
+		73A4C3218EB4422DE6656A2D /* TorchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0BC4AFC7F069A7DF12DD066 /* TorchService.swift */; };
+		73BB59DEF7FA224DF1C3FAD2 /* VehicleKitViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92328046E77C8D10BDC9B06D /* VehicleKitViewModel.swift */; };
+		756E291FDF6FEADC237E49C0 /* Tasks.json in Resources */ = {isa = PBXBuildFile; fileRef = 7CDE27D4FE493B9AD2C6AB37 /* Tasks.json */; };
+		76AF509BC78DCF7B51C180A0 /* GoBagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0AE9687EC66EFE2EE65AA1F /* GoBagView.swift */; };
+		77720BED66911510EEF97D70 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F92AC2219DC5E4F56923D0BC /* RootView.swift */; };
+		77D29CF2994CE406F82E306E /* VehicleReadinessServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59B9991A30B7589B68B0399B /* VehicleReadinessServiceTests.swift */; };
+		77EC950042EB24409B6EE8DB /* FamilyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85295B497EE015FFB533EBF7 /* FamilyService.swift */; };
+		79BF1EFDB1D3B5C019DA4336 /* FireTrailService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 568FF7BB9D3E6BB73C75D270 /* FireTrailService.swift */; };
+		7BC57B2CCF3E35088C46DBC0 /* HouseholdSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 676ED8A9425A724AB7AC73A0 /* HouseholdSetupView.swift */; };
+		7D49C2ED76BDFE5564D63159 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DB898A804E5E9F15E96A4DC /* HomeView.swift */; };
+		7F48ABDB03C801228F0C1FBC /* PreparednessInsights.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51BD1B33B95E68446EBCD8B7 /* PreparednessInsights.swift */; };
+		7F4F3F175F74C113315A32BB /* FireTrailServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50FA8D1CF9E7C5E4781F5575 /* FireTrailServiceTests.swift */; };
+		7F7CF1922C270E1DA8890BD3 /* DecisionSupportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B381F6985B636481AFA45F /* DecisionSupportService.swift */; };
+		7FBE660835D5515DACA6A4FC /* OfflineBasemapServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E06B2D318A83CBA551D5F7D /* OfflineBasemapServiceTests.swift */; };
+		810408E83452DFCC876F698C /* GoBag.swift in Sources */ = {isa = PBXBuildFile; fileRef = 484F0D16814323B927D505F0 /* GoBag.swift */; };
+		8236E61BFE93E8833E56848B /* FamilyMember.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865BE1A463F215C24CE54829 /* FamilyMember.swift */; };
+		825B1633245534B5313ECB06 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33EE4ADF637156984F082D46 /* Environment.swift */; };
+		84EF9A4229FB40864FB9CACA /* OnboardingContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 344380CD78CD4CFE56C0F7E7 /* OnboardingContainerView.swift */; };
+		851FF86FF784BC56EE598B95 /* FireTrails.json in Resources */ = {isa = PBXBuildFile; fileRef = 257D49439F7AF8ABCDB00992 /* FireTrails.json */; };
+		86E5526F7FEE3D24BB159921 /* WaterRuntimeServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E592ED3734D3826B5565C1 /* WaterRuntimeServiceTests.swift */; };
+		88510BBA8840CA1541ACAD52 /* BlackoutViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 942AEA34FF1A3E123E2C9059 /* BlackoutViewModel.swift */; };
+		899427B876A3EC57877983A4 /* ReadinessReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FF7EB5E7FA433B594D2892 /* ReadinessReportView.swift */; };
+		8C4E4AB52DB3A30711376471 /* WaterRuntimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50646F91D3F349C6C1B0D987 /* WaterRuntimeService.swift */; };
+		91F41503D11EC1C6305F6F08 /* CommunityBeacon.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF4C785F56C2BFF92A8AEA6 /* CommunityBeacon.swift */; };
+		92734555BD79BF9F2D7C4863 /* SurvivalModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327F9F22FF83CD9C94649399 /* SurvivalModeView.swift */; };
+		92D411E14FF4938B27F1A8E8 /* PermissionsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C34D4DDF5EDA1788416B2D /* PermissionsManager.swift */; };
+		9308213EBFDC01103D5A0819 /* GuideServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E659D04F58693F6AA6D890E /* GuideServiceTests.swift */; };
+		9340B1B95B01CB786221D94C /* OfflineMapData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DFAD8EBEFD0A8EB5F2B6A9 /* OfflineMapData.swift */; };
+		98B015B9F276010F6C836BFA /* GuideService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1122419460AAD6AC86F08CE0 /* GuideService.swift */; };
+		9C81FBBD858F69B588E89EBA /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BD3CA7438409285AB86EAB /* Extensions.swift */; };
+		9D1542B6F48B9DBE40DB8951 /* PlanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6373A5CBCE3ED15D049C2D2F /* PlanViewModel.swift */; };
+		9DC993E9677C39D76ED6EF63 /* MapDataServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAB24B83D820271A8F95BA06 /* MapDataServiceTests.swift */; };
+		9F03DEEF715A9F2BBA777CAF /* RediM8Branding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103FF758BBF6FCE9ACC1EEC0 /* RediM8Branding.swift */; };
+		A1BEF1C937530915D3753D2F /* Guide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F23378F93FC04B138C4E8F3 /* Guide.swift */; };
+		A24415D9D7109BE77C6A22BD /* ResourceLocations.json in Resources */ = {isa = PBXBuildFile; fileRef = B5C3CFE6A1E245115A5904B4 /* ResourceLocations.json */; };
+		A2BDB1591F9CB5A0BB1D9D5A /* OfflineDataManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C6FBB6918BE3AD2CE86B710 /* OfflineDataManagementView.swift */; };
+		A374375FAC6A8A814617A8B0 /* TrackSegments.json in Resources */ = {isa = PBXBuildFile; fileRef = 86C8F2472EA191A0F3B754D8 /* TrackSegments.json */; };
+		A49DED091C07F91F72669CAB /* Monetization.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0DFE88ABFC321E4DC5CA21A /* Monetization.swift */; };
+		A4A9BD7304EDB8B6D3BAD0DE /* Trust.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A23ECFAA94B799D822BC2C /* Trust.swift */; };
+		A719B742E0419BB74B77F948 /* MigrationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DDD60DBA7ADA7C765758EB3 /* MigrationManager.swift */; };
+		A8F93DD64533435E876C8195 /* OnboardingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7768733FC76B93C632096C67 /* OnboardingViewModel.swift */; };
+		AB2BC8C0A981C5EB2F54E91D /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A63DBEBD0A5D6FDA079DF39 /* MapViewModel.swift */; };
+		ACCB87D429271E87D9293943 /* AppStateQuickActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEB27EEEB8087B09F94E227F /* AppStateQuickActionTests.swift */; };
+		AD18C047BD9462C750C00014 /* ScoreBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13B01F51F99F67A04222456B /* ScoreBar.swift */; };
+		AD524CF6C887091DB43A1791 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF0AB08D3B98FD82F6A2DEAF /* AppSettings.swift */; };
+		ADB2B507F6419F2176B42B04 /* MeshService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CAA5677B34762100DC387ED /* MeshService.swift */; };
+		AF84851B360FA957687563A7 /* OfficialAlertService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DFE6EC643DCC827EC95F8F7 /* OfficialAlertService.swift */; };
+		B06BD0EC5593ABE60FD42BBB /* FeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D6FF4A1342EECD5EA096862 /* FeatureFlags.swift */; };
+		B194511FE40E0D78B8FD748F /* SecureVaultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69489959402789E83ABB30A2 /* SecureVaultView.swift */; };
+		B688AA079A9E0B332C7CB9C0 /* VaultModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC8CAA78FE9B3A2B4FEEFF36 /* VaultModels.swift */; };
+		B82FD6C7704D962E441A2CF4 /* BatteryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C4D7B33B6C93AA0FADA77A /* BatteryService.swift */; };
+		B93E3F51B31143779F84E253 /* SQLiteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 439D8396350FCA3C9F91882D /* SQLiteStore.swift */; };
+		BCD68220A8233744A2D0A359 /* EmergencyModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14D546A2D5A305B22202999B /* EmergencyModeView.swift */; };
+		C3AA0964F2D5DCD30A476851 /* RediIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE24B8FD15EBA7C8C0999E8B /* RediIcon.swift */; };
+		C81D7AF84FF439066594F803 /* OfflineBasemapService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFB1B8E7647416438C6DE8BA /* OfflineBasemapService.swift */; };
+		C9EBBFA2BC743BBB167DC9E8 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1144BAC0424B54DD0F0E9234 /* SettingsService.swift */; };
+		CAD6356FEC2C22CA2877C9EB /* Gear.json in Resources */ = {isa = PBXBuildFile; fileRef = 3347AE19D8F524C45FD0866D /* Gear.json */; };
+		CB6832D5DAD230214826FC49 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2333635E6C92D32147B2BA0E /* WelcomeView.swift */; };
+		CBFAD86386F4A0D7ADD637E8 /* ActionButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9F477153367199CDED60AF9 /* ActionButtonStyles.swift */; };
+		CCC5A22B4E0F3752F033DC45 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115991379E0B8EB39AD89913 /* Constants.swift */; };
+		D085A25F9A1CF6EBB875D9B3 /* Supplies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 610F61F5BEF1FA0B2767654B /* Supplies.swift */; };
+		D1C440C18B9FB5D87E069D77 /* PermissionsManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD3E2F676C3C7F582A09B440 /* PermissionsManagerTests.swift */; };
+		D2392C5F5F39A77B53205817 /* MapLibreEmergencyMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7E16FDE3D3FBE071249F407 /* MapLibreEmergencyMapView.swift */; };
+		D239708B0F53E0C487E13390 /* EmergencyPlanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD530A0CD0B8C8F0B251B4F /* EmergencyPlanService.swift */; };
+		D36720697AD8949C611A8D79 /* Guides.json in Resources */ = {isa = PBXBuildFile; fileRef = 0D19C11A0CAB2E900AA09882 /* Guides.json */; };
+		D5A9BC002D4F137421CC9262 /* RediM8ProView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45522127933A008F4CACAFE9 /* RediM8ProView.swift */; };
+		D5AD3971D017416F9404E91F /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AA07750C2C4B3E7ADA8DD6E /* AppState.swift */; };
+		D625F69F0504FF020ABCE88D /* MapDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8E91C7D2AE6E8681D6F5D9 /* MapDataService.swift */; };
+		DC4C4C609510AAE2A5E37BF0 /* GoBagItems.json in Resources */ = {isa = PBXBuildFile; fileRef = 0F224AB536762428EB87A962 /* GoBagItems.json */; };
+		DF6BF6D9C939DD638C1C3124 /* Emergency72HourPlan.json in Resources */ = {isa = PBXBuildFile; fileRef = FA6B4DD1CE7D189D7E158B83 /* Emergency72HourPlan.json */; };
+		E04219CB577D3399D17F91C9 /* GoBagViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5651F034F775D4F5471D8118 /* GoBagViewModel.swift */; };
+		E197E7FB584E0FDEC7CD6440 /* EmergencyCardDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71BE368AF107AE48AA1ACC50 /* EmergencyCardDeckView.swift */; };
+		E498A20CAE2A344456D47CAB /* PlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C73AB47259F4917B88FD84E /* PlanView.swift */; };
+		EE028C5701A42A997A00FFC8 /* ShelterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BEB7638F5A4EEE1A6D8692C /* ShelterService.swift */; };
+		F113595FF1BE882A261413A3 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13971571E45688CF953A489F /* HomeViewModel.swift */; };
+		F5CE9C292B722138BD9A1782 /* ScenarioSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47234335787B5614814768E5 /* ScenarioSelectionView.swift */; };
+		F6C6E3636DBE6FEEF00BEA56 /* OfficialAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731652C5575FF5291D05402F /* OfficialAlert.swift */; };
+		FCBB16C84791E974A811E69C /* WaterPoints.json in Resources */ = {isa = PBXBuildFile; fileRef = 534475155007F14DDF9E626E /* WaterPoints.json */; };
+		FE92381F55957A998C7A80ED /* DecisionSupportServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016AD175858523E0D5B66BF9 /* DecisionSupportServiceTests.swift */; };
+		FEA83AC05A07A382E6736B1B /* DatabaseSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CA0F81B27CFD2710D8ED3B /* DatabaseSchema.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A14BB4D943AE8894CBEBCD82 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F0EDB76ABCDD45956EC0591F /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 58142F5EE17B9D21C5CC50CE;
+			remoteInfo = RediM8;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		016AD175858523E0D5B66BF9 /* DecisionSupportServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionSupportServiceTests.swift; sourceTree = "<group>"; };
+		01EEA51ADF6D0F12D9CD3EA6 /* LeaveNowViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaveNowViewModel.swift; sourceTree = "<group>"; };
+		06AD4375747BA9F022CFC4E9 /* LeaveNowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaveNowView.swift; sourceTree = "<group>"; };
+		071815223F57278E2156263B /* PanelCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelCard.swift; sourceTree = "<group>"; };
+		0AA07750C2C4B3E7ADA8DD6E /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		0AD530A0CD0B8C8F0B251B4F /* EmergencyPlanService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyPlanService.swift; sourceTree = "<group>"; };
+		0AF112E1CF25C3DC8921009C /* ColorTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorTheme.swift; sourceTree = "<group>"; };
+		0B1ABD1691996927E59BA5A3 /* ScenarioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenarioEngine.swift; sourceTree = "<group>"; };
+		0B8A48B7A8F2D5E78F13584A /* RediM8MapStyle.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = RediM8MapStyle.json; sourceTree = "<group>"; };
+		0BEB7638F5A4EEE1A6D8692C /* ShelterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelterService.swift; sourceTree = "<group>"; };
+		0D19C11A0CAB2E900AA09882 /* Guides.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Guides.json; sourceTree = "<group>"; };
+		0DFE6EC643DCC827EC95F8F7 /* OfficialAlertService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfficialAlertService.swift; sourceTree = "<group>"; };
+		0F224AB536762428EB87A962 /* GoBagItems.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = GoBagItems.json; sourceTree = "<group>"; };
+		0FBDC18413AF54CEBE8498AB /* GoBagServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoBagServiceTests.swift; sourceTree = "<group>"; };
+		103FF758BBF6FCE9ACC1EEC0 /* RediM8Branding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RediM8Branding.swift; sourceTree = "<group>"; };
+		1122419460AAD6AC86F08CE0 /* GuideService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideService.swift; sourceTree = "<group>"; };
+		112769A170BF2F8C99EA93FD /* ChecklistItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChecklistItem.swift; sourceTree = "<group>"; };
+		1144BAC0424B54DD0F0E9234 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
+		115991379E0B8EB39AD89913 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
+		13971571E45688CF953A489F /* HomeViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		13B01F51F99F67A04222456B /* ScoreBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreBar.swift; sourceTree = "<group>"; };
+		13D02FCE648689BD2D45FCF5 /* ScenarioEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenarioEngineTests.swift; sourceTree = "<group>"; };
+		14D546A2D5A305B22202999B /* EmergencyModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyModeView.swift; sourceTree = "<group>"; };
+		169C7C2D1C6EC15F1F48BD8B /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
+		17B381F6985B636481AFA45F /* DecisionSupportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionSupportService.swift; sourceTree = "<group>"; };
+		17C1A710B704531E4525896F /* MotionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionService.swift; sourceTree = "<group>"; };
+		1920FF4CC63CEBF7B94D71DA /* MapService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapService.swift; sourceTree = "<group>"; };
+		19EF2F45EC3CCC4134B98D27 /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
+		1A63DBEBD0A5D6FDA079DF39 /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
+		1C21BC8DAEBFE18F27959635 /* ShelterServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelterServiceTests.swift; sourceTree = "<group>"; };
+		1C73AB47259F4917B88FD84E /* PlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanView.swift; sourceTree = "<group>"; };
+		1CEBB28CBCCD6AA856DBA506 /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
+		1D6FF4A1342EECD5EA096862 /* FeatureFlags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureFlags.swift; sourceTree = "<group>"; };
+		1EB278CBD2328876D49EFDBC /* GuideLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideLibraryView.swift; sourceTree = "<group>"; };
+		21140D5DDAF55D2FC7F5B61E /* GoBagService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoBagService.swift; sourceTree = "<group>"; };
+		2333635E6C92D32147B2BA0E /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		257D49439F7AF8ABCDB00992 /* FireTrails.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = FireTrails.json; sourceTree = "<group>"; };
+		261BBAAAD0188C1ED68C12A7 /* HiddenModeIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiddenModeIndicatorView.swift; sourceTree = "<group>"; };
+		2B4850F7DC8DE614600B6648 /* BeaconServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeaconServiceTests.swift; sourceTree = "<group>"; };
+		2BEABD510C52C8FB797AD4CE /* GearChecklistView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GearChecklistView.swift; sourceTree = "<group>"; };
+		2C606D76FFCE1747E55E2C7B /* RediM8.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RediM8.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2DFC88210BCD296072C83AC5 /* ReadinessReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessReportService.swift; sourceTree = "<group>"; };
+		2FD5879C13F853644930F081 /* WaterRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterRuntime.swift; sourceTree = "<group>"; };
+		327F9F22FF83CD9C94649399 /* SurvivalModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurvivalModeView.swift; sourceTree = "<group>"; };
+		3347AE19D8F524C45FD0866D /* Gear.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Gear.json; sourceTree = "<group>"; };
+		33EE4ADF637156984F082D46 /* Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
+		344380CD78CD4CFE56C0F7E7 /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
+		35D11F4F600A9114B7810F61 /* AppStateBatteryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateBatteryTests.swift; sourceTree = "<group>"; };
+		3B2D2F48C11F3758856C7991 /* DocumentVaultServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentVaultServiceTests.swift; sourceTree = "<group>"; };
+		3CAA5677B34762100DC387ED /* MeshService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshService.swift; sourceTree = "<group>"; };
+		3D6BB391D0E1FA584D861669 /* VehicleReadiness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleReadiness.swift; sourceTree = "<group>"; };
+		4023EDA521F560796F651B2C /* SettingsViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModelTests.swift; sourceTree = "<group>"; };
+		439D8396350FCA3C9F91882D /* SQLiteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteStore.swift; sourceTree = "<group>"; };
+		45522127933A008F4CACAFE9 /* RediM8ProView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RediM8ProView.swift; sourceTree = "<group>"; };
+		466673E8468097FA4DCBAB28 /* PrepServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrepServiceTests.swift; sourceTree = "<group>"; };
+		46FF7EB5E7FA433B594D2892 /* ReadinessReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessReportView.swift; sourceTree = "<group>"; };
+		47234335787B5614814768E5 /* ScenarioSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScenarioSelectionView.swift; sourceTree = "<group>"; };
+		484F0D16814323B927D505F0 /* GoBag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoBag.swift; sourceTree = "<group>"; };
+		49055EBB0F70AAAFE63B4035 /* WaterPointService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterPointService.swift; sourceTree = "<group>"; };
+		4DB898A804E5E9F15E96A4DC /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		4DDD60DBA7ADA7C765758EB3 /* MigrationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationManager.swift; sourceTree = "<group>"; };
+		4E659D04F58693F6AA6D890E /* GuideServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideServiceTests.swift; sourceTree = "<group>"; };
+		4F23378F93FC04B138C4E8F3 /* Guide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guide.swift; sourceTree = "<group>"; };
+		50646F91D3F349C6C1B0D987 /* WaterRuntimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterRuntimeService.swift; sourceTree = "<group>"; };
+		507010A8B96BD97DDE5DD660 /* RediM8Tests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RediM8Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		50FA8D1CF9E7C5E4781F5575 /* FireTrailServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireTrailServiceTests.swift; sourceTree = "<group>"; };
+		518BCBC3B7E1640382AE6FFA /* RediM8App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RediM8App.swift; sourceTree = "<group>"; };
+		51BD1B33B95E68446EBCD8B7 /* PreparednessInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreparednessInsights.swift; sourceTree = "<group>"; };
+		52C34D4DDF5EDA1788416B2D /* PermissionsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsManager.swift; sourceTree = "<group>"; };
+		534475155007F14DDF9E626E /* WaterPoints.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WaterPoints.json; sourceTree = "<group>"; };
+		5397471111306E53595303A6 /* BlackoutModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlackoutModeView.swift; sourceTree = "<group>"; };
+		5651F034F775D4F5471D8118 /* GoBagViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoBagViewModel.swift; sourceTree = "<group>"; };
+		568FF7BB9D3E6BB73C75D270 /* FireTrailService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireTrailService.swift; sourceTree = "<group>"; };
+		57AC746702C41D20910B1626 /* TrustLayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustLayerTests.swift; sourceTree = "<group>"; };
+		57B6A92B8F5B976FDF84DD1F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		59B9991A30B7589B68B0399B /* VehicleReadinessServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleReadinessServiceTests.swift; sourceTree = "<group>"; };
+		5E6775085D6C21E5159461E1 /* NavigationRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationRouter.swift; sourceTree = "<group>"; };
+		5E90087F80E80FCA485214EF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		610F61F5BEF1FA0B2767654B /* Supplies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Supplies.swift; sourceTree = "<group>"; };
+		6373A5CBCE3ED15D049C2D2F /* PlanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanViewModel.swift; sourceTree = "<group>"; };
+		676ED8A9425A724AB7AC73A0 /* HouseholdSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdSetupView.swift; sourceTree = "<group>"; };
+		69469F5BCE71920587819A44 /* PrepScoreResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrepScoreResultView.swift; sourceTree = "<group>"; };
+		69489959402789E83ABB30A2 /* SecureVaultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureVaultView.swift; sourceTree = "<group>"; };
+		6E06B2D318A83CBA551D5F7D /* OfflineBasemapServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineBasemapServiceTests.swift; sourceTree = "<group>"; };
+		71BE368AF107AE48AA1ACC50 /* EmergencyCardDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmergencyCardDeckView.swift; sourceTree = "<group>"; };
+		731652C5575FF5291D05402F /* OfficialAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfficialAlert.swift; sourceTree = "<group>"; };
+		75A5E28AEF237CB613577605 /* Emergency72HourView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Emergency72HourView.swift; sourceTree = "<group>"; };
+		7768733FC76B93C632096C67 /* OnboardingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingViewModel.swift; sourceTree = "<group>"; };
+		7CDE27D4FE493B9AD2C6AB37 /* Tasks.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Tasks.json; sourceTree = "<group>"; };
+		7ED72C382E5CD03A882195E9 /* MapPacks.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = MapPacks.json; sourceTree = "<group>"; };
+		81C4D7B33B6C93AA0FADA77A /* BatteryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryService.swift; sourceTree = "<group>"; };
+		8243DD2657E85345628A14F1 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
+		842342B40549E5CCED6313FE /* SignalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalView.swift; sourceTree = "<group>"; };
+		85295B497EE015FFB533EBF7 /* FamilyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyService.swift; sourceTree = "<group>"; };
+		85CA0F81B27CFD2710D8ED3B /* DatabaseSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseSchema.swift; sourceTree = "<group>"; };
+		865BE1A463F215C24CE54829 /* FamilyMember.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyMember.swift; sourceTree = "<group>"; };
+		86C8F2472EA191A0F3B754D8 /* TrackSegments.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = TrackSegments.json; sourceTree = "<group>"; };
+		86D9390CC27BE6DB86EC8917 /* AssistantIntentClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantIntentClassifier.swift; sourceTree = "<group>"; };
+		8C6FBB6918BE3AD2CE86B710 /* OfflineDataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineDataManagementView.swift; sourceTree = "<group>"; };
+		8C778AEA37BA9F9ED6481109 /* PrepScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrepScore.swift; sourceTree = "<group>"; };
+		92328046E77C8D10BDC9B06D /* VehicleKitViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleKitViewModel.swift; sourceTree = "<group>"; };
+		9385EAD4D22E1A47035B8780 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		942AEA34FF1A3E123E2C9059 /* BlackoutViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlackoutViewModel.swift; sourceTree = "<group>"; };
+		96A47EC81EE0DCF41437DACF /* PrepScenario.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrepScenario.swift; sourceTree = "<group>"; };
+		96B251050AE87CB39544F999 /* LocationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationService.swift; sourceTree = "<group>"; };
+		9764322ABA2173679AB630C9 /* AssistantIntentClassifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantIntentClassifierTests.swift; sourceTree = "<group>"; };
+		99A23ECFAA94B799D822BC2C /* Trust.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Trust.swift; sourceTree = "<group>"; };
+		9D0DDB7D31DAACC4331FAB6F /* ResourceMarker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMarker.swift; sourceTree = "<group>"; };
+		9E3422BA028D17130682664F /* SignalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalViewModel.swift; sourceTree = "<group>"; };
+		9EBF52732BD4B890B5C28B0F /* Shelters.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Shelters.json; sourceTree = "<group>"; };
+		A0AE9687EC66EFE2EE65AA1F /* GoBagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoBagView.swift; sourceTree = "<group>"; };
+		A28278FBD21FCFF427D6F891 /* MapAssetIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapAssetIcon.swift; sourceTree = "<group>"; };
+		A33F3951B11ADF4D8123CCB1 /* PreparednessInsightsServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreparednessInsightsServiceTests.swift; sourceTree = "<group>"; };
+		AC5367C1A1DC55FCD4C0B5C2 /* VehicleKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleKitView.swift; sourceTree = "<group>"; };
+		AD3E2F676C3C7F582A09B440 /* PermissionsManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsManagerTests.swift; sourceTree = "<group>"; };
+		B5C3CFE6A1E245115A5904B4 /* ResourceLocations.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ResourceLocations.json; sourceTree = "<group>"; };
+		B61A48D4025B9665B9EFE907 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		BAB24B83D820271A8F95BA06 /* MapDataServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapDataServiceTests.swift; sourceTree = "<group>"; };
+		BF5BFB10D99502B3DA7B2654 /* MeshMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshMessage.swift; sourceTree = "<group>"; };
+		C0BC4AFC7F069A7DF12DD066 /* TorchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TorchService.swift; sourceTree = "<group>"; };
+		C55D2FF393A28202B0E2A46D /* WaterPointServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterPointServiceTests.swift; sourceTree = "<group>"; };
+		C6BBB7952E10233300448F57 /* BeaconService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeaconService.swift; sourceTree = "<group>"; };
+		C9F477153367199CDED60AF9 /* ActionButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionButtonStyles.swift; sourceTree = "<group>"; };
+		CE24B8FD15EBA7C8C0999E8B /* RediIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RediIcon.swift; sourceTree = "<group>"; };
+		CFAAC6C22196B1D13C55488B /* NearbyWaterSourcesSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyWaterSourcesSection.swift; sourceTree = "<group>"; };
+		D1179ED5550123E92173DD0B /* Scenarios.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Scenarios.json; sourceTree = "<group>"; };
+		D1C901C2331FBE48C5DD0140 /* AssistantPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantPolicy.swift; sourceTree = "<group>"; };
+		D6C636829168CE0A05C373B2 /* ResourceCategories.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ResourceCategories.json; sourceTree = "<group>"; };
+		DDF7F44CB63C9A897933748C /* AppStateSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateSettingsTests.swift; sourceTree = "<group>"; };
+		DF5E6290CE5C572A06801714 /* VehicleReadinessService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleReadinessService.swift; sourceTree = "<group>"; };
+		DFF6E3783482BC18EC524739 /* OfficialAlertServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfficialAlertServiceTests.swift; sourceTree = "<group>"; };
+		E0DFAD8EBEFD0A8EB5F2B6A9 /* OfflineMapData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineMapData.swift; sourceTree = "<group>"; };
+		E0DFE88ABFC321E4DC5CA21A /* Monetization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Monetization.swift; sourceTree = "<group>"; };
+		E3E592ED3734D3826B5565C1 /* WaterRuntimeServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterRuntimeServiceTests.swift; sourceTree = "<group>"; };
+		E603FCA37ABA4BB9847700A2 /* MonetizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonetizationTests.swift; sourceTree = "<group>"; };
+		E77B3511C87A8F7256AB8990 /* PreparednessDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreparednessDataService.swift; sourceTree = "<group>"; };
+		E7BD3CA7438409285AB86EAB /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		EB4F555824E23AAF0BA90491 /* DecisionSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionSupport.swift; sourceTree = "<group>"; };
+		ECF0D0EC47248C10E7D95C57 /* SuppliesSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuppliesSetupView.swift; sourceTree = "<group>"; };
+		EEB27EEEB8087B09F94E227F /* AppStateQuickActionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateQuickActionTests.swift; sourceTree = "<group>"; };
+		EEF4C785F56C2BFF92A8AEA6 /* CommunityBeacon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityBeacon.swift; sourceTree = "<group>"; };
+		EF0AB08D3B98FD82F6A2DEAF /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		EFB1B8E7647416438C6DE8BA /* OfflineBasemapService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineBasemapService.swift; sourceTree = "<group>"; };
+		F438B2933263FF2D679BC8B0 /* DocumentVaultService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentVaultService.swift; sourceTree = "<group>"; };
+		F66E79616236ED7E9F4BD37F /* NavigationRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationRouterTests.swift; sourceTree = "<group>"; };
+		F7E16FDE3D3FBE071249F407 /* MapLibreEmergencyMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapLibreEmergencyMapView.swift; sourceTree = "<group>"; };
+		F92AC2219DC5E4F56923D0BC /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		FA6B4DD1CE7D189D7E158B83 /* Emergency72HourPlan.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Emergency72HourPlan.json; sourceTree = "<group>"; };
+		FA8E91C7D2AE6E8681D6F5D9 /* MapDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapDataService.swift; sourceTree = "<group>"; };
+		FC8CAA78FE9B3A2B4FEEFF36 /* VaultModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultModels.swift; sourceTree = "<group>"; };
+		FE268DFF1AE79E9CABB78570 /* PrepService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrepService.swift; sourceTree = "<group>"; };
+		FFF1D3D6FDBF2EF158C21FAC /* PreparednessInsightsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreparednessInsightsService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		08AB4BCFE37ED5DF7DC7C003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3DC51F68ACF67932F4104C86 /* MapLibre in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		12EF2997B60E32B127813B83 /* Guides */ = {
+			isa = PBXGroup;
+			children = (
+				1EB278CBD2328876D49EFDBC /* GuideLibraryView.swift */,
+			);
+			path = Guides;
+			sourceTree = "<group>";
+		};
+		17277793406E798B89FD46A2 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				EF0AB08D3B98FD82F6A2DEAF /* AppSettings.swift */,
+				D1C901C2331FBE48C5DD0140 /* AssistantPolicy.swift */,
+				112769A170BF2F8C99EA93FD /* ChecklistItem.swift */,
+				EEF4C785F56C2BFF92A8AEA6 /* CommunityBeacon.swift */,
+				EB4F555824E23AAF0BA90491 /* DecisionSupport.swift */,
+				865BE1A463F215C24CE54829 /* FamilyMember.swift */,
+				484F0D16814323B927D505F0 /* GoBag.swift */,
+				4F23378F93FC04B138C4E8F3 /* Guide.swift */,
+				BF5BFB10D99502B3DA7B2654 /* MeshMessage.swift */,
+				E0DFE88ABFC321E4DC5CA21A /* Monetization.swift */,
+				731652C5575FF5291D05402F /* OfficialAlert.swift */,
+				E0DFAD8EBEFD0A8EB5F2B6A9 /* OfflineMapData.swift */,
+				51BD1B33B95E68446EBCD8B7 /* PreparednessInsights.swift */,
+				96A47EC81EE0DCF41437DACF /* PrepScenario.swift */,
+				8C778AEA37BA9F9ED6481109 /* PrepScore.swift */,
+				9D0DDB7D31DAACC4331FAB6F /* ResourceMarker.swift */,
+				610F61F5BEF1FA0B2767654B /* Supplies.swift */,
+				99A23ECFAA94B799D822BC2C /* Trust.swift */,
+				9385EAD4D22E1A47035B8780 /* UserProfile.swift */,
+				FC8CAA78FE9B3A2B4FEEFF36 /* VaultModels.swift */,
+				3D6BB391D0E1FA584D861669 /* VehicleReadiness.swift */,
+				2FD5879C13F853644930F081 /* WaterRuntime.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		1886567D76F24EAB8768D1BA /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				86D9390CC27BE6DB86EC8917 /* AssistantIntentClassifier.swift */,
+				81C4D7B33B6C93AA0FADA77A /* BatteryService.swift */,
+				C6BBB7952E10233300448F57 /* BeaconService.swift */,
+				17B381F6985B636481AFA45F /* DecisionSupportService.swift */,
+				F438B2933263FF2D679BC8B0 /* DocumentVaultService.swift */,
+				0AD530A0CD0B8C8F0B251B4F /* EmergencyPlanService.swift */,
+				85295B497EE015FFB533EBF7 /* FamilyService.swift */,
+				568FF7BB9D3E6BB73C75D270 /* FireTrailService.swift */,
+				21140D5DDAF55D2FC7F5B61E /* GoBagService.swift */,
+				1122419460AAD6AC86F08CE0 /* GuideService.swift */,
+				96B251050AE87CB39544F999 /* LocationService.swift */,
+				FA8E91C7D2AE6E8681D6F5D9 /* MapDataService.swift */,
+				1920FF4CC63CEBF7B94D71DA /* MapService.swift */,
+				3CAA5677B34762100DC387ED /* MeshService.swift */,
+				17C1A710B704531E4525896F /* MotionService.swift */,
+				0DFE6EC643DCC827EC95F8F7 /* OfficialAlertService.swift */,
+				EFB1B8E7647416438C6DE8BA /* OfflineBasemapService.swift */,
+				E77B3511C87A8F7256AB8990 /* PreparednessDataService.swift */,
+				FFF1D3D6FDBF2EF158C21FAC /* PreparednessInsightsService.swift */,
+				FE268DFF1AE79E9CABB78570 /* PrepService.swift */,
+				2DFC88210BCD296072C83AC5 /* ReadinessReportService.swift */,
+				0B1ABD1691996927E59BA5A3 /* ScenarioEngine.swift */,
+				1144BAC0424B54DD0F0E9234 /* SettingsService.swift */,
+				0BEB7638F5A4EEE1A6D8692C /* ShelterService.swift */,
+				C0BC4AFC7F069A7DF12DD066 /* TorchService.swift */,
+				DF5E6290CE5C572A06801714 /* VehicleReadinessService.swift */,
+				49055EBB0F70AAAFE63B4035 /* WaterPointService.swift */,
+				50646F91D3F349C6C1B0D987 /* WaterRuntimeService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		1D47F5B7580EED50277B66F7 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				FA6B4DD1CE7D189D7E158B83 /* Emergency72HourPlan.json */,
+				257D49439F7AF8ABCDB00992 /* FireTrails.json */,
+				3347AE19D8F524C45FD0866D /* Gear.json */,
+				0F224AB536762428EB87A962 /* GoBagItems.json */,
+				0D19C11A0CAB2E900AA09882 /* Guides.json */,
+				7ED72C382E5CD03A882195E9 /* MapPacks.json */,
+				D6C636829168CE0A05C373B2 /* ResourceCategories.json */,
+				B5C3CFE6A1E245115A5904B4 /* ResourceLocations.json */,
+				D1179ED5550123E92173DD0B /* Scenarios.json */,
+				9EBF52732BD4B890B5C28B0F /* Shelters.json */,
+				7CDE27D4FE493B9AD2C6AB37 /* Tasks.json */,
+				86C8F2472EA191A0F3B754D8 /* TrackSegments.json */,
+				534475155007F14DDF9E626E /* WaterPoints.json */,
+			);
+			name = Data;
+			path = RediM8/Data;
+			sourceTree = "<group>";
+		};
+		205CF1057AF7D6B14553EB5D /* Plan */ = {
+			isa = PBXGroup;
+			children = (
+				75A5E28AEF237CB613577605 /* Emergency72HourView.swift */,
+				A0AE9687EC66EFE2EE65AA1F /* GoBagView.swift */,
+				5651F034F775D4F5471D8118 /* GoBagViewModel.swift */,
+				1C73AB47259F4917B88FD84E /* PlanView.swift */,
+				6373A5CBCE3ED15D049C2D2F /* PlanViewModel.swift */,
+				69489959402789E83ABB30A2 /* SecureVaultView.swift */,
+				AC5367C1A1DC55FCD4C0B5C2 /* VehicleKitView.swift */,
+				92328046E77C8D10BDC9B06D /* VehicleKitViewModel.swift */,
+			);
+			path = Plan;
+			sourceTree = "<group>";
+		};
+		36F4B1F26C9728FB42D52CA6 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				40B5074C81B7FDB117A74799 /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		3F3C80B3DE7194AC95DEDB95 /* Storage */ = {
+			isa = PBXGroup;
+			children = (
+				85CA0F81B27CFD2710D8ED3B /* DatabaseSchema.swift */,
+				4DDD60DBA7ADA7C765758EB3 /* MigrationManager.swift */,
+				439D8396350FCA3C9F91882D /* SQLiteStore.swift */,
+			);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		40B5074C81B7FDB117A74799 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				C9F477153367199CDED60AF9 /* ActionButtonStyles.swift */,
+				71BE368AF107AE48AA1ACC50 /* EmergencyCardDeckView.swift */,
+				261BBAAAD0188C1ED68C12A7 /* HiddenModeIndicatorView.swift */,
+				A28278FBD21FCFF427D6F891 /* MapAssetIcon.swift */,
+				F7E16FDE3D3FBE071249F407 /* MapLibreEmergencyMapView.swift */,
+				CFAAC6C22196B1D13C55488B /* NearbyWaterSourcesSection.swift */,
+				071815223F57278E2156263B /* PanelCard.swift */,
+				CE24B8FD15EBA7C8C0999E8B /* RediIcon.swift */,
+				103FF758BBF6FCE9ACC1EEC0 /* RediM8Branding.swift */,
+				13B01F51F99F67A04222456B /* ScoreBar.swift */,
+				1CEBB28CBCCD6AA856DBA506 /* StatusBadge.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		455332E0321FC278FAFC132F /* Signal */ = {
+			isa = PBXGroup;
+			children = (
+				842342B40549E5CCED6313FE /* SignalView.swift */,
+				9E3422BA028D17130682664F /* SignalViewModel.swift */,
+			);
+			path = Signal;
+			sourceTree = "<group>";
+		};
+		4EAC6F34A7E281001F19A453 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				115991379E0B8EB39AD89913 /* Constants.swift */,
+				33EE4ADF637156984F082D46 /* Environment.swift */,
+				1D6FF4A1342EECD5EA096862 /* FeatureFlags.swift */,
+				52C34D4DDF5EDA1788416B2D /* PermissionsManager.swift */,
+				3F3C80B3DE7194AC95DEDB95 /* Storage */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		5079D348FEE50A8BD9397315 /* Emergency */ = {
+			isa = PBXGroup;
+			children = (
+				5397471111306E53595303A6 /* BlackoutModeView.swift */,
+				942AEA34FF1A3E123E2C9059 /* BlackoutViewModel.swift */,
+				14D546A2D5A305B22202999B /* EmergencyModeView.swift */,
+				06AD4375747BA9F022CFC4E9 /* LeaveNowView.swift */,
+				01EEA51ADF6D0F12D9CD3EA6 /* LeaveNowViewModel.swift */,
+				327F9F22FF83CD9C94649399 /* SurvivalModeView.swift */,
+			);
+			path = Emergency;
+			sourceTree = "<group>";
+		};
+		7A04F0AC3FE53CB6593A5613 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				57B6A92B8F5B976FDF84DD1F /* Assets.xcassets */,
+				0B8A48B7A8F2D5E78F13584A /* RediM8MapStyle.json */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		7ACED93834EFA49DE5FD145B = {
+			isa = PBXGroup;
+			children = (
+				1D47F5B7580EED50277B66F7 /* Data */,
+				A448197A8882B5BBC69F525F /* RediM8 */,
+				D484132AEA803FB1AEC705C2 /* RediM8Tests */,
+				AE625E75DB31D84A2980863C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		804BCED800573C1A09F9C7A4 /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				19EF2F45EC3CCC4134B98D27 /* MapView.swift */,
+				1A63DBEBD0A5D6FDA079DF39 /* MapViewModel.swift */,
+				8C6FBB6918BE3AD2CE86B710 /* OfflineDataManagementView.swift */,
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
+		9E7F3FB1022A3483676AA54B /* App */ = {
+			isa = PBXGroup;
+			children = (
+				0AA07750C2C4B3E7ADA8DD6E /* AppState.swift */,
+				5E6775085D6C21E5159461E1 /* NavigationRouter.swift */,
+				518BCBC3B7E1640382AE6FFA /* RediM8App.swift */,
+				F92AC2219DC5E4F56923D0BC /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		A448197A8882B5BBC69F525F /* RediM8 */ = {
+			isa = PBXGroup;
+			children = (
+				5E90087F80E80FCA485214EF /* Info.plist */,
+				9E7F3FB1022A3483676AA54B /* App */,
+				4EAC6F34A7E281001F19A453 /* Core */,
+				EFDDB5669049CF203396E80E /* Features */,
+				17277793406E798B89FD46A2 /* Models */,
+				7A04F0AC3FE53CB6593A5613 /* Resources */,
+				1886567D76F24EAB8768D1BA /* Services */,
+				D86A8854DA6D966E92490F0F /* Utilities */,
+				36F4B1F26C9728FB42D52CA6 /* Views */,
+			);
+			path = RediM8;
+			sourceTree = "<group>";
+		};
+		AE625E75DB31D84A2980863C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2C606D76FFCE1747E55E2C7B /* RediM8.app */,
+				507010A8B96BD97DDE5DD660 /* RediM8Tests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CED27AE344F552DBF1CC24F7 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				4DB898A804E5E9F15E96A4DC /* HomeView.swift */,
+				13971571E45688CF953A489F /* HomeViewModel.swift */,
+				46FF7EB5E7FA433B594D2892 /* ReadinessReportView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
+		D484132AEA803FB1AEC705C2 /* RediM8Tests */ = {
+			isa = PBXGroup;
+			children = (
+				169C7C2D1C6EC15F1F48BD8B /* AppSettingsTests.swift */,
+				35D11F4F600A9114B7810F61 /* AppStateBatteryTests.swift */,
+				EEB27EEEB8087B09F94E227F /* AppStateQuickActionTests.swift */,
+				DDF7F44CB63C9A897933748C /* AppStateSettingsTests.swift */,
+				9764322ABA2173679AB630C9 /* AssistantIntentClassifierTests.swift */,
+				2B4850F7DC8DE614600B6648 /* BeaconServiceTests.swift */,
+				016AD175858523E0D5B66BF9 /* DecisionSupportServiceTests.swift */,
+				3B2D2F48C11F3758856C7991 /* DocumentVaultServiceTests.swift */,
+				50FA8D1CF9E7C5E4781F5575 /* FireTrailServiceTests.swift */,
+				0FBDC18413AF54CEBE8498AB /* GoBagServiceTests.swift */,
+				4E659D04F58693F6AA6D890E /* GuideServiceTests.swift */,
+				BAB24B83D820271A8F95BA06 /* MapDataServiceTests.swift */,
+				E603FCA37ABA4BB9847700A2 /* MonetizationTests.swift */,
+				F66E79616236ED7E9F4BD37F /* NavigationRouterTests.swift */,
+				DFF6E3783482BC18EC524739 /* OfficialAlertServiceTests.swift */,
+				6E06B2D318A83CBA551D5F7D /* OfflineBasemapServiceTests.swift */,
+				AD3E2F676C3C7F582A09B440 /* PermissionsManagerTests.swift */,
+				A33F3951B11ADF4D8123CCB1 /* PreparednessInsightsServiceTests.swift */,
+				466673E8468097FA4DCBAB28 /* PrepServiceTests.swift */,
+				13D02FCE648689BD2D45FCF5 /* ScenarioEngineTests.swift */,
+				4023EDA521F560796F651B2C /* SettingsViewModelTests.swift */,
+				1C21BC8DAEBFE18F27959635 /* ShelterServiceTests.swift */,
+				57AC746702C41D20910B1626 /* TrustLayerTests.swift */,
+				59B9991A30B7589B68B0399B /* VehicleReadinessServiceTests.swift */,
+				C55D2FF393A28202B0E2A46D /* WaterPointServiceTests.swift */,
+				E3E592ED3734D3826B5565C1 /* WaterRuntimeServiceTests.swift */,
+			);
+			path = RediM8Tests;
+			sourceTree = "<group>";
+		};
+		D86A8854DA6D966E92490F0F /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				0AF112E1CF25C3DC8921009C /* ColorTheme.swift */,
+				E7BD3CA7438409285AB86EAB /* Extensions.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		E2E3FF8ABA1E315858F8B10C /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				2BEABD510C52C8FB797AD4CE /* GearChecklistView.swift */,
+				676ED8A9425A724AB7AC73A0 /* HouseholdSetupView.swift */,
+				344380CD78CD4CFE56C0F7E7 /* OnboardingContainerView.swift */,
+				7768733FC76B93C632096C67 /* OnboardingViewModel.swift */,
+				69469F5BCE71920587819A44 /* PrepScoreResultView.swift */,
+				47234335787B5614814768E5 /* ScenarioSelectionView.swift */,
+				ECF0D0EC47248C10E7D95C57 /* SuppliesSetupView.swift */,
+				2333635E6C92D32147B2BA0E /* WelcomeView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		EFDDB5669049CF203396E80E /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				5079D348FEE50A8BD9397315 /* Emergency */,
+				12EF2997B60E32B127813B83 /* Guides */,
+				CED27AE344F552DBF1CC24F7 /* Home */,
+				804BCED800573C1A09F9C7A4 /* Map */,
+				E2E3FF8ABA1E315858F8B10C /* Onboarding */,
+				205CF1057AF7D6B14553EB5D /* Plan */,
+				F7AAB9ECF45A5FBE7E95DB6A /* Settings */,
+				455332E0321FC278FAFC132F /* Signal */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		F7AAB9ECF45A5FBE7E95DB6A /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				45522127933A008F4CACAFE9 /* RediM8ProView.swift */,
+				B61A48D4025B9665B9EFE907 /* SettingsView.swift */,
+				8243DD2657E85345628A14F1 /* SettingsViewModel.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		58142F5EE17B9D21C5CC50CE /* RediM8 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 214A4126CF9B93D37F1CDD83 /* Build configuration list for PBXNativeTarget "RediM8" */;
+			buildPhases = (
+				6FC9FD04B4A697C59B52F2C0 /* Sources */,
+				EDB452C6FAB6CAE8DA8830B7 /* Resources */,
+				08AB4BCFE37ED5DF7DC7C003 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = RediM8;
+			packageProductDependencies = (
+				2F719DE1CBFA38701FFA67B1 /* MapLibre */,
+			);
+			productName = RediM8;
+			productReference = 2C606D76FFCE1747E55E2C7B /* RediM8.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A33BA7545C2DB0B47CE7686E /* RediM8Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 64E268081E44B4028C34C312 /* Build configuration list for PBXNativeTarget "RediM8Tests" */;
+			buildPhases = (
+				84ADC38451A28286F0A4F46B /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B7059FDE269D7AD07F1BAC74 /* PBXTargetDependency */,
+			);
+			name = RediM8Tests;
+			packageProductDependencies = (
+			);
+			productName = RediM8Tests;
+			productReference = 507010A8B96BD97DDE5DD660 /* RediM8Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F0EDB76ABCDD45956EC0591F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				ORGANIZATIONNAME = RediM8;
+				TargetAttributes = {
+					A33BA7545C2DB0B47CE7686E = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = C18099A7B6A4A2E01F5EEBF6 /* Build configuration list for PBXProject "RediM8" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 7ACED93834EFA49DE5FD145B;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D0DF9D16402DC96A5127ED36 /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AE625E75DB31D84A2980863C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				58142F5EE17B9D21C5CC50CE /* RediM8 */,
+				A33BA7545C2DB0B47CE7686E /* RediM8Tests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		EDB452C6FAB6CAE8DA8830B7 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				707E35464647F32ED298380B /* Assets.xcassets in Resources */,
+				DF6BF6D9C939DD638C1C3124 /* Emergency72HourPlan.json in Resources */,
+				851FF86FF784BC56EE598B95 /* FireTrails.json in Resources */,
+				CAD6356FEC2C22CA2877C9EB /* Gear.json in Resources */,
+				DC4C4C609510AAE2A5E37BF0 /* GoBagItems.json in Resources */,
+				D36720697AD8949C611A8D79 /* Guides.json in Resources */,
+				5177E5B53DB8BCBDC0AED911 /* MapPacks.json in Resources */,
+				2A519D0A87956E417D39A6B0 /* RediM8MapStyle.json in Resources */,
+				55F22F5DB1B1678BF8FA0CE3 /* ResourceCategories.json in Resources */,
+				A24415D9D7109BE77C6A22BD /* ResourceLocations.json in Resources */,
+				2573C98896E612E763C6678F /* Scenarios.json in Resources */,
+				04EE75149ED5525197EE35FF /* Shelters.json in Resources */,
+				756E291FDF6FEADC237E49C0 /* Tasks.json in Resources */,
+				A374375FAC6A8A814617A8B0 /* TrackSegments.json in Resources */,
+				FCBB16C84791E974A811E69C /* WaterPoints.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6FC9FD04B4A697C59B52F2C0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CBFAD86386F4A0D7ADD637E8 /* ActionButtonStyles.swift in Sources */,
+				AD524CF6C887091DB43A1791 /* AppSettings.swift in Sources */,
+				D5AD3971D017416F9404E91F /* AppState.swift in Sources */,
+				50C87DE85B0E599D3EEC2587 /* AssistantIntentClassifier.swift in Sources */,
+				5F52E3687EDF23751A4A281A /* AssistantPolicy.swift in Sources */,
+				B82FD6C7704D962E441A2CF4 /* BatteryService.swift in Sources */,
+				5DFF2E7024F369D5D77CDAF3 /* BeaconService.swift in Sources */,
+				1658BE4B0E8DC07A904CB95C /* BlackoutModeView.swift in Sources */,
+				88510BBA8840CA1541ACAD52 /* BlackoutViewModel.swift in Sources */,
+				26DFC59CB9892AFB09B93233 /* ChecklistItem.swift in Sources */,
+				1AA9294C8BAC3088CE2A3CEC /* ColorTheme.swift in Sources */,
+				91F41503D11EC1C6305F6F08 /* CommunityBeacon.swift in Sources */,
+				CCC5A22B4E0F3752F033DC45 /* Constants.swift in Sources */,
+				FEA83AC05A07A382E6736B1B /* DatabaseSchema.swift in Sources */,
+				3E7EB0D7E74776FEC266E129 /* DecisionSupport.swift in Sources */,
+				7F7CF1922C270E1DA8890BD3 /* DecisionSupportService.swift in Sources */,
+				53CF305A775C2115722475F8 /* DocumentVaultService.swift in Sources */,
+				0C62D9FBFF361D60E0E55084 /* Emergency72HourView.swift in Sources */,
+				E197E7FB584E0FDEC7CD6440 /* EmergencyCardDeckView.swift in Sources */,
+				BCD68220A8233744A2D0A359 /* EmergencyModeView.swift in Sources */,
+				D239708B0F53E0C487E13390 /* EmergencyPlanService.swift in Sources */,
+				825B1633245534B5313ECB06 /* Environment.swift in Sources */,
+				9C81FBBD858F69B588E89EBA /* Extensions.swift in Sources */,
+				8236E61BFE93E8833E56848B /* FamilyMember.swift in Sources */,
+				77EC950042EB24409B6EE8DB /* FamilyService.swift in Sources */,
+				B06BD0EC5593ABE60FD42BBB /* FeatureFlags.swift in Sources */,
+				79BF1EFDB1D3B5C019DA4336 /* FireTrailService.swift in Sources */,
+				4BD902D2250F1227658A4AC3 /* GearChecklistView.swift in Sources */,
+				810408E83452DFCC876F698C /* GoBag.swift in Sources */,
+				2A7D8F57F2CF7031B8CC1800 /* GoBagService.swift in Sources */,
+				76AF509BC78DCF7B51C180A0 /* GoBagView.swift in Sources */,
+				E04219CB577D3399D17F91C9 /* GoBagViewModel.swift in Sources */,
+				A1BEF1C937530915D3753D2F /* Guide.swift in Sources */,
+				704754D9EF5EE2A1510BA052 /* GuideLibraryView.swift in Sources */,
+				98B015B9F276010F6C836BFA /* GuideService.swift in Sources */,
+				677F7A85A4E281A93F6C0F4F /* HiddenModeIndicatorView.swift in Sources */,
+				7D49C2ED76BDFE5564D63159 /* HomeView.swift in Sources */,
+				F113595FF1BE882A261413A3 /* HomeViewModel.swift in Sources */,
+				7BC57B2CCF3E35088C46DBC0 /* HouseholdSetupView.swift in Sources */,
+				6041C6EC7C24970224729385 /* LeaveNowView.swift in Sources */,
+				282FE6E74529224E44F17964 /* LeaveNowViewModel.swift in Sources */,
+				38E3F765770841A167C6BE61 /* LocationService.swift in Sources */,
+				5986AC39F020A1A68FFD7C27 /* MapAssetIcon.swift in Sources */,
+				D625F69F0504FF020ABCE88D /* MapDataService.swift in Sources */,
+				D2392C5F5F39A77B53205817 /* MapLibreEmergencyMapView.swift in Sources */,
+				680263F59728823ABFB8E57C /* MapService.swift in Sources */,
+				2FA9D104076531CA0A5CDD52 /* MapView.swift in Sources */,
+				AB2BC8C0A981C5EB2F54E91D /* MapViewModel.swift in Sources */,
+				62E627AE17B3C411C1BE9535 /* MeshMessage.swift in Sources */,
+				ADB2B507F6419F2176B42B04 /* MeshService.swift in Sources */,
+				A719B742E0419BB74B77F948 /* MigrationManager.swift in Sources */,
+				A49DED091C07F91F72669CAB /* Monetization.swift in Sources */,
+				59AEDBE60DDAA9FCC211E484 /* MotionService.swift in Sources */,
+				224E7BDB9DDE02119AFCC3BE /* NavigationRouter.swift in Sources */,
+				6690A153E2E1D9C3BACB1AEE /* NearbyWaterSourcesSection.swift in Sources */,
+				F6C6E3636DBE6FEEF00BEA56 /* OfficialAlert.swift in Sources */,
+				AF84851B360FA957687563A7 /* OfficialAlertService.swift in Sources */,
+				C81D7AF84FF439066594F803 /* OfflineBasemapService.swift in Sources */,
+				A2BDB1591F9CB5A0BB1D9D5A /* OfflineDataManagementView.swift in Sources */,
+				9340B1B95B01CB786221D94C /* OfflineMapData.swift in Sources */,
+				84EF9A4229FB40864FB9CACA /* OnboardingContainerView.swift in Sources */,
+				A8F93DD64533435E876C8195 /* OnboardingViewModel.swift in Sources */,
+				159415960755FE05606B1AA8 /* PanelCard.swift in Sources */,
+				92D411E14FF4938B27F1A8E8 /* PermissionsManager.swift in Sources */,
+				E498A20CAE2A344456D47CAB /* PlanView.swift in Sources */,
+				9D1542B6F48B9DBE40DB8951 /* PlanViewModel.swift in Sources */,
+				4321BBE5DF5420553FBD9C21 /* PrepScenario.swift in Sources */,
+				3D8FF9F224312072B003080A /* PrepScore.swift in Sources */,
+				141AB2CE10C085C6704E8CBB /* PrepScoreResultView.swift in Sources */,
+				271FE6797214EBD667169DE4 /* PrepService.swift in Sources */,
+				37376537EAB158547BCCC428 /* PreparednessDataService.swift in Sources */,
+				7F48ABDB03C801228F0C1FBC /* PreparednessInsights.swift in Sources */,
+				5D461DDD59DB4280B50FEDB1 /* PreparednessInsightsService.swift in Sources */,
+				046C2AE42865B1B7CBDD2637 /* ReadinessReportService.swift in Sources */,
+				899427B876A3EC57877983A4 /* ReadinessReportView.swift in Sources */,
+				C3AA0964F2D5DCD30A476851 /* RediIcon.swift in Sources */,
+				3A07BB6B2891E5D24889A840 /* RediM8App.swift in Sources */,
+				9F03DEEF715A9F2BBA777CAF /* RediM8Branding.swift in Sources */,
+				D5A9BC002D4F137421CC9262 /* RediM8ProView.swift in Sources */,
+				4D99557B61F2D6D582D904BC /* ResourceMarker.swift in Sources */,
+				77720BED66911510EEF97D70 /* RootView.swift in Sources */,
+				B93E3F51B31143779F84E253 /* SQLiteStore.swift in Sources */,
+				63C04E87E65B74C5D022639E /* ScenarioEngine.swift in Sources */,
+				F5CE9C292B722138BD9A1782 /* ScenarioSelectionView.swift in Sources */,
+				AD18C047BD9462C750C00014 /* ScoreBar.swift in Sources */,
+				B194511FE40E0D78B8FD748F /* SecureVaultView.swift in Sources */,
+				C9EBBFA2BC743BBB167DC9E8 /* SettingsService.swift in Sources */,
+				18BF3836EFD4EF6B5F3A2E73 /* SettingsView.swift in Sources */,
+				065731F2D1660B851B2CC98D /* SettingsViewModel.swift in Sources */,
+				EE028C5701A42A997A00FFC8 /* ShelterService.swift in Sources */,
+				173F17BB1BA1C956D6725042 /* SignalView.swift in Sources */,
+				587BF86F3191AC03C4D90841 /* SignalViewModel.swift in Sources */,
+				06FBD5A30AD79B2227933004 /* StatusBadge.swift in Sources */,
+				D085A25F9A1CF6EBB875D9B3 /* Supplies.swift in Sources */,
+				60B77E8505029E892BC0E4B2 /* SuppliesSetupView.swift in Sources */,
+				92734555BD79BF9F2D7C4863 /* SurvivalModeView.swift in Sources */,
+				73A4C3218EB4422DE6656A2D /* TorchService.swift in Sources */,
+				A4A9BD7304EDB8B6D3BAD0DE /* Trust.swift in Sources */,
+				2CDAEDE539E09DFE3E04EA26 /* UserProfile.swift in Sources */,
+				B688AA079A9E0B332C7CB9C0 /* VaultModels.swift in Sources */,
+				70360DDF3B9E3E2F4D39D9DD /* VehicleKitView.swift in Sources */,
+				73BB59DEF7FA224DF1C3FAD2 /* VehicleKitViewModel.swift in Sources */,
+				26247AF2C5CC4AD98DA5D8E0 /* VehicleReadiness.swift in Sources */,
+				6669EDCA6ACC8D0CBF8634C1 /* VehicleReadinessService.swift in Sources */,
+				1DA513A7CE6F25F96AC86F0D /* WaterPointService.swift in Sources */,
+				6B782DA9C162CB1B330FCDDA /* WaterRuntime.swift in Sources */,
+				8C4E4AB52DB3A30711376471 /* WaterRuntimeService.swift in Sources */,
+				CB6832D5DAD230214826FC49 /* WelcomeView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		84ADC38451A28286F0A4F46B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				02D8C81CF1A6973FDCA4ED51 /* AppSettingsTests.swift in Sources */,
+				418EF8BEA2C13E631F0FEC53 /* AppStateBatteryTests.swift in Sources */,
+				ACCB87D429271E87D9293943 /* AppStateQuickActionTests.swift in Sources */,
+				2EC7C41F2E18B10E173C6FEC /* AppStateSettingsTests.swift in Sources */,
+				112C7CC8D093D181B82075EF /* AssistantIntentClassifierTests.swift in Sources */,
+				4A562B584ECCB7FAD640358D /* BeaconServiceTests.swift in Sources */,
+				FE92381F55957A998C7A80ED /* DecisionSupportServiceTests.swift in Sources */,
+				7185F5130C8408DE87D024BE /* DocumentVaultServiceTests.swift in Sources */,
+				7F4F3F175F74C113315A32BB /* FireTrailServiceTests.swift in Sources */,
+				3B818F3DA86371804516BC71 /* GoBagServiceTests.swift in Sources */,
+				9308213EBFDC01103D5A0819 /* GuideServiceTests.swift in Sources */,
+				9DC993E9677C39D76ED6EF63 /* MapDataServiceTests.swift in Sources */,
+				05A401720DF0CA6F9020F514 /* MonetizationTests.swift in Sources */,
+				37585FD12479A694714F6BD2 /* NavigationRouterTests.swift in Sources */,
+				267D99B8C5272C6B874E0071 /* OfficialAlertServiceTests.swift in Sources */,
+				7FBE660835D5515DACA6A4FC /* OfflineBasemapServiceTests.swift in Sources */,
+				D1C440C18B9FB5D87E069D77 /* PermissionsManagerTests.swift in Sources */,
+				3989F85634EB0B2F30661B72 /* PrepServiceTests.swift in Sources */,
+				6A27F5D21D8CB80B49BCEE6F /* PreparednessInsightsServiceTests.swift in Sources */,
+				2D0CBF0D08D32A8AC173EEC6 /* ScenarioEngineTests.swift in Sources */,
+				2C8CF0417E9DEC6718FD8F19 /* SettingsViewModelTests.swift in Sources */,
+				5C8715855F6140E8CC70B932 /* ShelterServiceTests.swift in Sources */,
+				111DC98C7BBE4BC67650187A /* TrustLayerTests.swift in Sources */,
+				77D29CF2994CE406F82E306E /* VehicleReadinessServiceTests.swift in Sources */,
+				33A86EE17114867B0EF81AA4 /* WaterPointServiceTests.swift in Sources */,
+				86E5526F7FEE3D24BB159921 /* WaterRuntimeServiceTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B7059FDE269D7AD07F1BAC74 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 58142F5EE17B9D21C5CC50CE /* RediM8 */;
+			targetProxy = A14BB4D943AE8894CBEBCD82 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1C4462BFD214327AAD895F4E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_MODULE_NAME = RediM8Tests;
+				PRODUCT_NAME = RediM8Tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RediM8.app/RediM8";
+			};
+			name = Debug;
+		};
+		55263E5018B9A246BB42549B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 44YVRQ7DHJ;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RediM8/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = au.com.redim8.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		69485D7D4EE85A53AE8F7CBD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = X49NJA432H;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lsqlite3",
+				);
+				PRODUCT_NAME = RediM8;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.1;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		6951546EEE8E9678D933F33F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_MODULE_NAME = RediM8Tests;
+				PRODUCT_NAME = RediM8Tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RediM8.app/RediM8";
+			};
+			name = Release;
+		};
+		DC6683243CD38D6127BE7456 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = X49NJA432H;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lsqlite3",
+				);
+				PRODUCT_NAME = RediM8;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.1;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		F442B96FEEFD15B5697A629D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 44YVRQ7DHJ;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = RediM8/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = au.com.redim8.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		214A4126CF9B93D37F1CDD83 /* Build configuration list for PBXNativeTarget "RediM8" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				55263E5018B9A246BB42549B /* Debug */,
+				F442B96FEEFD15B5697A629D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		64E268081E44B4028C34C312 /* Build configuration list for PBXNativeTarget "RediM8Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1C4462BFD214327AAD895F4E /* Debug */,
+				6951546EEE8E9678D933F33F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C18099A7B6A4A2E01F5EEBF6 /* Build configuration list for PBXProject "RediM8" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC6683243CD38D6127BE7456 /* Debug */,
+				69485D7D4EE85A53AE8F7CBD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D0DF9D16402DC96A5127ED36 /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/maplibre/maplibre-gl-native-distribution.git";
+			requirement = {
+				kind = exactVersion;
+				version = 6.9.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		2F719DE1CBFA38701FFA67B1 /* MapLibre */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D0DF9D16402DC96A5127ED36 /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */;
+			productName = MapLibre;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = F0EDB76ABCDD45956EC0591F /* Project object */;
+}

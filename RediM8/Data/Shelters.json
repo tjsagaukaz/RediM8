@@ -1,0 +1,128 @@
+{
+  "lastUpdated" : "2026-03-01T00:00:00Z",
+  "shelters" : [
+    {
+      "capacity" : 500,
+      "id" : "brisbane_community_hall",
+      "latitude" : -27.467,
+      "longitude" : 153.025,
+      "name" : "Brisbane Community Hall",
+      "notes" : "May open during emergencies. Confirm official activation before travel.",
+      "packIDs" : [
+        "brisbane_region",
+        "queensland"
+      ],
+      "source" : "Bundled baseline facility dataset",
+      "type" : "community_shelter"
+    },
+    {
+      "capacity" : 800,
+      "id" : "samford_showgrounds_evacuation_centre",
+      "latitude" : -27.370,
+      "longitude" : 152.886,
+      "name" : "Samford Showgrounds",
+      "notes" : "May be used as an evacuation centre or relief point during major incidents.",
+      "packIDs" : [
+        "brisbane_region",
+        "queensland"
+      ],
+      "source" : "Bundled baseline facility dataset",
+      "type" : "evacuation_centre"
+    },
+    {
+      "capacity" : 300,
+      "id" : "fernvale_public_assembly_point",
+      "latitude" : -27.451,
+      "longitude" : 152.654,
+      "name" : "Fernvale Sports Oval",
+      "notes" : "Public assembly point used for local staging when larger centres are still being activated.",
+      "packIDs" : [
+        "brisbane_region",
+        "queensland"
+      ],
+      "source" : "Bundled baseline facility dataset",
+      "type" : "public_assembly_point"
+    },
+    {
+      "capacity" : 180,
+      "id" : "coen_relief_centre",
+      "latitude" : -13.945,
+      "longitude" : 143.201,
+      "name" : "Coen Community Centre",
+      "notes" : "Temporary relief centre used for staged evacuations and supply coordination.",
+      "packIDs" : [
+        "cape_york",
+        "queensland"
+      ],
+      "source" : "Bundled baseline facility dataset",
+      "type" : "temporary_relief_centre"
+    },
+    {
+      "capacity" : 220,
+      "id" : "derby_community_shelter",
+      "latitude" : -17.300,
+      "longitude" : 123.630,
+      "name" : "Derby Civic Hall",
+      "notes" : "Community shelter reference location for wet-season disruptions. Activation is event-dependent.",
+      "packIDs" : [
+        "kimberley"
+      ],
+      "source" : "Bundled baseline facility dataset",
+      "type" : "community_shelter"
+    },
+    {
+      "capacity" : 450,
+      "id" : "alice_springs_relief_centre",
+      "latitude" : -23.700,
+      "longitude" : 133.880,
+      "name" : "Alice Springs Community Centre",
+      "notes" : "May operate as an emergency evacuation centre during severe heat, fire, or flood events.",
+      "packIDs" : [
+        "central_australia",
+        "northern_territory"
+      ],
+      "source" : "Bundled baseline facility dataset",
+      "type" : "evacuation_centre"
+    },
+    {
+      "capacity" : 140,
+      "id" : "west_macdonnell_community_hall",
+      "latitude" : -23.720,
+      "longitude" : 132.350,
+      "name" : "West MacDonnell Community Hall",
+      "notes" : "Community shelter reference point for remote travellers and nearby residents during major disruptions.",
+      "packIDs" : [
+        "central_australia",
+        "northern_territory"
+      ],
+      "source" : "Bundled baseline facility dataset",
+      "type" : "community_shelter"
+    },
+    {
+      "capacity" : 900,
+      "id" : "townsville_cyclone_shelter",
+      "latitude" : -19.258,
+      "longitude" : 146.817,
+      "name" : "Townsville Cyclone Shelter",
+      "notes" : "Purpose-built cyclone shelter reference location. Only use when officially opened.",
+      "packIDs" : [
+        "queensland"
+      ],
+      "source" : "Bundled baseline facility dataset",
+      "type" : "cyclone_shelter"
+    },
+    {
+      "capacity" : 600,
+      "id" : "cairns_community_shelter",
+      "latitude" : -16.920,
+      "longitude" : 145.770,
+      "name" : "Cairns Community Centre",
+      "notes" : "Community shelter reference location that may support cyclone and flood evacuations.",
+      "packIDs" : [
+        "queensland"
+      ],
+      "source" : "Bundled baseline facility dataset",
+      "type" : "community_shelter"
+    }
+  ]
+}

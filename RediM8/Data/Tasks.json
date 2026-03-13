@@ -1,0 +1,1437 @@
+{
+  "tasks": [
+    {
+      "id": "store_drinking_water_case",
+      "title": "Store bottled drinking water",
+      "description": "Keep sealed water ready for immediate use so the household can start a 72-hour plan without queueing or filling containers under pressure.",
+      "prep_score_value": 6,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "bushfires",
+        "cyclones",
+        "powerOutages",
+        "extendedInfrastructureDisruption",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "fill_food_grade_containers",
+      "title": "Fill food-grade water containers before warnings",
+      "description": "Top up clean containers early when severe weather or outages are forecast so you are not relying on mains pressure later.",
+      "prep_score_value": 5,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "floods",
+        "cyclones",
+        "powerOutages",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "rotate_water_stock",
+      "title": "Rotate stored water every 6 months",
+      "description": "Replace older water on a fixed schedule so taste, seals, and container condition are checked before an emergency.",
+      "prep_score_value": 4,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "bushfires",
+        "powerOutages",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "separate_drinking_and_washing_water",
+      "title": "Separate drinking water from washing water",
+      "description": "Allocate clean water for drinking and cooking first, and keep lower-grade water for cleaning and flushing.",
+      "prep_score_value": 5,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "floods",
+        "campingOffGrid",
+        "extendedInfrastructureDisruption",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "store_pet_water",
+      "title": "Store dedicated water for pets",
+      "description": "Set aside extra water for animals so household drinking reserves are not consumed faster than planned.",
+      "prep_score_value": 4,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "bushfires",
+        "floods",
+        "extremeHeat",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "keep_small_grab_bottles",
+      "title": "Keep grab-and-go water bottles packed",
+      "description": "Place small bottles in go-bags and vehicles so each person has immediate water during evacuation or transport delays.",
+      "prep_score_value": 4,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "bushfires",
+        "fuelShortages",
+        "remoteTravel",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "protect_water_from_heat",
+      "title": "Protect stored water from heat",
+      "description": "Store water out of direct sun and away from hot sheds or vehicle cabins so containers last longer and water stays usable.",
+      "prep_score_value": 4,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "bushfires",
+        "extremeHeat",
+        "remoteTravel"
+      ]
+    },
+    {
+      "id": "keep_water_treatment_backup",
+      "title": "Keep a water treatment backup",
+      "description": "Store tablets, filters, or boiling equipment so you can make uncertain water safer if mains supply is contaminated.",
+      "prep_score_value": 6,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "floods",
+        "campingOffGrid",
+        "remoteTravel",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "label_nonpotable_water",
+      "title": "Label non-potable water clearly",
+      "description": "Mark utility water so nobody accidentally drinks stored cleaning or collected floodwater.",
+      "prep_score_value": 3,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "floods",
+        "extendedInfrastructureDisruption",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "set_household_water_ration",
+      "title": "Set a household water ration",
+      "description": "Decide a daily water allocation for each person before you are under stress so reserves last the full plan duration.",
+      "prep_score_value": 6,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "powerOutages",
+        "extendedInfrastructureDisruption",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "learn_home_water_isolation",
+      "title": "Learn how to isolate the home water supply",
+      "description": "Know where the main valve is so you can shut down damaged plumbing or contaminated inflow safely.",
+      "prep_score_value": 4,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "floods",
+        "earthquake",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "stage_vehicle_water_cache",
+      "title": "Stage a vehicle water cache",
+      "description": "Keep extra water in a durable carrier for evacuations, breakdowns, or long detours.",
+      "prep_score_value": 5,
+      "category": "waterStorage",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "fuelShortages",
+        "bushfires",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "build_three_day_food_supply",
+      "title": "Build a 3-day food supply",
+      "description": "Store enough ready-to-eat food for at least 72 hours so the household can shelter safely when shops or roads are disrupted.",
+      "prep_score_value": 6,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "powerOutages",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "build_seven_day_pantry",
+      "title": "Build a 7-day pantry buffer",
+      "description": "Expand beyond the minimum and keep a week of shelf-stable food to cover transport delays and extended outages.",
+      "prep_score_value": 7,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "extendedInfrastructureDisruption",
+        "cyclones",
+        "floods"
+      ]
+    },
+    {
+      "id": "store_no_cook_meals",
+      "title": "Store no-cook meals",
+      "description": "Keep food that can be eaten cold if power, gas, or safe cooking space is unavailable.",
+      "prep_score_value": 5,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "powerOutages",
+        "floods",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "rotate_expiry_dates",
+      "title": "Rotate pantry expiry dates",
+      "description": "Use and replace stored food through normal meals so emergency food stays familiar and in date.",
+      "prep_score_value": 4,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "keep_manual_can_opener",
+      "title": "Keep a manual can opener with stored food",
+      "description": "Avoid relying on electric kitchen gear during outages and make canned food immediately usable.",
+      "prep_score_value": 3,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "powerOutages",
+        "cyclones",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "store_infant_and_special_diet_food",
+      "title": "Store infant and special-diet food",
+      "description": "Keep enough formula, texture-modified meals, or prescribed nutrition products for anyone who depends on them.",
+      "prep_score_value": 7,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "cyclones",
+        "floods",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "separate_allergy_safe_food",
+      "title": "Separate allergy-safe emergency food",
+      "description": "Store clearly labelled food that avoids known triggers so nobody improvises unsafe meals under pressure.",
+      "prep_score_value": 6,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "powerOutages",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "plan_fridge_outage_food_use",
+      "title": "Plan fridge-outage food use",
+      "description": "Know what to eat first and when chilled food is no longer safe so waste and illness risk are reduced.",
+      "prep_score_value": 4,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "powerOutages",
+        "severeStorm",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "pack_vehicle_rations",
+      "title": "Pack vehicle rations",
+      "description": "Keep compact food in the car in case detours, fuel queues, or road closures turn a short trip into a long wait.",
+      "prep_score_value": 5,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "fuelShortages",
+        "bushfires"
+      ]
+    },
+    {
+      "id": "protect_food_from_heat_and_pests",
+      "title": "Protect stored food from heat and pests",
+      "description": "Use sealed containers and cooler storage areas so food quality holds through summer and storm season.",
+      "prep_score_value": 4,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "extremeHeat",
+        "bushfires",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "keep_comfort_food_and_caffeine",
+      "title": "Keep familiar comfort food and caffeine options",
+      "description": "A small reserve of familiar items helps sustain morale and prevents sudden caffeine withdrawal headaches.",
+      "prep_score_value": 3,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "extendedInfrastructureDisruption",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "store_quick_hydration_snacks",
+      "title": "Store quick hydration snacks",
+      "description": "Keep salty, easy-to-eat food that supports hydration and energy when appetite is low or heat is high.",
+      "prep_score_value": 4,
+      "category": "foodStorage",
+      "recommended_scenarios": [
+        "extremeHeat",
+        "remoteTravel",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "assemble_first_aid_kit",
+      "title": "Assemble a household first aid kit",
+      "description": "Keep a complete first aid kit where everyone can access it quickly, and review missing items twice a year.",
+      "prep_score_value": 7,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "bushfires",
+        "remoteTravel"
+      ]
+    },
+    {
+      "id": "stock_prescription_buffer",
+      "title": "Hold a prescription medicine buffer",
+      "description": "Work with normal refill timing so critical medicines are not down to the last dose when services are disrupted.",
+      "prep_score_value": 8,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "extendedInfrastructureDisruption",
+        "floods",
+        "extremeHeat"
+      ]
+    },
+    {
+      "id": "record_medical_conditions",
+      "title": "Record medical conditions and allergies",
+      "description": "Keep a concise written record so helpers can act safely if phones are flat or the patient cannot speak clearly.",
+      "prep_score_value": 5,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "earthquake",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "keep_spare_glasses_and_hearing_aids",
+      "title": "Keep spare glasses and hearing aid supplies",
+      "description": "Store vision and hearing backups so mobility and communication do not drop sharply after damage or evacuation.",
+      "prep_score_value": 5,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "remoteTravel",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "pack_pain_relief_and_ors",
+      "title": "Pack pain relief and oral rehydration salts",
+      "description": "Keep simple treatment for pain, fever, and dehydration in both the home kit and evacuation bag.",
+      "prep_score_value": 5,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "extremeHeat",
+        "floods",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "learn_cpr_and_bleeding_control",
+      "title": "Learn CPR and bleeding control",
+      "description": "Practice core lifesaving skills so the household can stabilise a casualty while waiting for help.",
+      "prep_score_value": 8,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "earthquake",
+        "remoteTravel",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "stock_burn_dressings",
+      "title": "Stock burn dressings",
+      "description": "Keep appropriate dressings and gel to manage minor burns from cooking, generators, or radiant heat.",
+      "prep_score_value": 5,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "bushfires",
+        "campingOffGrid",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "prepare_pet_medical_supplies",
+      "title": "Prepare pet medical supplies",
+      "description": "Store animal medications, wound care items, and handling gear alongside household medical supplies.",
+      "prep_score_value": 4,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "bushfires",
+        "floods",
+        "remoteTravel"
+      ]
+    },
+    {
+      "id": "check_medicine_storage_temperature",
+      "title": "Check medicine storage temperature limits",
+      "description": "Move heat-sensitive medicines to safer storage during hot weather or outages so they remain effective.",
+      "prep_score_value": 6,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "extremeHeat",
+        "powerOutages",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "keep_hygiene_supplies_for_72_hours",
+      "title": "Keep hygiene supplies for 72 hours",
+      "description": "Store soap, wipes, sanitary items, and waste bags so illness risk stays lower during disrupted services.",
+      "prep_score_value": 5,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "floods",
+        "powerOutages",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "store_masks_gloves_and_disinfectant",
+      "title": "Store masks, gloves, and disinfectant",
+      "description": "Keep basic protective items ready for smoke, dirty cleanup work, and contaminated surfaces.",
+      "prep_score_value": 4,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "floods",
+        "severeStorm",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "prepare_spare_mobility_and_battery_aids",
+      "title": "Prepare spare mobility and battery aids",
+      "description": "Keep backup chargers, batteries, or mobility essentials for anyone who depends on assistive equipment.",
+      "prep_score_value": 7,
+      "category": "medicalPreparedness",
+      "recommended_scenarios": [
+        "powerOutages",
+        "earthquake",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "save_emergency_contacts_offline",
+      "title": "Save emergency contacts offline",
+      "description": "Keep critical contact numbers on the device and on paper so they remain available without signal or power.",
+      "prep_score_value": 6,
+      "category": "communication",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "severeStorm",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "agree_out_of_area_contact",
+      "title": "Agree on an out-of-area contact",
+      "description": "Choose one person outside the hazard zone who can relay updates if local networks are congested.",
+      "prep_score_value": 6,
+      "category": "communication",
+      "recommended_scenarios": [
+        "cyclones",
+        "bushfires",
+        "floods",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "program_emergency_radio",
+      "title": "Program and test the emergency radio",
+      "description": "Pre-set local stations and test reception so warnings can be monitored quickly during outages.",
+      "prep_score_value": 5,
+      "category": "communication",
+      "recommended_scenarios": [
+        "powerOutages",
+        "cyclones",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "print_local_emergency_frequencies",
+      "title": "Print local emergency broadcast frequencies",
+      "description": "Keep station lists with your radio kit so anyone in the household can tune in without searching online.",
+      "prep_score_value": 4,
+      "category": "communication",
+      "recommended_scenarios": [
+        "bushfires",
+        "cyclones",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "download_offline_maps_and_alerts",
+      "title": "Download offline maps and alert apps",
+      "description": "Store maps and official warning apps ahead of time so key information is available when signal is weak.",
+      "prep_score_value": 5,
+      "category": "communication",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "campingOffGrid",
+        "bushfires"
+      ]
+    },
+    {
+      "id": "teach_children_key_phone_numbers",
+      "title": "Teach children key phone numbers",
+      "description": "Practice the numbers they may need if they become separated or borrow another person\u2019s phone.",
+      "prep_score_value": 4,
+      "category": "communication",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "floods",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "practice_short_status_messages",
+      "title": "Practice short status messages",
+      "description": "Agree on concise messages such as location, safety, and next move so limited battery and signal are used well.",
+      "prep_score_value": 4,
+      "category": "communication",
+      "recommended_scenarios": [
+        "powerOutages",
+        "cyclones",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "keep_laminated_contact_sheet",
+      "title": "Keep a laminated contact sheet",
+      "description": "Store names, numbers, addresses, and medical notes in a waterproof sleeve with go-bags and the car.",
+      "prep_score_value": 5,
+      "category": "communication",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "extendedInfrastructureDisruption",
+        "remoteTravel"
+      ]
+    },
+    {
+      "id": "set_family_check_in_schedule",
+      "title": "Set a family check-in schedule",
+      "description": "Agree on regular times to report in so silence is noticed early and battery use stays predictable.",
+      "prep_score_value": 5,
+      "category": "communication",
+      "recommended_scenarios": [
+        "powerOutages",
+        "extendedInfrastructureDisruption",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "enable_location_sharing_when_signal_exists",
+      "title": "Enable location sharing when signal exists",
+      "description": "Know how to switch on trusted location sharing quickly when moving or evacuating.",
+      "prep_score_value": 3,
+      "category": "communication",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "bushfires",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "keep_whistle_signal_plan",
+      "title": "Keep a whistle signal plan",
+      "description": "Use simple whistle patterns for help, regrouping, or location marking where voices may not carry.",
+      "prep_score_value": 3,
+      "category": "communication",
+      "recommended_scenarios": [
+        "campingOffGrid",
+        "earthquake",
+        "floods"
+      ]
+    },
+    {
+      "id": "label_all_device_chargers_and_cables",
+      "title": "Label all device chargers and cables",
+      "description": "Avoid wasting time matching cables in the dark and keep power options ready for phones and radios.",
+      "prep_score_value": 3,
+      "category": "communication",
+      "recommended_scenarios": [
+        "powerOutages",
+        "extendedInfrastructureDisruption",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "charge_power_banks_before_risk_days",
+      "title": "Charge power banks before risk days",
+      "description": "Top up battery packs when warnings are issued so you start the event with full reserve power.",
+      "prep_score_value": 5,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "powerOutages",
+        "cyclones",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "keep_spare_batteries_sorted",
+      "title": "Keep spare batteries sorted by size",
+      "description": "Store fresh batteries by type and label opened packs so torches and radios can be re-powered fast.",
+      "prep_score_value": 4,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "powerOutages",
+        "generalEmergencies",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "test_torches_monthly",
+      "title": "Test torches monthly",
+      "description": "Switch on every torch and replace weak batteries before an emergency exposes failed gear.",
+      "prep_score_value": 4,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "powerOutages",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "plan_refrigeration_backup",
+      "title": "Plan refrigeration backup for food and medicine",
+      "description": "Decide what goes in the esky first and how long chilled items can stay safe if power is lost.",
+      "prep_score_value": 6,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "powerOutages",
+        "extendedInfrastructureDisruption",
+        "extremeHeat"
+      ]
+    },
+    {
+      "id": "store_car_usb_chargers",
+      "title": "Store car USB chargers",
+      "description": "Keep vehicle charging available so phones and lights can be topped up while parked or evacuating.",
+      "prep_score_value": 4,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "fuelShortages",
+        "remoteTravel",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "stage_solar_charger",
+      "title": "Stage a small solar charger",
+      "description": "Keep a compact solar panel or charger ready for multi-day outages or off-grid travel.",
+      "prep_score_value": 5,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "campingOffGrid",
+        "extendedInfrastructureDisruption",
+        "remoteTravel"
+      ]
+    },
+    {
+      "id": "learn_generator_safety",
+      "title": "Learn generator safety",
+      "description": "Operate generators outdoors, well clear of doors and windows, and protect cords from rain and trip hazards.",
+      "prep_score_value": 7,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "cyclones",
+        "severeStorm",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "protect_devices_with_surge_boards",
+      "title": "Protect critical devices with surge boards",
+      "description": "Use surge protection for chargers and essential electronics when unstable power returns.",
+      "prep_score_value": 4,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "severeStorm",
+        "cyclones",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "keep_headlamps_beside_beds",
+      "title": "Keep headlamps beside beds",
+      "description": "Hands-free lighting reduces falls and lets people move safely during sudden night-time outages.",
+      "prep_score_value": 4,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "powerOutages",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "reduce_nonessential_power_draw",
+      "title": "Reduce non-essential power draw early",
+      "description": "Shut down unneeded devices to preserve battery banks, generators, and vehicle charging time.",
+      "prep_score_value": 4,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "powerOutages",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "keep_backup_cooking_method",
+      "title": "Keep a backup cooking method",
+      "description": "Store safe outdoor or ventilated cooking gear so meals remain possible without mains power.",
+      "prep_score_value": 5,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "powerOutages",
+        "extendedInfrastructureDisruption",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "plan_medical_device_power_backup",
+      "title": "Plan backup power for medical devices",
+      "description": "Identify charging, battery, or relocation options for any essential medical equipment in the home.",
+      "prep_score_value": 8,
+      "category": "powerBackup",
+      "recommended_scenarios": [
+        "powerOutages",
+        "extremeHeat",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "choose_primary_evacuation_route",
+      "title": "Choose a primary evacuation route",
+      "description": "Pick the fastest safe route and write it down so nobody is deciding under time pressure.",
+      "prep_score_value": 6,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "bushfires",
+        "floods",
+        "cyclones",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "choose_secondary_evacuation_route",
+      "title": "Choose a secondary evacuation route",
+      "description": "Keep an alternate road or direction ready in case your main route is cut or congested.",
+      "prep_score_value": 5,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "bushfires",
+        "floods",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "stage_go_bags_by_exit",
+      "title": "Stage go-bags by the main exit",
+      "description": "Store ready bags near the door so people can move quickly with medications, documents, and water.",
+      "prep_score_value": 6,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "bushfires",
+        "severeStorm",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "copy_documents_to_waterproof_pouch",
+      "title": "Copy documents into a waterproof pouch",
+      "description": "Keep IDs, insurance details, and medical information protected from rain, floodwater, and smoke.",
+      "prep_score_value": 5,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "floods",
+        "cyclones",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "identify_local_shelter_options",
+      "title": "Identify local shelter options",
+      "description": "Know where to go if home is unsafe, including official centres and family or friends outside the risk area.",
+      "prep_score_value": 5,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "cyclones",
+        "floods",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "set_pet_evacuation_plan",
+      "title": "Set a pet evacuation plan",
+      "description": "Prepare carriers, leads, food, and accommodation options so animals can move with the household.",
+      "prep_score_value": 5,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "bushfires",
+        "floods",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "plan_school_and_work_pickup_roles",
+      "title": "Plan school and work pickup roles",
+      "description": "Decide who collects children or dependants if roads close or normal routines break down.",
+      "prep_score_value": 4,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "severeStorm",
+        "bushfires"
+      ]
+    },
+    {
+      "id": "keep_cash_in_small_notes",
+      "title": "Keep cash in small notes",
+      "description": "Cash helps when card terminals are offline or fuel and food outlets are limiting transactions.",
+      "prep_score_value": 4,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "fuelShortages",
+        "powerOutages",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "refuel_vehicle_at_half_tank",
+      "title": "Refuel vehicles at half a tank",
+      "description": "Avoid waiting until the last quarter so evacuation and supply runs remain viable during queues or shortages.",
+      "prep_score_value": 6,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "bushfires",
+        "fuelShortages",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "practice_ten_minute_departure",
+      "title": "Practice a 10-minute departure",
+      "description": "Run a timed drill so the household knows exactly what to grab and who does each task.",
+      "prep_score_value": 5,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "bushfires",
+        "floods",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "photograph_household_assets",
+      "title": "Photograph key household assets",
+      "description": "Record rooms, equipment, and serial numbers to support insurance and recovery after damage.",
+      "prep_score_value": 3,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "floods",
+        "cyclones",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "check_on_neighbours_after_warning",
+      "title": "Plan neighbour check-ins",
+      "description": "Identify who may need extra warning or transport assistance and agree how you will check on them safely.",
+      "prep_score_value": 4,
+      "category": "evacuationPlanning",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "severeStorm",
+        "extremeHeat"
+      ]
+    },
+    {
+      "id": "clear_gutters_and_roof_valleys",
+      "title": "Clear gutters and roof valleys",
+      "description": "Remove leaf litter and debris that can ignite or block drainage before fire and storm season.",
+      "prep_score_value": 6,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "bushfires",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "trim_fuel_around_home",
+      "title": "Trim fuel around the home",
+      "description": "Reduce long grass, dry leaf build-up, and low branches close to the house to lower ember and flame exposure.",
+      "prep_score_value": 7,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "bushfires",
+        "extremeHeat"
+      ]
+    },
+    {
+      "id": "test_smoke_alarms_monthly",
+      "title": "Test smoke alarms monthly",
+      "description": "Check alarms, replace weak batteries, and confirm everyone can hear them from sleeping areas.",
+      "prep_score_value": 5,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "bushfires",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "place_fire_extinguishers_near_kitchen_and_garage",
+      "title": "Place extinguishers near kitchen and garage",
+      "description": "Keep extinguishers where fire risk is higher and teach adults when to use them and when to leave.",
+      "prep_score_value": 5,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "bushfires",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "store_p2_masks",
+      "title": "Store P2 masks for smoke events",
+      "description": "Keep masks sealed and ready for outdoor movement, cleanup, or driving through smoky conditions.",
+      "prep_score_value": 4,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "bushfires",
+        "severeStorm",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "keep_hoses_connected_and_reachable",
+      "title": "Keep hoses connected and reachable",
+      "description": "Stage hoses where they can be used quickly for spot fires, cooling, or ember cleanup if safe to stay.",
+      "prep_score_value": 5,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "bushfires",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "move_flammables_away_from_house",
+      "title": "Move flammables away from the house",
+      "description": "Store gas bottles, fuel, kindling, and spare timber away from walls and access paths.",
+      "prep_score_value": 5,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "bushfires",
+        "extremeHeat"
+      ]
+    },
+    {
+      "id": "check_fire_blankets",
+      "title": "Check fire blankets and access points",
+      "description": "Make sure blankets are mounted, accessible, and not blocked by storage in kitchens or garages.",
+      "prep_score_value": 4,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "bushfires",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "prepare_ember_patrol_tools",
+      "title": "Prepare ember patrol tools",
+      "description": "Keep gloves, torch, ladder access, and a rake or shovel ready for spot fires and post-front checks.",
+      "prep_score_value": 5,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "bushfires"
+      ]
+    },
+    {
+      "id": "seal_gaps_against_embers",
+      "title": "Seal gaps against embers",
+      "description": "Screen vents and close gaps where embers can enter roofs, decks, and underfloor spaces.",
+      "prep_score_value": 7,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "bushfires",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "review_local_fire_danger_ratings",
+      "title": "Review local fire danger ratings",
+      "description": "Check ratings and warnings routinely during fire season so you act early instead of reacting late.",
+      "prep_score_value": 4,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "bushfires",
+        "extremeHeat"
+      ]
+    },
+    {
+      "id": "plan_safe_cooking_in_outage",
+      "title": "Plan safe cooking during outages",
+      "description": "Choose safe cooking locations and keep open flames away from vehicles, tents, and combustible surfaces.",
+      "prep_score_value": 4,
+      "category": "fireSafety",
+      "recommended_scenarios": [
+        "powerOutages",
+        "campingOffGrid",
+        "bushfires"
+      ]
+    },
+    {
+      "id": "move_valuables_above_flood_line",
+      "title": "Move valuables above the expected flood line",
+      "description": "Pre-stage critical items on higher shelves or an upper floor before heavy rain arrives.",
+      "prep_score_value": 6,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "floods",
+        "cyclones",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "mark_safe_high_ground_route",
+      "title": "Mark a safe high-ground route",
+      "description": "Know the quickest way to higher ground that does not rely on low crossings or creek roads.",
+      "prep_score_value": 6,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "floods",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "store_sandbags_and_plastic_sheeting",
+      "title": "Store sandbags and plastic sheeting",
+      "description": "Keep simple flood barriers ready so doorways and low vents can be protected early.",
+      "prep_score_value": 5,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "floods",
+        "severeStorm",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "learn_mains_power_shutdown_for_floods",
+      "title": "Learn mains power shutdown for floods",
+      "description": "Know how to cut power safely before water enters the building or garage.",
+      "prep_score_value": 6,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "floods",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "avoid_driving_through_floodwater",
+      "title": "Commit to never driving through floodwater",
+      "description": "Set the rule before the event so the household does not take risks with unknown depth or road damage.",
+      "prep_score_value": 7,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "floods",
+        "cyclones",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "protect_documents_in_waterproof_bag",
+      "title": "Protect documents in a waterproof bag",
+      "description": "Keep papers sealed in a grab-and-go pouch so they survive rain, mud, and quick evacuations.",
+      "prep_score_value": 4,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "floods",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "secure_outdoor_items_before_heavy_rain",
+      "title": "Secure outdoor items before heavy rain",
+      "description": "Move loose items that can block drains, damage windows, or float into access paths.",
+      "prep_score_value": 4,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "cyclones",
+        "severeStorm",
+        "floods"
+      ]
+    },
+    {
+      "id": "seal_chemical_and_fuel_storage",
+      "title": "Seal chemical and fuel storage",
+      "description": "Reduce contamination by securing chemicals, paints, fuels, and cleaners above likely flood reach.",
+      "prep_score_value": 5,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "floods",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "inspect_drains_and_grates_before_storm",
+      "title": "Inspect drains and grates before storms",
+      "description": "Clear obvious blockages around the home so runoff can move away more effectively.",
+      "prep_score_value": 4,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "severeStorm",
+        "floods",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "pack_cleanup_disinfectant_and_gloves",
+      "title": "Pack cleanup disinfectant and gloves",
+      "description": "Keep simple cleanup supplies ready for dirty water, mud, and post-flood hygiene work.",
+      "prep_score_value": 4,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "floods",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "prepare_after_flood_hygiene_plan",
+      "title": "Prepare an after-flood hygiene plan",
+      "description": "Plan safe waste handling, hand washing, and laundry until normal water and sewer systems return.",
+      "prep_score_value": 5,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "floods",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "check_water_quality_after_flood",
+      "title": "Check water quality after flooding",
+      "description": "Use stored water until authorities confirm safety or treat water with your backup method.",
+      "prep_score_value": 6,
+      "category": "floodSafety",
+      "recommended_scenarios": [
+        "floods",
+        "cyclones",
+        "extendedInfrastructureDisruption"
+      ]
+    },
+    {
+      "id": "keep_vehicle_serviced_for_evacuation",
+      "title": "Keep the vehicle serviced for evacuation",
+      "description": "Address basic maintenance so the car is less likely to fail during an urgent departure or long detour.",
+      "prep_score_value": 5,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "bushfires",
+        "remoteTravel",
+        "fuelShortages"
+      ]
+    },
+    {
+      "id": "store_spare_tyre_and_tools",
+      "title": "Store a usable spare tyre and tools",
+      "description": "Check the spare, jack, and wheel brace before long trips or hazard season.",
+      "prep_score_value": 5,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "fuelShortages",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "keep_jump_starter_charged",
+      "title": "Keep a jump starter charged",
+      "description": "Maintain a charged jump starter so a flat battery does not strand the household during an emergency.",
+      "prep_score_value": 4,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "powerOutages",
+        "remoteTravel",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "carry_recovery_strap_remote_routes",
+      "title": "Carry a recovery strap on remote routes",
+      "description": "Pack basic recovery gear when travelling on soft ground or isolated roads.",
+      "prep_score_value": 4,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "campingOffGrid",
+        "floods"
+      ]
+    },
+    {
+      "id": "pack_vehicle_water_and_food",
+      "title": "Pack water and food in the vehicle",
+      "description": "Keep vehicle reserves for delays, road closures, or breakdowns away from services.",
+      "prep_score_value": 5,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "fuelShortages",
+        "bushfires"
+      ]
+    },
+    {
+      "id": "keep_paper_map_in_vehicle",
+      "title": "Keep a paper map in the vehicle",
+      "description": "Store a local or state map in the glovebox in case data coverage, power, or navigation apps fail.",
+      "prep_score_value": 4,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "fuelShortages",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "maintain_vehicle_first_aid_kit",
+      "title": "Maintain a vehicle first aid kit",
+      "description": "Keep a small but complete kit in the car for breakdowns, travel, and evacuations.",
+      "prep_score_value": 5,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "generalEmergencies",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "store_window_breaker_and_seatbelt_cutter",
+      "title": "Store a window breaker and seatbelt cutter",
+      "description": "Place rescue tools where the driver can reach them without searching.",
+      "prep_score_value": 4,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "floods",
+        "severeStorm",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "keep_spare_phone_charger_in_vehicle",
+      "title": "Keep a spare phone charger in the vehicle",
+      "description": "Maintain charging access during long waits, detours, or response trips.",
+      "prep_score_value": 3,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "check_windscreen_wipers_before_storm",
+      "title": "Check wipers before storm season",
+      "description": "Replace worn blades before visibility becomes a safety issue in heavy rain.",
+      "prep_score_value": 3,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "severeStorm",
+        "cyclones",
+        "floods"
+      ]
+    },
+    {
+      "id": "keep_two_route_options_for_key_trips",
+      "title": "Keep two route options for key trips",
+      "description": "Know at least one alternate route for school, work, and evacuation travel.",
+      "prep_score_value": 4,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "fuelShortages",
+        "bushfires",
+        "floods"
+      ]
+    },
+    {
+      "id": "log_remote_trip_intentions",
+      "title": "Log remote trip intentions with someone trusted",
+      "description": "Tell a trusted contact where you are going, which route you are taking, and when to expect a check-in.",
+      "prep_score_value": 6,
+      "category": "vehiclePreparedness",
+      "recommended_scenarios": [
+        "remoteTravel",
+        "campingOffGrid"
+      ]
+    },
+    {
+      "id": "assign_household_roles",
+      "title": "Assign household emergency roles",
+      "description": "Decide who handles pets, documents, children, first aid, and vehicle loading so no critical task is missed.",
+      "prep_score_value": 6,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "bushfires",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "rehearse_children_reunion_plan",
+      "title": "Rehearse the children\u2019s reunion plan",
+      "description": "Practice where children wait, who picks them up, and which backup adult can step in.",
+      "prep_score_value": 5,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "floods",
+        "severeStorm"
+      ]
+    },
+    {
+      "id": "choose_neighbour_support_contact",
+      "title": "Choose a neighbour support contact",
+      "description": "Pick one nearby person to share quick updates or help with checks when families are split between work and home.",
+      "prep_score_value": 4,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "extremeHeat",
+        "generalEmergencies",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "maintain_contact_card_for_each_member",
+      "title": "Maintain a contact card for each member",
+      "description": "Give each person a small card with names, numbers, addresses, and allergies.",
+      "prep_score_value": 4,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "earthquake",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "note_pet_handling_instructions",
+      "title": "Note pet feeding and handling instructions",
+      "description": "Write down food, medications, carrier setup, and calming tips for anyone who may move or care for the pet.",
+      "prep_score_value": 3,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "bushfires",
+        "floods",
+        "cyclones"
+      ]
+    },
+    {
+      "id": "share_key_and_alarm_info_with_trusted_person",
+      "title": "Share key and alarm info with a trusted person",
+      "description": "Make sure one trusted person can access the home if you are away or delayed.",
+      "prep_score_value": 4,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "severeStorm",
+        "floods"
+      ]
+    },
+    {
+      "id": "set_medication_responsibility",
+      "title": "Set medication responsibility",
+      "description": "Decide who checks, packs, and carries each critical medication during evacuation or sheltering.",
+      "prep_score_value": 5,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "extendedInfrastructureDisruption",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "update_family_photo_for_identification",
+      "title": "Update family photos for identification",
+      "description": "Keep recent photos available to help if someone is separated during a large-scale event.",
+      "prep_score_value": 3,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "floods",
+        "cyclones",
+        "earthquake"
+      ]
+    },
+    {
+      "id": "choose_phone_free_meeting_rule",
+      "title": "Choose a phone-free meeting rule",
+      "description": "Agree where to wait and how long to stay even if phones fail or batteries are flat.",
+      "prep_score_value": 4,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "earthquake",
+        "powerOutages"
+      ]
+    },
+    {
+      "id": "practice_blackout_evening",
+      "title": "Practice a blackout evening",
+      "description": "Run an evening without mains power so lighting, cooking, charging, and family routines are tested in reality.",
+      "prep_score_value": 5,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "powerOutages",
+        "extendedInfrastructureDisruption",
+        "generalEmergencies"
+      ]
+    },
+    {
+      "id": "confirm_school_and_work_emergency_contacts",
+      "title": "Confirm school and work emergency contacts",
+      "description": "Check that organisations have the right names and numbers to reach the household in a crisis.",
+      "prep_score_value": 4,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "severeStorm",
+        "floods"
+      ]
+    },
+    {
+      "id": "review_plan_every_season",
+      "title": "Review the household plan every season",
+      "description": "Refresh tasks, supplies, routes, and contact details before conditions change.",
+      "prep_score_value": 4,
+      "category": "familyCoordination",
+      "recommended_scenarios": [
+        "generalEmergencies",
+        "cyclones",
+        "bushfires",
+        "extremeHeat"
+      ]
+    }
+  ]
+}

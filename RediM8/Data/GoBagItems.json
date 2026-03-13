@@ -1,0 +1,473 @@
+{
+  "categories": [
+    {
+      "id": "documents",
+      "title": "Documents",
+      "items": [
+        {
+          "id": "id_copies",
+          "title": "ID copies",
+          "detail": "Keep printed or digital copies of identification ready to grab.",
+          "related_gear_ids": [],
+          "related_task_ids": [
+            "copy_documents_to_waterproof_pouch"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "insurance_documents",
+          "title": "Insurance documents",
+          "detail": "Store policy numbers and claim contacts in the bag.",
+          "related_gear_ids": [],
+          "related_task_ids": [
+            "copy_documents_to_waterproof_pouch"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "emergency_contacts_sheet",
+          "title": "Emergency contacts",
+          "detail": "Keep a printed contact list in case the phone is flat.",
+          "related_gear_ids": [],
+          "related_task_ids": [
+            "save_emergency_contacts_offline",
+            "keep_laminated_contact_sheet"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "usb_document_backup",
+          "title": "USB backup of documents",
+          "detail": "Save key files offline on an encrypted drive or spare phone.",
+          "related_gear_ids": [],
+          "related_task_ids": [
+            "copy_documents_to_waterproof_pouch"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "waterproof_document_pouch_item",
+          "title": "Waterproof document pouch",
+          "detail": "Protect papers from rain, ash, and floodwater.",
+          "related_gear_ids": [
+            "waterproof_document_pouch"
+          ],
+          "related_task_ids": [
+            "protect_documents_in_waterproof_bag"
+          ],
+          "recommended_scenarios": [
+            "bushfires",
+            "floods",
+            "cyclones",
+            "severeStorm"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "medical",
+      "title": "Medical",
+      "items": [
+        {
+          "id": "first_aid_kit_item",
+          "title": "First aid kit",
+          "detail": "Pack a compact kit with dressings, gloves, and antiseptic.",
+          "related_gear_ids": [],
+          "related_task_ids": [
+            "store_masks_gloves_and_disinfectant"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "prescription_medications",
+          "title": "Prescription medications",
+          "detail": "Store a ready-to-grab supply with labels intact.",
+          "related_gear_ids": [],
+          "related_task_ids": [
+            "set_medication_responsibility"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "inhalers_devices",
+          "title": "Inhalers or medical devices",
+          "detail": "Include chargers, spacers, and backup consumables if needed.",
+          "related_gear_ids": [],
+          "related_task_ids": [
+            "prepare_spare_mobility_and_battery_aids"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "pain_relief_tablets",
+          "title": "Pain relief tablets",
+          "detail": "Keep simple over-the-counter treatment sealed and current.",
+          "related_gear_ids": [],
+          "related_task_ids": [
+            "set_medication_responsibility"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "p2_masks",
+          "title": "P2 masks",
+          "detail": "Reduce smoke exposure during bushfire and ember events.",
+          "related_gear_ids": [
+            "p2_mask_pack"
+          ],
+          "related_task_ids": [
+            "store_p2_masks"
+          ],
+          "recommended_scenarios": [
+            "bushfires"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "water",
+      "title": "Water",
+      "items": [
+        {
+          "id": "water_bottles",
+          "title": "Water bottles",
+          "detail": "Keep ready-to-drink bottles for immediate departure.",
+          "related_gear_ids": [
+            "bottled_water_case"
+          ],
+          "related_task_ids": [
+            "keep_small_grab_bottles"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "purification_tablets_item",
+          "title": "Water purification tablets",
+          "detail": "Carry a backup treatment option if clean water runs short.",
+          "related_gear_ids": [
+            "purification_tablets"
+          ],
+          "related_task_ids": [
+            "keep_water_treatment_backup"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "collapsible_water_container_item",
+          "title": "Collapsible water container",
+          "detail": "Useful for topping up when you reach a safe water source.",
+          "related_gear_ids": [
+            "collapsible_water_container"
+          ],
+          "related_task_ids": [
+            "fill_food_grade_containers"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "vehicle_water_cache",
+          "title": "Vehicle water cache",
+          "detail": "Stage extra bottles for long drives or remote detours.",
+          "related_gear_ids": [
+            "water_jerry_can"
+          ],
+          "related_task_ids": [
+            "stage_vehicle_water_cache"
+          ],
+          "recommended_scenarios": [
+            "remoteTravel",
+            "campingOffGrid"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "food",
+      "title": "Food",
+      "items": [
+        {
+          "id": "energy_bars",
+          "title": "Energy bars",
+          "detail": "Pack shelf-stable food that needs no preparation.",
+          "related_gear_ids": [],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "canned_food",
+          "title": "Canned food",
+          "detail": "Choose simple meals that travel well and tolerate heat.",
+          "related_gear_ids": [
+            "canned_protein"
+          ],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "portable_stove",
+          "title": "Portable stove",
+          "detail": "Only pack if you can carry it safely and have fuel ready.",
+          "related_gear_ids": [
+            "camp_stove"
+          ],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "utensils",
+          "title": "Utensils and can opener",
+          "detail": "Keep eating tools with the food section so nothing is missed.",
+          "related_gear_ids": [
+            "manual_can_opener"
+          ],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        }
+      ]
+    },
+    {
+      "id": "clothing",
+      "title": "Clothing",
+      "items": [
+        {
+          "id": "change_of_clothes",
+          "title": "Change of clothes",
+          "detail": "Pack one weather-appropriate set for each person using the bag.",
+          "related_gear_ids": [],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "sturdy_shoes",
+          "title": "Sturdy shoes",
+          "detail": "Use enclosed shoes suitable for debris and uneven ground.",
+          "related_gear_ids": [],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "rain_layer",
+          "title": "Rain layer",
+          "detail": "Add a compact waterproof shell for wind and driving rain.",
+          "related_gear_ids": [],
+          "related_task_ids": [],
+          "recommended_scenarios": [
+            "floods",
+            "cyclones",
+            "severeStorm"
+          ]
+        },
+        {
+          "id": "rubber_boots",
+          "title": "Rubber boots",
+          "detail": "Useful when roads, verges, and evacuation points are wet or muddy.",
+          "related_gear_ids": [],
+          "related_task_ids": [],
+          "recommended_scenarios": [
+            "floods"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "title": "Tools",
+      "items": [
+        {
+          "id": "multitool",
+          "title": "Multitool",
+          "detail": "Pack a compact tool for minor fixes and opening gear.",
+          "related_gear_ids": [],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "emergency_whistle_item",
+          "title": "Emergency whistle",
+          "detail": "Use a whistle to signal without draining your voice.",
+          "related_gear_ids": [
+            "whistle"
+          ],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "heavy_duty_duct_tape_item",
+          "title": "Duct tape",
+          "detail": "Useful for quick sealing, bundling, and temporary fixes.",
+          "related_gear_ids": [
+            "heavy_duty_duct_tape"
+          ],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "rope",
+          "title": "Rope",
+          "detail": "Carry a short durable length for bundling or securing loose items.",
+          "related_gear_ids": [],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "fire_blanket_item",
+          "title": "Fire blanket",
+          "detail": "Useful for ember attack and small fire suppression on the way out.",
+          "related_gear_ids": [
+            "fire_blanket"
+          ],
+          "related_task_ids": [
+            "check_fire_blankets"
+          ],
+          "recommended_scenarios": [
+            "bushfires"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "communication",
+      "title": "Communication",
+      "items": [
+        {
+          "id": "battery_radio_item",
+          "title": "Battery radio",
+          "detail": "Keep an offline news source for official warnings and updates.",
+          "related_gear_ids": [
+            "battery_radio"
+          ],
+          "related_task_ids": [
+            "program_emergency_radio"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "phone_power_bank_item",
+          "title": "Phone power bank",
+          "detail": "Charge it before high-risk days and store it with cables.",
+          "related_gear_ids": [
+            "power_bank_20000"
+          ],
+          "related_task_ids": [
+            "charge_power_banks_before_risk_days"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "charging_cables",
+          "title": "Charging cables",
+          "detail": "Include the cables that match every device you rely on.",
+          "related_gear_ids": [],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "laminated_contact_card",
+          "title": "Laminated contact card",
+          "detail": "Carry a small card with key names, numbers, and meeting points.",
+          "related_gear_ids": [],
+          "related_task_ids": [
+            "keep_laminated_contact_sheet",
+            "maintain_contact_card_for_each_member"
+          ],
+          "recommended_scenarios": []
+        }
+      ]
+    },
+    {
+      "id": "lighting",
+      "title": "Lighting",
+      "items": [
+        {
+          "id": "torch_item",
+          "title": "Torch",
+          "detail": "Use a dedicated torch instead of relying only on the phone light.",
+          "related_gear_ids": [
+            "led_torch"
+          ],
+          "related_task_ids": [
+            "test_torches_monthly"
+          ],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "headlamp_item",
+          "title": "Headlamp",
+          "detail": "Keeps hands free when loading the car or moving in smoke or rain.",
+          "related_gear_ids": [
+            "headlamp"
+          ],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "spare_batteries",
+          "title": "Extra batteries",
+          "detail": "Store the battery size required for your torch and radio.",
+          "related_gear_ids": [
+            "aa_aaa_battery_pack"
+          ],
+          "related_task_ids": [],
+          "recommended_scenarios": []
+        },
+        {
+          "id": "usb_car_charger_item",
+          "title": "USB car charger",
+          "detail": "Top up phones and lights during evacuation travel.",
+          "related_gear_ids": [
+            "usb_car_charger"
+          ],
+          "related_task_ids": [],
+          "recommended_scenarios": [
+            "remoteTravel",
+            "campingOffGrid"
+          ]
+        }
+      ]
+    }
+  ],
+  "evacuation_checklist": [
+    {
+      "id": "grab_go_bag",
+      "title": "Grab go bag",
+      "detail": "Take the packed bag staged near the main exit.",
+      "requires_pets": false
+    },
+    {
+      "id": "take_document_pouch",
+      "title": "Take document pouch",
+      "detail": "Check the waterproof document pouch is in the bag or in hand.",
+      "requires_pets": false
+    },
+    {
+      "id": "turn_off_gas",
+      "title": "Turn off gas",
+      "detail": "Only if it is safe and you know the shutoff procedure.",
+      "requires_pets": false
+    },
+    {
+      "id": "turn_off_electricity",
+      "title": "Turn off electricity",
+      "detail": "Shut down power if authorities or your household plan require it.",
+      "requires_pets": false
+    },
+    {
+      "id": "secure_pets",
+      "title": "Secure pets",
+      "detail": "Load carriers, leads, food, and medications before leaving.",
+      "requires_pets": true
+    },
+    {
+      "id": "lock_house",
+      "title": "Lock house",
+      "detail": "Do a final exit check and lock the property if time allows.",
+      "requires_pets": false
+    },
+    {
+      "id": "leave_immediately",
+      "title": "Leave immediately",
+      "detail": "Use the planned route and avoid stopping unless conditions force it.",
+      "requires_pets": false
+    }
+  ]
+}
