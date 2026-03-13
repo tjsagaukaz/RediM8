@@ -520,6 +520,11 @@ final class BeaconService: ObservableObject {
         }
 
         relayBacklog = Self.sorted(relayBacklog)
+
+        if relayBacklog.count > AppConstants.Beacon.maxRelayBacklogSize {
+            relayBacklog.removeLast(relayBacklog.count - AppConstants.Beacon.maxRelayBacklogSize)
+        }
+
         persistRelayBacklog()
     }
 

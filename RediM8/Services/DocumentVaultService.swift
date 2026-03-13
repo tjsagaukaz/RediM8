@@ -174,7 +174,11 @@ final class DocumentVaultService: ObservableObject {
         documentsDirectoryURL = resolvedBaseURL.appendingPathComponent("Documents", isDirectory: true)
         stateFileURL = resolvedBaseURL.appendingPathComponent("vault_state.bin", isDirectory: false)
 
-        try? ensureStorageDirectories()
+        do {
+            try ensureStorageDirectories()
+        } catch {
+            assertionFailure("DocumentVaultService: failed to create storage directories: \(error)")
+        }
     }
 
     deinit {
@@ -332,7 +336,7 @@ final class DocumentVaultService: ObservableObject {
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         var mutableBaseURL = baseURL
-        try? mutableBaseURL.setResourceValues(values)
+        try mutableBaseURL.setResourceValues(values)
     }
 
     private func encrypt(_ data: Data, using key: SymmetricKey) throws -> Data {

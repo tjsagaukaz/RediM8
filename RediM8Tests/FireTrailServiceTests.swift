@@ -20,4 +20,37 @@ final class FireTrailServiceTests: XCTestCase {
         XCTAssertEqual(trail.purpose, .emergencyAccess)
         XCTAssertTrue(trail.safetyLabels.contains(.emergencyVehicleRoute))
     }
+
+    func testEmptyPackIDsReturnsNoTrails() {
+        let service = FireTrailService(bundle: .main)
+
+        let trails = service.fireTrails(for: [])
+
+        XCTAssertTrue(trails.isEmpty)
+    }
+
+    func testUnknownPackIDReturnsNoTrails() {
+        let service = FireTrailService(bundle: .main)
+
+        let trails = service.fireTrails(for: ["nonexistent_pack_id_xyz"])
+
+        XCTAssertTrue(trails.isEmpty)
+    }
+
+    func testServiceIndicatesOfflineDataIsLoaded() {
+        let service = FireTrailService(bundle: .main)
+
+        XCTAssertTrue(service.didLoadOfflineData)
+    }
+
+    func testMultiplePackIDsReturnTrailsFromAllMatchingPacks() {
+        let service = FireTrailService(bundle: .main)
+
+        let centralTrails = service.fireTrails(for: ["central_australia"])
+        let brisbaneTrails = service.fireTrails(for: ["brisbane_region"])
+        let combinedTrails = service.fireTrails(for: ["central_australia", "brisbane_region"])
+
+        XCTAssertFalse(combinedTrails.isEmpty)
+        XCTAssertGreaterThanOrEqual(combinedTrails.count, centralTrails.count + brisbaneTrails.count)
+    }
 }
