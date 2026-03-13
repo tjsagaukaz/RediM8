@@ -443,64 +443,73 @@ final class OfficialAlertService: ObservableObject {
         }
     }
 
-    nonisolated private static let defaultFeedSources: [FeedSource] = [
-        FeedSource(
-            id: "act_cap_warnings",
-            name: "ACT ESA Official Warnings",
-            jurisdiction: .act,
-            url: URL(string: "https://data.esa.act.gov.au/feeds/esa-cap-incidents.xml")!,
-            format: .cap
-        ),
-        FeedSource(
-            id: "nsw_cap_warnings",
-            name: "NSW RFS Official Warnings",
-            jurisdiction: .nsw,
-            url: URL(string: "https://www.rfs.nsw.gov.au/feeds/majorIncidentsCAP.xml")!,
-            format: .cap
-        ),
-        FeedSource(
-            id: "nt_bom_land_warnings",
-            name: "Northern Territory Official Weather Warnings",
-            jurisdiction: .nt,
-            url: URL(string: "https://www.bom.gov.au/fwo/IDZ00062.warnings_land_nt.xml")!,
-            format: .rss
-        ),
-        FeedSource(
-            id: "qld_cap_warnings",
-            name: "Queensland Official Warnings",
-            jurisdiction: .qld,
-            url: URL(string: "https://publiccontent-qld-alerts.s3.ap-southeast-2.amazonaws.com/content/Feeds/StormFloodCycloneWarnings/StormWarnings_capau.xml")!,
-            format: .cap
-        ),
-        FeedSource(
-            id: "sa_cap_warnings",
-            name: "South Australia Official Warnings",
-            jurisdiction: .sa,
-            url: URL(string: "https://data.eso.sa.gov.au/prod/cfs/criimson/alertsa-fire.xml")!,
-            format: .cap
-        ),
-        FeedSource(
-            id: "tas_incidents",
-            name: "Tasmania Official Incidents",
-            jurisdiction: .tas,
-            url: URL(string: "https://api.alert.tas.gov.au/jsonapi/incidents?sort=-changed&page%5Blimit%5D=50&include=agency,incident_type")!,
-            format: .tasIncidentsJSON
-        ),
-        FeedSource(
-            id: "vic_incidents",
-            name: "Victoria Official Incidents",
-            jurisdiction: .vic,
-            url: URL(string: "https://data.emergency.vic.gov.au/Show?pageId=getIncidentJSON")!,
-            format: .vicIncidentsJSON
-        ),
-        FeedSource(
-            id: "wa_warnings",
-            name: "Western Australia Official Warnings",
-            jurisdiction: .wa,
-            url: URL(string: "https://api.emergency.wa.gov.au/v1/warnings")!,
-            format: .waWarningsJSON
-        )
-    ]
+    nonisolated private static let defaultFeedSources: [FeedSource] = {
+        let raw: [(id: String, name: String, jurisdiction: AustralianJurisdiction, urlString: String, format: FeedFormat)] = [
+            (
+                "act_cap_warnings",
+                "ACT ESA Official Warnings",
+                .act,
+                "https://data.esa.act.gov.au/feeds/esa-cap-incidents.xml",
+                .cap
+            ),
+            (
+                "nsw_cap_warnings",
+                "NSW RFS Official Warnings",
+                .nsw,
+                "https://www.rfs.nsw.gov.au/feeds/majorIncidentsCAP.xml",
+                .cap
+            ),
+            (
+                "nt_bom_land_warnings",
+                "Northern Territory Official Weather Warnings",
+                .nt,
+                "https://www.bom.gov.au/fwo/IDZ00062.warnings_land_nt.xml",
+                .rss
+            ),
+            (
+                "qld_cap_warnings",
+                "Queensland Official Warnings",
+                .qld,
+                "https://publiccontent-qld-alerts.s3.ap-southeast-2.amazonaws.com/content/Feeds/StormFloodCycloneWarnings/StormWarnings_capau.xml",
+                .cap
+            ),
+            (
+                "sa_cap_warnings",
+                "South Australia Official Warnings",
+                .sa,
+                "https://data.eso.sa.gov.au/prod/cfs/criimson/alertsa-fire.xml",
+                .cap
+            ),
+            (
+                "tas_incidents",
+                "Tasmania Official Incidents",
+                .tas,
+                "https://api.alert.tas.gov.au/jsonapi/incidents?sort=-changed&page%5Blimit%5D=50&include=agency,incident_type",
+                .tasIncidentsJSON
+            ),
+            (
+                "vic_incidents",
+                "Victoria Official Incidents",
+                .vic,
+                "https://data.emergency.vic.gov.au/Show?pageId=getIncidentJSON",
+                .vicIncidentsJSON
+            ),
+            (
+                "wa_warnings",
+                "Western Australia Official Warnings",
+                .wa,
+                "https://api.emergency.wa.gov.au/v1/warnings",
+                .waWarningsJSON
+            )
+        ]
+        return raw.compactMap { item in
+            guard let url = URL(string: item.urlString) else {
+                assertionFailure("Invalid feed source URL: \(item.urlString)")
+                return nil
+            }
+            return FeedSource(id: item.id, name: item.name, jurisdiction: item.jurisdiction, url: url, format: item.format)
+        }
+    }()
 
     private static func sort(lhs: OfficialAlert, rhs: OfficialAlert) -> Bool {
         if lhs.severity.rank != rhs.severity.rank {

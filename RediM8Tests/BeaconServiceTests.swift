@@ -223,6 +223,31 @@ final class BeaconServiceTests: XCTestCase {
         return service
     }
 
+    @MainActor
+    func testRelayBacklogDoesNotExceedMaximumSize() {
+        let service = makeRelayEnabledService()
+        let timestamp = Date()
+        let cap = AppConstants.Beacon.maxRelayBacklogSize
+
+        for index in 0 ..< cap + 50 {
+            service.recordReceivedBeacon(
+                makeBeacon(
+                    id: "beacon_\(index)",
+                    nodeID: "NODE_\(index)",
+                    type: .waterAvailable,
+                    state: .active,
+                    updatedAt: timestamp,
+                    expiresAt: timestamp.addingTimeInterval(2 * 60 * 60),
+                    message: "Water available"
+                ),
+                sourcePeerDisplayName: "Peer \(index)",
+                receivedFromMesh: true
+            )
+        }
+
+        XCTAssertLessThanOrEqual(service.relayQueueCount, cap)
+    }
+
     private func makeBeacon(
         id: String,
         nodeID: String,

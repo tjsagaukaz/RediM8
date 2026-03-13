@@ -25,5 +25,6 @@ enum AppConstants {
         static let lifetime: TimeInterval = 2 * 60 * 60
         static let maxRelayDepth = 2
         static let inactiveRelayLifetime: TimeInterval = 15 * 60
+        static let maxRelayBacklogSize = 200
     }
 }

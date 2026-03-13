@@ -25,4 +25,36 @@ final class VehicleReadinessServiceTests: XCTestCase {
         XCTAssertTrue(plan.items.contains(where: { $0.id == "vehicle_maps" && $0.isCritical }))
         XCTAssertTrue(plan.items.contains(where: { $0.id == "vehicle_fuel" && $0.isCritical }))
     }
+
+    @MainActor
+    func testNoCompletedItemsReturnsZeroScore() {
+        let service = VehicleReadinessService(store: nil)
+
+        let plan = service.plan(for: UserProfile.empty)
+
+        XCTAssertEqual(plan.readiness.completedCount, 0)
+        XCTAssertGreaterThan(plan.readiness.totalCount, 0)
+    }
+
+    @MainActor
+    func testUncheckedItemIsRemovedFromCompletedSet() {
+        let service = VehicleReadinessService(store: nil)
+        service.setItem("vehicle_water", isComplete: true)
+
+        service.setItem("vehicle_water", isComplete: false)
+
+        let plan = service.plan(for: UserProfile.empty)
+        XCTAssertEqual(plan.readiness.completedCount, 0)
+        XCTAssertFalse(service.isItemComplete("vehicle_water"))
+    }
+
+    @MainActor
+    func testNextActionsArePopulatedWhenItemsAreIncomplete() {
+        let service = VehicleReadinessService(store: nil)
+
+        let plan = service.plan(for: UserProfile.empty)
+
+        XCTAssertFalse(plan.nextActions.isEmpty)
+        XCTAssertLessThanOrEqual(plan.nextActions.count, 3)
+    }
 }
