@@ -17,6 +17,10 @@ final class LocationService: NSObject, ObservableObject {
     private var activeClients = 0
     private var runtimeMode: LocationRuntimeMode = .standard
 
+    var activeClientCount: Int {
+        activeClients
+    }
+
     init(permissionsManager: PermissionsManager = .live) {
         let manager = CLLocationManager()
         self.manager = manager

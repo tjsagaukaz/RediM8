@@ -1,0 +1,21 @@
+{
+  "version" : 8,
+  "name" : "Starter Tactical",
+  "center" : [133.7751, -25.2744],
+  "zoom" : 3.1,
+  "pitch" : 0,
+  "bearing" : 0,
+  "metadata" : {
+    "redim8Package" : "starter_tactical"
+  },
+  "sources" : {},
+  "layers" : [
+    {
+      "id" : "background",
+      "type" : "background",
+      "paint" : {
+        "background-color" : "#08100b"
+      }
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import CoreLocation
 import UIKit
 import XCTest
 @testable import RediM8
@@ -209,6 +210,132 @@ final class AppStateSettingsTests: XCTestCase {
         XCTAssertFalse(appState.settings.battery.enablesSurvivalModeAtFifteenPercent)
         XCTAssertTrue(appState.settings.battery.reducesMapAnimations)
         XCTAssertTrue(appState.settings.maps.defaultLayers.contains(.evacuationPoints))
+    }
+
+    func testAnalogRescueSnapshotPrefersPrimaryFamilyMemberAndProfileMedicalInfo() {
+        var profile = UserProfile.empty
+        profile.familyMembers = [
+            FamilyMember(name: "Taylor", phone: "0400 000 111", medicalNotes: "", emergencyRole: "Primary", isPrimaryUser: true)
+        ]
+        profile.emergencyContacts = [
+            EmergencyContact(name: "Alex", phone: "0400 123 456")
+        ]
+        profile.emergencyMedicalInfo = EmergencyMedicalInfo(
+            criticalConditions: [.asthma],
+            severeAllergies: "Peanuts",
+            otherCriticalCondition: "",
+            bloodType: "O+",
+            emergencyMedication: "Ventolin"
+        )
+
+        let snapshot = AnalogRescueSnapshot(
+            profile: profile,
+            fallbackOwnerName: "Thomas's iPhone",
+            location: CLLocation(latitude: -27.4705, longitude: 153.0260)
+        )
+
+        XCTAssertEqual(snapshot.ownerName, "Taylor")
+        XCTAssertEqual(snapshot.bloodType, "O+")
+        XCTAssertEqual(snapshot.allergies, "Peanuts")
+        XCTAssertEqual(snapshot.medication, "Ventolin")
+        XCTAssertEqual(snapshot.conditionSummary, "Asthma")
+        XCTAssertEqual(snapshot.contacts.first?.name, "Alex")
+        XCTAssertEqual(snapshot.coordinatesText, "-27.4705, 153.0260")
+    }
+
+    func testAnalogRescueSnapshotFallsBackToDeviceNameWhenProfileIsEmpty() {
+        let snapshot = AnalogRescueSnapshot(
+            profile: .empty,
+            fallbackOwnerName: "Thomas's iPhone",
+            location: nil
+        )
+
+        XCTAssertEqual(snapshot.ownerName, "Thomas's iPhone")
+        XCTAssertNil(snapshot.coordinatesText)
+        XCTAssertFalse(snapshot.hasAnyMedicalInfo)
+        XCTAssertTrue(snapshot.contacts.isEmpty)
+    }
+
+    func testScannerSnapshotEscalatesOfflineLowBatteryState() {
+        let snapshot = SituationalScannerSnapshot(
+            gpsState: .unavailable,
+            networkState: .offline,
+            radioState: .bluetoothOff,
+            pressureTrend: .unavailable,
+            powerState: .onBattery,
+            batteryStatus: BatteryStatus(level: 0.10, state: .unplugged),
+            lastNetworkDropAt: .now,
+            updatedAt: .now
+        )
+
+        XCTAssertEqual(snapshot.tone, .danger)
+        XCTAssertTrue(snapshot.alerts.contains { $0.title == "Network drop detected" })
+        XCTAssertTrue(snapshot.alerts.contains { $0.title == "Battery reserve is low" })
+    }
+
+    func testScannerSnapshotSurfacesPressureAndRadioDensityCues() {
+        let snapshot = SituationalScannerSnapshot(
+            gpsState: .locked,
+            networkState: .cellularAvailable,
+            radioState: .scanning(16),
+            pressureTrend: .falling,
+            powerState: .charging,
+            batteryStatus: BatteryStatus(level: 0.72, state: .charging),
+            lastNetworkDropAt: nil,
+            updatedAt: .now
+        )
+
+        XCTAssertEqual(snapshot.tone, .caution)
+        XCTAssertTrue(snapshot.alerts.contains { $0.title == "Pressure trend is falling" })
+        XCTAssertTrue(snapshot.alerts.contains { $0.title == "Nearby radio activity is high" })
+        XCTAssertEqual(snapshot.statusLabel, "Monitor")
+    }
+
+    @MainActor
+    func testSignalViewModelSeedsAccountabilityCircleFromProfile() {
+        var profile = UserProfile.empty
+        profile.familyMembers = [
+            FamilyMember(name: "TJ", phone: "0400 000 111", medicalNotes: "", emergencyRole: "Primary", isPrimaryUser: true),
+            FamilyMember(name: "Emma", phone: "0400 000 222", medicalNotes: "", emergencyRole: "Family")
+        ]
+        profile.emergencyContacts = [
+            EmergencyContact(name: "Dad", phone: "0400 000 333")
+        ]
+
+        let circle = SignalViewModel.synchronizedAccountabilityCircle(
+            .empty,
+            with: profile,
+            fallbackLocalName: "You"
+        )
+
+        XCTAssertEqual(circle.title, "Household Status")
+        XCTAssertEqual(circle.members.map(\.name), ["TJ", "Emma", "Dad"])
+        XCTAssertEqual(circle.members.first?.source, .selfUser)
+        XCTAssertEqual(circle.members[1].source, .family)
+        XCTAssertEqual(circle.members[2].source, .emergencyContact)
+    }
+
+    func testMeshMessageEncodesAccountabilityStatusPayload() throws {
+        let message = MeshMessage(
+            sender: "TJ",
+            body: "TJ: Safe",
+            kind: .accountabilityStatus,
+            accountabilityStatus: AccountabilityMeshStatus(
+                circleTitle: "Family",
+                memberName: "TJ",
+                status: .safe,
+                note: "At rally point"
+            )
+        )
+
+        let data = try JSONEncoder().encode(message)
+        let decoded = try JSONDecoder().decode(MeshMessage.self, from: data)
+
+        XCTAssertEqual(decoded.kind, .accountabilityStatus)
+        XCTAssertEqual(decoded.accountabilityStatus?.circleTitle, "Family")
+        XCTAssertEqual(decoded.accountabilityStatus?.memberName, "TJ")
+        XCTAssertEqual(decoded.accountabilityStatus?.status, .safe)
+        XCTAssertEqual(decoded.accountabilityStatus?.note, "At rally point")
     }
 
     private func sampleOfficialAlert(areaScoped: Bool) -> OfficialAlert {

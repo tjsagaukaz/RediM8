@@ -12,10 +12,6 @@ enum EmergencyQuickAction: String, Equatable {
 
 @MainActor
 final class AppState: ObservableObject {
-    private enum EmergencyUnlockPolicy {
-        static let recentlyEndedVisibility: TimeInterval = 12 * 60 * 60
-    }
-
     @Published private(set) var profile: UserProfile
     @Published private(set) var settings: AppSettings
     @Published private(set) var prepScore: PrepScore
@@ -23,47 +19,24 @@ final class AppState: ObservableObject {
     @Published private(set) var pendingQuickAction: EmergencyQuickAction?
     @Published private(set) var isEmergencyAccessActive = false
     @Published private(set) var batteryStatus: BatteryStatus
-    @Published private(set) var shouldPromptForSurvivalMode = false
-    @Published private(set) var isLowBatterySurvivalModeEnabled = false
-    @Published private(set) var isStealthModeEnabled = false
-    @Published private(set) var stealthNodeID = AppState.generateEphemeralNodeID()
+    @Published private(set) var shouldPromptForSurvivalMode: Bool
+    @Published private(set) var isLowBatterySurvivalModeEnabled: Bool
+    @Published private(set) var isStealthModeEnabled: Bool
+    @Published private(set) var stealthNodeID: String
     @Published private(set) var activePrioritySituation: PrioritySituation?
-    @Published private(set) var emergencyUnlockState: EmergencyUnlockState = .inactive
+    @Published private(set) var emergencyUnlockState: EmergencyUnlockState
 
-    let assistantIntentClassifier: AssistantIntentClassifier
     let featureFlags: AppFeatureFlags
     let permissionsManager: PermissionsManager
-    let offlineBasemapService: OfflineBasemapService
-    let officialAlertService: OfficialAlertService
-    let documentVaultService: DocumentVaultService
-    let preparednessDataService: PreparednessDataService
-    let settingsService: SettingsService
-    let familyService: FamilyService
-    let guideService: GuideService
-    let scenarioEngine: ScenarioEngine
-    let prepService: PrepService
-    let preparednessInsightsService: PreparednessInsightsService
-    let decisionSupportService: DecisionSupportService
-    let vehicleReadinessService: VehicleReadinessService
-    let waterRuntimeService: WaterRuntimeService
-    let emergencyPlanService: EmergencyPlanService
-    let goBagService: GoBagService
-    let readinessReportService: ReadinessReportService
-    let beaconService: BeaconService
-    let mapService: MapService
-    let mapDataService: MapDataService
-    let waterPointService: WaterPointService
-    let fireTrailService: FireTrailService
-    let shelterService: ShelterService
-    let batteryService: BatteryService
-    let meshService: MeshService
-    let locationService: LocationService
-    let torchService: TorchService
-    let motionService: MotionService
+    let services: AppServices
+    let preparedness: PreparednessSystem
+    let signal: SignalSystem
+    let map: MapSystem
+    let vault: VaultSystem
+    let power: PowerSystem
 
     private let store: SQLiteStore?
     private var cancellables = Set<AnyCancellable>()
-    private var deferredSurvivalPromptDismissal = false
     private var storedScreenBrightness: CGFloat?
     private var storedIdleTimerDisabled: Bool?
 
@@ -77,100 +50,107 @@ final class AppState: ObservableObject {
 
     init(environment: AppEnvironment) {
         let services = environment.makeServices()
-
-        store = environment.store
-        assistantIntentClassifier = services.assistantIntentClassifier
-        featureFlags = environment.featureFlags
-        permissionsManager = environment.permissionsManager
-        offlineBasemapService = services.offlineBasemapService
-        officialAlertService = services.officialAlertService
-        documentVaultService = services.documentVaultService
-
-        preparednessDataService = services.preparednessDataService
-        settingsService = services.settingsService
-        familyService = services.familyService
-        guideService = services.guideService
-        scenarioEngine = services.scenarioEngine
-        prepService = services.prepService
-        preparednessInsightsService = services.preparednessInsightsService
-        decisionSupportService = services.decisionSupportService
-        vehicleReadinessService = services.vehicleReadinessService
-        waterRuntimeService = services.waterRuntimeService
-        emergencyPlanService = services.emergencyPlanService
-        goBagService = services.goBagService
-        readinessReportService = services.readinessReportService
-        beaconService = services.beaconService
-        mapService = services.mapService
-        mapDataService = services.mapDataService
-        waterPointService = services.waterPointService
-        fireTrailService = services.fireTrailService
-        shelterService = services.shelterService
-        batteryService = services.batteryService
-        meshService = services.meshService
-        locationService = services.locationService
-        torchService = services.torchService
-        motionService = services.motionService
-        batteryStatus = services.batteryService.status
-
-        let loadedProfile = familyService.loadProfile()
-        profile = loadedProfile
-        if let storedSettings = settingsService.loadStoredSettings() {
-            settings = storedSettings
+        let loadedSettings: AppSettings
+        let hasStoredSettings = services.settingsService.loadStoredSettings() != nil
+        if let storedSettings = services.settingsService.loadStoredSettings() {
+            loadedSettings = storedSettings
         } else {
             var defaultSettings = AppSettings.default
-            defaultSettings.maps.defaultLayers = mapDataService.loadEnabledLayers()
-            settings = defaultSettings
+            defaultSettings.maps.defaultLayers = services.mapDataService.loadEnabledLayers()
+            loadedSettings = defaultSettings
         }
-        let scenarios = scenarioEngine.selectedScenarios(for: loadedProfile.selectedScenarios)
-        prepScore = prepService.calculateScore(for: loadedProfile, scenarios: scenarios, engine: scenarioEngine)
-        isShowingOnboarding = !loadedProfile.isOnboardingComplete
 
-        synchronizeSettings(settings, persist: settingsService.loadStoredSettings() == nil)
+        let preparednessSystem = PreparednessSystem(
+            preparednessDataService: services.preparednessDataService,
+            familyService: services.familyService,
+            guideService: services.guideService,
+            scenarioEngine: services.scenarioEngine,
+            prepService: services.prepService,
+            preparednessInsightsService: services.preparednessInsightsService,
+            decisionSupportService: services.decisionSupportService,
+            vehicleReadinessService: services.vehicleReadinessService,
+            waterRuntimeService: services.waterRuntimeService,
+            emergencyPlanService: services.emergencyPlanService,
+            goBagService: services.goBagService,
+            readinessReportService: services.readinessReportService
+        )
 
-        batteryService.$status
-            .sink { [weak self] status in
-                self?.applyBatteryStatus(status)
-            }
-            .store(in: &cancellables)
+        let signalSystem = SignalSystem(
+            featureFlags: environment.featureFlags,
+            meshService: services.meshService,
+            beaconService: services.beaconService,
+            locationService: services.locationService,
+            torchService: services.torchService,
+            motionService: services.motionService,
+            initialSettings: loadedSettings
+        )
 
-        officialAlertService.$library
-            .sink { [weak self] _ in
-                self?.refreshEmergencyUnlockState()
-            }
-            .store(in: &cancellables)
+        let mapSystem = MapSystem(
+            offlineBasemapService: services.offlineBasemapService,
+            officialAlertService: services.officialAlertService,
+            mapService: services.mapService,
+            mapDataService: services.mapDataService,
+            waterPointService: services.waterPointService,
+            fireTrailService: services.fireTrailService,
+            shelterService: services.shelterService,
+            tileCacheService: services.tileCacheService,
+            offlineRoutingService: services.offlineRoutingService,
+            locationService: services.locationService
+        )
 
-        officialAlertService.$lastRefreshError
-            .sink { [weak self] _ in
-                self?.refreshEmergencyUnlockState()
-            }
-            .store(in: &cancellables)
+        let vaultSystem = VaultSystem(documentVaultService: services.documentVaultService)
+        let powerSystem = PowerSystem(
+            featureFlags: environment.featureFlags,
+            batteryService: services.batteryService,
+            torchService: services.torchService,
+            initialSettings: loadedSettings.battery
+        )
 
-        locationService.$currentLocation
-            .sink { [weak self] _ in
-                self?.refreshEmergencyUnlockState()
-            }
-            .store(in: &cancellables)
+        store = environment.store
+        featureFlags = environment.featureFlags
+        permissionsManager = environment.permissionsManager
+        self.services = services
+        preparedness = preparednessSystem
+        signal = signalSystem
+        map = mapSystem
+        vault = vaultSystem
+        power = powerSystem
 
-        applyBatteryStatus(batteryStatus)
-        refreshEmergencyUnlockState()
+        profile = preparednessSystem.profile
+        settings = loadedSettings
+        prepScore = preparednessSystem.prepScore
+        isShowingOnboarding = !preparednessSystem.profile.isOnboardingComplete
+        pendingQuickAction = nil
+        batteryStatus = powerSystem.batteryStatus
+        shouldPromptForSurvivalMode = powerSystem.shouldPromptForSurvivalMode
+        isLowBatterySurvivalModeEnabled = powerSystem.isLowBatterySurvivalModeEnabled
+        isStealthModeEnabled = signalSystem.isStealthModeEnabled
+        stealthNodeID = signalSystem.stealthNodeID
+        activePrioritySituation = preparednessSystem.activePrioritySituation
+        emergencyUnlockState = mapSystem.emergencyUnlockState
+
+        bindSystems()
+        startSystems()
+        applySettings(loadedSettings, persist: !hasStoredSettings)
     }
 
     func applyProfile(_ profile: UserProfile) {
-        self.profile = profile
-        familyService.saveProfile(profile)
-        refreshScore()
+        preparedness.applyProfile(profile)
     }
 
     func applySettings(_ settings: AppSettings, persist: Bool = true) {
         self.settings = settings
-        synchronizeSettings(settings, persist: persist)
-        applyBatteryStatus(batteryStatus)
+        if persist {
+            settingsService.saveSettings(settings)
+        }
+
+        signal.updateSettings(settings)
+        map.updateSettings(settings)
+        power.updateSettings(settings.battery)
     }
 
     func mutateProfile(_ update: (inout UserProfile) -> Void) {
-        var draft = profile
-        update(&draft)
-        applyProfile(draft)
+        preparedness.mutateProfile(update)
     }
 
     func mutateSettings(_ update: (inout AppSettings) -> Void) {
@@ -195,8 +175,7 @@ final class AppState: ObservableObject {
     }
 
     func refreshScore() {
-        let scenarios = scenarioEngine.selectedScenarios(for: profile.selectedScenarios)
-        prepScore = prepService.calculateScore(for: profile, scenarios: scenarios, engine: scenarioEngine)
+        preparedness.refreshScore()
     }
 
     func setMapLayer(_ layer: MapLayer, isEnabled: Bool) {
@@ -247,116 +226,132 @@ final class AppState: ObservableObject {
     }
 
     func enableLowBatterySurvivalMode() {
-        guard featureFlags.enablesLowBatterySurvivalMode else {
-            shouldPromptForSurvivalMode = false
-            return
+        let wasEnabled = power.isLowBatterySurvivalModeEnabled
+        power.enableLowBatterySurvivalMode()
+        if !wasEnabled, power.isLowBatterySurvivalModeEnabled {
+            beginEmergencyAccessSession()
         }
-
-        isLowBatterySurvivalModeEnabled = true
-        shouldPromptForSurvivalMode = false
-        deferredSurvivalPromptDismissal = true
-        beginEmergencyAccessSession()
     }
 
     func disableLowBatterySurvivalMode() {
-        isLowBatterySurvivalModeEnabled = false
-        torchService.setTorch(on: false)
-        if !shouldPromptForSurvivalMode {
+        power.disableLowBatterySurvivalMode()
+        if !power.shouldPromptForSurvivalMode {
             endEmergencyAccessSession()
         }
     }
 
     func dismissSurvivalModePrompt() {
-        shouldPromptForSurvivalMode = false
-        deferredSurvivalPromptDismissal = true
+        power.dismissSurvivalModePrompt()
+    }
+
+    func applyBatteryStatus(_ status: BatteryStatus) {
+        batteryService.simulate(status: status)
     }
 
     func enableStealthMode() {
-        guard featureFlags.enablesStealthMode else { return }
-        setStealthMode(true)
+        signal.enableStealthMode()
     }
 
     func disableStealthMode() {
-        setStealthMode(false)
+        signal.disableStealthMode()
     }
 
     func toggleStealthMode() {
-        if isStealthModeEnabled {
-            setStealthMode(false)
-        } else {
-            enableStealthMode()
-        }
+        signal.toggleStealthMode()
     }
 
     func activatePriorityMode(for situation: PrioritySituation) {
-        activePrioritySituation = situation
+        preparedness.activatePriorityMode(for: situation)
     }
 
     func clearPriorityMode() {
-        activePrioritySituation = nil
+        preparedness.clearPriorityMode()
     }
 
     func togglePriorityMode(for situation: PrioritySituation) {
-        if activePrioritySituation == situation {
-            clearPriorityMode()
-        } else {
-            activatePriorityMode(for: situation)
-        }
+        preparedness.togglePriorityMode(for: situation)
     }
 
     @discardableResult
     func resetLocalNodeID() -> String {
-        let nodeID = beaconService.resetLocalNodeID()
-        synchronizeSettings(settings, persist: false)
-        return nodeID
+        signal.resetLocalNodeID()
     }
 
     func clearCachedData() {
-        meshService.clearSessionMessages()
-        beaconService.clearNearbyBeaconsCache()
+        signal.clearCachedData()
     }
 
     func currentReadinessReport() -> ReadinessReport {
-        readinessReportService.generateReport(profile: profile, prepScore: prepScore)
+        preparedness.currentReadinessReport()
     }
 
     var stealthModeNodeLabel: String {
-        "Node \(stealthNodeID)"
+        signal.stealthModeNodeLabel
     }
 
     func exportPreparednessReport() throws -> URL {
-        try readinessReportService.savePDF(for: currentReadinessReport())
+        try preparedness.exportPreparednessReport()
     }
 
-    func applyBatteryStatus(_ status: BatteryStatus) {
-        batteryStatus = status
+    private func bindSystems() {
+        preparedness.$profile
+            .sink { [weak self] profile in
+                self?.profile = profile
+            }
+            .store(in: &cancellables)
 
-        guard featureFlags.enablesLowBatterySurvivalMode else {
-            shouldPromptForSurvivalMode = false
-            deferredSurvivalPromptDismissal = false
-            return
-        }
+        preparedness.$prepScore
+            .sink { [weak self] prepScore in
+                self?.prepScore = prepScore
+            }
+            .store(in: &cancellables)
 
-        guard settings.battery.enablesSurvivalModeAtFifteenPercent else {
-            shouldPromptForSurvivalMode = false
-            deferredSurvivalPromptDismissal = false
-            return
-        }
+        preparedness.$activePrioritySituation
+            .sink { [weak self] situation in
+                self?.activePrioritySituation = situation
+            }
+            .store(in: &cancellables)
 
-        guard status.isBelowSurvivalThreshold else {
-            shouldPromptForSurvivalMode = false
-            deferredSurvivalPromptDismissal = false
-            return
-        }
+        signal.$isStealthModeEnabled
+            .sink { [weak self] isEnabled in
+                self?.isStealthModeEnabled = isEnabled
+            }
+            .store(in: &cancellables)
 
-        guard !isLowBatterySurvivalModeEnabled else {
-            shouldPromptForSurvivalMode = false
-            return
-        }
+        signal.$stealthNodeID
+            .sink { [weak self] nodeID in
+                self?.stealthNodeID = nodeID
+            }
+            .store(in: &cancellables)
 
-        if !deferredSurvivalPromptDismissal {
-            shouldPromptForSurvivalMode = true
-        }
+        map.$emergencyUnlockState
+            .sink { [weak self] state in
+                self?.emergencyUnlockState = state
+            }
+            .store(in: &cancellables)
+
+        power.$batteryStatus
+            .sink { [weak self] status in
+                self?.batteryStatus = status
+            }
+            .store(in: &cancellables)
+
+        power.$shouldPromptForSurvivalMode
+            .sink { [weak self] shouldPrompt in
+                self?.shouldPromptForSurvivalMode = shouldPrompt
+            }
+            .store(in: &cancellables)
+
+        power.$isLowBatterySurvivalModeEnabled
+            .sink { [weak self] isEnabled in
+                self?.isLowBatterySurvivalModeEnabled = isEnabled
+            }
+            .store(in: &cancellables)
+    }
+
+    private func startSystems() {
+        let systems: [any AppSystem] = [preparedness, signal, map, vault, power]
+        systems.forEach { $0.start() }
     }
 
     private func activateEmergencyDevicePresentation() {
@@ -390,112 +385,5 @@ final class AppState: ObservableObject {
             UIScreen.main.brightness = storedScreenBrightness
             self.storedScreenBrightness = nil
         }
-    }
-
-    private func synchronizeSettings(_ settings: AppSettings, persist: Bool) {
-        if persist {
-            settingsService.saveSettings(settings)
-        }
-
-        mapDataService.saveEnabledLayers(settings.maps.defaultLayers)
-
-        let effectiveRangeMode: SignalRangeMode = isStealthModeEnabled ? .lowPower : settings.signalDiscovery.rangeMode
-
-        meshService.updateConfiguration(
-            displayName: resolvedMeshDisplayName(for: settings),
-            isBrowsingEnabled: settings.signalDiscovery.discoversNearbyUsers,
-            isBroadcastingEnabled: !settings.privacy.isAnonymousModeEnabled && !isStealthModeEnabled,
-            autoAcceptInvitations: settings.signalDiscovery.autoAcceptsMessages,
-            locationShareMode: settings.privacy.locationShareMode,
-            rangeMode: effectiveRangeMode,
-            allowsOutgoingInvitations: !isStealthModeEnabled,
-            usesLowFrequencyBrowsing: isStealthModeEnabled && settings.signalDiscovery.discoversNearbyUsers
-        )
-
-        beaconService.updateSettings(
-            BeaconRuntimeSettings(
-                isStealthModeEnabled: isStealthModeEnabled,
-                isAnonymousModeEnabled: settings.privacy.isAnonymousModeEnabled,
-                allowsBeaconBroadcasts: settings.signalDiscovery.allowsBeaconBroadcasts,
-                locationShareMode: settings.privacy.locationShareMode,
-                showsDeviceName: isStealthModeEnabled ? false : settings.privacy.showsDeviceName,
-                rangeMode: effectiveRangeMode
-            )
-        )
-
-        locationService.updateRuntimeMode(isStealthModeEnabled ? .stealth : .standard)
-    }
-
-    private func refreshEmergencyUnlockState(referenceDate: Date = .now) {
-        let installedPackIDs = mapDataService.loadInstalledPackIDs()
-        let installedPacks = mapDataService.packs(withIDs: installedPackIDs)
-        let unlockedFeatureIDs = RediM8MonetizationCatalog.launch.emergencyUnlockFeatureIDs
-
-        if let triggerAlert = officialAlertService.safeModeAlert(
-            currentLocation: locationService.currentLocation,
-            installedPacks: installedPacks
-        ) {
-            let activationDate: Date
-            if emergencyUnlockState.isActive,
-               emergencyUnlockState.triggerAlert?.id == triggerAlert.id,
-               let existingActivation = emergencyUnlockState.activatedAt {
-                activationDate = existingActivation
-            } else {
-                activationDate = referenceDate
-            }
-
-            emergencyUnlockState = .active(
-                alert: triggerAlert,
-                activatedAt: activationDate,
-                accessEndsAt: triggerAlert.expiresAt,
-                unlockedFeatureIDs: unlockedFeatureIDs
-            )
-            return
-        }
-
-        if emergencyUnlockState.isActive {
-            emergencyUnlockState = .recentlyEnded(
-                triggerAlert: emergencyUnlockState.triggerAlert,
-                activatedAt: emergencyUnlockState.activatedAt,
-                endedAt: referenceDate,
-                unlockedFeatureIDs: unlockedFeatureIDs
-            )
-            return
-        }
-
-        if emergencyUnlockState.isRecentlyEnded,
-           let endedAt = emergencyUnlockState.endedAt,
-           referenceDate.timeIntervalSince(endedAt) <= EmergencyUnlockPolicy.recentlyEndedVisibility {
-            return
-        }
-
-        emergencyUnlockState = .inactive
-    }
-
-    private func resolvedMeshDisplayName(for settings: AppSettings) -> String {
-        if isStealthModeEnabled {
-            return stealthModeNodeLabel
-        }
-        if settings.privacy.showsDeviceName {
-            return String(UIDevice.current.name.prefix(20))
-        }
-        return beaconService.localNodeLabel
-    }
-
-    private func setStealthMode(_ isEnabled: Bool) {
-        guard !isEnabled || featureFlags.enablesStealthMode else { return }
-        guard isStealthModeEnabled != isEnabled else { return }
-
-        if isEnabled {
-            stealthNodeID = Self.generateEphemeralNodeID()
-        }
-
-        isStealthModeEnabled = isEnabled
-        synchronizeSettings(settings, persist: false)
-    }
-
-    private static func generateEphemeralNodeID() -> String {
-        let value = Int.random(in: 0...0xFFFF)
-        return String(format: "%04X", value)
     }
 }

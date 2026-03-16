@@ -54,6 +54,8 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var nearbyOfficialAlerts: [OfficialAlert] = []
     @Published private(set) var officialAlertSummary: OfficialAlertHomeSummary
     @Published private(set) var safeModeSummary: SafeModeHomeSummary?
+    @Published private(set) var connectedMeshPeerCount: Int = 0
+    @Published private(set) var hasLocationFix = false
 
     private let appState: AppState
     private let officialAlertService: OfficialAlertService
@@ -93,6 +95,8 @@ final class HomeViewModel: ObservableObject {
             detail: "Official alerts will appear here when RediM8 has a cached public warning snapshot for your location.",
             tone: .ready
         )
+        connectedMeshPeerCount = appState.meshService.connectedPeers.count
+        hasLocationFix = appState.locationService.currentLocation != nil
         refreshDerivedState(for: appState.profile, prepScore: appState.prepScore)
 
         appState.$profile
@@ -114,6 +118,7 @@ final class HomeViewModel: ObservableObject {
         locationService.$currentLocation
             .sink { [weak self] location in
                 guard let self else { return }
+                self.hasLocationFix = location != nil
                 Task { @MainActor [weak self] in
                     guard let self else { return }
                     await self.refreshNearbyNetworkResources(for: location)
@@ -147,6 +152,12 @@ final class HomeViewModel: ObservableObject {
         officialAlertService.$lastRefreshError
             .sink { [weak self] _ in
                 self?.refreshOfficialAlerts()
+            }
+            .store(in: &cancellables)
+
+        appState.meshService.$connectedPeers
+            .sink { [weak self] peers in
+                self?.connectedMeshPeerCount = peers.count
             }
             .store(in: &cancellables)
     }

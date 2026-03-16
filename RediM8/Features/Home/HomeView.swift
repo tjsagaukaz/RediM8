@@ -3,138 +3,104 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var viewModel: HomeViewModel
     private let appState: AppState
-    private let openPlan: () -> Void
-    private let openVault: () -> Void
-    private let openLibrary: () -> Void
-    private let openMap: () -> Void
-    private let openVehicleReadiness: () -> Void
-    private let openWaterRuntime: () -> Void
-    private let openBlackout: () -> Void
-    private let openSignalNearby: () -> Void
-    private let openEmergencyGuides: () -> Void
-    private let openEmergency: () -> Void
-    private let openLeaveNow: () -> Void
+    @ObservedObject private var router: NavigationRouter
+    private let scrollToTopRequestID: Int
     private let monetizationCatalog = RediM8MonetizationCatalog.launch
 
-    @State private var isShowingReadinessReport = false
-    @State private var isShowingSettings = false
-    @State private var isShowingPro = false
+    @State private var activeSheet: HomeSheet?
     @State private var isShowingOperationalInsights = false
     @State private var isShowingPriorityTools = false
     @State private var isShowingBushfireReadiness = false
-    @State private var isShowingReadinessSummary = false
+    @State private var isShowingQuickAccess = false
 
-    init(
-        appState: AppState,
-        openPlan: @escaping () -> Void,
-        openVault: @escaping () -> Void,
-        openLibrary: @escaping () -> Void,
-        openMap: @escaping () -> Void,
-        openVehicleReadiness: @escaping () -> Void,
-        openWaterRuntime: @escaping () -> Void,
-        openBlackout: @escaping () -> Void,
-        openSignalNearby: @escaping () -> Void,
-        openEmergencyGuides: @escaping () -> Void,
-        openEmergency: @escaping () -> Void,
-        openLeaveNow: @escaping () -> Void
-    ) {
+    init(appState: AppState, router: NavigationRouter, scrollToTopRequestID: Int) {
         self.appState = appState
-        self.openPlan = openPlan
-        self.openVault = openVault
-        self.openLibrary = openLibrary
-        self.openMap = openMap
-        self.openVehicleReadiness = openVehicleReadiness
-        self.openWaterRuntime = openWaterRuntime
-        self.openBlackout = openBlackout
-        self.openSignalNearby = openSignalNearby
-        self.openEmergencyGuides = openEmergencyGuides
-        self.openEmergency = openEmergency
-        self.openLeaveNow = openLeaveNow
+        self.router = router
+        self.scrollToTopRequestID = scrollToTopRequestID
         _viewModel = StateObject(wrappedValue: HomeViewModel(appState: appState))
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: RediSpacing.section) {
-                if appState.isStealthModeEnabled {
-                    StealthModeIndicatorView()
-                }
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: RediSpacing.section) {
+                    Color.clear
+                        .frame(height: 0)
+                        .id(HomeScrollAnchor.top)
 
-                if appState.settings.privacy.isAnonymousModeEnabled {
-                    HiddenModeIndicatorView()
-                }
-
-                homeStatusRail
-
-                if let safeModeSummary = viewModel.safeModeSummary {
-                    safeModeCard(summary: safeModeSummary)
-                }
-
-                emergencyLaunchCard
-
-                nextActionsCard
-
-                officialAlertsCard
-
-                if appState.emergencyUnlockState.isVisible {
-                    emergencyUnlockCard
-                }
-
-                preparednessOverviewCard
-
-                emergencyUtilitiesCard
-
-                emergencyGuidesCard
-
-                decisionToolsCard
-
-                proOverviewCard
-
-                if shouldShowOperationalInsights {
-                    CollapsiblePanelCard(
-                        title: "Operational Insights",
-                        subtitle: "Forgotten items, expiry reminders, and nearby water guidance when reserves are running low.",
-                        accent: ColorTheme.warning,
-                        isExpanded: $isShowingOperationalInsights
-                    ) {
-                        operationalInsightsContent
+                    if appState.isStealthModeEnabled {
+                        StealthModeIndicatorView()
                     }
-                }
 
-                CollapsiblePanelCard(
-                    title: "Priority Situations",
-                    subtitle: viewModel.priorityModeSummary?.subtitle ?? "Activate a live situation and RediM8 will bring the right actions forward.",
-                    accent: ColorTheme.warning,
-                    isExpanded: $isShowingPriorityTools
-                ) {
-                    priorityModeCard
-                }
-
-                if viewModel.isBushfireModeEnabled {
-                    CollapsiblePanelCard(
-                        title: "Bushfire Readiness",
-                        subtitle: "Scenario-linked preparation for households facing bushfire season.",
-                        accent: ColorTheme.warning,
-                        isExpanded: $isShowingBushfireReadiness
-                    ) {
-                        bushfireModeCard
+                    if appState.settings.privacy.isAnonymousModeEnabled {
+                        HiddenModeIndicatorView()
                     }
-                }
 
-                CollapsiblePanelCard(
-                    title: "Readiness Report",
-                    subtitle: "Visual household summary ready to save, share, or send to family.",
-                    accent: ColorTheme.info,
-                    isExpanded: $isShowingReadinessSummary
-                ) {
-                    readinessReportContent
+                    // MARK: — GLANCE ZONE (above fold)
+
+                    todayReadinessCard
+                    todayNextStepCard
+
+                    if let safeModeSummary = viewModel.safeModeSummary {
+                        safeModeCard(summary: safeModeSummary)
+                    } else {
+                        todayLocalStatusCard
+                    }
+
+                    // MARK: — TAP ZONE (primary actions)
+
+                    quickAccessHubCard
+
+                    // MARK: — BROWSE ZONE (progressive detail)
+
+                    homeStatusRail
+
+                    if appState.emergencyUnlockState.isVisible {
+                        emergencyUnlockCard
+                    }
+
+                    if shouldShowOperationalInsights {
+                        CollapsiblePanelCard(
+                            title: "Operational Insights",
+                            subtitle: "Forgotten items, expiry reminders, and water guidance.",
+                            accent: ColorTheme.textTertiary,
+                            isExpanded: $isShowingOperationalInsights
+                        ) {
+                            operationalInsightsContent
+                        }
+                    }
+
+                    CollapsiblePanelCard(
+                        title: "Priority Situations",
+                        subtitle: viewModel.priorityModeSummary?.subtitle ?? "Activate a live situation to surface the right actions.",
+                        accent: ColorTheme.textTertiary,
+                        isExpanded: $isShowingPriorityTools
+                    ) {
+                        priorityModeCard
+                    }
+
+                    if viewModel.isBushfireModeEnabled {
+                        CollapsiblePanelCard(
+                            title: "Bushfire Readiness",
+                            subtitle: "Bushfire scenario preparation and checklists.",
+                            accent: ColorTheme.textTertiary,
+                            isExpanded: $isShowingBushfireReadiness
+                        ) {
+                            bushfireModeCard
+                        }
+                    }
+
+                    compactProBanner
                 }
+                .padding(.horizontal, RediSpacing.screen)
+                .padding(.top, RediSpacing.screen)
+                .padding(.bottom, RediLayout.commandDockContentInset)
             }
-            .padding(.horizontal, RediSpacing.screen)
-            .padding(.top, RediSpacing.screen)
-            .padding(.bottom, RediLayout.commandDockContentInset)
+            .scrollIndicators(.hidden)
+            .onChange(of: scrollToTopRequestID) { _, _ in
+                scrollToHomeTop(using: proxy)
+            }
         }
-        .scrollIndicators(.hidden)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -146,7 +112,7 @@ struct HomeView: View {
 
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    isShowingSettings = true
+                    activeSheet = .settings
                 } label: {
                     Image(systemName: "gearshape.fill")
                 }
@@ -155,49 +121,87 @@ struct HomeView: View {
         .background(Color.clear)
         .onAppear { viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }
-        .sheet(isPresented: $isShowingReadinessReport) {
-            NavigationStack {
-                ReadinessReportView(
-                    report: viewModel.readinessReport,
-                    onShare: viewModel.shareReadinessReportItems,
-                    onSavePDF: viewModel.saveReadinessReportPDF,
-                    onSendToFamily: viewModel.sendToFamilyItems
-                )
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .readinessReport:
+                NavigationStack {
+                    ReadinessReportView(
+                        report: viewModel.readinessReport,
+                        onShare: viewModel.shareReadinessReportItems,
+                        onSavePDF: viewModel.saveReadinessReportPDF,
+                        onSendToFamily: viewModel.sendToFamilyItems
+                    )
+                }
+                .rediSheetPresentation()
+            case .settings:
+                NavigationStack {
+                    SettingsView(appState: appState)
+                }
+                .rediSheetPresentation()
+            case .pro:
+                NavigationStack {
+                    RediM8ProView(emergencyUnlockState: appState.emergencyUnlockState)
+                }
+                .rediSheetPresentation()
+            case let .assistant(context):
+                NavigationStack {
+                    AssistantView(
+                        appState: appState,
+                        initialQuery: context.initialQuery,
+                        sourceLabel: context.sourceLabel
+                    )
+                }
+                .rediSheetPresentation()
             }
-            .rediSheetPresentation(style: .plan, accent: ColorTheme.warning)
         }
-        .sheet(isPresented: $isShowingSettings) {
-            NavigationStack {
-                SettingsView(appState: appState)
+    }
+
+    private enum HomeSheet: Identifiable {
+        case readinessReport
+        case settings
+        case pro
+        case assistant(AssistantLaunchContext)
+
+        var id: String {
+            switch self {
+            case .readinessReport: "readinessReport"
+            case .settings: "settings"
+            case .pro: "pro"
+            case .assistant: "assistant"
             }
-            .rediSheetPresentation(style: .neutral, accent: ColorTheme.premium)
         }
-        .sheet(isPresented: $isShowingPro) {
-            NavigationStack {
-                RediM8ProView(emergencyUnlockState: appState.emergencyUnlockState)
+    }
+
+    private enum HomeScrollAnchor {
+        static let top = "home-scroll-top"
+    }
+
+    private func scrollToHomeTop(using proxy: ScrollViewProxy) {
+        DispatchQueue.main.async {
+            withAnimation(RediMotion.selection) {
+                proxy.scrollTo(HomeScrollAnchor.top, anchor: .top)
             }
-            .rediSheetPresentation(style: .pro, accent: ColorTheme.warning)
         }
     }
 
     private let quickActionColumns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
+        GridItem(.adaptive(minimum: 148, maximum: 220), spacing: 12)
     ]
 
     private let priorityColumns = [
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10)
+        GridItem(.adaptive(minimum: 150, maximum: 240), spacing: 10)
     ]
 
     private let decisionColumns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
+        GridItem(.adaptive(minimum: 156, maximum: 260), spacing: 12)
     ]
 
     private let preparednessColumns = [
-        GridItem(.flexible(), spacing: 12),
-        GridItem(.flexible(), spacing: 12)
+        GridItem(.adaptive(minimum: 132, maximum: 220), spacing: 12)
+    ]
+
+    private let todayStatusColumns = [
+        GridItem(.adaptive(minimum: 110, maximum: 220), spacing: 12)
     ]
 
     private var shouldShowOperationalInsights: Bool {
@@ -271,161 +275,263 @@ struct HomeView: View {
         return .ready
     }
 
-    private var preparednessOverviewCard: some View {
-        PanelCard(
-            backgroundAssetName: "preparedness_flatlay"
-        ) {
-            VStack(alignment: .leading, spacing: 22) {
-                HStack(alignment: .top, spacing: 16) {
-                    RediM8Wordmark(
-                        iconSize: 40,
-                        titleFont: .system(size: 22, weight: .black),
-                        subtitle: "Preparedness dashboard",
-                        subtitleColor: ColorTheme.textFaint
+    private var installedMapPackCount: Int {
+        appState.mapDataService.loadInstalledPackIDs().count
+    }
+
+    private var foodDaysSummary: String {
+        "\(appState.profile.supplies.foodDays.formatted(.number.precision(.fractionLength(1)))) days"
+    }
+
+    private var powerReserveValue: String {
+        switch appState.profile.supplies.batteryCapacity {
+        case ..<35:
+            "Low"
+        case 35..<70:
+            "Stable"
+        default:
+            "Ready"
+        }
+    }
+
+    private var powerReserveDetail: String {
+        "\(appState.profile.supplies.batteryCapacity.roundedIntString)% reserve stored"
+    }
+
+    private var powerReserveTint: Color {
+        readinessColor(for: scoreValue(for: .power))
+    }
+
+    private var foodSupplyTint: Color {
+        readinessColor(for: scoreValue(for: .food))
+    }
+
+    private var todayLocalStatusTitle: String {
+        switch viewModel.officialAlertSummary.tone {
+        case .ready:
+            "No alerts nearby"
+        case .info:
+            "Monitoring local conditions"
+        case .caution, .danger:
+            viewModel.officialAlertSummary.title
+        }
+    }
+
+    private var signalEnvironmentValue: String {
+        let peerCount = viewModel.connectedMeshPeerCount
+        return peerCount == 1 ? "1 node" : "\(peerCount) nodes"
+    }
+
+    private var signalEnvironmentDetail: String {
+        if appState.isStealthModeEnabled || appState.settings.privacy.isAnonymousModeEnabled {
+            return "Hidden mode keeps Signal receive-only"
+        }
+
+        if viewModel.connectedMeshPeerCount == 0 {
+            return "No nearby RediM8 mesh links yet"
+        }
+
+        return viewModel.connectedMeshPeerCount == 1
+            ? "One nearby mesh connection is active"
+            : "\(viewModel.connectedMeshPeerCount) nearby mesh connections are active"
+    }
+
+    private var signalEnvironmentTint: Color {
+        if appState.isStealthModeEnabled || appState.settings.privacy.isAnonymousModeEnabled {
+            return ColorTheme.accent
+        }
+
+        return viewModel.connectedMeshPeerCount == 0 ? ColorTheme.warning : ColorTheme.ready
+    }
+
+    private var mapCoverageValue: String {
+        installedMapPackCount == 0 ? "Limited" : "Ready"
+    }
+
+    private var mapCoverageDetail: String {
+        installedMapPackCount == 0
+            ? "Install regional packs for richer offline detail"
+            : installedMapPackCount == 1
+                ? "1 offline map pack installed"
+                : "\(installedMapPackCount) offline map packs installed"
+    }
+
+    private var mapCoverageTint: Color {
+        installedMapPackCount == 0 ? ColorTheme.warning : ColorTheme.ready
+    }
+
+    // MARK: - Today Cards
+
+    private var todayReadinessCard: some View {
+        let readinessTint = readinessColor(for: viewModel.prepScore.overall)
+
+        return CinematicCommandPanel(assetName: "preparedness_flatlay", eyebrow: "Home Readiness") {
+            // Hero score
+            HStack(alignment: .top, spacing: RediSpacing.content) {
+                VStack(alignment: .leading, spacing: RediSpacing.tight) {
+                    Text("\(viewModel.prepScore.overall)%")
+                        .font(RediTypography.dataHero)
+                        .foregroundStyle(readinessTint)
+
+                    Text(viewModel.prepScore.nextMilestoneSummary)
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.textSecondary)
+                }
+
+                Spacer(minLength: 0)
+
+                StatusBadge(tier: viewModel.prepScore.tier)
+            }
+
+            ReadinessMeter(
+                value: Double(viewModel.prepScore.overall) / 100,
+                tint: readinessTint,
+                height: 6
+            )
+
+            // Supply metrics as dense label:value rows
+            MetricGrid(items: [
+                MetricItem(
+                    label: "Water",
+                    value: viewModel.waterRuntimeEstimate.estimatedDaysText,
+                    status: metricStatus(for: waterRuntimeColor)
+                ),
+                MetricItem(
+                    label: "Food",
+                    value: foodDaysSummary,
+                    status: metricStatus(for: foodSupplyTint)
+                ),
+                MetricItem(
+                    label: "Power",
+                    value: "\(appState.profile.supplies.batteryCapacity.roundedIntString)%",
+                    status: metricStatus(for: powerReserveTint)
+                )
+            ])
+        }
+    }
+
+    private var todayNextStepCard: some View {
+        CommandPanel(eyebrow: "Best Next Step") {
+            VStack(alignment: .leading, spacing: RediSpacing.content) {
+                if let summary = viewModel.priorityModeSummary,
+                   let action = summary.actions.first {
+                    featuredActionCard(
+                        eyebrow: "Today's readiness action",
+                        iconName: action.systemImage,
+                        title: action.title,
+                        detail: action.detail,
+                        tint: ColorTheme.warning,
+                        emphasis: "Priority",
+                        supporting: summary.situation.title
                     )
-
-                    Spacer()
-
-                    StatusBadge(tier: viewModel.prepScore.tier)
-                }
-
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .bottom, spacing: 18) {
-                        preparednessHeadlineBlock
-
-                        Spacer()
-
-                        preparednessScenarioBlock(isTrailing: true)
-                    }
-
-                    VStack(alignment: .leading, spacing: 14) {
-                        preparednessHeadlineBlock
-                        preparednessScenarioBlock(isTrailing: false)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(viewModel.prepScore.milestoneCaption)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(ColorTheme.text)
-                    Text("Tracking \(viewModel.scenarioSummary)")
-                        .font(.subheadline)
-                        .foregroundStyle(ColorTheme.textMuted)
-                }
-
-                Button(action: openWaterRuntime) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("WATER RUNTIME")
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(waterRuntimeColor)
-                                Text(viewModel.waterRuntimeEstimate.estimatedDaysText.uppercased())
-                                    .font(.system(size: 32, weight: .black))
-                                    .foregroundStyle(ColorTheme.text)
-                                Text("Target \(viewModel.waterRuntimeEstimate.recommendedTargetText)")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(ColorTheme.textFaint)
-                            }
-
-                            Spacer()
-
-                            RediIcon("water")
-                                .foregroundStyle(waterRuntimeColor)
-                                .frame(width: 24, height: 24)
-                                .padding(12)
-                                .background(waterRuntimeColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
-
-                        Text(viewModel.waterRuntimeEstimate.statusMessage)
-                            .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textMuted)
-                            .multilineTextAlignment(.leading)
-
-                        HStack {
-                            Text(viewModel.waterRuntimeEstimate.statusTitle.uppercased())
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(waterRuntimeColor)
-                            Spacer()
-                            Image(systemName: "arrow.up.right")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(ColorTheme.textFaint)
-                        }
-                    }
-                    .padding(20)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        LinearGradient(
-                            colors: [ColorTheme.panelElevated, ColorTheme.panel],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        in: RoundedRectangle(cornerRadius: 22, style: .continuous)
+                } else if let suggestion = viewModel.prepScore.suggestions.first {
+                    featuredSuggestionCard(suggestion, eyebrow: nil)
+                } else if let task = viewModel.scenarioTasks.first {
+                    featuredActionCard(
+                        eyebrow: "Today's readiness action",
+                        iconName: task.category.systemImage,
+                        title: task.title,
+                        detail: task.description,
+                        tint: ColorTheme.accent,
+                        emphasis: "+\(task.prepScoreValue)%",
+                        supporting: "Scenario-linked"
                     )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .stroke(ColorTheme.dividerStrong, lineWidth: 1)
+                } else {
+                    Text("Main readiness actions covered. Open Plan to keep routes, supplies, and family tasks current.")
+                        .font(RediTypography.body)
+                        .foregroundStyle(ColorTheme.textSecondary)
+                }
+
+                Button {
+                    performTodayAction()
+                } label: {
+                    RediCommandCard(
+                        title: "Do This Now",
+                        detail: viewModel.priorityModeSummary == nil
+                            ? "Open the fastest path to today's highest-value improvement."
+                            : "Jump straight into the live priority workflow.",
+                        systemImage: "arrow.forward.circle.fill",
+                        tint: viewModel.priorityModeSummary == nil ? ColorTheme.accent : ColorTheme.danger,
+                        badge: viewModel.priorityModeSummary == nil ? "Today" : "Live",
+                        prominence: .accented,
+                        layout: .rail
                     )
                 }
                 .buttonStyle(CardPressButtonStyle())
-
-                LazyVGrid(columns: preparednessColumns, spacing: 12) {
-                    ForEach(viewModel.prepScore.categoryScores) { score in
-                        preparednessCategoryTile(score)
-                    }
-                }
-
-                HStack(spacing: 12) {
-                    Button("Update Supplies") {
-                        viewModel.reopenSetup()
-                    }
-                    .buttonStyle(PrimaryActionButtonStyle())
-
-                    Button("View Plan") {
-                        openPlan()
-                    }
-                    .buttonStyle(SecondaryActionButtonStyle())
-                }
             }
         }
     }
 
-    private var officialAlertsCard: some View {
-        PanelCard(
-            title: "Official Alerts",
-            subtitle: "Mirrored Australian public warnings that stay readable when coverage drops.",
-            backgroundAssetName: "community_storm_town",
-            backgroundImageOffset: CGSize(width: 0, height: 8)
-        ) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top, spacing: 12) {
-                    RediIcon(viewModel.nearbyOfficialAlerts.first?.kind.systemImage ?? "warning")
+    private var todayLocalStatusCard: some View {
+        CinematicCommandPanel(assetName: "community_storm_town", eyebrow: "Local Status", bannerHeight: 140) {
+            VStack(alignment: .leading, spacing: RediSpacing.content) {
+                HStack(alignment: .center, spacing: RediSpacing.compact) {
+                    Circle()
+                        .fill(officialAlertToneColor(viewModel.officialAlertSummary.tone))
+                        .frame(width: 8, height: 8)
+
+                    Text(todayLocalStatusTitle)
+                        .font(RediTypography.heading)
                         .foregroundStyle(officialAlertToneColor(viewModel.officialAlertSummary.tone))
-                        .frame(width: 18, height: 18)
-                        .padding(10)
-                        .background(
-                            officialAlertToneColor(viewModel.officialAlertSummary.tone).opacity(0.14),
-                            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        )
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("OFFICIAL ALERTS")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(officialAlertToneColor(viewModel.officialAlertSummary.tone))
-                        Text(viewModel.officialAlertSummary.title)
-                            .font(.headline)
-                            .foregroundStyle(ColorTheme.text)
-                        Text(viewModel.officialAlertSummary.detail)
-                            .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textMuted)
-                    }
-
-                    Spacer(minLength: 0)
                 }
 
-                TrustPillGroup(items: viewModel.officialAlertTrustItems)
+                Text(viewModel.officialAlertSummary.detail)
+                    .font(RediTypography.body)
+                    .foregroundStyle(ColorTheme.textSecondary)
 
-                HStack(spacing: 12) {
+                MetricGrid(items: [
+                    MetricItem(
+                        label: "Alerts",
+                        value: officialAlertRailValue,
+                        status: alertMetricStatus(viewModel.officialAlertSummary.tone)
+                    ),
+                    MetricItem(
+                        label: "Signal",
+                        value: signalEnvironmentValue,
+                        status: metricStatus(for: signalEnvironmentTint)
+                    ),
+                    MetricItem(
+                        label: "Maps",
+                        value: mapCoverageValue,
+                        status: metricStatus(for: mapCoverageTint)
+                    )
+                ])
+            }
+        }
+    }
+
+    private var officialAlertsCardContent: some View {
+        VStack(alignment: .leading, spacing: RediSpacing.content) {
+            HStack(alignment: .top, spacing: RediSpacing.content) {
+                RediIcon(viewModel.nearbyOfficialAlerts.first?.kind.systemImage ?? "warning")
+                    .foregroundStyle(officialAlertToneColor(viewModel.officialAlertSummary.tone))
+                    .frame(width: 18, height: 18)
+                    .padding(10)
+                    .background(
+                        officialAlertToneColor(viewModel.officialAlertSummary.tone).opacity(0.14),
+                        in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                    )
+
+                VStack(alignment: .leading, spacing: RediSpacing.micro) {
+                    Text("OFFICIAL ALERTS")
+                        .font(RediTypography.label)
+                        .tracking(1.2)
+                        .foregroundStyle(officialAlertToneColor(viewModel.officialAlertSummary.tone))
+                    Text(viewModel.officialAlertSummary.title)
+                        .font(RediTypography.heading)
+                        .foregroundStyle(ColorTheme.text)
+                    Text(viewModel.officialAlertSummary.detail)
+                        .font(RediTypography.body)
+                        .foregroundStyle(ColorTheme.textSecondary)
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            TrustPillGroup(items: viewModel.officialAlertTrustItems)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: RediSpacing.content) {
                     alertMetaPanel(
                         title: "Official Feed",
                         value: viewModel.nearbyOfficialAlerts.first?.issuer ?? "Cached mirror"
@@ -436,155 +542,32 @@ struct HomeView: View {
                     )
                 }
 
-                if viewModel.nearbyOfficialAlerts.count > 1 {
-                    Text("\(viewModel.nearbyOfficialAlerts.count) official alerts matched your current area or jurisdiction.")
-                        .font(.caption)
-                        .foregroundStyle(ColorTheme.textMuted)
-                }
-
-                Text("Official source labels remain separate from RediM8's readable summary so you can judge the warning against the issuing agency.")
-                    .font(.caption)
-                    .foregroundStyle(ColorTheme.textFaint)
-
-                Button("View on Map") {
-                    openMap()
-                }
-                .buttonStyle(SecondaryActionButtonStyle())
-            }
-        }
-    }
-
-    private var emergencyLaunchCard: some View {
-        HeroPanel(
-            eyebrow: "Immediate Access",
-            title: "Emergency Mode",
-            subtitle: "Open the high-visibility survival deck first. Leave-now flow and offline map stay staged directly underneath.",
-            iconName: "emergency",
-            accent: ColorTheme.danger,
-            atmosphere: ColorTheme.accent.opacity(0.18),
-            showsBreathing: true
-        ) {
-            TrustPillGroup(items: [
-                TrustPillItem(title: "Action first", tone: .danger),
-                TrustPillItem(title: "Offline staged", tone: .info),
-                TrustPillItem(title: "High visibility", tone: .verified)
-            ])
-
-            Button("OPEN EMERGENCY MODE") {
-                RediHaptics.emergency(enabled: !appState.isStealthModeEnabled)
-                openEmergency()
-            }
-            .buttonStyle(EmergencyActionButtonStyle())
-
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 12) {
-                    Button("LEAVE NOW") {
-                        RediHaptics.emergency(enabled: !appState.isStealthModeEnabled)
-                        openLeaveNow()
-                    }
-                    .buttonStyle(PrimaryActionButtonStyle())
-
-                    Button("OFFLINE MAP") {
-                        openMap()
-                    }
-                    .buttonStyle(SecondaryActionButtonStyle())
-                }
-
-                VStack(spacing: 12) {
-                    Button("LEAVE NOW") {
-                        RediHaptics.emergency(enabled: !appState.isStealthModeEnabled)
-                        openLeaveNow()
-                    }
-                    .buttonStyle(PrimaryActionButtonStyle())
-
-                    Button("OFFLINE MAP") {
-                        openMap()
-                    }
-                    .buttonStyle(SecondaryActionButtonStyle())
+                VStack(spacing: RediSpacing.content) {
+                    alertMetaPanel(
+                        title: "Official Feed",
+                        value: viewModel.nearbyOfficialAlerts.first?.issuer ?? "Cached mirror"
+                    )
+                    alertMetaPanel(
+                        title: "RediM8",
+                        value: viewModel.nearbyOfficialAlerts.isEmpty ? "Monitoring cache" : "Readable summary only"
+                    )
                 }
             }
-        }
-    }
 
-    private var nextActionsCard: some View {
-        PanelCard(
-            title: "Next Actions",
-            subtitle: viewModel.priorityModeSummary == nil
-                ? "Highest-value tasks to lift readiness fast without hunting through menus."
-                : "Priority mode is active, so RediM8 is surfacing the most urgent steps first."
-        ) {
-            VStack(alignment: .leading, spacing: 14) {
-                if let summary = viewModel.priorityModeSummary {
-                    HStack {
-                        Text("PRIORITY MODE ACTIVE")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(ColorTheme.warning)
-                        Spacer()
-                        Button("Clear") {
-                            viewModel.clearPriorityMode()
-                        }
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                    }
-
-                    if let featuredAction = summary.actions.first {
-                        featuredActionCard(
-                            eyebrow: "Now",
-                            iconName: featuredAction.systemImage,
-                            title: featuredAction.title,
-                            detail: featuredAction.detail,
-                            tint: ColorTheme.warning,
-                            emphasis: "Priority",
-                            supporting: "Mode-specific"
-                        )
-                    }
-
-                    ForEach(Array(summary.actions.dropFirst().prefix(2))) { action in
-                        nextActionRow(
-                            iconName: action.systemImage,
-                            title: action.title,
-                            detail: action.detail,
-                            emphasis: nil,
-                            supporting: nil,
-                            tint: ColorTheme.warning
-                        )
-                    }
-                } else {
-                    if let featuredSuggestion = viewModel.prepScore.suggestions.first {
-                        featuredActionCard(
-                            eyebrow: "Best Next Step",
-                            iconName: featuredSuggestion.category.systemImage,
-                            title: featuredSuggestion.title,
-                            detail: featuredSuggestion.detail,
-                            tint: readinessColor(for: scoreValue(for: featuredSuggestion.category)),
-                            emphasis: "+\(featuredSuggestion.impact)%",
-                            supporting: featuredSuggestion.category.quickTaskEstimate
-                        )
-                    }
-
-                    ForEach(Array(viewModel.prepScore.suggestions.dropFirst().prefix(2))) { suggestion in
-                        nextActionRow(
-                            iconName: suggestion.category.systemImage,
-                            title: suggestion.title,
-                            detail: suggestion.detail,
-                            emphasis: "+\(suggestion.impact)%",
-                            supporting: suggestion.category.quickTaskEstimate,
-                            tint: readinessColor(for: scoreValue(for: suggestion.category))
-                        )
-                    }
-
-                    if let task = viewModel.scenarioTasks.first {
-                        nextActionRow(
-                            iconName: task.category.systemImage,
-                            title: task.title,
-                            detail: task.description,
-                            emphasis: "+\(task.prepScoreValue)%",
-                            supporting: "Scenario-linked",
-                            tint: ColorTheme.info
-                        )
-                    }
-                }
+            if viewModel.nearbyOfficialAlerts.count > 1 {
+                Text("\(viewModel.nearbyOfficialAlerts.count) official alerts matched your current area or jurisdiction.")
+                    .font(RediTypography.caption)
+                    .foregroundStyle(ColorTheme.textSecondary)
             }
+
+            Text("Official source labels remain separate from RediM8's readable summary so you can judge the warning against the issuing agency.")
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textTertiary)
+
+            Button("View on Map") {
+                router.openMap()
+            }
+            .buttonStyle(SecondaryActionButtonStyle())
         }
     }
 
@@ -593,23 +576,29 @@ struct HomeView: View {
         let accent = state.isActive ? ColorTheme.warning : ColorTheme.accent
         let unlockedRows = monetizationCatalog.emergencyUnlockRows.filter { state.unlockedFeatureIDs.contains($0.id) }
 
-        return PanelCard(title: state.calloutTitle, subtitle: state.calloutDetail) {
-            VStack(alignment: .leading, spacing: 12) {
+        return CommandPanel(eyebrow: state.calloutTitle) {
+            VStack(alignment: .leading, spacing: RediSpacing.content) {
+                if let subtitle = state.calloutDetail as String? {
+                    Text(subtitle)
+                        .font(RediTypography.body)
+                        .foregroundStyle(ColorTheme.textSecondary)
+                }
+
                 if let triggerAlert = state.triggerAlert {
-                    HStack(alignment: .top, spacing: 12) {
+                    HStack(alignment: .top, spacing: RediSpacing.content) {
                         RediIcon(triggerAlert.kind.systemImage)
                             .foregroundStyle(accent)
                             .frame(width: 18, height: 18)
                             .padding(10)
-                            .background(accent.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .background(accent.opacity(0.14), in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
 
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: RediSpacing.micro) {
                             Text(triggerAlert.title)
-                                .font(.headline)
+                                .font(RediTypography.heading)
                                 .foregroundStyle(ColorTheme.text)
                             Text(emergencyUnlockTimingLine(for: state, triggerAlert: triggerAlert))
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .font(RediTypography.body)
+                                .foregroundStyle(ColorTheme.textSecondary)
                         }
 
                         Spacer(minLength: 0)
@@ -618,17 +607,17 @@ struct HomeView: View {
 
                 TrustPillGroup(items: emergencyUnlockTrustItems)
 
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: RediSpacing.compact) {
                     ForEach(Array(unlockedRows.prefix(3))) { row in
-                        HStack(alignment: .top, spacing: 10) {
+                        HStack(alignment: .top, spacing: RediSpacing.compact) {
                             Image(systemName: "checkmark.circle.fill")
                                 .foregroundStyle(accent)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(row.title)
-                                    .font(.headline)
+                                    .font(RediTypography.bodyStrong)
                                     .foregroundStyle(ColorTheme.text)
                                 Text(row.proValue)
-                                    .font(.caption.weight(.semibold))
+                                    .font(RediTypography.caption)
                                     .foregroundStyle(accent)
                             }
                             Spacer()
@@ -636,98 +625,182 @@ struct HomeView: View {
                     }
                 }
 
-                Button(state.isActive ? "Open Pro Tools" : "See Pro Plans") {
-                    isShowingPro = true
+                Button {
+                    activeSheet = .pro
+                } label: {
+                    RediCommandCard(
+                        title: state.isActive ? "Open Pro Tools" : "See Pro Plans",
+                        detail: state.isActive
+                            ? "Emergency access is already active. Jump into the unlocked toolkit."
+                            : "See the premium tools that open during real incidents or with Pro.",
+                        systemImage: "sparkles",
+                        tint: accent,
+                        badge: state.isActive ? "Live" : "Explore",
+                        prominence: .accented,
+                        layout: .rail
+                    )
                 }
-                .buttonStyle(SecondaryActionButtonStyle())
+                .buttonStyle(CardPressButtonStyle())
             }
         }
     }
 
-    private var emergencyUtilitiesCard: some View {
-        PanelCard(title: "Emergency Utilities", subtitle: "One-tap controls for privacy, local comms, and emergency access.") {
-            LazyVGrid(columns: quickActionColumns, spacing: 12) {
-                quickActionButton(
-                    title: "Blackout Mode",
-                    subtitle: "Dim tools"
-                ) {
-                    openBlackout()
-                }
+    // MARK: - Quick Access
 
-                quickActionButton(
-                    title: "Signal Nearby",
-                    subtitle: "Open mesh"
-                ) {
-                    openSignalNearby()
-                }
-
-                quickActionButton(
-                    title: "Emergency Guides",
-                    subtitle: "Offline help"
-                ) {
-                    openEmergencyGuides()
-                }
-
-                quickActionButton(
-                    title: appState.isStealthModeEnabled ? "Disable Stealth" : "Stealth Mode",
-                    subtitle: appState.isStealthModeEnabled ? "Receive-only on" : "Hide & conserve"
-                ) {
-                    appState.toggleStealthMode()
-                }
-            }
+    private var quickAccessHubCard: some View {
+        CollapsiblePanelCard(
+            title: "Quick Access",
+            subtitle: "Map, vault, blackout, guides, and vehicle tools.",
+            accent: ColorTheme.accent,
+            isExpanded: $isShowingQuickAccess
+        ) {
+            quickAccessContent
         }
     }
 
-    private var emergencyGuidesCard: some View {
-        PanelCard(title: "Emergency Guides", subtitle: "Start with the three lanes people look for first under stress.") {
-            VStack(alignment: .leading, spacing: 12) {
-                guideLaneRow(
-                    title: "FIRST AID",
-                    detail: "Bleeding, burns, snake bite, and emergency first-response steps.",
-                    iconName: "first_aid",
-                    tint: ColorTheme.danger
-                )
-                guideLaneRow(
-                    title: "SURVIVAL",
-                    detail: "Water, shelter, heat, and bushcraft guidance that stays available offline.",
-                    iconName: "tent",
-                    tint: ColorTheme.info
-                )
-                guideLaneRow(
-                    title: "EVACUATION",
-                    detail: "Bushfire, flood, blackout, and leave-now decision support.",
-                    iconName: "route",
-                    tint: ColorTheme.warning
-                )
+    private var quickAccessContent: some View {
+        VStack(alignment: .leading, spacing: RediSpacing.section) {
+            // Emergency actions
+            VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                Text("EMERGENCY")
+                    .font(RediTypography.label)
+                    .tracking(1.2)
+                    .foregroundStyle(ColorTheme.textTertiary)
 
-                if let topGuide = viewModel.recommendedGuides.first {
-                    Text("Top offline match: \(topGuide.title)")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(ColorTheme.text)
-                }
-
-                HStack(spacing: 12) {
-                    Button("Open Guide Library") {
-                        openLibrary()
+                LazyVGrid(columns: decisionColumns, spacing: RediSpacing.content) {
+                    Button {
+                        RediHaptics.emergency(enabled: !appState.isStealthModeEnabled)
+                        router.presentEmergencyMode(appState: appState)
+                    } label: {
+                        RediCommandCard(
+                            title: "Emergency Mode",
+                            detail: "Official alerts, hazard actions, and command tools.",
+                            systemImage: "exclamationmark.triangle.fill",
+                            tint: ColorTheme.danger,
+                            badge: "Critical",
+                            prominence: .critical
+                        )
                     }
-                    .buttonStyle(PrimaryActionButtonStyle())
+                    .buttonStyle(CardPressButtonStyle())
 
-                    Button("Emergency Guide Sheet") {
-                        openEmergencyGuides()
+                    Button {
+                        RediHaptics.emergency(enabled: !appState.isStealthModeEnabled)
+                        router.presentLeaveNowMode(appState: appState)
+                    } label: {
+                        RediCommandCard(
+                            title: "Leave Now",
+                            detail: "Evacuation steps, routes, and go-time checks.",
+                            systemImage: "figure.run",
+                            tint: ColorTheme.warning,
+                            badge: "Evacuate",
+                            prominence: .critical
+                        )
                     }
-                    .buttonStyle(SecondaryActionButtonStyle())
+                    .buttonStyle(CardPressButtonStyle())
                 }
+            }
+
+            // Tools grid
+            VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                Text("TOOLS")
+                    .font(RediTypography.label)
+                    .tracking(1.2)
+                    .foregroundStyle(ColorTheme.textTertiary)
+
+                LazyVGrid(columns: quickActionColumns, spacing: RediSpacing.content) {
+                    quickActionButton(
+                        title: "Blackout Mode",
+                        subtitle: "Dim tools",
+                        systemImage: "lightbulb.slash.fill",
+                        tint: ColorTheme.textTertiary
+                    ) {
+                        router.presentBlackout(appState: appState)
+                    }
+
+                    quickActionButton(
+                        title: "Signal Nearby",
+                        subtitle: "Open mesh",
+                        systemImage: "antenna.radiowaves.left.and.right",
+                        tint: ColorTheme.accent
+                    ) {
+                        router.openSignalNearby()
+                    }
+
+                    quickActionButton(
+                        title: "Emergency Guides",
+                        subtitle: "Offline help",
+                        systemImage: "books.vertical.fill",
+                        tint: ColorTheme.textTertiary
+                    ) {
+                        router.presentEmergencyGuides(appState: appState)
+                    }
+
+                    quickActionButton(
+                        title: appState.isStealthModeEnabled ? "Disable Stealth" : "Stealth Mode",
+                        subtitle: appState.isStealthModeEnabled ? "Receive-only on" : "Hide & conserve",
+                        systemImage: "eye.slash.fill",
+                        tint: ColorTheme.textSecondary
+                    ) {
+                        appState.toggleStealthMode()
+                    }
+                }
+            }
+
+            // Readiness tools
+            VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                Text("READINESS")
+                    .font(RediTypography.label)
+                    .tracking(1.2)
+                    .foregroundStyle(ColorTheme.textTertiary)
+
+                LazyVGrid(columns: decisionColumns, spacing: RediSpacing.content) {
+                    decisionToolButton(
+                        title: "Secure Vault",
+                        value: appState.documentVaultService.isUnlocked ? "Ready" : "Locked",
+                        subtitle: "ID, insurance, and medical docs",
+                        systemImage: "documents",
+                        tint: appState.documentVaultService.isUnlocked ? ColorTheme.ready : ColorTheme.accent,
+                        action: { router.openVault() }
+                    )
+
+                    decisionToolButton(
+                        title: "Vehicle Kit",
+                        value: viewModel.vehicleReadinessPlan.readiness.percentage.percentageText,
+                        subtitle: "\(viewModel.vehicleReadinessPlan.readiness.completedCount) / \(viewModel.vehicleReadinessPlan.readiness.totalCount) essentials checked",
+                        systemImage: "car.fill",
+                        tint: readinessColor(for: viewModel.vehicleReadinessPlan.readiness.percentage),
+                        action: { router.openVehicleReadiness() }
+                    )
+                }
+
+                Button {
+                    activeSheet = .readinessReport
+                } label: {
+                    RediCommandCard(
+                        title: "Readiness Report",
+                        detail: "Generate a PDF summary to save, share, or send to family.",
+                        systemImage: "doc.richtext.fill",
+                        tint: ColorTheme.accent,
+                        badge: "PDF",
+                        prominence: .neutral,
+                        layout: .rail
+                    )
+                }
+                .buttonStyle(CardPressButtonStyle())
             }
         }
     }
+
+    // MARK: - Operational Insights
 
     private var operationalInsightsContent: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: RediSpacing.section) {
             if !viewModel.forgottenItems.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Often Forgotten")
-                        .font(.headline)
-                        .foregroundStyle(ColorTheme.text)
+                VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                    Text("OFTEN FORGOTTEN")
+                        .font(RediTypography.label)
+                        .tracking(1.2)
+                        .foregroundStyle(ColorTheme.textTertiary)
 
                     ForEach(Array(viewModel.forgottenItems.prefix(3))) { item in
                         insightRow(
@@ -741,10 +814,11 @@ struct HomeView: View {
             }
 
             if viewModel.shouldShowExpiryReminders {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Supply Expiry")
-                        .font(.headline)
-                        .foregroundStyle(ColorTheme.text)
+                VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                    Text("SUPPLY EXPIRY")
+                        .font(RediTypography.label)
+                        .tracking(1.2)
+                        .foregroundStyle(ColorTheme.textTertiary)
 
                     ForEach(Array(viewModel.expiryReminders.prefix(3))) { reminder in
                         insightRow(
@@ -758,10 +832,11 @@ struct HomeView: View {
             }
 
             if viewModel.shouldShowWaterSourceGuidance {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Nearest Water Sources")
-                        .font(.headline)
-                        .foregroundStyle(ColorTheme.text)
+                VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                    Text("NEAREST WATER SOURCES")
+                        .font(RediTypography.label)
+                        .tracking(1.2)
+                        .foregroundStyle(ColorTheme.textTertiary)
 
                     NearbyWaterSourcesSection(
                         sources: viewModel.nearbyWaterSources,
@@ -774,152 +849,266 @@ struct HomeView: View {
     }
 
     private var readinessReportContent: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: RediSpacing.card) {
             HStack(alignment: .center) {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: RediSpacing.tight) {
                     Text(viewModel.readinessReport.scoreSummary)
-                        .font(.title2.weight(.bold))
+                        .font(RediTypography.dataLarge)
                         .foregroundStyle(readinessColor(for: viewModel.prepScore.overall))
                     Text(viewModel.readinessReport.householdSummary)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(RediTypography.body)
+                        .foregroundStyle(ColorTheme.textSecondary)
                 }
                 Spacer()
                 RediIcon("documents")
-                    .foregroundStyle(ColorTheme.info)
+                    .foregroundStyle(ColorTheme.accent)
                     .frame(width: 28, height: 28)
             }
 
             Text("Focus areas: \(readinessFocusAreaText)")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(RediTypography.body)
+                .foregroundStyle(ColorTheme.textSecondary)
 
             if let firstSuggestion = viewModel.readinessReport.suggestions.first {
                 Text("Next improvement: \(firstSuggestion.title)")
-                    .font(.subheadline.weight(.medium))
+                    .font(RediTypography.bodyStrong)
                     .foregroundStyle(ColorTheme.text)
             }
 
-            Button("Generate Readiness Report") {
-                isShowingReadinessReport = true
+            Button {
+                activeSheet = .readinessReport
+            } label: {
+                RediCommandCard(
+                    title: "Generate Readiness Report",
+                    detail: "Create a PDF summary of score, focus areas, and next improvements.",
+                    systemImage: "doc.richtext.fill",
+                    tint: readinessColor(for: viewModel.prepScore.overall),
+                    badge: "PDF",
+                    prominence: .accented,
+                    layout: .rail
+                )
             }
-            .buttonStyle(PrimaryActionButtonStyle())
+            .buttonStyle(CardPressButtonStyle())
         }
     }
 
-    private var decisionToolsCard: some View {
-        PanelCard(title: "Support Tools", subtitle: "Jump straight into leave-now flow, your secure documents, or vehicle readiness.") {
-            VStack(alignment: .leading, spacing: 14) {
-                Button("LEAVE NOW") {
-                    openLeaveNow()
-                }
-                .buttonStyle(EmergencyActionButtonStyle())
+    // MARK: - Premium Tools
 
-                LazyVGrid(columns: decisionColumns, spacing: 12) {
-                    decisionToolButton(
-                        title: "Secure Vault",
-                        value: "Offline locked",
-                        subtitle: "ID, insurance, and medical docs ready without signal",
-                        systemImage: "documents",
-                        tint: ColorTheme.info,
-                        action: openVault
-                    )
-
-                    decisionToolButton(
-                        title: "Vehicle Kit",
-                        value: viewModel.vehicleReadinessPlan.readiness.percentage.percentageText,
-                        subtitle: "\(viewModel.vehicleReadinessPlan.readiness.completedCount) / \(viewModel.vehicleReadinessPlan.readiness.totalCount) essentials checked",
-                        systemImage: "car.fill",
-                        tint: readinessColor(for: viewModel.vehicleReadinessPlan.readiness.percentage),
-                        action: openVehicleReadiness
-                    )
-                }
-            }
+    private var premiumToolsSection: some View {
+        PanelCard {
+            proOverviewContent
         }
     }
 
-    private var proOverviewCard: some View {
-        PanelCard(title: "RediM8 Pro", subtitle: "Launch pricing for premium planning, expanded maps, and the offline assistant.") {
-            VStack(alignment: .leading, spacing: 14) {
-                if appState.emergencyUnlockState.isActive {
-                    HStack(alignment: .top, spacing: 12) {
-                        RediIcon(appState.emergencyUnlockState.triggerAlert?.kind.systemImage ?? "warning")
+    private var proOverviewContent: some View {
+        VStack(alignment: .leading, spacing: RediSpacing.section) {
+            VStack(alignment: .leading, spacing: RediSpacing.content) {
+                Rectangle()
+                    .fill(ColorTheme.textSecondary.opacity(0.34))
+                    .frame(height: 1)
+
+                Text("REDIM8 PRO")
+                    .font(RediTypography.display)
+                    .foregroundStyle(ColorTheme.text)
+
+                Text("Prepared when networks fail.")
+                    .font(RediTypography.body)
+                    .foregroundStyle(ColorTheme.textSecondary)
+
+                Rectangle()
+                    .fill(ColorTheme.textSecondary.opacity(0.18))
+                    .frame(height: 1)
+            }
+
+            if appState.emergencyUnlockState.isActive {
+                HStack(alignment: .top, spacing: RediSpacing.content) {
+                    RediIcon(appState.emergencyUnlockState.triggerAlert?.kind.systemImage ?? "warning")
+                        .foregroundStyle(ColorTheme.warning)
+                        .frame(width: 18, height: 18)
+                        .padding(10)
+                        .background(ColorTheme.warning.opacity(0.14), in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+
+                    VStack(alignment: .leading, spacing: RediSpacing.micro) {
+                        Text("EMERGENCY UNLOCK ACTIVE")
+                            .font(RediTypography.label)
+                            .tracking(1.2)
                             .foregroundStyle(ColorTheme.warning)
-                            .frame(width: 18, height: 18)
-                            .padding(10)
-                            .background(ColorTheme.warning.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("EMERGENCY UNLOCK ACTIVE")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(ColorTheme.warning)
-                            Text("Pro tools are temporarily available without billing while the nearby official warning remains active.")
-                                .font(.subheadline)
-                                .foregroundStyle(ColorTheme.textMuted)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-
-                        Spacer(minLength: 0)
+                        Text("Pro tools are temporarily available without billing while the nearby official warning remains active.")
+                            .font(RediTypography.body)
+                            .foregroundStyle(ColorTheme.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
+
+                    Spacer(minLength: 0)
                 }
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(monetizationCatalog.offers) { offer in
-                            VStack(alignment: .leading, spacing: 6) {
-                                if let badge = offer.badge {
-                                    Text(badge.uppercased())
-                                        .font(.caption.weight(.bold))
-                                        .foregroundStyle(offer.isRecommended ? ColorTheme.accent : ColorTheme.warning)
-                                }
-
-                                Text(offer.title)
-                                    .font(.headline)
-                                    .foregroundStyle(ColorTheme.text)
-                                Text(offer.shortPriceText)
-                                    .font(.title3.weight(.bold))
-                                    .foregroundStyle(ColorTheme.text)
-                                Text(offer.interval == .lifetime ? "one-time" : offer.interval == .annual ? "per year" : "per month")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding(14)
-                            .frame(width: 138, alignment: .leading)
-                            .background(Color.black.opacity(0.24), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                                    .stroke((offer.isRecommended ? ColorTheme.accent : offer.isFoundingOffer ? ColorTheme.warning : ColorTheme.info).opacity(0.22), lineWidth: 1)
-                            )
-                        }
-                    }
-                }
-
-                Text(monetizationCatalog.alwaysFreePromise)
-                    .font(.subheadline)
-                    .foregroundStyle(ColorTheme.textMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Button("See Pro Plans") {
-                    isShowingPro = true
-                }
-                .buttonStyle(SecondaryActionButtonStyle())
             }
+
+            VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                ForEach(proFeatureHighlights, id: \.self) { highlight in
+                    proFeatureRow(title: highlight)
+                }
+            }
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: RediSpacing.content) {
+                    ForEach(monetizationCatalog.offers) { offer in
+                        proOfferCard(offer)
+                    }
+                }
+
+                VStack(spacing: RediSpacing.content) {
+                    ForEach(monetizationCatalog.offers) { offer in
+                        proOfferCard(offer)
+                    }
+                }
+            }
+
+            Text(monetizationCatalog.launchPricingSummary)
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.text)
+
+            Text(monetizationCatalog.alwaysFreePromise)
+                .font(RediTypography.body)
+                .foregroundStyle(ColorTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button {
+                activeSheet = .pro
+            } label: {
+                RediCommandCard(
+                    title: appState.emergencyUnlockState.isActive ? "Open Pro Tools" : "Upgrade to Pro",
+                    detail: appState.emergencyUnlockState.isActive
+                        ? "Emergency access is active. Open the expanded planning and map tools."
+                        : "Unlock offline AI, survival maps, and advanced planning tools.",
+                    systemImage: "sparkles.rectangle.stack.fill",
+                    tint: ColorTheme.textSecondary,
+                    badge: appState.emergencyUnlockState.isActive ? "Unlocked" : "Pro",
+                    prominence: .accented,
+                    layout: .rail
+                )
+            }
+            .buttonStyle(CardPressButtonStyle())
         }
     }
+
+    private var proFeatureHighlights: [String] {
+        [
+            "Offline assistant safe summaries",
+            "Expanded survival maps",
+            "Advanced planning tools"
+        ]
+    }
+
+    private func proFeatureRow(title: String) -> some View {
+        HStack(alignment: .center, spacing: RediSpacing.content) {
+            Circle()
+                .fill(ColorTheme.textSecondary)
+                .frame(width: 6, height: 6)
+
+            Text(title)
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.text)
+
+            Spacer()
+        }
+        .padding(RediSpacing.card)
+        .homeInsetSurface(cornerRadius: RediRadius.card)
+    }
+
+    private func proOfferCard(_ offer: RediM8ProOffer) -> some View {
+        VStack(alignment: .leading, spacing: RediSpacing.compact) {
+            if let badge = offer.badge {
+                Text(badge.uppercased())
+                    .font(RediTypography.label)
+                    .tracking(1.2)
+                    .foregroundStyle(offer.isRecommended ? ColorTheme.accent : ColorTheme.textSecondary)
+            }
+
+            Text(offer.title)
+                .font(RediTypography.heading)
+                .foregroundStyle(ColorTheme.text)
+
+            Text(offer.shortPriceText)
+                .font(RediTypography.dataLarge)
+                .foregroundStyle(ColorTheme.text)
+
+            Text(offer.billingSummary)
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textSecondary)
+        }
+        .padding(RediSpacing.card)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .homeInsetSurface(cornerRadius: RediRadius.card)
+        .overlay(
+            RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                .stroke(
+                    offer.isRecommended
+                        ? ColorTheme.accent.opacity(0.28)
+                        : offer.isFoundingOffer
+                            ? ColorTheme.textSecondary.opacity(0.22)
+                            : ColorTheme.dividerStrong,
+                    lineWidth: 1
+                )
+        )
+    }
+
+    // MARK: - Compact Pro Banner
+
+    private var compactProBanner: some View {
+        Button {
+            activeSheet = .pro
+        } label: {
+            HStack(spacing: RediSpacing.card) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(ColorTheme.textSecondary)
+                    .frame(width: 36, height: 36)
+                    .background(ColorTheme.textSecondary.opacity(0.14), in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("RediM8 Pro")
+                        .font(RediTypography.bodyStrong)
+                        .foregroundStyle(ColorTheme.text)
+                    Text(appState.emergencyUnlockState.isActive
+                         ? "Emergency access active"
+                         : "Offline AI, survival maps, advanced tools")
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.textSecondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(RediTypography.caption)
+                    .foregroundStyle(ColorTheme.textSecondary.opacity(0.6))
+            }
+            .padding(RediSpacing.card)
+            .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                    .stroke(ColorTheme.divider, lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(CardPressButtonStyle())
+    }
+
+    // MARK: - Bushfire & Priority Modes
 
     private var bushfireModeCard: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: RediSpacing.section) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: RediSpacing.tight) {
                     Text("BUSHFIRE MODE ACTIVE")
-                        .font(.caption.weight(.bold))
+                        .font(RediTypography.label)
+                        .tracking(1.2)
                         .foregroundStyle(ColorTheme.warning)
                     Text("\(viewModel.bushfireReadinessPercentage)%")
-                        .font(.system(size: 44, weight: .bold))
+                        .font(RediTypography.dataHero)
                         .foregroundStyle(ColorTheme.text)
                     Text("Overall bushfire readiness")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(RediTypography.body)
+                        .foregroundStyle(ColorTheme.textSecondary)
                 }
 
                 Spacer()
@@ -927,119 +1116,128 @@ struct HomeView: View {
                 RediIcon("fire_trail")
                     .foregroundStyle(ColorTheme.warning)
                     .frame(width: 28, height: 28)
-                    .padding(14)
-                    .background(ColorTheme.warning.opacity(0.14), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .padding(RediSpacing.card)
+                    .background(ColorTheme.warning.opacity(0.14), in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
             }
 
-            VStack(spacing: 12) {
+            VStack(spacing: RediSpacing.content) {
                 ForEach(viewModel.bushfireStatusRows) { row in
-                    HStack(spacing: 12) {
+                    HStack(spacing: RediSpacing.content) {
                         RediIcon(row.systemImage)
                             .foregroundStyle(bushfireToneColor(row.tone))
                             .frame(width: 22, height: 22)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(row.title)
-                                .font(.headline)
+                                .font(RediTypography.bodyStrong)
                                 .foregroundStyle(ColorTheme.text)
                             Text(row.detail)
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .font(RediTypography.body)
+                                .foregroundStyle(ColorTheme.textSecondary)
                         }
                         Spacer()
                     }
-                    .padding(12)
-                    .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .padding(RediSpacing.content)
+                    .homeInsetSurface(cornerRadius: RediRadius.card)
                 }
             }
 
-            Divider().background(ColorTheme.divider)
+            Rectangle()
+                .fill(ColorTheme.divider)
+                .frame(height: 0.5)
 
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Bushfire Checklist")
-                    .font(.headline)
-                    .foregroundStyle(ColorTheme.text)
+            VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                Text("BUSHFIRE CHECKLIST")
+                    .font(RediTypography.label)
+                    .tracking(1.2)
+                    .foregroundStyle(ColorTheme.textTertiary)
 
                 ForEach(viewModel.bushfireChecklistItems) { item in
                     Button {
                         viewModel.toggleBushfireChecklist(item.kind)
                     } label: {
-                        HStack(spacing: 12) {
+                        HStack(spacing: RediSpacing.content) {
                             Image(systemName: item.isChecked ? "checkmark.circle.fill" : "circle")
                                 .foregroundStyle(item.isChecked ? ColorTheme.ready : ColorTheme.warning)
                             Text(item.kind.title)
-                                .font(.subheadline.weight(.medium))
+                                .font(RediTypography.bodyStrong)
                                 .foregroundStyle(ColorTheme.text)
                             Spacer()
                         }
-                        .padding(.vertical, 4)
+                        .padding(.vertical, RediSpacing.micro)
                     }
                     .buttonStyle(CardPressButtonStyle())
                 }
             }
 
-            Divider().background(ColorTheme.divider)
+            Rectangle()
+                .fill(ColorTheme.divider)
+                .frame(height: 0.5)
 
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Bushfire Approaching")
-                    .font(.headline)
-                    .foregroundStyle(ColorTheme.text)
+            VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                Text("BUSHFIRE APPROACHING")
+                    .font(RediTypography.label)
+                    .tracking(1.2)
+                    .foregroundStyle(ColorTheme.textTertiary)
 
                 ForEach(Array(viewModel.bushfireEmergencySteps.enumerated()), id: \.offset) { index, step in
-                    HStack(alignment: .top, spacing: 12) {
+                    HStack(alignment: .top, spacing: RediSpacing.content) {
                         Text("\(index + 1).")
-                            .font(.headline)
+                            .font(RediTypography.data)
                             .foregroundStyle(ColorTheme.warning)
                         Text(step)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .font(RediTypography.body)
+                            .foregroundStyle(ColorTheme.textSecondary)
                     }
                 }
             }
 
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: RediSpacing.content) {
                 RediIcon("warning")
                     .foregroundStyle(ColorTheme.warning)
                     .frame(width: 22, height: 22)
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: RediSpacing.micro) {
                     Text(viewModel.bushfireReminderTitle)
-                        .font(.headline)
+                        .font(RediTypography.bodyStrong)
                         .foregroundStyle(ColorTheme.text)
                     Text(viewModel.bushfireReminderMessage)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(RediTypography.body)
+                        .foregroundStyle(ColorTheme.textSecondary)
                 }
             }
-            .padding(14)
-            .background(ColorTheme.warning.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .padding(RediSpacing.card)
+            .homeInsetSurface(cornerRadius: RediRadius.card)
         }
     }
 
     private var priorityModeCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-                LazyVGrid(columns: priorityColumns, spacing: 10) {
+        VStack(alignment: .leading, spacing: RediSpacing.card) {
+                LazyVGrid(columns: priorityColumns, spacing: RediSpacing.compact) {
                     ForEach(viewModel.prioritySituationOptions) { situation in
                         Button {
                             viewModel.togglePrioritySituation(situation)
                         } label: {
-                        HStack(spacing: 10) {
+                        HStack(spacing: RediSpacing.compact) {
                             RediIcon(situation.systemImage)
                                 .frame(width: 15, height: 15)
                             Text(situation.title)
-                                .font(.subheadline.weight(.semibold))
+                                .font(RediTypography.bodyStrong)
                             Spacer(minLength: 0)
                         }
                         .foregroundStyle(appState.activePrioritySituation == situation ? ColorTheme.warning : ColorTheme.text)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 12)
+                        .padding(.horizontal, RediSpacing.card)
+                        .padding(.vertical, RediSpacing.content)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            appState.activePrioritySituation == situation
-                                ? ColorTheme.warning.opacity(0.16)
-                                : Color.black.opacity(0.24),
-                            in: RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .homeInsetSurface(cornerRadius: RediRadius.card)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                                .fill(
+                                    appState.activePrioritySituation == situation
+                                        ? ColorTheme.warning.opacity(0.12)
+                                        : Color.clear
+                                )
                         )
                         .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
                                 .stroke(
                                     appState.activePrioritySituation == situation
                                         ? ColorTheme.warning.opacity(0.4)
@@ -1053,56 +1251,61 @@ struct HomeView: View {
             }
 
             if let summary = viewModel.priorityModeSummary {
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: RediSpacing.card) {
                     HStack {
                         Text("PRIORITY MODE ACTIVE")
-                            .font(.caption.weight(.bold))
+                            .font(RediTypography.label)
+                            .tracking(1.2)
                             .foregroundStyle(ColorTheme.warning)
                         Spacer()
                         Button("Clear") {
                             viewModel.clearPriorityMode()
                         }
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .font(RediTypography.bodyStrong)
+                        .foregroundStyle(ColorTheme.textSecondary)
                     }
 
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: RediSpacing.content) {
                         ForEach(summary.actions) { action in
-                            HStack(alignment: .top, spacing: 12) {
+                            HStack(alignment: .top, spacing: RediSpacing.content) {
                                 RediIcon(action.systemImage)
                                     .foregroundStyle(ColorTheme.warning)
                                     .frame(width: 16, height: 16)
-                                VStack(alignment: .leading, spacing: 4) {
+                                VStack(alignment: .leading, spacing: RediSpacing.micro) {
                                     Text(action.title)
-                                        .font(.headline)
+                                        .font(RediTypography.bodyStrong)
                                         .foregroundStyle(ColorTheme.text)
                                     Text(action.detail)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                                        .font(RediTypography.body)
+                                        .foregroundStyle(ColorTheme.textSecondary)
                                 }
                             }
                         }
                     }
 
                     if !summary.resources.isEmpty {
-                        Divider().background(ColorTheme.divider)
+                        Rectangle()
+                            .fill(ColorTheme.divider)
+                            .frame(height: 0.5)
 
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Nearest Resources")
-                                .font(.headline)
-                                .foregroundStyle(ColorTheme.text)
+                        VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                            Text("NEAREST RESOURCES")
+                                .font(RediTypography.label)
+                                .tracking(1.2)
+                                .foregroundStyle(ColorTheme.textTertiary)
+
                             ForEach(summary.resources) { resource in
-                                HStack(alignment: .top, spacing: 12) {
+                                HStack(alignment: .top, spacing: RediSpacing.content) {
                                     RediIcon(resource.systemImage)
-                                        .foregroundStyle(ColorTheme.info)
+                                        .foregroundStyle(ColorTheme.accent)
                                         .frame(width: 16, height: 16)
-                                    VStack(alignment: .leading, spacing: 4) {
+                                    VStack(alignment: .leading, spacing: RediSpacing.micro) {
                                         Text(resource.title)
-                                            .font(.subheadline.weight(.semibold))
+                                            .font(RediTypography.bodyStrong)
                                             .foregroundStyle(ColorTheme.text)
                                         Text(resource.detail)
-                                            .font(.subheadline)
-                                            .foregroundStyle(.secondary)
+                                            .font(RediTypography.body)
+                                            .foregroundStyle(ColorTheme.textSecondary)
                                     }
                                 }
                             }
@@ -1110,42 +1313,60 @@ struct HomeView: View {
                     }
 
                     if !summary.evacuationOptions.isEmpty {
-                        Divider().background(ColorTheme.divider)
+                        Rectangle()
+                            .fill(ColorTheme.divider)
+                            .frame(height: 0.5)
 
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Evacuation Options")
-                                .font(.headline)
-                                .foregroundStyle(ColorTheme.text)
+                        VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                            Text("EVACUATION OPTIONS")
+                                .font(RediTypography.label)
+                                .tracking(1.2)
+                                .foregroundStyle(ColorTheme.textTertiary)
+
                             ForEach(summary.evacuationOptions, id: \.self) { option in
-                                HStack(alignment: .top, spacing: 10) {
+                                HStack(alignment: .top, spacing: RediSpacing.compact) {
                                     RediIcon("route", fallbackSystemName: "arrow.triangle.turn.up.right.diamond.fill")
-                                        .foregroundStyle(ColorTheme.info)
+                                        .foregroundStyle(ColorTheme.accent)
                                         .frame(width: 14, height: 14)
-                                        .padding(.top, 4)
+                                        .padding(.top, RediSpacing.micro)
                                     Text(option)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                                        .font(RediTypography.body)
+                                        .foregroundStyle(ColorTheme.textSecondary)
                                 }
                             }
                         }
                     }
 
-                    HStack(spacing: 12) {
-                        Button("LEAVE NOW") {
-                            openLeaveNow()
-                        }
-                        .buttonStyle(PrimaryActionButtonStyle())
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: RediSpacing.content) {
+                            Button("LEAVE NOW") {
+                                router.presentLeaveNowMode(appState: appState)
+                            }
+                            .buttonStyle(PrimaryActionButtonStyle())
 
-                        Button("Emergency Screen") {
-                            openEmergency()
+                            Button("Emergency Screen") {
+                                router.presentEmergencyMode(appState: appState)
+                            }
+                            .buttonStyle(SecondaryActionButtonStyle())
                         }
-                        .buttonStyle(SecondaryActionButtonStyle())
+
+                        VStack(spacing: RediSpacing.content) {
+                            Button("LEAVE NOW") {
+                                router.presentLeaveNowMode(appState: appState)
+                            }
+                            .buttonStyle(PrimaryActionButtonStyle())
+
+                            Button("Emergency Screen") {
+                                router.presentEmergencyMode(appState: appState)
+                            }
+                            .buttonStyle(SecondaryActionButtonStyle())
+                        }
                     }
                 }
             } else {
                 Text("Bushfire, flood, blackout, and remote-travel incidents each get their own action order so the app tells the user what matters first.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(RediTypography.body)
+                    .foregroundStyle(ColorTheme.textSecondary)
             }
         }
     }
@@ -1167,30 +1388,94 @@ struct HomeView: View {
     }
 
     private var preparednessHeadlineBlock: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: RediSpacing.compact) {
             Text("\(viewModel.prepScore.overall)%")
-                .font(.system(size: 64, weight: .black, design: .rounded))
+                .font(RediTypography.dataHero)
                 .foregroundStyle(readinessColor(for: viewModel.prepScore.overall))
                 .minimumScaleFactor(0.72)
                 .lineLimit(1)
 
             Text(viewModel.prepScore.milestoneTitle)
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(RediTypography.display)
                 .foregroundStyle(ColorTheme.text)
 
             Text(viewModel.prepScore.nextMilestoneSummary)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(ColorTheme.textMuted)
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textSecondary)
         }
     }
 
+    private var commandCenterNextLine: String {
+        if let summary = viewModel.priorityModeSummary, let action = summary.actions.first {
+            return action.title
+        }
+
+        if let suggestion = viewModel.prepScore.suggestions.first {
+            return suggestion.title
+        }
+
+        if let task = viewModel.scenarioTasks.first {
+            return task.title
+        }
+
+        return "Review your household plan and keep critical tools staged."
+    }
+
+    private var commandCenterStatusLine: String {
+        if let safeModeSummary = viewModel.safeModeSummary {
+            return "\(safeModeSummary.alert.severity.title) nearby"
+        }
+
+        switch viewModel.officialAlertSummary.tone {
+        case .ready:
+            return "No warnings nearby"
+        case .info:
+            return "Monitoring official feeds"
+        case .caution, .danger:
+            return viewModel.officialAlertSummary.title
+        }
+    }
+
+    private var commandCenterReadinessLine: String {
+        "\(viewModel.prepScore.overall)% prepared • \(viewModel.waterRuntimeEstimate.estimatedDaysText) water"
+    }
+
+    private var commandCenterStatusTint: Color {
+        if viewModel.safeModeSummary != nil {
+            return ColorTheme.danger
+        }
+
+        return officialAlertToneColor(viewModel.officialAlertSummary.tone)
+    }
+
+    private var commandCenterEdgeColor: Color {
+        commandCenterStatusTint.opacity(viewModel.safeModeSummary == nil ? 0.14 : 0.22)
+    }
+
+    private func commandCenterDetailLine(label: String, detail: String, tint: Color) -> some View {
+        HStack(alignment: .top, spacing: RediSpacing.compact) {
+            Text(label.uppercased())
+                .font(RediTypography.label)
+                .tracking(1.2)
+                .foregroundStyle(tint)
+                .frame(width: 74, alignment: .leading)
+
+            Text(detail)
+                .font(RediTypography.data)
+                .foregroundStyle(ColorTheme.text)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, RediSpacing.card)
+    }
+
     private func preparednessScenarioBlock(isTrailing: Bool) -> some View {
-        VStack(alignment: isTrailing ? .trailing : .leading, spacing: 8) {
+        VStack(alignment: isTrailing ? .trailing : .leading, spacing: RediSpacing.compact) {
             Text("SCENARIOS")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(ColorTheme.textFaint)
+                .font(RediTypography.label)
+                .tracking(1.2)
+                .foregroundStyle(ColorTheme.textTertiary)
             Text("\(viewModel.prepScore.categoryScores.count) tracked")
-                .font(.headline.weight(.bold))
+                .font(RediTypography.data)
                 .foregroundStyle(ColorTheme.text)
         }
         .frame(maxWidth: .infinity, alignment: isTrailing ? .trailing : .leading)
@@ -1200,7 +1485,7 @@ struct HomeView: View {
         let tint = readinessColor(for: score.score)
         let progress = min(max(score.score, 0), 100)
 
-        return VStack(alignment: .leading, spacing: 10) {
+        return VStack(alignment: .leading, spacing: RediSpacing.compact) {
             HStack(alignment: .top) {
                 RediIcon(score.category.systemImage)
                     .foregroundStyle(tint)
@@ -1209,30 +1494,160 @@ struct HomeView: View {
                 Spacer()
 
                 Text(score.score.percentageText)
-                    .font(.subheadline.weight(.bold))
+                    .font(RediTypography.data)
                     .foregroundStyle(tint)
             }
 
             Text(score.category.title)
-                .font(.headline)
+                .font(RediTypography.bodyStrong)
                 .foregroundStyle(ColorTheme.text)
 
             ReadinessMeter(value: Double(progress) / 100, tint: tint)
         }
-        .padding(16)
+        .padding(RediSpacing.section)
         .frame(maxWidth: .infinity, minHeight: 112, alignment: .leading)
-        .background(
-            LinearGradient(
-                colors: [ColorTheme.panelElevated, ColorTheme.panel],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            ),
-            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(ColorTheme.dividerStrong, lineWidth: 1)
-        )
+        .homeInsetSurface(cornerRadius: RediRadius.card)
+    }
+
+    private func todaySnapshotMetric(
+        title: String,
+        value: String,
+        detail: String,
+        tint: Color,
+        systemImage: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: RediSpacing.tight) {
+            Text(title.uppercased())
+                .font(RediTypography.label)
+                .tracking(1.2)
+                .foregroundStyle(ColorTheme.textTertiary)
+
+            Text(value)
+                .font(RediTypography.dataLarge)
+                .foregroundStyle(tint)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
+
+            Text(detail)
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(RediSpacing.card)
+        .frame(maxWidth: .infinity, minHeight: 96, alignment: .leading)
+        .homeInsetSurface(cornerRadius: RediRadius.card)
+    }
+
+    private func performTodayAction() {
+        if let summary = viewModel.priorityModeSummary {
+            switch summary.situation {
+            case .blackout:
+                router.presentBlackout(appState: appState)
+            case .remoteTravel:
+                router.openVehicleReadiness()
+            case .bushfire, .flood:
+                router.presentEmergencyMode(appState: appState)
+            }
+            return
+        }
+
+        if let suggestion = viewModel.prepScore.suggestions.first {
+            performImprovementAction(for: suggestion)
+            return
+        }
+
+        if !viewModel.scenarioTasks.isEmpty {
+            router.openPlan()
+            return
+        }
+
+        router.openPlan()
+    }
+
+    private func performImprovementAction(for suggestion: ImprovementSuggestion) {
+        switch suggestion.category {
+        case .water:
+            router.openWaterRuntime()
+        case .communication:
+            router.openSignalNearby()
+        case .food, .medical, .power, .evacuation:
+            router.openPlan()
+        }
+    }
+
+    // MARK: - Reusable Card Builders
+
+    private func featuredSuggestionCard(_ suggestion: ImprovementSuggestion, eyebrow: String? = "BEST NEXT STEP") -> some View {
+        let currentScore = scoreValue(for: suggestion.category)
+        let tint = readinessColor(for: currentScore)
+
+        return VStack(alignment: .leading, spacing: RediSpacing.section) {
+            HStack(alignment: .top, spacing: RediSpacing.content) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                        .fill(tint.opacity(0.12))
+                        .frame(width: 48, height: 48)
+
+                    RediIcon(suggestion.category.systemImage)
+                        .foregroundStyle(tint)
+                        .frame(width: 20, height: 20)
+                }
+
+                VStack(alignment: .leading, spacing: RediSpacing.micro) {
+                    if let eyebrow {
+                        Text(eyebrow.uppercased())
+                            .font(RediTypography.label)
+                            .tracking(1.2)
+                            .foregroundStyle(ColorTheme.textTertiary)
+                    }
+                    Text(suggestion.title)
+                        .font(RediTypography.heading)
+                        .foregroundStyle(ColorTheme.text)
+                }
+
+                Spacer(minLength: 0)
+
+                Text("+\(suggestion.impact)%")
+                    .font(RediTypography.data)
+                    .foregroundStyle(ColorTheme.accent)
+                    .padding(.horizontal, RediSpacing.compact)
+                    .padding(.vertical, RediSpacing.tight)
+                    .background(ColorTheme.accent.opacity(0.12), in: Capsule())
+            }
+
+            Text(suggestion.detail)
+                .font(RediTypography.body)
+                .foregroundStyle(ColorTheme.textSecondary)
+
+            VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                HStack {
+                    Text(suggestion.category.title.uppercased())
+                        .font(RediTypography.label)
+                        .tracking(1.2)
+                        .foregroundStyle(ColorTheme.textTertiary)
+                    Spacer()
+                    Text(currentScore.percentageText)
+                        .font(RediTypography.data)
+                        .foregroundStyle(tint)
+                }
+
+                ReadinessMeter(value: Double(currentScore) / 100, tint: tint, height: 6)
+
+                HStack {
+                    Text("+\(suggestion.impact)% if completed")
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.accent)
+                    Spacer()
+                    Text(suggestion.category.quickTaskEstimate)
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.textTertiary)
+                }
+            }
+            .padding(RediSpacing.card)
+            .homeInsetSurface(cornerRadius: RediRadius.card)
+        }
+        .padding(RediSpacing.section)
+        .homeInsetSurface(cornerRadius: RediRadius.card)
     }
 
     private func featuredActionCard(
@@ -1244,10 +1659,10 @@ struct HomeView: View {
         emphasis: String,
         supporting: String?
     ) -> some View {
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
+        return VStack(alignment: .leading, spacing: RediSpacing.content) {
+            HStack(alignment: .top, spacing: RediSpacing.content) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
                         .fill(tint.opacity(0.16))
                         .frame(width: 48, height: 48)
 
@@ -1256,46 +1671,38 @@ struct HomeView: View {
                         .frame(width: 20, height: 20)
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: RediSpacing.micro) {
                     Text(eyebrow.uppercased())
-                        .font(RediTypography.metadata)
+                        .font(RediTypography.label)
+                        .tracking(1.2)
                         .foregroundStyle(tint)
                     Text(title)
-                        .font(.headline.weight(.bold))
+                        .font(RediTypography.heading)
                         .foregroundStyle(ColorTheme.text)
                 }
 
                 Spacer(minLength: 0)
 
                 Text(emphasis)
-                    .font(.subheadline.weight(.bold))
+                    .font(RediTypography.data)
                     .foregroundStyle(tint)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
+                    .padding(.horizontal, RediSpacing.compact)
+                    .padding(.vertical, RediSpacing.tight)
                     .background(tint.opacity(0.14), in: Capsule())
             }
 
             Text(detail)
-                .font(.subheadline)
-                .foregroundStyle(ColorTheme.textMuted)
+                .font(RediTypography.body)
+                .foregroundStyle(ColorTheme.textSecondary)
 
             if let supporting {
                 Text(supporting)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(ColorTheme.textFaint)
+                    .font(RediTypography.caption)
+                    .foregroundStyle(ColorTheme.textTertiary)
             }
         }
-        .padding(16)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 20,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: tint.opacity(0.12)
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 20, edgeColor: tint.opacity(0.16), shadowColor: tint.opacity(0.06)))
+        .padding(RediSpacing.section)
+        .homeInsetSurface(cornerRadius: RediRadius.card)
     }
 
     private func nextActionRow(
@@ -1306,82 +1713,65 @@ struct HomeView: View {
         supporting: String?,
         tint: Color
     ) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: RediSpacing.content) {
             RediIcon(iconName)
                 .foregroundStyle(tint)
                 .frame(width: 18, height: 18)
                 .padding(.top, 2)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: RediSpacing.micro) {
                 Text(title)
-                    .font(.headline)
+                    .font(RediTypography.bodyStrong)
                     .foregroundStyle(ColorTheme.text)
                 Text(detail)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(RediTypography.body)
+                    .foregroundStyle(ColorTheme.textSecondary)
             }
 
-            Spacer(minLength: 12)
+            Spacer(minLength: RediSpacing.content)
 
-            VStack(alignment: .trailing, spacing: 6) {
+            VStack(alignment: .trailing, spacing: RediSpacing.tight) {
                 if let emphasis {
                     Text(emphasis)
-                        .font(.caption.weight(.bold))
+                        .font(RediTypography.label)
+                        .tracking(1.2)
                         .foregroundStyle(tint)
                         .padding(.horizontal, 9)
-                        .padding(.vertical, 6)
+                        .padding(.vertical, RediSpacing.tight)
                         .background(tint.opacity(0.12), in: Capsule())
                 }
                 if let supporting {
                     Text(supporting)
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(ColorTheme.textFaint)
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.textTertiary)
                 }
             }
         }
-        .padding(14)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 18,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: tint.opacity(0.08)
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 18, edgeColor: tint.opacity(0.12), shadowColor: tint.opacity(0.04)))
+        .padding(RediSpacing.card)
+        .homeInsetSurface(cornerRadius: RediRadius.card)
     }
 
     private func guideLaneRow(title: String, detail: String, iconName: String, tint: Color) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: RediSpacing.content) {
             RediIcon(iconName)
                 .foregroundStyle(tint)
                 .frame(width: 20, height: 20)
                 .padding(10)
-                .background(tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(tint.opacity(0.14), in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: RediSpacing.micro) {
                 Text(title)
-                    .font(.headline)
+                    .font(RediTypography.bodyStrong)
                     .foregroundStyle(ColorTheme.text)
                 Text(detail)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(RediTypography.body)
+                    .foregroundStyle(ColorTheme.textSecondary)
             }
 
             Spacer(minLength: 0)
         }
-        .padding(14)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 18,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: tint.opacity(0.08)
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 18, edgeColor: tint.opacity(0.12), shadowColor: tint.opacity(0.04)))
+        .padding(RediSpacing.card)
+        .homeInsetSurface(cornerRadius: RediRadius.card)
     }
 
     private var emergencyUnlockTrustItems: [TrustPillItem] {
@@ -1420,7 +1810,7 @@ struct HomeView: View {
             iconName: summary.alert.kind.systemImage,
             accent: officialAlertToneColor(.danger)
         ) {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: RediSpacing.content) {
                 TrustPillGroup(items: viewModel.officialAlertTrustItems)
 
                 operationalSafeModeLine(label: "Shelter", detail: summary.nearestShelterLine)
@@ -1428,24 +1818,38 @@ struct HomeView: View {
                 operationalSafeModeLine(label: "Route", detail: summary.routeLine)
 
                 Text(summary.note)
-                    .font(.subheadline)
-                    .foregroundStyle(ColorTheme.textMuted)
+                    .font(RediTypography.body)
+                    .foregroundStyle(ColorTheme.textSecondary)
 
                 Button("View Map") {
-                    openMap()
+                    router.openMap()
                 }
                 .buttonStyle(PrimaryActionButtonStyle())
 
-                HStack(spacing: 12) {
-                    Button("Send Alert") {
-                        openSignalNearby()
-                    }
-                    .buttonStyle(SecondaryActionButtonStyle())
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: RediSpacing.content) {
+                        Button("Send Alert") {
+                            router.openSignalNearby()
+                        }
+                        .buttonStyle(SecondaryActionButtonStyle())
 
-                    Button("Share Location") {
-                        openSignalNearby()
+                        Button("Share Location") {
+                            router.openSignalNearby()
+                        }
+                        .buttonStyle(SecondaryActionButtonStyle())
                     }
-                    .buttonStyle(SecondaryActionButtonStyle())
+
+                    VStack(spacing: RediSpacing.content) {
+                        Button("Send Alert") {
+                            router.openSignalNearby()
+                        }
+                        .buttonStyle(SecondaryActionButtonStyle())
+
+                        Button("Share Location") {
+                            router.openSignalNearby()
+                        }
+                        .buttonStyle(SecondaryActionButtonStyle())
+                    }
                 }
             }
         }
@@ -1480,7 +1884,7 @@ struct HomeView: View {
         case .ready:
             ColorTheme.ready
         case .info:
-            ColorTheme.info
+            ColorTheme.accent
         case .caution:
             ColorTheme.warning
         case .danger:
@@ -1501,28 +1905,36 @@ struct HomeView: View {
         }
     }
 
+    private func metricStatus(for color: Color) -> MetricStatus {
+        if color == ColorTheme.ready { return .ready }
+        if color == ColorTheme.warning { return .warning }
+        if color == ColorTheme.danger { return .danger }
+        return .normal
+    }
+
+    private func alertMetricStatus(_ tone: OfficialAlertStatusTone) -> MetricStatus {
+        switch tone {
+        case .ready: .ready
+        case .info: .normal
+        case .caution: .warning
+        case .danger: .danger
+        }
+    }
+
     private func alertMetaPanel(title: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: RediSpacing.micro) {
             Text(title.uppercased())
-                .font(RediTypography.metadata)
-                .foregroundStyle(ColorTheme.textFaint)
+                .font(RediTypography.label)
+                .tracking(1.2)
+                .foregroundStyle(ColorTheme.textTertiary)
             Text(value)
-                .font(.subheadline.weight(.semibold))
+                .font(RediTypography.data)
                 .foregroundStyle(ColorTheme.text)
                 .lineLimit(2)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 16,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: ColorTheme.info.opacity(0.06)
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 16, edgeColor: ColorTheme.info.opacity(0.08), shadowColor: ColorTheme.info.opacity(0.03)))
+        .padding(RediSpacing.content)
+        .homeInsetSurface(cornerRadius: RediRadius.card)
     }
 
     private func decisionToolButton(
@@ -1534,83 +1946,93 @@ struct HomeView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top) {
-                    RediIcon(systemImage)
-                        .foregroundStyle(tint)
-                        .frame(width: 18, height: 18)
-                    Spacer()
-                    Image(systemName: "arrow.up.right")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(.secondary)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(ColorTheme.text)
-                    Text(value)
-                        .font(.title2.weight(.bold))
-                        .foregroundStyle(tint)
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.leading)
-                }
-            }
-            .padding(16)
-            .frame(maxWidth: .infinity, minHeight: 138, alignment: .leading)
-            .background(Color.black.opacity(0.24), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            RediCommandCard(
+                title: title,
+                detail: subtitle,
+                systemImage: systemImage,
+                tint: tint,
+                badge: value,
+                prominence: .accented,
+                minHeight: 126
+            )
         }
         .buttonStyle(CardPressButtonStyle())
     }
 
-    private func quickActionButton(title: String, subtitle: String, action: @escaping () -> Void) -> some View {
+    private func quickActionButton(
+        title: String,
+        subtitle: String,
+        systemImage: String,
+        tint: Color,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(ColorTheme.text)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer(minLength: 0)
-            }
-            .frame(maxWidth: .infinity, minHeight: 88, alignment: .leading)
-            .padding(14)
-            .background(Color.black.opacity(0.26), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            RediCommandCard(
+                title: title,
+                detail: subtitle,
+                systemImage: systemImage,
+                tint: tint,
+                prominence: .neutral,
+                minHeight: 96
+            )
         }
         .buttonStyle(CardPressButtonStyle())
     }
 
     private func operationalSafeModeLine(label: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Text(label)
-                .font(.caption.weight(.bold))
-                .foregroundStyle(ColorTheme.textFaint)
+        HStack(alignment: .top, spacing: RediSpacing.compact) {
+            Text(label.uppercased())
+                .font(RediTypography.label)
+                .tracking(1.2)
+                .foregroundStyle(ColorTheme.textTertiary)
                 .frame(width: 58, alignment: .leading)
 
             Text(detail)
-                .font(.subheadline)
+                .font(RediTypography.data)
                 .foregroundStyle(ColorTheme.text)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private func insightRow(title: String, detail: String, systemImage: String, tint: Color) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: RediSpacing.content) {
             RediIcon(systemImage)
                 .foregroundStyle(tint)
                 .frame(width: 24, height: 24, alignment: .center)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: RediSpacing.micro) {
                 Text(title)
-                    .font(.headline)
+                    .font(RediTypography.bodyStrong)
                     .foregroundStyle(ColorTheme.text)
                 Text(detail)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(RediTypography.body)
+                    .foregroundStyle(ColorTheme.textSecondary)
             }
         }
+    }
+}
+
+// MARK: - Flat Panel Surface
+
+private struct HomeInsetSurfaceModifier: ViewModifier {
+    let cornerRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(ColorTheme.graphite)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(ColorTheme.divider, lineWidth: 0.5)
+            )
+    }
+}
+
+private extension View {
+    func homeInsetSurface(cornerRadius: CGFloat) -> some View {
+        modifier(HomeInsetSurfaceModifier(cornerRadius: cornerRadius))
     }
 }

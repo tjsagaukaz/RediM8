@@ -4,62 +4,120 @@ import Foundation
 @preconcurrency import MultipeerConnectivity
 import UIKit
 
+struct MeshPeer: Identifiable, Codable, Equatable, Hashable {
+    let id: String
+    let transportID: String
+    let displayName: String
+}
+
 struct ReceivedCommunityBeacon: Equatable {
     let beacon: CommunityBeacon
     let sourcePeerDisplayName: String
 }
 
-final class MeshService: NSObject, ObservableObject {
-    @Published private(set) var nearbyPeers: [MCPeerID] = []
-    @Published private(set) var connectedPeers: [MCPeerID] = []
-    @Published private(set) var sessionMessages: [MeshMessage] = []
+struct MeshTransportConfiguration: Equatable {
+    var displayName: String
+    var isBrowsingEnabled: Bool
+    var isBroadcastingEnabled: Bool
+    var autoAcceptInvitations: Bool
+    var locationShareMode: LocationShareMode
+    var rangeMode: SignalRangeMode
+    var allowsOutgoingInvitations: Bool
+    var usesLowFrequencyBrowsing: Bool
+}
 
-    private(set) var localPeer: MCPeerID
+enum MeshTransportEvent: Equatable {
+    case message(MeshMessage)
+    case receivedBeacon(ReceivedCommunityBeacon)
+}
+
+@MainActor
+protocol MeshTransport: AnyObject {
+    var id: String { get }
+    var isActive: Bool { get }
+    var localPeer: MeshPeer { get }
+    var nearbyPeers: [MeshPeer] { get }
+    var connectedPeers: [MeshPeer] { get }
+
+    var onEvent: ((MeshTransportEvent) -> Void)? { get set }
+    var onLocalPeerChange: ((MeshPeer) -> Void)? { get set }
+    var onNearbyPeersChange: (([MeshPeer]) -> Void)? { get set }
+    var onConnectedPeersChange: (([MeshPeer]) -> Void)? { get set }
+
+    func start()
+    func stop()
+    func updateConfiguration(_ configuration: MeshTransportConfiguration)
+    func invite(_ peer: MeshPeer)
+    @discardableResult
+    func sendMessage(_ message: MeshMessage, to peers: [MeshPeer]) -> Bool
+    @discardableResult
+    func sendBeacon(_ beacon: CommunityBeacon, to peers: [MeshPeer]) -> Bool
+}
+
+@MainActor
+final class MeshManager: ObservableObject {
+    @Published private(set) var nearbyPeers: [MeshPeer] = []
+    @Published private(set) var connectedPeers: [MeshPeer] = []
+    @Published private(set) var sessionMessages: [MeshMessage] = []
+    @Published private(set) var localPeer: MeshPeer
+
     let receivedBeacons = PassthroughSubject<ReceivedCommunityBeacon, Never>()
 
-    private let serviceType = AppConstants.Mesh.serviceType
-    private var session: MCSession
-    private var advertiser: MCNearbyServiceAdvertiser
-    private var browser: MCNearbyServiceBrowser
-    private var isRunning = false
-    private var isBrowsingEnabled = true
-    private var isBroadcastingEnabled = true
-    private var automaticallyAcceptsInvitations = true
-    private var allowsOutgoingInvitations = true
-    private var usesLowFrequencyBrowsing = false
+    private var transports: [any MeshTransport] = []
     private var locationShareMode: LocationShareMode = .approximate
-    private var invitationTimeout: TimeInterval = SignalRangeMode.balanced.invitationTimeout
-    private var preferredDisplayName: String
-    private var browsePulseTicker: AnyCancellable?
-    private var browsePulseStopWorkItem: DispatchWorkItem?
 
-    override init() {
-        let displayName = Self.defaultDisplayName()
-        preferredDisplayName = displayName
-        let peer = MCPeerID(displayName: displayName)
-        localPeer = peer
-        session = MCSession(peer: peer, securityIdentity: nil, encryptionPreference: .required)
-        advertiser = MCNearbyServiceAdvertiser(peer: peer, discoveryInfo: nil, serviceType: AppConstants.Mesh.serviceType)
-        browser = MCNearbyServiceBrowser(peer: peer, serviceType: AppConstants.Mesh.serviceType)
-        super.init()
-        bindDelegates()
+    init(transports: [any MeshTransport]? = nil) {
+        let configuredTransports = transports ?? [
+            NearbyTransport(),
+            LoRaTransport()
+        ]
+
+        localPeer = MeshPeer(
+            id: "system:local",
+            transportID: "system",
+            displayName: AppConstants.Mesh.fallbackDisplayName
+        )
+
+        configuredTransports.forEach(addTransport)
+        refreshLocalPeer()
+        refreshPeerLists()
     }
 
-    @MainActor
+    func addTransport(_ transport: any MeshTransport) {
+        transport.onEvent = { [weak self] event in
+            guard let self else { return }
+            self.handle(event)
+        }
+
+        transport.onLocalPeerChange = { [weak self] _ in
+            guard let self else { return }
+            self.refreshLocalPeer()
+        }
+
+        transport.onNearbyPeersChange = { [weak self] _ in
+            guard let self else { return }
+            self.refreshPeerLists()
+        }
+
+        transport.onConnectedPeersChange = { [weak self] _ in
+            guard let self else { return }
+            self.refreshPeerLists()
+        }
+
+        transports.append(transport)
+    }
+
     func start() {
-        isRunning = true
-        applyTransportState()
-        refreshConnectedPeers()
+        transports.forEach { $0.start() }
+        refreshLocalPeer()
+        refreshPeerLists()
     }
 
-    @MainActor
     func stop() {
-        isRunning = false
-        stopTransports()
-        refreshConnectedPeers()
+        transports.forEach { $0.stop() }
+        refreshPeerLists()
     }
 
-    @MainActor
     func updateConfiguration(
         displayName: String,
         isBrowsingEnabled: Bool,
@@ -70,17 +128,245 @@ final class MeshService: NSObject, ObservableObject {
         allowsOutgoingInvitations: Bool,
         usesLowFrequencyBrowsing: Bool
     ) {
-        let trimmedDisplayName = Self.sanitizedDisplayName(displayName)
+        let configuration = MeshTransportConfiguration(
+            displayName: displayName,
+            isBrowsingEnabled: isBrowsingEnabled,
+            isBroadcastingEnabled: isBroadcastingEnabled,
+            autoAcceptInvitations: autoAcceptInvitations,
+            locationShareMode: locationShareMode,
+            rangeMode: rangeMode,
+            allowsOutgoingInvitations: allowsOutgoingInvitations,
+            usesLowFrequencyBrowsing: usesLowFrequencyBrowsing
+        )
+
+        self.locationShareMode = locationShareMode
+        transports.forEach { $0.updateConfiguration(configuration) }
+        refreshLocalPeer()
+        refreshPeerLists()
+    }
+
+    func invite(_ peer: MeshPeer) {
+        transport(for: peer.transportID)?.invite(peer)
+    }
+
+    func sendDirect(_ text: String, to peer: MeshPeer) {
+        let message = MeshMessage(
+            sender: localPeer.displayName,
+            recipient: peer.displayName,
+            body: text,
+            kind: .direct
+        )
+        sendMessage(message, to: [peer])
+    }
+
+    func broadcastAlert(_ text: String) {
+        let message = MeshMessage(
+            sender: localPeer.displayName,
+            body: text,
+            kind: .broadcastAlert
+        )
+        sendMessage(message, to: connectedPeers)
+    }
+
+    func broadcastAccountabilityStatus(
+        circleTitle: String,
+        memberName: String,
+        status: AccountabilityStatus,
+        note: String = ""
+    ) {
+        let payload = AccountabilityMeshStatus(
+            circleTitle: circleTitle,
+            memberName: memberName,
+            status: status,
+            note: note
+        )
+        let body = "\(memberName): \(status.title)"
+        let message = MeshMessage(
+            sender: memberName,
+            body: body,
+            kind: .accountabilityStatus,
+            accountabilityStatus: payload
+        )
+        sendMessage(message, to: connectedPeers)
+    }
+
+    func shareLocation(_ coordinate: CLLocationCoordinate2D, label: String) {
+        guard let sharedCoordinate = locationShareMode.sharedCoordinate(from: coordinate) else {
+            return
+        }
+
+        let location = SharedLocation(
+            latitude: sharedCoordinate.latitude,
+            longitude: sharedCoordinate.longitude,
+            label: label
+        )
+        let message = MeshMessage(
+            sender: localPeer.displayName,
+            body: label,
+            kind: .locationShare,
+            location: location
+        )
+        sendMessage(message, to: connectedPeers)
+    }
+
+    func sendBeacon(_ beacon: CommunityBeacon) {
+        sendBeacon(beacon, to: connectedPeers)
+    }
+
+    func sendBeacon(_ beacon: CommunityBeacon, excludingDisplayName excludedDisplayName: String?) {
+        let peers = connectedPeers.filter { $0.displayName != excludedDisplayName }
+        sendBeacon(beacon, to: peers)
+    }
+
+    func sendBeacon(_ beacon: CommunityBeacon, to peers: [MeshPeer]) {
+        guard !peers.isEmpty else { return }
+
+        for (transport, transportPeers) in peersByTransport(from: peers) {
+            _ = transport.sendBeacon(beacon, to: transportPeers)
+        }
+    }
+
+    func clearSessionMessages() {
+        sessionMessages = []
+    }
+
+    private func sendMessage(_ message: MeshMessage, to peers: [MeshPeer]) {
+        guard !peers.isEmpty else { return }
+
+        var didSend = false
+        for (transport, transportPeers) in peersByTransport(from: peers) {
+            didSend = transport.sendMessage(message, to: transportPeers) || didSend
+        }
+
+        if didSend {
+            sessionMessages.insert(message, at: 0)
+        }
+    }
+
+    private func handle(_ event: MeshTransportEvent) {
+        switch event {
+        case let .message(message):
+            sessionMessages.insert(message, at: 0)
+        case let .receivedBeacon(received):
+            receivedBeacons.send(received)
+        }
+    }
+
+    private func refreshLocalPeer() {
+        if let preferredTransport = transports.first(where: { !$0.localPeer.displayName.isEmpty }) {
+            localPeer = preferredTransport.localPeer
+        }
+    }
+
+    private func refreshPeerLists() {
+        nearbyPeers = mergedPeers { $0.nearbyPeers }
+        connectedPeers = mergedPeers { $0.connectedPeers }
+    }
+
+    private func mergedPeers(_ peers: (any MeshTransport) -> [MeshPeer]) -> [MeshPeer] {
+        var merged: [String: MeshPeer] = [:]
+
+        for transport in transports {
+            for peer in peers(transport) {
+                merged[peer.id] = peer
+            }
+        }
+
+        return merged.values.sorted { lhs, rhs in
+            lhs.displayName.localizedCaseInsensitiveCompare(rhs.displayName) == .orderedAscending
+        }
+    }
+
+    private func peersByTransport(from peers: [MeshPeer]) -> [(transport: any MeshTransport, peers: [MeshPeer])] {
+        var grouped: [String: [MeshPeer]] = [:]
+        for peer in peers {
+            grouped[peer.transportID, default: []].append(peer)
+        }
+
+        return transports.compactMap { transport in
+            guard let transportPeers = grouped[transport.id], !transportPeers.isEmpty else {
+                return nil
+            }
+            return (transport, transportPeers)
+        }
+    }
+
+    private func transport(for id: String) -> (any MeshTransport)? {
+        transports.first { $0.id == id }
+    }
+}
+
+@MainActor
+final class NearbyTransport: NSObject, MeshTransport {
+    let id = "nearby"
+
+    private(set) var isActive = false
+    private(set) var localPeer: MeshPeer
+    private(set) var nearbyPeers: [MeshPeer] = []
+    private(set) var connectedPeers: [MeshPeer] = []
+
+    var onEvent: ((MeshTransportEvent) -> Void)?
+    var onLocalPeerChange: ((MeshPeer) -> Void)?
+    var onNearbyPeersChange: (([MeshPeer]) -> Void)?
+    var onConnectedPeersChange: (([MeshPeer]) -> Void)?
+
+    private let serviceType = AppConstants.Mesh.serviceType
+    private var preferredDisplayName: String
+    private var session: MCSession
+    private var advertiser: MCNearbyServiceAdvertiser
+    private var browser: MCNearbyServiceBrowser
+    private var peerLookup: [String: MCPeerID] = [:]
+    private var isRunning = false
+    private var isBrowsingEnabled = true
+    private var isBroadcastingEnabled = true
+    private var automaticallyAcceptsInvitations = true
+    private var allowsOutgoingInvitations = true
+    private var usesLowFrequencyBrowsing = false
+    private var invitationTimeout: TimeInterval = SignalRangeMode.balanced.invitationTimeout
+    private var browsePulseTicker: AnyCancellable?
+    private var browsePulseStopWorkItem: DispatchWorkItem?
+
+    override init() {
+        let displayName = Self.defaultDisplayName()
+        preferredDisplayName = displayName
+        let peerID = MCPeerID(displayName: displayName)
+        session = MCSession(peer: peerID, securityIdentity: nil, encryptionPreference: .required)
+        advertiser = MCNearbyServiceAdvertiser(
+            peer: peerID,
+            discoveryInfo: nil,
+            serviceType: AppConstants.Mesh.serviceType
+        )
+        browser = MCNearbyServiceBrowser(peer: peerID, serviceType: AppConstants.Mesh.serviceType)
+        localPeer = Self.meshPeer(from: peerID, transportID: id)
+        super.init()
+        bindDelegates()
+    }
+
+    func start() {
+        isRunning = true
+        isActive = true
+        applyTransportState()
+        refreshConnectedPeers()
+    }
+
+    func stop() {
+        isRunning = false
+        isActive = false
+        stopTransports()
+        refreshConnectedPeers()
+    }
+
+    func updateConfiguration(_ configuration: MeshTransportConfiguration) {
+        let trimmedDisplayName = Self.sanitizedDisplayName(configuration.displayName)
         let needsPeerRebuild = trimmedDisplayName != preferredDisplayName
 
         preferredDisplayName = trimmedDisplayName
-        self.isBrowsingEnabled = isBrowsingEnabled
-        self.isBroadcastingEnabled = isBroadcastingEnabled
-        automaticallyAcceptsInvitations = autoAcceptInvitations
-        self.allowsOutgoingInvitations = allowsOutgoingInvitations
-        self.usesLowFrequencyBrowsing = usesLowFrequencyBrowsing
-        self.locationShareMode = locationShareMode
-        invitationTimeout = rangeMode.invitationTimeout
+        isBrowsingEnabled = configuration.isBrowsingEnabled
+        isBroadcastingEnabled = configuration.isBroadcastingEnabled
+        automaticallyAcceptsInvitations = configuration.autoAcceptInvitations
+        allowsOutgoingInvitations = configuration.allowsOutgoingInvitations
+        usesLowFrequencyBrowsing = configuration.usesLowFrequencyBrowsing
+        invitationTimeout = configuration.rangeMode.invitationTimeout
 
         if needsPeerRebuild {
             rebuildPeer(displayName: trimmedDisplayName)
@@ -89,93 +375,53 @@ final class MeshService: NSObject, ObservableObject {
         applyTransportState()
     }
 
-    @MainActor
-    func invite(_ peer: MCPeerID) {
+    func invite(_ peer: MeshPeer) {
         guard allowsOutgoingInvitations else { return }
-        browser.invitePeer(peer, to: session, withContext: nil, timeout: invitationTimeout)
+        guard let peerID = peerLookup[peer.id] else { return }
+        browser.invitePeer(peerID, to: session, withContext: nil, timeout: invitationTimeout)
     }
 
-    @MainActor
-    func sendDirect(_ text: String, to peer: MCPeerID) {
-        let message = MeshMessage(sender: localPeer.displayName, recipient: peer.displayName, body: text, kind: .direct)
-        send(message, to: [peer])
-    }
-
-    @MainActor
-    func broadcastAlert(_ text: String) {
-        let message = MeshMessage(sender: localPeer.displayName, body: text, kind: .broadcastAlert)
-        send(message, to: session.connectedPeers)
-    }
-
-    @MainActor
-    func shareLocation(_ coordinate: CLLocationCoordinate2D, label: String) {
-        guard let sharedCoordinate = locationShareMode.sharedCoordinate(from: coordinate) else {
-            return
-        }
-
-        let location = SharedLocation(latitude: sharedCoordinate.latitude, longitude: sharedCoordinate.longitude, label: label)
-        let message = MeshMessage(sender: localPeer.displayName, body: label, kind: .locationShare, location: location)
-        send(message, to: session.connectedPeers)
-    }
-
-    @MainActor
-    func sendBeacon(_ beacon: CommunityBeacon) {
-        sendData(beacon, to: session.connectedPeers, mode: .unreliable)
-    }
-
-    @MainActor
-    func sendBeacon(_ beacon: CommunityBeacon, excludingDisplayName excludedDisplayName: String?) {
-        let peers = session.connectedPeers.filter { $0.displayName != excludedDisplayName }
-        sendData(beacon, to: peers, mode: .unreliable)
-    }
-
-    @MainActor
-    func sendBeacon(_ beacon: CommunityBeacon, to peers: [MCPeerID]) {
-        sendData(beacon, to: peers, mode: .unreliable)
-    }
-
-    @MainActor
-    func clearSessionMessages() {
-        sessionMessages = []
-    }
-
-    @MainActor
-    private func send(_ message: MeshMessage, to peers: [MCPeerID]) {
+    func sendMessage(_ message: MeshMessage, to peers: [MeshPeer]) -> Bool {
         sendData(message, to: peers, mode: .reliable)
     }
 
-    @MainActor
-    private func sendData<T: Encodable>(_ payload: T, to peers: [MCPeerID], mode: MCSessionSendDataMode) {
-        guard !peers.isEmpty else { return }
+    func sendBeacon(_ beacon: CommunityBeacon, to peers: [MeshPeer]) -> Bool {
+        sendData(beacon, to: peers, mode: .unreliable)
+    }
+
+    private func sendData<T: Encodable>(_ payload: T, to peers: [MeshPeer], mode: MCSessionSendDataMode) -> Bool {
+        let peerIDs = peers.compactMap { peerLookup[$0.id] }
+        guard !peerIDs.isEmpty else { return false }
 
         do {
             let data = try JSONEncoder.rediM8.encode(payload)
-            try session.send(data, toPeers: peers, with: mode)
-            if let message = payload as? MeshMessage {
-                sessionMessages.insert(message, at: 0)
-            }
+            try session.send(data, toPeers: peerIDs, with: mode)
             refreshConnectedPeers()
+            return true
         } catch {
-            sessionMessages.insert(
-                MeshMessage(sender: "System", body: "Unable to send message. Keep peers nearby and retry.", kind: .broadcastAlert),
-                at: 0
-            )
+            emitSystemMessage("Unable to send message. Keep peers nearby and retry.")
+            return false
         }
     }
 
-    @MainActor
     private func rebuildPeer(displayName: String) {
         let wasRunning = isRunning
 
         stopTransports()
         session.disconnect()
 
-        let peer = MCPeerID(displayName: displayName)
-        localPeer = peer
-        session = MCSession(peer: peer, securityIdentity: nil, encryptionPreference: .required)
-        advertiser = MCNearbyServiceAdvertiser(peer: peer, discoveryInfo: nil, serviceType: serviceType)
-        browser = MCNearbyServiceBrowser(peer: peer, serviceType: serviceType)
+        let peerID = MCPeerID(displayName: displayName)
+        session = MCSession(peer: peerID, securityIdentity: nil, encryptionPreference: .required)
+        advertiser = MCNearbyServiceAdvertiser(peer: peerID, discoveryInfo: nil, serviceType: serviceType)
+        browser = MCNearbyServiceBrowser(peer: peerID, serviceType: serviceType)
+        localPeer = Self.meshPeer(from: peerID, transportID: id)
+        nearbyPeers = []
+        connectedPeers = []
+        peerLookup = [:]
         bindDelegates()
+        onLocalPeerChange?(localPeer)
+        onNearbyPeersChange?(nearbyPeers)
+        onConnectedPeersChange?(connectedPeers)
 
         if wasRunning {
             applyTransportState()
@@ -183,7 +429,6 @@ final class MeshService: NSObject, ObservableObject {
         refreshConnectedPeers()
     }
 
-    @MainActor
     private func applyTransportState() {
         guard isRunning else {
             stopTransports()
@@ -208,25 +453,26 @@ final class MeshService: NSObject, ObservableObject {
         }
     }
 
-    @MainActor
     private func stopTransports() {
         advertiser.stopAdvertisingPeer()
         stopLowFrequencyBrowsing(clearPeers: true)
     }
 
-    @MainActor
     private func startLowFrequencyBrowsing() {
         browsePulseTicker?.cancel()
         browsePulseTicker = nil
         beginBrowsingPulse()
-        browsePulseTicker = Timer.publish(every: AppConstants.Mesh.stealthPulseInterval, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                self?.beginBrowsingPulse()
-            }
+        browsePulseTicker = Timer.publish(
+            every: AppConstants.Mesh.stealthPulseInterval,
+            on: .main,
+            in: .common
+        )
+        .autoconnect()
+        .sink { [weak self] _ in
+            self?.beginBrowsingPulse()
+        }
     }
 
-    @MainActor
     private func beginBrowsingPulse() {
         browser.startBrowsingForPeers()
 
@@ -237,10 +483,12 @@ final class MeshService: NSObject, ObservableObject {
             }
         }
         browsePulseStopWorkItem = stopWorkItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + AppConstants.Mesh.stealthPulseDuration, execute: stopWorkItem)
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + AppConstants.Mesh.stealthPulseDuration,
+            execute: stopWorkItem
+        )
     }
 
-    @MainActor
     private func stopLowFrequencyBrowsing(clearPeers: Bool) {
         browsePulseTicker?.cancel()
         browsePulseTicker = nil
@@ -249,6 +497,7 @@ final class MeshService: NSObject, ObservableObject {
         browser.stopBrowsingForPeers()
         if clearPeers {
             nearbyPeers = []
+            onNearbyPeersChange?(nearbyPeers)
         }
     }
 
@@ -258,9 +507,33 @@ final class MeshService: NSObject, ObservableObject {
         browser.delegate = self
     }
 
-    @MainActor
     private func refreshConnectedPeers() {
-        connectedPeers = session.connectedPeers.sorted { $0.displayName < $1.displayName }
+        for peerID in session.connectedPeers {
+            let peer = Self.meshPeer(from: peerID, transportID: id)
+            peerLookup[peer.id] = peerID
+        }
+
+        connectedPeers = session.connectedPeers
+            .map { Self.meshPeer(from: $0, transportID: id) }
+            .sorted { $0.displayName < $1.displayName }
+        onConnectedPeersChange?(connectedPeers)
+    }
+
+    private func updateNearbyPeers(_ peers: [MeshPeer]) {
+        nearbyPeers = peers.sorted { $0.displayName < $1.displayName }
+        onNearbyPeersChange?(nearbyPeers)
+    }
+
+    private func emitSystemMessage(_ body: String) {
+        onEvent?(.message(MeshMessage(sender: "System", body: body, kind: .broadcastAlert)))
+    }
+
+    private static func meshPeer(from peerID: MCPeerID, transportID: String) -> MeshPeer {
+        MeshPeer(
+            id: "\(transportID):\(peerID.displayName)",
+            transportID: transportID,
+            displayName: peerID.displayName
+        )
     }
 
     private static func defaultDisplayName() -> String {
@@ -274,44 +547,54 @@ final class MeshService: NSObject, ObservableObject {
     }
 }
 
-extension MeshService: MCNearbyServiceAdvertiserDelegate {
-    nonisolated func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-        invitationHandler(automaticallyAcceptsInvitations, automaticallyAcceptsInvitations ? session : nil)
+extension NearbyTransport: MCNearbyServiceAdvertiserDelegate {
+    nonisolated func advertiser(
+        _ advertiser: MCNearbyServiceAdvertiser,
+        didReceiveInvitationFromPeer peerID: MCPeerID,
+        withContext context: Data?,
+        invitationHandler: @escaping (Bool, MCSession?) -> Void
+    ) {
+        Task { @MainActor in
+            invitationHandler(self.automaticallyAcceptsInvitations, self.automaticallyAcceptsInvitations ? self.session : nil)
+        }
     }
 }
 
-extension MeshService: MCNearbyServiceBrowserDelegate {
-    nonisolated func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
-        guard peerID != localPeer else { return }
+extension NearbyTransport: MCNearbyServiceBrowserDelegate {
+    nonisolated func browser(
+        _ browser: MCNearbyServiceBrowser,
+        foundPeer peerID: MCPeerID,
+        withDiscoveryInfo info: [String: String]?
+    ) {
         Task { @MainActor in
-            guard !self.nearbyPeers.contains(peerID) else { return }
-            self.nearbyPeers.append(peerID)
-            self.nearbyPeers.sort { $0.displayName < $1.displayName }
+            let peer = Self.meshPeer(from: peerID, transportID: self.id)
+            guard peer.id != self.localPeer.id else { return }
+            guard !self.nearbyPeers.contains(peer) else { return }
+            self.peerLookup[peer.id] = peerID
+            self.updateNearbyPeers(self.nearbyPeers + [peer])
         }
     }
 
     nonisolated func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
         Task { @MainActor in
-            self.nearbyPeers.removeAll { $0 == peerID }
+            let peer = Self.meshPeer(from: peerID, transportID: self.id)
+            self.updateNearbyPeers(self.nearbyPeers.filter { $0 != peer })
         }
     }
 
     nonisolated func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
         Task { @MainActor in
-            self.sessionMessages.insert(MeshMessage(sender: "System", body: "Peer discovery unavailable right now.", kind: .broadcastAlert), at: 0)
+            self.emitSystemMessage("Peer discovery unavailable right now.")
         }
     }
 }
 
-extension MeshService: MCSessionDelegate {
+extension NearbyTransport: MCSessionDelegate {
     nonisolated func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         Task { @MainActor in
             self.refreshConnectedPeers()
             if state == .connected {
-                self.sessionMessages.insert(
-                    MeshMessage(sender: "System", body: "\(peerID.displayName) connected.", kind: .broadcastAlert),
-                    at: 0
-                )
+                self.emitSystemMessage("\(peerID.displayName) connected.")
             }
         }
     }
@@ -319,17 +602,19 @@ extension MeshService: MCSessionDelegate {
     nonisolated func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         if let message = try? JSONDecoder.rediM8.decode(MeshMessage.self, from: data) {
             Task { @MainActor in
-                self.sessionMessages.insert(message, at: 0)
+                self.onEvent?(.message(message))
             }
             return
         }
 
         if let beacon = try? JSONDecoder.rediM8.decode(CommunityBeacon.self, from: data) {
             Task { @MainActor in
-                self.receivedBeacons.send(
-                    ReceivedCommunityBeacon(
-                        beacon: beacon,
-                        sourcePeerDisplayName: peerID.displayName
+                self.onEvent?(
+                    .receivedBeacon(
+                        ReceivedCommunityBeacon(
+                            beacon: beacon,
+                            sourcePeerDisplayName: peerID.displayName
+                        )
                     )
                 )
             }
@@ -346,3 +631,40 @@ extension MeshService: MCSessionDelegate {
         certificateHandler(true)
     }
 }
+
+@MainActor
+final class LoRaTransport: MeshTransport {
+    let id = "lora"
+
+    private(set) var isActive = false
+    private(set) var localPeer = MeshPeer(
+        id: "lora:unavailable",
+        transportID: "lora",
+        displayName: AppConstants.Mesh.fallbackDisplayName
+    )
+    private(set) var nearbyPeers: [MeshPeer] = []
+    private(set) var connectedPeers: [MeshPeer] = []
+
+    var onEvent: ((MeshTransportEvent) -> Void)?
+    var onLocalPeerChange: ((MeshPeer) -> Void)?
+    var onNearbyPeersChange: (([MeshPeer]) -> Void)?
+    var onConnectedPeersChange: (([MeshPeer]) -> Void)?
+
+    func start() {
+        isActive = true
+    }
+
+    func stop() {
+        isActive = false
+    }
+
+    func updateConfiguration(_ configuration: MeshTransportConfiguration) {}
+
+    func invite(_ peer: MeshPeer) {}
+
+    func sendMessage(_ message: MeshMessage, to peers: [MeshPeer]) -> Bool { false }
+
+    func sendBeacon(_ beacon: CommunityBeacon, to peers: [MeshPeer]) -> Bool { false }
+}
+
+typealias MeshService = MeshManager

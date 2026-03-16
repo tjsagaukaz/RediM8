@@ -1,0 +1,62 @@
+{
+  "lastUpdated" : "2026-03-15T00:00:00Z",
+  "packages" : [
+    {
+      "availability" : "availableNow",
+      "backgroundAssetName" : "map_remote_track",
+      "coverageSummary" : "Installs the RediM8 starter local basemap shell so Tactical mode can swap to a managed local package immediately.",
+      "highlights" : [
+        "Starter install",
+        "Low storage",
+        "Instant setup"
+      ],
+      "id" : "starter_tactical",
+      "isFeatured" : true,
+      "manifestReference" : "BasemapPackages/starter-tactical/manifest.json",
+      "name" : "Starter Tactical",
+      "region" : "Australia",
+      "sizeMB" : 1,
+      "subtitle" : "Managed local basemap shell for Tactical mode",
+      "summary" : "A lightweight starter package that validates the local basemap pipeline and makes Tactical mode package-managed instead of manual.",
+      "version" : "1.0"
+    },
+    {
+      "availability" : "comingSoon",
+      "backgroundAssetName" : "community_storm_town",
+      "coverageSummary" : "Regional offline cartography tuned for storm, flood, and evacuation travel across southeast Queensland.",
+      "highlights" : [
+        "Storm routes",
+        "Shelter context",
+        "Regional detail"
+      ],
+      "id" : "queensland_relief",
+      "isFeatured" : false,
+      "manifestReference" : null,
+      "name" : "Queensland Relief",
+      "region" : "Queensland",
+      "sizeMB" : 148,
+      "subtitle" : "Hosted regional basemap pack",
+      "summary" : "A larger hosted package for evacuation corridors, regional road context, and broader Queensland offline travel coverage.",
+      "version" : "Preview"
+    },
+    {
+      "availability" : "comingSoon",
+      "backgroundAssetName" : "map_forest_route",
+      "coverageSummary" : "Remote-road and terrain-focused offline cartography for long-haul driving and isolated access planning.",
+      "highlights" : [
+        "Remote corridors",
+        "Outback planning",
+        "High contrast"
+      ],
+      "id" : "outback_access_grid",
+      "isFeatured" : false,
+      "manifestReference" : null,
+      "name" : "Outback Access Grid",
+      "region" : "Outback",
+      "sizeMB" : 196,
+      "subtitle" : "Hosted long-range travel basemap",
+      "summary" : "A hosted large-area package planned for remote routes, sparse landmarks, and higher-contrast offline travel context.",
+      "version" : "Preview"
+    }
+  ]
+}

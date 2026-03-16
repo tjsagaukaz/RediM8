@@ -193,8 +193,8 @@ final class DocumentVaultService: ObservableObject {
         state.documents
             .filter(\.quickAccessEligible)
             .sorted { lhs, rhs in
-                if lhs.category != rhs.category {
-                    return lhs.category.rawValue < rhs.category.rawValue
+                if lhs.category.quickAccessPriority != rhs.category.quickAccessPriority {
+                    return lhs.category.quickAccessPriority < rhs.category.quickAccessPriority
                 }
                 return lhs.updatedAt > rhs.updatedAt
             }
@@ -293,6 +293,12 @@ final class DocumentVaultService: ObservableObject {
         try decryptedData.write(to: previewURL, options: .atomic)
         previewURLs.insert(previewURL)
         return previewURL
+    }
+
+    func releaseTemporaryPreviewURL(_ url: URL) {
+        guard previewURLs.contains(url) else { return }
+        try? fileManager.removeItem(at: url)
+        previewURLs.remove(url)
     }
 
     private func persistState() throws {

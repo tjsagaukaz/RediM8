@@ -1,0 +1,14 @@
+{
+  "package" : {
+    "id" : "starter_tactical",
+    "name" : "Starter Tactical",
+    "summary" : "Starter local basemap shell for Tactical mode.",
+    "version" : "1.0"
+  },
+  "files" : [
+    {
+      "path" : "style.json",
+      "url" : "style.json"
+    }
+  ]
+}

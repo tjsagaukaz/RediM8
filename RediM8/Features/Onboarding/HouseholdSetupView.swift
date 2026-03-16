@@ -11,38 +11,30 @@ struct HouseholdSetupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             ModeHeroCard(
-                eyebrow: "Plan Basics",
-                title: "Save the details that matter when leaving quickly.",
-                subtitle: "A simple count, one route, one meeting point, and one contact go further in an emergency than a huge profile no one finishes.",
+                eyebrow: "Household",
+                title: "Save the basics you need to leave fast.",
+                subtitle: "One count, one route, one meeting point, and one contact is enough for day one.",
                 iconName: "family",
-                accent: ColorTheme.ready,
+                accent: ColorTheme.textTertiary,
                 backgroundAssetName: "onboarding_route",
                 backgroundImageOffset: CGSize(width: -28, height: 0)
             ) {
                 TrustPillGroup(items: [
-                    TrustPillItem(title: "Route saved offline", tone: .verified),
-                    TrustPillItem(title: "Contacts available locally", tone: .info),
-                    TrustPillItem(title: "Edit later anytime", tone: .neutral)
+                    TrustPillItem(title: "Edit later anytime", tone: .neutral),
+                    TrustPillItem(title: "Route saved locally", tone: .verified),
+                    TrustPillItem(title: "Meeting point ready", tone: .info)
                 ])
             }
 
-            PanelCard(title: "Who Are You Planning For?", subtitle: "People and pets change water, transport, and timing") {
-                VStack(spacing: 14) {
-                    countCard(
-                        title: "People",
-                        value: viewModel.peopleCount,
-                        detail: "Human household members who need supplies and transport."
-                    ) {
+            PanelCard(title: "Who Are You Planning For?", subtitle: "People and pets change water, transport, and timing.") {
+                LazyVGrid(columns: columns, spacing: 12) {
+                    countCard(title: "People", detail: "Need supplies and transport.") {
                         Stepper("People: \(viewModel.peopleCount)", value: $viewModel.peopleCount, in: 1...12)
                             .font(.headline)
                             .foregroundStyle(ColorTheme.text)
                     }
 
-                    countCard(
-                        title: "Pets",
-                        value: viewModel.petCount,
-                        detail: "Pets increase water needs and change evacuation speed."
-                    ) {
+                    countCard(title: "Pets", detail: "Change pace and water use.") {
                         Stepper("Pets: \(viewModel.petCount)", value: $viewModel.petCount, in: 0...12)
                             .font(.headline)
                             .foregroundStyle(ColorTheme.text)
@@ -50,7 +42,7 @@ struct HouseholdSetupView: View {
                 }
             }
 
-            PanelCard(title: "Fast Plan Basics", subtitle: "The minimum plan we want ready from day one") {
+            PanelCard(title: "Leave-Now Basics", subtitle: "Keep this lightweight. You can add detail later.") {
                 VStack(alignment: .leading, spacing: 14) {
                     TextField("Primary meeting point", text: $viewModel.primaryMeetingPoint)
                         .textFieldStyle(TacticalTextFieldStyle())
@@ -58,51 +50,35 @@ struct HouseholdSetupView: View {
                     TextField("Primary evacuation route", text: $viewModel.primaryEvacuationRoute, axis: .vertical)
                         .textFieldStyle(TacticalTextFieldStyle())
 
-                    HStack(spacing: 12) {
-                        TextField("Emergency contact name", text: $viewModel.emergencyContactName)
-                            .textFieldStyle(TacticalTextFieldStyle())
-
-                        TextField("Phone", text: $viewModel.emergencyContactPhone)
-                            .textFieldStyle(TacticalTextFieldStyle())
-                            .keyboardType(.phonePad)
-                    }
-
-                    TextField("Household care notes or medication reminders", text: $viewModel.medicalNotes, axis: .vertical)
+                    TextField("Emergency contact name", text: $viewModel.emergencyContactName)
                         .textFieldStyle(TacticalTextFieldStyle())
 
-                    Text("Keep this lightweight. One clear route and one reachable contact are already better than nothing.")
+                    TextField("Emergency contact phone", text: $viewModel.emergencyContactPhone)
+                        .textFieldStyle(TacticalTextFieldStyle())
+                        .keyboardType(.phonePad)
+
+                    Text("Example route: Pacific Hwy north to community hall. Example meeting point: front gate across from school.")
                         .font(.caption)
                         .foregroundStyle(ColorTheme.textFaint)
                 }
             }
 
-            PanelCard(title: "Targets From Your Scenarios", subtitle: "Planning targets generated from your household and selected risks") {
-                LazyVGrid(columns: columns, spacing: 12) {
-                    targetCard(title: "Water", value: "\(viewModel.prepTargets.waterLitres.roundedIntString)L", detail: "Stored supply target", tint: ColorTheme.info)
-                    targetCard(title: "Food", value: "\(viewModel.prepTargets.foodDays.roundedIntString) days", detail: "Shelf-stable meals", tint: ColorTheme.ready)
-                    targetCard(title: "Fuel", value: "\(viewModel.prepTargets.fuelLitres.roundedIntString)L", detail: "Vehicle or generator reserve", tint: ColorTheme.warning)
-                    targetCard(title: "Battery", value: "\(viewModel.prepTargets.batteryCapacity.roundedIntString)%", detail: "Power reserve target", tint: ColorTheme.danger)
-                }
-
-                Text("These are planning targets, not guarantees. Conditions, closures, and access can still change.")
-                    .font(.caption)
-                    .foregroundStyle(ColorTheme.textFaint)
-                    .padding(.top, 12)
+            PanelCard(title: "Planning Targets", subtitle: "Auto-generated from your risks and household.") {
+                TrustPillGroup(items: [
+                    TrustPillItem(title: "Water \(viewModel.prepTargets.waterLitres.roundedIntString)L", tone: .info),
+                    TrustPillItem(title: "Food \(viewModel.prepTargets.foodDays.roundedIntString) days", tone: .verified),
+                    TrustPillItem(title: "Fuel \(viewModel.prepTargets.fuelLitres.roundedIntString)L", tone: .caution),
+                    TrustPillItem(title: "Battery \(viewModel.prepTargets.batteryCapacity.roundedIntString)%", tone: .caution)
+                ])
             }
         }
     }
 
-    private func countCard<Content: View>(title: String, value: Int, detail: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(title)
-                    .font(RediTypography.bodyStrong)
-                    .foregroundStyle(ColorTheme.text)
-                Spacer()
-                Text(String(value))
-                    .font(.system(size: 28, weight: .black))
-                    .foregroundStyle(ColorTheme.ready)
-            }
+    private func countCard<Content: View>(title: String, detail: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.text)
 
             Text(detail)
                 .font(.subheadline)
@@ -110,31 +86,8 @@ struct HouseholdSetupView: View {
 
             content()
         }
+        .frame(maxWidth: .infinity, minHeight: 128, alignment: .leading)
         .padding(16)
         .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-    }
-
-    private func targetCard(title: String, value: String, detail: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title.uppercased())
-                .font(RediTypography.caption)
-                .foregroundStyle(tint)
-
-            Text(value)
-                .font(.system(size: 28, weight: .black))
-                .foregroundStyle(ColorTheme.text)
-
-            Text(detail)
-                .font(.subheadline)
-                .foregroundStyle(ColorTheme.textMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
-        .padding(16)
-        .background(Color.black.opacity(0.24), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(tint.opacity(0.22), lineWidth: 1)
-        )
     }
 }

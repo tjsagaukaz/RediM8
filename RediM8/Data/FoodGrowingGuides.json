@@ -1,0 +1,155 @@
+{
+  "last_updated": "2026-03-14T00:00:00Z",
+  "guides": [
+    {
+      "id": "backyard_vegetable_garden_start",
+      "title": "Backyard Vegetable Garden Quick Start",
+      "category": "foodGrowing",
+      "region": "australia",
+      "risk_level": "advisory",
+      "summary": "Start small with reliable vegetables, simple beds, and water-conscious layouts so the garden becomes productive before you scale it up.",
+      "steps": [
+        "Choose a sunny area that gets at least six hours of light and is close to a water source.",
+        "Start with a few dependable crops such as tomatoes, beans, lettuce, silverbeet, and herbs for your season.",
+        "Improve soil first with compost and mulch before adding more crop variety.",
+        "Expand only after one small bed is producing consistently."
+      ],
+      "notes": "Local season, heat, and water limits matter more than planting everything at once.",
+      "sources": [
+        {
+          "id": "backyard-garden-redim8",
+          "title": "RediM8 Food Growing Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/backyard-garden",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["vegetable garden", "backyard growing", "starter crops"],
+      "estimated_read_minutes": 5,
+      "related_guide_ids": ["raised_bed_layout", "seed_tray_starting"],
+      "hero_icon_name": "camp"
+    },
+    {
+      "id": "drought_ready_food_garden",
+      "title": "Water-Efficient Gardening for Drought",
+      "category": "foodGrowing",
+      "region": "australia",
+      "risk_level": "advisory",
+      "summary": "In drought or hot summers, garden design matters more than enthusiasm. Mulch, timing, shade, and crop choice are the main levers.",
+      "steps": [
+        "Water deeply and less often so roots move downward instead of staying shallow.",
+        "Mulch exposed soil heavily to slow evaporation and reduce temperature swings.",
+        "Group thirsty crops together and keep hardy crops in the hottest or driest edges.",
+        "Use temporary shade cloth during heatwaves and wind events."
+      ],
+      "notes": "Do not use scarce drinking water blindly. Match crop area to realistic stored water and rainfall.",
+      "sources": [
+        {
+          "id": "drought-garden-redim8",
+          "title": "RediM8 Food Growing Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/drought-garden",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["drought", "water efficient gardening", "mulch", "shade cloth"],
+      "estimated_read_minutes": 5,
+      "related_guide_ids": ["store_water_safely_in_heat"],
+      "hero_icon_name": "camp"
+    },
+    {
+      "id": "native_edible_plants_basics",
+      "title": "Native Edible Plants Basics",
+      "category": "foodGrowing",
+      "region": "australia",
+      "risk_level": "advisory",
+      "summary": "Native edible plants can be useful in Australian gardens, but only plant and consume species you can identify confidently and source safely.",
+      "steps": [
+        "Start with a few well-documented edible natives suited to your state and climate.",
+        "Grow labelled plants from reputable nurseries instead of relying on wild identification alone.",
+        "Keep records of what is planted, when it fruits, and how it is prepared safely.",
+        "Treat any unfamiliar wild plant as inedible until confirmed by a trusted regional source."
+      ],
+      "notes": "Never guess on wild plant identification. Some native plants have inedible or toxic lookalikes.",
+      "sources": [
+        {
+          "id": "native-edible-redim8",
+          "title": "RediM8 Food Growing Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/native-edibles",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["native edible plants", "australian edibles", "plant identification"],
+      "estimated_read_minutes": 5,
+      "related_guide_ids": ["bush_tucker_medicinal_plants"],
+      "hero_icon_name": "camp"
+    },
+    {
+      "id": "compost_and_seed_saving",
+      "title": "Composting and Seed Saving Basics",
+      "category": "foodGrowing",
+      "region": "general",
+      "risk_level": "advisory",
+      "summary": "Compost builds resilience in the soil, while seed saving helps preserve crop continuity across disruptions and seasonal shortages.",
+      "steps": [
+        "Keep a simple compost stream using kitchen scraps, dry carbon material, and regular turning.",
+        "Avoid diseased plant material and meat or dairy in small household compost systems.",
+        "Save seeds from healthy, open-pollinated plants once they are fully mature and dry.",
+        "Label and store saved seed in cool, dry, dark conditions."
+      ],
+      "notes": "Hybrid seeds may not grow true to type. Start with simple, reliable crops for saving.",
+      "sources": [
+        {
+          "id": "compost-seed-redim8",
+          "title": "RediM8 Food Growing Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/compost-seeds",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["composting", "seed saving", "soil health"],
+      "estimated_read_minutes": 4,
+      "related_guide_ids": ["backyard_vegetable_garden_start"],
+      "hero_icon_name": "camp"
+    },
+    {
+      "id": "urban_food_production_small_spaces",
+      "title": "Urban Food Production in Small Spaces",
+      "category": "foodGrowing",
+      "region": "general",
+      "risk_level": "advisory",
+      "summary": "Small balconies, courtyards, and rentals can still produce herbs, greens, and compact vegetables if container layout and watering are consistent.",
+      "steps": [
+        "Use containers sized to the crop so roots do not dry out too quickly.",
+        "Grow fast-turnover foods first such as herbs, lettuce, spring onion, and compact tomatoes.",
+        "Stack production vertically with shelves, rails, or trellises where safe.",
+        "Check moisture daily because container gardens fail fastest through missed watering."
+      ],
+      "notes": "Container gardens can become water-hungry in wind and heat. Match plant numbers to what you can maintain.",
+      "sources": [
+        {
+          "id": "urban-food-redim8",
+          "title": "RediM8 Food Growing Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/urban-food",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["urban food production", "containers", "balcony garden", "small spaces"],
+      "estimated_read_minutes": 4,
+      "related_guide_ids": ["potato_bag_growing"],
+      "hero_icon_name": "camp"
+    }
+  ]
+}

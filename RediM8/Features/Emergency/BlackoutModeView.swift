@@ -13,6 +13,9 @@ struct BlackoutModeView: View {
     @State private var isShowingContacts = false
     @State private var isShowingGoBag = false
     @State private var selectedGuide: Guide?
+    @State private var isShowingBushfireReference = false
+    @State private var isShowingEmergencyCards = false
+    @State private var isShowingAdditionalContacts = false
 
     init(appState: AppState, dismiss: @escaping () -> Void, switchToTab: @escaping (AppTab) -> Void) {
         self.appState = appState
@@ -66,19 +69,75 @@ struct BlackoutModeView: View {
                         .frame(width: 110)
                     }
 
-                    Text(TrustLayer.blackoutSafetyReminder)
-                        .font(RediTypography.bodyStrong)
-                        .foregroundStyle(ColorTheme.warning)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    blackoutModeStatusCard
+
+                    LazyVGrid(columns: columns, spacing: 16) {
+                        blackoutPrimaryActionButton(
+                            title: viewModel.isTorchOn ? "Flashlight On" : "Flashlight",
+                            detail: viewModel.isTorchOn ? "Tap to conserve battery when you no longer need light." : "Fastest light source in the dark.",
+                            systemImage: "flashlight",
+                            tint: ColorTheme.textTertiary
+                        ) {
+                            viewModel.toggleTorch()
+                        }
+
+                        blackoutPrimaryActionButton(
+                            title: primaryEmergencyContact?.displayNumber ?? TrustLayer.emergencyCallNumber,
+                            detail: primaryEmergencyContact?.title ?? "Emergency call",
+                            systemImage: primaryEmergencyContact?.systemImage ?? "emergency",
+                            tint: ColorTheme.danger
+                        ) {
+                            callPrimaryEmergencyContact()
+                        }
+
+                        blackoutPrimaryActionButton(
+                            title: "First Aid",
+                            detail: "Offline medical guidance with large readable steps.",
+                            systemImage: "first_aid",
+                            tint: ColorTheme.textTertiary
+                        ) {
+                            isShowingFirstAid = true
+                        }
+
+                        blackoutPrimaryActionButton(
+                            title: "Offline Map",
+                            detail: "Keep the route and nearest fallbacks visible.",
+                            systemImage: "map_marker",
+                            tint: ColorTheme.textTertiary
+                        ) {
+                            switchToTab(.map)
+                        }
+                    }
+
+                    LazyVGrid(columns: columns, spacing: 16) {
+                        blackoutToolButton(title: "Signal", subtitle: "Nearby mesh", systemImage: "signal") {
+                            switchToTab(.signal)
+                        }
+
+                        blackoutToolButton(title: "Go Bag", subtitle: "Evacuation checklist", systemImage: "go_bag") {
+                            isShowingGoBag = true
+                        }
+
+                        blackoutToolButton(title: "Contacts", subtitle: "Stored offline", systemImage: "family") {
+                            isShowingContacts = true
+                        }
+
+                        blackoutToolButton(title: "Compass", subtitle: viewModel.headingText, systemImage: "compass") {}
+                    }
 
                     if isBushfireModeEnabled {
-                        PanelCard(title: "Bushfire Approaching", subtitle: "Quick reference actions that stay readable in blackout conditions") {
+                        CollapsiblePanelCard(
+                            title: "Bushfire Reference",
+                            subtitle: "Quick steps that stay readable in blackout conditions.",
+                            accent: ColorTheme.textTertiary,
+                            isExpanded: $isShowingBushfireReference
+                        ) {
                             VStack(alignment: .leading, spacing: 10) {
                                 ForEach(Array(bushfireSteps.enumerated()), id: \.offset) { index, step in
                                     HStack(alignment: .top, spacing: 12) {
                                         Text("\(index + 1).")
                                             .font(RediTypography.bodyStrong)
-                                            .foregroundStyle(ColorTheme.warning)
+                                            .foregroundStyle(ColorTheme.textTertiary)
                                         Text(step)
                                             .font(RediTypography.body)
                                             .foregroundStyle(ColorTheme.textMuted)
@@ -88,38 +147,28 @@ struct BlackoutModeView: View {
                         }
                     }
 
-                    PanelCard(title: "Emergency Cards", subtitle: "Short action lists for quick reference in the dark") {
+                    CollapsiblePanelCard(
+                        title: "Emergency Cards",
+                        subtitle: "Short action lists for quick reference in the dark.",
+                        accent: ColorTheme.textTertiary,
+                        isExpanded: $isShowingEmergencyCards
+                    ) {
                         EmergencyCardDeckView(
                             cards: appState.guideService.emergencyCards(for: appState.profile.selectedScenarios, limit: 4),
                             selectedGuide: $selectedGuide
                         )
                     }
 
-                    LazyVGrid(columns: columns, spacing: 16) {
-                        ForEach(viewModel.quickContacts) { contact in
-                            emergencyActionButton(contact)
-                        }
-                    }
-
-                    LazyVGrid(columns: columns, spacing: 16) {
-                        blackoutButton(title: viewModel.isTorchOn ? "Flashlight On" : "Flashlight", systemImage: "flashlight") {
-                            viewModel.toggleTorch()
-                        }
-                        blackoutButton(title: "Compass", subtitle: viewModel.headingText, systemImage: "compass") {}
-                        blackoutButton(title: "First Aid", systemImage: "first_aid") {
-                            isShowingFirstAid = true
-                        }
-                        blackoutButton(title: "Signal", systemImage: "signal") {
-                            switchToTab(.signal)
-                        }
-                        blackoutButton(title: "Map", systemImage: "map_marker") {
-                            switchToTab(.map)
-                        }
-                        blackoutButton(title: "Go Bag", systemImage: "go_bag") {
-                            isShowingGoBag = true
-                        }
-                        blackoutButton(title: "Emergency Contacts", systemImage: "family") {
-                            isShowingContacts = true
+                    CollapsiblePanelCard(
+                        title: "Emergency Contacts",
+                        subtitle: "Additional saved numbers kept offline.",
+                        accent: ColorTheme.textTertiary,
+                        isExpanded: $isShowingAdditionalContacts
+                    ) {
+                        LazyVGrid(columns: columns, spacing: 16) {
+                            ForEach(viewModel.quickContacts) { contact in
+                                emergencyActionButton(contact)
+                            }
                         }
                     }
 
@@ -128,7 +177,7 @@ struct BlackoutModeView: View {
                 .padding(24)
                 .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
             }
-            .background(ColorTheme.background)
+            .background(Color.black)
         }
         .ignoresSafeArea()
         .transaction { transaction in
@@ -140,19 +189,19 @@ struct BlackoutModeView: View {
             NavigationStack {
                 GuideLibraryView(appState: appState, highlightedCategory: .firstAid)
             }
-            .rediSheetPresentation(style: .library, accent: ColorTheme.info)
+            .rediSheetPresentation()
         }
         .sheet(isPresented: $isShowingContacts) {
             NavigationStack {
                 EmergencyContactsView(contacts: viewModel.emergencyContacts)
             }
-            .rediSheetPresentation(style: .neutral, accent: ColorTheme.premium)
+            .rediSheetPresentation()
         }
         .sheet(item: $selectedGuide) { guide in
             NavigationStack {
                 GuideDetailView(guide: guide)
             }
-            .rediSheetPresentation(style: .library, accent: ColorTheme.info)
+            .rediSheetPresentation()
         }
         .fullScreenCover(isPresented: $isShowingGoBag) {
             GoBagEvacuationView(
@@ -162,12 +211,91 @@ struct BlackoutModeView: View {
         }
     }
 
-    private func blackoutButton(title: String, subtitle: String? = nil, systemImage: String, action: @escaping () -> Void) -> some View {
+    private var primaryEmergencyContact: EmergencyQuickContact? {
+        viewModel.quickContacts.first { $0.id == "emergency_services" && $0.isAvailable }
+            ?? viewModel.quickContacts.first { $0.isAvailable }
+    }
+
+    private func callPrimaryEmergencyContact() {
+        guard let url = primaryEmergencyContact?.dialURL ?? URL(string: "tel://\(TrustLayer.emergencyCallNumber)") else {
+            return
+        }
+        openURL(url)
+    }
+
+    private var blackoutModeStatusCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(TrustLayer.blackoutSafetyReminder)
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.warning)
+
+            HStack(spacing: 12) {
+                blackoutStatusBadge(title: "Heading", value: viewModel.headingText, tint: ColorTheme.text)
+                blackoutStatusBadge(title: "Phone", value: viewModel.orientationSummary, tint: ColorTheme.text)
+                blackoutStatusBadge(title: "Mode", value: "Readability first", tint: ColorTheme.text)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(ColorTheme.panelRaised, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(ColorTheme.divider, lineWidth: 0.5)
+        )
+    }
+
+    private func blackoutStatusBadge(title: String, value: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(RediTypography.metadata)
+                .foregroundStyle(ColorTheme.textFaint)
+            Text(value)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(tint)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.black.opacity(0.32), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func blackoutPrimaryActionButton(
+        title: String,
+        detail: String,
+        systemImage: String,
+        tint: Color,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 12) {
+                RediIcon(systemImage)
+                    .foregroundStyle(tint)
+                    .frame(width: 32, height: 32)
+                Spacer()
+                Text(title)
+                    .font(RediTypography.emergencyValue)
+                    .foregroundStyle(ColorTheme.text)
+                    .multilineTextAlignment(.leading)
+                Text(detail)
+                    .font(RediTypography.body)
+                    .foregroundStyle(ColorTheme.textMuted)
+            }
+            .padding(20)
+            .frame(maxWidth: .infinity, minHeight: 196, alignment: .leading)
+            .background(ColorTheme.panelRaised, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(tint.opacity(0.24), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func blackoutToolButton(title: String, subtitle: String? = nil, systemImage: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 12) {
                 RediIcon(systemImage)
                     .foregroundStyle(ColorTheme.accent)
-                    .frame(width: 30, height: 30)
+                    .frame(width: 28, height: 28)
                 Spacer()
                 Text(title)
                     .font(RediTypography.sectionTitle)
@@ -180,7 +308,7 @@ struct BlackoutModeView: View {
                 }
             }
             .padding(20)
-            .frame(maxWidth: .infinity, minHeight: 164, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 154, alignment: .leading)
             .background(ColorTheme.panelRaised, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -199,7 +327,7 @@ struct BlackoutModeView: View {
         } label: {
             VStack(alignment: .leading, spacing: 12) {
                 RediIcon(contact.systemImage)
-                    .foregroundStyle(contact.isAvailable ? ColorTheme.warning : ColorTheme.divider)
+                    .foregroundStyle(contact.isAvailable ? ColorTheme.accent : ColorTheme.divider)
                     .frame(width: 28, height: 28)
                 Spacer()
                 Text(contact.displayNumber ?? "Not saved")
@@ -218,7 +346,7 @@ struct BlackoutModeView: View {
             .background(ColorTheme.panelRaised, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(contact.isAvailable ? ColorTheme.warning.opacity(0.4) : ColorTheme.divider, lineWidth: 1)
+                    .stroke(contact.isAvailable ? ColorTheme.accent.opacity(0.18) : ColorTheme.divider, lineWidth: 0.5)
             )
             .opacity(contact.isAvailable ? 1 : 0.55)
         }

@@ -44,17 +44,8 @@ extension Bundle {
         let directURL = url(forResource: filename, withExtension: nil)
         let dataFolderURL = url(forResource: filename, withExtension: nil, subdirectory: "Data")
         let bundleDataURL = bundleURL.appendingPathComponent("Data", isDirectory: true).appendingPathComponent(filename)
-        let workspaceDataURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
-            .appendingPathComponent("RediM8", isDirectory: true)
-            .appendingPathComponent("Data", isDirectory: true)
-            .appendingPathComponent(filename)
-        let sourceTreeDataURL = URL(fileURLWithPath: #filePath, isDirectory: false)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("Data", isDirectory: true)
-            .appendingPathComponent(filename)
 
-        let candidateURLs = [directURL, dataFolderURL, bundleDataURL, workspaceDataURL, sourceTreeDataURL]
+        let candidateURLs = [directURL, dataFolderURL, bundleDataURL]
         let resolvedURL = candidateURLs.first { url in
             guard let url else {
                 return false

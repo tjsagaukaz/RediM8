@@ -25,6 +25,8 @@ final class BeaconServiceTests: XCTestCase {
         XCTAssertTrue(BeaconType.fireSpotted.isPriorityReport)
         XCTAssertTrue(BeaconType.medicalHelp.isPriorityReport)
         XCTAssertFalse(BeaconType.waterAvailable.isPriorityReport)
+        XCTAssertEqual(BeaconType.fireSpotted.defaultSeverity, .critical)
+        XCTAssertEqual(BeaconType.safeLocation.defaultSeverity, .low)
     }
 
     @MainActor
@@ -207,6 +209,65 @@ final class BeaconServiceTests: XCTestCase {
         XCTAssertTrue(beacon.summaryLines.contains("Medical note: Asthma • Medication: Inhaler in top pocket"))
     }
 
+    func testCommunityBeaconCanCarryStructuredSignalMetadata() {
+        let beacon = makeBeacon(
+            id: "beacon_fire",
+            nodeID: "F1R3",
+            type: .fireSpotted,
+            state: .active,
+            updatedAt: .now,
+            expiresAt: .now.addingTimeInterval(2 * 60 * 60),
+            message: "Fire moving uphill",
+            signalMetadata: BeaconSignalMetadata(
+                severity: .critical,
+                confidence: .high,
+                directionHint: "Moving east",
+                routeCondition: nil,
+                waterSafety: nil,
+                shelterStatus: nil,
+                capacityNote: nil,
+                batteryLevelPercent: nil
+            )
+        )
+
+        XCTAssertEqual(beacon.severity, .critical)
+        XCTAssertEqual(beacon.confidence, .high)
+        XCTAssertTrue(beacon.signalHighlights.contains { $0.label == "Spread" && $0.value == "Moving east" })
+    }
+
+    func testLegacyCommunityBeaconDefaultsStructuredSignalMetadataWhenMissing() throws {
+        let legacyJSON = """
+        {
+          "created_at": "2026-03-15T06:00:00Z",
+          "display_name": null,
+          "emergency_medical_summary": null,
+          "expires_at": "2026-03-15T08:00:00Z",
+          "id": "beacon_legacy",
+          "lat": -27.468,
+          "lng": 153.028,
+          "location_label": "Pine Street",
+          "message": "Road blocked by debris",
+          "node_id": "L0G1",
+          "relay_depth": 0,
+          "resources": ["water"],
+          "shows_name": false,
+          "status": "active",
+          "status_text": "Road blocked",
+          "timestamp": "2026-03-15T06:05:00Z",
+          "type": "road_blocked"
+        }
+        """
+
+        let beacon = try JSONDecoder.rediM8.decode(
+            CommunityBeacon.self,
+            from: XCTUnwrap(legacyJSON.data(using: .utf8))
+        )
+
+        XCTAssertEqual(beacon.severity, .high)
+        XCTAssertEqual(beacon.confidence, .medium)
+        XCTAssertEqual(beacon.signalMetadata.routeCondition, .blocked)
+    }
+
     @MainActor
     private func makeRelayEnabledService() -> BeaconService {
         let service = BeaconService(meshService: MeshService(), locationService: LocationService(), store: nil)
@@ -248,6 +309,31 @@ final class BeaconServiceTests: XCTestCase {
         XCTAssertLessThanOrEqual(service.relayQueueCount, cap)
     }
 
+    @MainActor
+    func testMonitoringSyncDoesNotLeakLocationClients() {
+        let locationService = LocationService()
+        let service = BeaconService(meshService: MeshService(), locationService: locationService, store: nil)
+
+        service.startMonitoring()
+        XCTAssertEqual(locationService.activeClientCount, 1)
+
+        service.updateSettings(
+            BeaconRuntimeSettings(
+                isStealthModeEnabled: false,
+                isAnonymousModeEnabled: true,
+                allowsBeaconBroadcasts: false,
+                locationShareMode: .off,
+                showsDeviceName: false,
+                rangeMode: .balanced
+            )
+        )
+        service.pruneExpiredBeacons()
+        XCTAssertEqual(locationService.activeClientCount, 1)
+
+        service.stopMonitoring()
+        XCTAssertEqual(locationService.activeClientCount, 0)
+    }
+
     private func makeBeacon(
         id: String,
         nodeID: String,
@@ -257,7 +343,8 @@ final class BeaconServiceTests: XCTestCase {
         expiresAt: Date,
         message: String,
         relayDepth: Int = 0,
-        emergencyMedicalSummary: String? = nil
+        emergencyMedicalSummary: String? = nil,
+        signalMetadata: BeaconSignalMetadata? = nil
     ) -> CommunityBeacon {
         CommunityBeacon(
             id: id,
@@ -276,7 +363,8 @@ final class BeaconServiceTests: XCTestCase {
             relayDepth: relayDepth,
             displayName: nil,
             showsName: false,
-            emergencyMedicalSummary: emergencyMedicalSummary
+            emergencyMedicalSummary: emergencyMedicalSummary,
+            signalMetadata: signalMetadata
         )
     }
 }

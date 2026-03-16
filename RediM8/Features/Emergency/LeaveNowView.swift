@@ -31,6 +31,8 @@ struct LeaveNowView: View {
                     .frame(width: 110)
                 }
 
+                CinematicBanner("evacuation_staging", height: 180)
+
                 ModeHeroCard(
                     eyebrow: "Evacuation Flow",
                     title: "LEAVE NOW",
@@ -46,54 +48,54 @@ struct LeaveNowView: View {
                         Text(viewModel.nextStepLine)
                             .font(.subheadline)
                             .foregroundStyle(ColorTheme.textMuted)
-                    }
-                }
 
-                VStack(spacing: 12) {
-                    ForEach(viewModel.actions) { action in
-                        Button {
-                            viewModel.toggleAction(action.id)
-                        } label: {
-                            HStack(spacing: 16) {
-                                Image(systemName: action.isComplete ? "checkmark.circle.fill" : "circle")
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundStyle(action.isComplete ? ColorTheme.ready : Color.white.opacity(0.65))
+                        ReadinessMeter(value: prepProgress, tint: departureStatusTint, height: 10)
 
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(action.title)
-                                        .font(RediTypography.button)
-                                        .foregroundStyle(Color.white)
-                                    Text(action.detail)
-                                        .font(RediTypography.body)
-                                        .foregroundStyle(ColorTheme.textMuted)
-                                        .multilineTextAlignment(.leading)
-                                }
-
-                                Spacer()
-                            }
-                            .padding(.horizontal, 20)
-                            .frame(maxWidth: .infinity, minHeight: max(64, (proxy.size.height - 380) / CGFloat(max(viewModel.actions.count, 1))), alignment: .leading)
-                            .background(
-                                action.title == "Evacuate"
-                                    ? ColorTheme.danger
-                                    : ColorTheme.panelRaised.opacity(action.isComplete ? 0.94 : 1),
-                                in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        HStack(spacing: 10) {
+                            departureBadge(
+                                title: "\(completedPrepCount) / \(prepActions.count) prep done",
+                                tint: departureStatusTint
                             )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                    .stroke(
-                                        action.title == "Evacuate"
-                                            ? Color.white.opacity(0.08)
-                                            : ColorTheme.accent.opacity(action.isComplete ? 0.30 : 0.14),
-                                        lineWidth: 1
-                                    )
+                            departureBadge(
+                                title: departureStatusTitle,
+                                tint: departureStatusTint
                             )
                         }
-                        .buttonStyle(.plain)
                     }
                 }
 
-                Spacer(minLength: 0)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Before You Move")
+                        .font(RediTypography.sectionTitle)
+                        .foregroundStyle(ColorTheme.text)
+                    Text("Finish the essentials you still can. If officials say leave, go even if this list is incomplete.")
+                        .font(RediTypography.body)
+                        .foregroundStyle(ColorTheme.textMuted)
+
+                    VStack(spacing: 12) {
+                        ForEach(prepActions) { action in
+                            prepActionButton(
+                                action: action,
+                                minHeight: max(68, (proxy.size.height - 470) / CGFloat(max(prepActions.count, 1)))
+                            )
+                        }
+                    }
+                }
+
+                if let evacuationAction {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Final Departure")
+                            .font(RediTypography.sectionTitle)
+                            .foregroundStyle(ColorTheme.text)
+                        Text(departureStatusDetail)
+                            .font(RediTypography.body)
+                            .foregroundStyle(ColorTheme.textMuted)
+
+                        finalDepartureButton(action: evacuationAction)
+                    }
+                }
+
+                Spacer(minLength: 6)
             }
             .padding(24)
             .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
@@ -108,7 +110,7 @@ struct LeaveNowView: View {
                         title: "Open Offline Map",
                         detail: viewModel.mapStatusLine,
                         assetName: "route",
-                        tint: ColorTheme.info,
+                        tint: ColorTheme.accent,
                         action: openMap
                     )
 
@@ -125,21 +127,14 @@ struct LeaveNowView: View {
                             title: "Signal Nearby",
                             detail: viewModel.signalStatusLine,
                             assetName: "signal",
-                            tint: ColorTheme.warning,
+                            tint: ColorTheme.accent,
                             action: openSignal
                         )
                     }
                 }
             }
         }
-        .background(
-            LinearGradient(
-                colors: [Color.black, Color(red: 0.16, green: 0.03, blue: 0.03)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        )
+        .background(ColorTheme.background.ignoresSafeArea())
     }
 
     private func callEmergencyServices() {
@@ -147,6 +142,59 @@ struct LeaveNowView: View {
             return
         }
         openURL(url)
+    }
+
+    private var prepActions: [LeaveNowActionDisplay] {
+        viewModel.actions.filter { $0.id != "evacuate" }
+    }
+
+    private var evacuationAction: LeaveNowActionDisplay? {
+        viewModel.actions.first { $0.id == "evacuate" }
+    }
+
+    private var completedPrepCount: Int {
+        prepActions.filter { $0.isComplete }.count
+    }
+
+    private var remainingPrepCount: Int {
+        max(prepActions.count - completedPrepCount, 0)
+    }
+
+    private var prepProgress: Double {
+        guard !prepActions.isEmpty else { return 1 }
+        return Double(completedPrepCount) / Double(prepActions.count)
+    }
+
+    private var departureStatusTitle: String {
+        if evacuationAction?.isComplete == true {
+            return "Departure marked"
+        }
+
+        if remainingPrepCount == 0 {
+            return "Ready to depart"
+        }
+
+        return "Finish \(remainingPrepCount) more"
+    }
+
+    private var departureStatusDetail: String {
+        if evacuationAction?.isComplete == true {
+            return "Departure has been marked complete. Keep map, call, and signal tools available while moving."
+        }
+
+        if remainingPrepCount == 0 {
+            return "Essentials are covered. Use the departure card when you are actually moving."
+        }
+
+        return "The route is already staged below. If official instructions say leave now, leave even if the checklist is not perfect."
+    }
+
+    private var departureStatusTint: Color {
+        if evacuationAction?.isComplete == true {
+            return ColorTheme.ready
+        }
+
+        return remainingPrepCount == 0 ? ColorTheme.ready : ColorTheme.warning
     }
 
     private func actionFooterButton(
@@ -183,5 +231,108 @@ struct LeaveNowView: View {
             )
         }
         .buttonStyle(.plain)
+    }
+
+    private func prepActionButton(action: LeaveNowActionDisplay, minHeight: CGFloat) -> some View {
+        Button {
+            viewModel.toggleAction(action.id)
+        } label: {
+            HStack(spacing: 16) {
+                Image(systemName: action.isComplete ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(action.isComplete ? ColorTheme.ready : Color.white.opacity(0.65))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(action.title)
+                        .font(RediTypography.button)
+                        .foregroundStyle(Color.white)
+                    Text(action.detail)
+                        .font(RediTypography.body)
+                        .foregroundStyle(ColorTheme.textMuted)
+                        .multilineTextAlignment(.leading)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .leading)
+            .background(
+                ColorTheme.panelRaised.opacity(action.isComplete ? 0.94 : 1),
+                in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(action.isComplete ? ColorTheme.ready.opacity(0.30) : ColorTheme.accent.opacity(0.14), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func finalDepartureButton(action: LeaveNowActionDisplay) -> some View {
+        Button {
+            viewModel.toggleAction(action.id)
+        } label: {
+            HStack(alignment: .top, spacing: 16) {
+                Image(systemName: action.isComplete ? "checkmark.circle.fill" : "arrow.right.circle.fill")
+                    .font(.system(size: 30, weight: .bold))
+                    .foregroundStyle(Color.white)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 10) {
+                        Text(action.title.uppercased())
+                            .font(RediTypography.button)
+                            .foregroundStyle(Color.white)
+                        Text(action.isComplete ? "Marked" : (remainingPrepCount == 0 ? "Ready" : "When safe"))
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(action.isComplete ? ColorTheme.ready : Color.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                (action.isComplete ? ColorTheme.ready : Color.white.opacity(0.14)),
+                                in: Capsule()
+                            )
+                    }
+
+                    Text(action.detail)
+                        .font(RediTypography.body)
+                        .foregroundStyle(Color.white.opacity(0.9))
+                        .multilineTextAlignment(.leading)
+
+                    Text(remainingPrepCount == 0
+                         ? "Map, call, and signal stay ready in the dock below."
+                         : "If conditions escalate, move with the essentials you have and use the dock below on the way.")
+                        .font(RediTypography.caption)
+                        .foregroundStyle(Color.white.opacity(0.78))
+                }
+
+                Spacer()
+            }
+            .padding(22)
+            .frame(maxWidth: .infinity, minHeight: 110, alignment: .leading)
+            .background(
+                LinearGradient(
+                    colors: action.isComplete
+                        ? [ColorTheme.ready, ColorTheme.ready.opacity(0.72)]
+                        : [ColorTheme.danger, ColorTheme.danger.opacity(0.72)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                in: RoundedRectangle(cornerRadius: 28, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func departureBadge(title: String, tint: Color) -> some View {
+        Text(title)
+            .font(.caption.weight(.bold))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(tint.opacity(0.14), in: Capsule())
     }
 }

@@ -60,7 +60,8 @@ final class OfflineBasemapServiceTests: XCTestCase {
         let configuration = service.configuration
 
         XCTAssertTrue(configuration.isPremiumActive)
-        XCTAssertTrue(configuration.statusMessage.contains("Premium offline basemap active"))
+        XCTAssertTrue(configuration.statusMessage.contains("offline basemap active"))
+        XCTAssertTrue(configuration.statusMessage.contains("RediM8 Premium Tactical"))
         XCTAssertNotEqual(configuration.styleURL, fallbackStyleURL)
 
         let rewrittenStyleData = try Data(contentsOf: configuration.styleURL)

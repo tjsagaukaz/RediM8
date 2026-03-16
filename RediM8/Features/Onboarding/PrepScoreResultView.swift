@@ -12,11 +12,13 @@ struct PrepScoreResultView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             ModeHeroCard(
-                eyebrow: "Launch Summary",
-                title: "You’re launching with a calmer, more honest default setup.",
-                subtitle: "RediM8 now knows your likely risks, has a route and meeting point to work with, and is configured with clearer trust and privacy defaults.",
+                eyebrow: "Ready",
+                title: "You now have a usable baseline.",
+                subtitle: "RediM8 knows your likely risks, has the basics of your household plan, and can show gaps more honestly.",
                 iconName: "checklist",
-                accent: ColorTheme.accent
+                accent: ColorTheme.accent,
+                backgroundAssetName: "marketing_command_table",
+                backgroundImageOffset: CGSize(width: 14, height: 0)
             ) {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -30,25 +32,12 @@ struct PrepScoreResultView: View {
 
                     Spacer()
 
-                    VStack(alignment: .trailing, spacing: 8) {
-                        StatusBadge(tier: viewModel.livePreviewScore.tier)
-                        if let highlighted = viewModel.highlightedPrioritySituation {
-                            Text("\(highlighted.title) prioritized")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(ColorTheme.info)
-                        }
-                    }
+                    StatusBadge(tier: viewModel.livePreviewScore.tier)
                 }
             }
 
-            PanelCard(title: "What Works Right Now", subtitle: "The fast-read summary after setup") {
+            PanelCard(title: "Ready Now", subtitle: "The important pieces after setup.") {
                 LazyVGrid(columns: columns, spacing: 12) {
-                    launchCard(
-                        title: "Emergency Flow",
-                        value: "Ready",
-                        detail: "Emergency Mode, Leave Now, Map, and Call/Signal are staged.",
-                        tint: ColorTheme.danger
-                    )
                     launchCard(
                         title: "Route",
                         value: routeValue,
@@ -67,39 +56,29 @@ struct PrepScoreResultView: View {
                         detail: locationDetail,
                         tint: locationPermissionState == .authorized ? ColorTheme.ready : ColorTheme.warning
                     )
+                    launchCard(
+                        title: "Priority",
+                        value: viewModel.highlightedPrioritySituation?.title ?? "General",
+                        detail: "Emergency shortcuts and planning targets now follow this bias first.",
+                        tint: ColorTheme.accent
+                    )
                 }
             }
 
-            PanelCard(title: "First Moves After Setup", subtitle: "Highest-value follow-through items") {
+            PanelCard(title: "Next", subtitle: "Highest-value follow-through after launch.") {
                 VStack(alignment: .leading, spacing: 12) {
                     nextMove(
                         title: "Add emergency documents to Secure Vault",
-                        detail: "Store ID, insurance, prescriptions, and medical records locally in the Vault tab."
+                        detail: "Store ID, insurance, prescriptions, and medical records locally."
                     )
                     nextMove(
-                        title: "Review offline map coverage",
-                        detail: "Confirm your area has pack coverage and that shelters, water, and routes are visible where you’ll need them."
+                        title: "Check offline map coverage",
+                        detail: "Make sure your area has the packs, shelters, and routes you expect."
                     )
 
-                    if viewModel.launchSuggestions.isEmpty {
-                        nextMove(
-                            title: "Keep refining when calm",
-                            detail: "You’re in a solid place. Revisit supplies, routes, and contacts as seasons or travel plans change."
-                        )
-                    } else {
-                        ForEach(viewModel.launchSuggestions) { suggestion in
-                            nextMove(title: suggestion.title, detail: suggestion.detail)
-                        }
+                    ForEach(Array(viewModel.launchSuggestions.prefix(2))) { suggestion in
+                        nextMove(title: suggestion.title, detail: suggestion.detail)
                     }
-                }
-            }
-
-            PanelCard(title: "Trust Defaults", subtitle: "The stance RediM8 will now take by default") {
-                VStack(alignment: .leading, spacing: 10) {
-                    trustLine("Location sharing: \(viewModel.locationShareMode.title) - \(viewModel.locationShareMode.subtitle)")
-                    trustLine(viewModel.isAnonymousModeEnabled ? "Signal identity: anonymous by default." : "Signal identity: device identity can be more visible.")
-                    trustLine(viewModel.enablesSurvivalModeAtFifteenPercent ? "Low-battery survival mode prompt is enabled." : "Low-battery survival mode prompt is disabled.")
-                    trustLine(TrustLayer.signalConstraintNotice)
                 }
             }
         }
@@ -110,7 +89,7 @@ struct PrepScoreResultView: View {
     }
 
     private var routeDetail: String {
-        viewModel.primaryEvacuationRoute.nilIfBlank ?? "Add one route in Plan so Leave Now and Map have something concrete to use."
+        viewModel.primaryEvacuationRoute.nilIfBlank ?? "Add one route in Plan if you want Leave Now to be more concrete."
     }
 
     private var contactValue: String {
@@ -121,7 +100,7 @@ struct PrepScoreResultView: View {
         if let name = viewModel.emergencyContactName.nilIfBlank, let phone = viewModel.emergencyContactPhone.nilIfBlank {
             return "\(name) • \(phone)"
         }
-        return "Add one reachable local contact for faster call decisions."
+        return "Add one reachable contact later if you skipped it."
     }
 
     private var locationValue: String {
@@ -129,7 +108,7 @@ struct PrepScoreResultView: View {
         case .authorized:
             "Enabled"
         case .notDetermined:
-            "Not Asked"
+            "Not asked"
         case .denied:
             "Denied"
         case .restricted:
@@ -144,9 +123,9 @@ struct PrepScoreResultView: View {
         case .authorized:
             return "\(viewModel.locationShareMode.title) sharing is ready if you use Signal or map centering."
         case .notDetermined:
-            return "Offline maps still work, but your position will not auto-center until permission is granted."
+            return "Offline maps still work even if you skip location permission."
         case .denied:
-            return "Offline maps still work, but your position will not auto-center on this device."
+            return "Offline maps still work, but your position will not auto-center."
         case .restricted, .unavailable:
             return "Treat maps as reference navigation without live self-location."
         }
@@ -192,20 +171,6 @@ struct PrepScoreResultView: View {
                     .foregroundStyle(ColorTheme.textMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
-        }
-    }
-
-    private func trustLine(_ line: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Circle()
-                .fill(ColorTheme.info.opacity(0.8))
-                .frame(width: 7, height: 7)
-                .padding(.top, 7)
-
-            Text(line)
-                .font(.subheadline)
-                .foregroundStyle(ColorTheme.text)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }

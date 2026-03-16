@@ -46,19 +46,19 @@ struct OnboardingContainerView: View {
             .ignoresSafeArea()
 
             Circle()
-                .fill(ColorTheme.info.opacity(0.16))
+                .fill(ColorTheme.dividerSubtle)
                 .frame(width: 260, height: 260)
                 .blur(radius: 70)
                 .offset(x: 130, y: -260)
 
             Circle()
-                .fill(ColorTheme.accent.opacity(0.1))
+                .fill(ColorTheme.dividerSubtle)
                 .frame(width: 280, height: 280)
                 .blur(radius: 80)
                 .offset(x: -140, y: -120)
 
             Circle()
-                .fill(ColorTheme.warning.opacity(0.08))
+                .fill(ColorTheme.dividerSubtle)
                 .frame(width: 220, height: 220)
                 .blur(radius: 60)
                 .offset(x: 120, y: 320)
@@ -66,12 +66,12 @@ struct OnboardingContainerView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .center, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("REDIM8 SETUP")
+                    Text("STEP \(viewModel.currentStepNumber) OF \(OnboardingViewModel.Step.allCases.count)")
                         .font(RediTypography.caption)
-                        .foregroundStyle(ColorTheme.info)
+                        .foregroundStyle(ColorTheme.textTertiary)
                     Text(viewModel.currentStep.heroTitle)
                         .font(.system(size: 28, weight: .black))
                         .foregroundStyle(ColorTheme.text)
@@ -84,36 +84,22 @@ struct OnboardingContainerView: View {
                         appState.isShowingOnboarding = false
                     }
                     .buttonStyle(SecondaryActionButtonStyle())
-                    .frame(width: 110)
+                    .frame(width: 108)
                 }
             }
 
             Text(viewModel.currentStep.heroSubtitle)
-                .font(RediTypography.body)
+                .font(.subheadline)
                 .foregroundStyle(ColorTheme.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
 
-            TrustPillGroup(items: viewModel.currentStep.headerPills)
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Step \(viewModel.currentStepNumber) of \(OnboardingViewModel.Step.allCases.count)")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(ColorTheme.textFaint)
-                    Spacer()
-                    Text("\(Int((viewModel.progressValue * 100).rounded()))%")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(ColorTheme.textFaint)
-                }
-
-                ProgressView(value: viewModel.progressValue)
-                    .tint(ColorTheme.info)
-            }
+            ProgressView(value: viewModel.progressValue)
+                .tint(ColorTheme.info)
         }
         .padding(.horizontal, 20)
         .padding(.top, 18)
-        .padding(.bottom, 18)
-        .background(ColorTheme.background.opacity(0.9))
+        .padding(.bottom, 16)
+        .background(ColorTheme.background.opacity(0.92))
     }
 
     @ViewBuilder
@@ -169,90 +155,42 @@ private extension OnboardingViewModel.Step {
     var heroTitle: String {
         switch self {
         case .welcome:
-            "Calm, Honest Setup"
+            "Fast Setup"
         case .safety:
-            "Safety First"
+            "Safety"
         case .scenarios:
-            "Choose What Matters"
+            "Risks"
         case .household:
-            "Plan For Real People"
+            "Household"
         case .medicalProfile:
-            "Critical Health Info"
+            "Health Info"
         case .supplies:
-            "Snapshot Your Readiness"
+            "Supplies"
         case .trust:
-            "Set Safer Defaults"
+            "Defaults"
         case .result:
-            "Launch With Clarity"
+            "Ready"
         }
     }
 
     var heroSubtitle: String {
         switch self {
         case .welcome:
-            "RediM8 works best when the first-run flow is simple, local, and trustworthy."
+            "We only need the basics. Everything here can be changed later."
         case .safety:
-            "Read the scope once, acknowledge it once, and reopen it later anytime from Settings."
+            "Official instructions always outrank the app."
         case .scenarios:
-            "We’ll tune targets, maps, and Priority Mode around the situations you actually face."
+            "Pick the situations RediM8 should prioritize first."
         case .household:
-            "Save the details that matter when leaving quickly: people, pets, route, contact, and meeting point."
+            "Save one route, one contact, and a simple household count."
         case .medicalProfile:
-            "Add only the critical conditions, severe allergies, blood type, or medication details that matter if someone is helping you urgently."
+            "Optional. Add only details that change urgent care."
         case .supplies:
-            "Use rough numbers now. You can refine food, water, fuel, and power later in Plan."
+            "Use rough numbers so RediM8 can show real gaps."
         case .trust:
-            "Choose privacy, location, and battery behaviour before you rely on them under stress."
+            "Choose privacy, battery, and grab-and-go defaults."
         case .result:
-            "Here’s what RediM8 can already do for you, and what to tighten next."
-        }
-    }
-
-    var headerPills: [TrustPillItem] {
-        switch self {
-        case .welcome:
-            [
-                TrustPillItem(title: "Offline first", tone: .verified),
-                TrustPillItem(title: "Local only docs", tone: .info),
-                TrustPillItem(title: "Assistive signal", tone: .caution)
-            ]
-        case .safety:
-            [
-                TrustPillItem(title: "Not a replacement", tone: .caution),
-                TrustPillItem(title: "Official alerts first", tone: .verified),
-                TrustPillItem(title: "Review later in Settings", tone: .info)
-            ]
-        case .scenarios:
-            [
-                TrustPillItem(title: "Priority tuned", tone: .info),
-                TrustPillItem(title: "Map defaults", tone: .neutral)
-            ]
-        case .household:
-            [
-                TrustPillItem(title: "Route saved offline", tone: .verified),
-                TrustPillItem(title: "Meeting point ready", tone: .info)
-            ]
-        case .medicalProfile:
-            [
-                TrustPillItem(title: "Optional", tone: .neutral),
-                TrustPillItem(title: "Local only", tone: .verified),
-                TrustPillItem(title: "Shared only by choice", tone: .info)
-            ]
-        case .supplies:
-            [
-                TrustPillItem(title: "Targets, not promises", tone: .caution),
-                TrustPillItem(title: "Edit later", tone: .neutral)
-            ]
-        case .trust:
-            [
-                TrustPillItem(title: "Approximate by default", tone: .verified),
-                TrustPillItem(title: "Delivery not guaranteed", tone: .caution)
-            ]
-        case .result:
-            [
-                TrustPillItem(title: "Ready to launch", tone: .verified),
-                TrustPillItem(title: "Review later anytime", tone: .neutral)
-            ]
+            "You now have a usable baseline and can launch."
         }
     }
 }
@@ -263,44 +201,38 @@ private struct SafetyNoticeView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             ModeHeroCard(
-                eyebrow: "Safety & Limitations",
-                title: "Assistive, not authoritative.",
-                subtitle: "RediM8 helps you prepare, navigate, and understand local conditions, but it should never outrank official instructions or professional medical help.",
+                eyebrow: "Safety",
+                title: "Use RediM8 as support, not authority.",
+                subtitle: "It helps you prepare and act faster, but official alerts, emergency services, and professional medical advice come first.",
                 iconName: "shield",
-                accent: ColorTheme.warning
+                accent: ColorTheme.textTertiary,
+                backgroundAssetName: "marketing_coast_storm",
+                backgroundImageOffset: CGSize(width: 8, height: 0)
             ) {
                 TrustPillGroup(items: [
                     TrustPillItem(title: "Official instructions first", tone: .verified),
-                    TrustPillItem(title: "Mesh delivery not guaranteed", tone: .caution),
-                    TrustPillItem(title: "Community reports unverified", tone: .info)
+                    TrustPillItem(title: "Signal is assistive", tone: .caution),
+                    TrustPillItem(title: "Maps can be stale", tone: .info)
                 ])
             }
 
-            PanelCard(title: "What RediM8 Is", subtitle: "The short version Apple reviewers and users both need to see clearly.") {
+            PanelCard(title: "Read This Once", subtitle: "The short version before you rely on the app.") {
                 VStack(alignment: .leading, spacing: 12) {
-                    ForEach(Array(TrustLayer.safetyLimitationsLines.enumerated()), id: \.offset) { _, line in
-                        safetyLine(line)
-                    }
+                    safetyLine("Official warnings and emergency crews outrank anything shown here.")
+                    safetyLine("Nearby signal, mesh delivery, and community reports can fail, lag, or be wrong.")
+                    safetyLine("Offline maps and cached data help, but they can still be incomplete or out of date.")
                 }
             }
 
-            PanelCard(title: "What Can Change Fast", subtitle: "These tools help, but conditions and information can move faster than any app.") {
-                VStack(alignment: .leading, spacing: 12) {
-                    safetyLine(TrustLayer.mapFreshnessNotice)
-                    safetyLine(TrustLayer.signalAssistiveReminder)
-                    safetyLine(TrustLayer.signalDeliveryNotice)
-                }
-            }
-
-            PanelCard(title: "Keep This Handy", subtitle: "You can reopen the same notice later from Settings > Safety.") {
+            PanelCard(title: "Acknowledgement", subtitle: "You only need to do this once on this device.") {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: viewModel.hasAcknowledgedSafetyNotice ? "checkmark.shield.fill" : "shield.lefthalf.filled")
                         .foregroundStyle(viewModel.hasAcknowledgedSafetyNotice ? ColorTheme.ready : ColorTheme.info)
                         .frame(width: 20, height: 20)
 
                     Text(viewModel.hasAcknowledgedSafetyNotice
-                         ? "Safety notice already acknowledged on this device."
-                         : "Tap I Understand once to continue. RediM8 will not nag you with repeated safety popups afterward.")
+                         ? "Safety notice already acknowledged."
+                         : "Tap I Understand to continue. You can reopen this later from Settings.")
                         .font(.subheadline)
                         .foregroundStyle(ColorTheme.textMuted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -312,8 +244,9 @@ private struct SafetyNoticeView: View {
     private func safetyLine(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(ColorTheme.warning)
+                .foregroundStyle(ColorTheme.textTertiary)
                 .padding(.top, 2)
+
             Text(text)
                 .font(.subheadline)
                 .foregroundStyle(ColorTheme.text)
@@ -329,14 +262,26 @@ private struct EmergencyMedicalInfoSetupView: View {
         GridItem(.adaptive(minimum: 150), spacing: 10)
     ]
 
+    private var preview: String? {
+        EmergencyMedicalInfo(
+            criticalConditions: Array(viewModel.emergencyMedicalConditions),
+            severeAllergies: viewModel.severeAllergies,
+            otherCriticalCondition: viewModel.otherCriticalCondition,
+            bloodType: viewModel.bloodType,
+            emergencyMedication: viewModel.emergencyMedication
+        ).broadcastSummary
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             ModeHeroCard(
-                eyebrow: "Emergency Medical Info",
-                title: "Save only what matters in a life-threatening moment.",
-                subtitle: "This is not a full medical history. Keep it to critical conditions, severe allergies, blood type, and medication details someone may need if you trigger a help alert.",
+                eyebrow: "Optional",
+                title: "Add only critical health details.",
+                subtitle: "Skip this unless it changes urgent care or evacuation help. This is not a full medical history.",
                 iconName: "first_aid",
-                accent: ColorTheme.danger
+                accent: ColorTheme.textTertiary,
+                backgroundAssetName: "vault_essentials",
+                backgroundImageOffset: CGSize(width: 10, height: 0)
             ) {
                 TrustPillGroup(items: [
                     TrustPillItem(title: "Optional", tone: .neutral),
@@ -345,16 +290,8 @@ private struct EmergencyMedicalInfoSetupView: View {
                 ])
             }
 
-            PanelCard(title: "Critical Health Information", subtitle: "Add only details that change urgent care or evacuation help") {
+            PanelCard(title: "Critical Details", subtitle: "Only add information a helper may need immediately.") {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Do you want to add critical medical information?")
-                        .font(.headline)
-                        .foregroundStyle(ColorTheme.text)
-
-                    Text(TrustLayer.emergencyMedicalInfoScopeNotice)
-                        .font(.subheadline)
-                        .foregroundStyle(ColorTheme.textMuted)
-
                     LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
                         ForEach(CriticalMedicalCondition.allCases) { condition in
                             Button {
@@ -391,57 +328,30 @@ private struct EmergencyMedicalInfoSetupView: View {
                     TextField("Severe allergies", text: $viewModel.severeAllergies, axis: .vertical)
                         .textFieldStyle(TacticalTextFieldStyle())
 
-                    TextField("Blood type (optional)", text: $viewModel.bloodType)
+                    TextField("Emergency medication", text: $viewModel.emergencyMedication, axis: .vertical)
                         .textFieldStyle(TacticalTextFieldStyle())
 
-                    TextField("Emergency medication or location", text: $viewModel.emergencyMedication, axis: .vertical)
+                    TextField("Blood type (optional)", text: $viewModel.bloodType)
                         .textFieldStyle(TacticalTextFieldStyle())
 
                     TextField("Other critical condition", text: $viewModel.otherCriticalCondition, axis: .vertical)
                         .textFieldStyle(TacticalTextFieldStyle())
+
+                    Text("Leave this blank and RediM8 will skip it for now.")
+                        .font(.caption)
+                        .foregroundStyle(ColorTheme.textFaint)
                 }
             }
 
-            PanelCard(title: "Privacy", subtitle: "Keep trust high by making sharing explicit") {
-                VStack(alignment: .leading, spacing: 12) {
-                    safetyLine(TrustLayer.emergencyMedicalInfoPrivacyNotice)
-
-                    if let preview = EmergencyMedicalInfo(
-                        criticalConditions: Array(viewModel.emergencyMedicalConditions),
-                        severeAllergies: viewModel.severeAllergies,
-                        otherCriticalCondition: viewModel.otherCriticalCondition,
-                        bloodType: viewModel.bloodType,
-                        emergencyMedication: viewModel.emergencyMedication
-                    ).broadcastSummary {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("IF YOU CHOOSE TO SHARE")
-                                .font(RediTypography.caption)
-                                .foregroundStyle(ColorTheme.danger)
-                            Text(preview)
-                                .font(.subheadline)
-                                .foregroundStyle(ColorTheme.text)
-                        }
+            if let preview {
+                PanelCard(title: "Sharing Preview", subtitle: "This is only shared if you explicitly choose to include it in a signal.") {
+                    Text(preview)
+                        .font(.subheadline)
+                        .foregroundStyle(ColorTheme.text)
                         .padding(12)
                         .background(ColorTheme.danger.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    } else {
-                        Text("Leave this blank and RediM8 will skip it for now.")
-                            .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textMuted)
-                    }
                 }
             }
-        }
-    }
-
-    private func safetyLine(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(ColorTheme.danger)
-                .padding(.top, 2)
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(ColorTheme.text)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }

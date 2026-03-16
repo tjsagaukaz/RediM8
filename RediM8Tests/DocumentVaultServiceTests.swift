@@ -80,6 +80,31 @@ final class DocumentVaultServiceTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: encryptedFileURL.path))
     }
 
+    func testReleaseTemporaryPreviewRemovesPlaintextFileImmediately() async throws {
+        let service = makeService(testName: #function)
+        try await service.unlock()
+
+        try service.addDocument(
+            VaultImportPayload(
+                data: Data("passport".utf8),
+                displayName: "Passport",
+                filename: "passport.pdf",
+                contentType: .pdf,
+                source: .pdfImport,
+                pageCount: 1
+            ),
+            to: .identity
+        )
+
+        let document = try XCTUnwrap(service.documents(in: .identity).first)
+        let previewURL = try service.temporaryPreviewURL(for: document)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: previewURL.path))
+
+        service.releaseTemporaryPreviewURL(previewURL)
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: previewURL.path))
+    }
+
     private func makeBaseURL(testName: String) -> URL {
         URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
             .appendingPathComponent("DocumentVaultServiceTests", isDirectory: true)

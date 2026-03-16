@@ -6,18 +6,20 @@ struct SuppliesSetupView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             ModeHeroCard(
-                eyebrow: "Readiness Snapshot",
-                title: "Rough numbers are enough to start.",
-                subtitle: "This step is about honesty, not perfection. Capture what you have right now so RediM8 can show clearer gaps and less false confidence.",
+                eyebrow: "Supplies",
+                title: "Rough numbers are enough.",
+                subtitle: "Capture what you have right now so RediM8 can show the gaps honestly.",
                 iconName: "water",
-                accent: ColorTheme.info
+                accent: ColorTheme.info,
+                backgroundAssetName: "preparedness_flatlay",
+                backgroundImageOffset: CGSize(width: 10, height: 0)
             ) {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("\(viewModel.livePreviewScore.overall)%")
                             .font(.system(size: 42, weight: .black))
                             .foregroundStyle(ColorTheme.text)
-                        Text("Current readiness snapshot")
+                        Text("Current snapshot")
                             .font(.subheadline)
                             .foregroundStyle(ColorTheme.textMuted)
                     }
@@ -28,7 +30,7 @@ struct SuppliesSetupView: View {
                 }
             }
 
-            PanelCard(title: "Household Supplies", subtitle: "Adjust these toward your current reality") {
+            PanelCard(title: "Current Supplies", subtitle: "Move the sliders until they roughly match reality.") {
                 VStack(spacing: 18) {
                     supplySlider(
                         title: "Water stored",
@@ -67,41 +69,7 @@ struct SuppliesSetupView: View {
                     )
                 }
             }
-
-            PanelCard(title: "What The Snapshot Means", subtitle: "Fast interpretation, not spreadsheeting") {
-                VStack(alignment: .leading, spacing: 10) {
-                    snapshotLine(title: "Water", detail: waterSummary)
-                    snapshotLine(title: "Food", detail: foodSummary)
-                    snapshotLine(title: "Fuel", detail: fuelSummary)
-                    snapshotLine(title: "Power", detail: batterySummary)
-                }
-            }
         }
-    }
-
-    private var waterSummary: String {
-        summary(current: viewModel.supplies.waterLitres, target: viewModel.prepTargets.waterLitres, suffix: "L")
-    }
-
-    private var foodSummary: String {
-        summary(current: viewModel.supplies.foodDays, target: viewModel.prepTargets.foodDays, suffix: "days")
-    }
-
-    private var fuelSummary: String {
-        summary(current: viewModel.supplies.fuelLitres, target: viewModel.prepTargets.fuelLitres, suffix: "L")
-    }
-
-    private var batterySummary: String {
-        summary(current: viewModel.supplies.batteryCapacity, target: viewModel.prepTargets.batteryCapacity, suffix: "%")
-    }
-
-    private func summary(current: Double, target: Double, suffix: String) -> String {
-        if current >= target {
-            return "\(current.roundedIntString)\(suffix == "%" ? "" : " ")\(suffix) is meeting or exceeding the current target."
-        }
-
-        let gap = max((target - current).rounded(), 0)
-        return "\(gap.roundedIntString)\(suffix == "%" ? "" : " ")\(suffix) below the current target."
     }
 
     private func supplySlider(
@@ -112,37 +80,40 @@ struct SuppliesSetupView: View {
         suffix: String,
         tint: Color
     ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        let ratio = target > 0 ? min(value.wrappedValue / target, 1) : 1
+        let gap = max(target - value.wrappedValue, 0)
+
+        return VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(ColorTheme.text)
+
                 Spacer()
+
                 Text("\(value.wrappedValue.roundedIntString)\(suffix == "%" ? "" : " ")\(suffix)")
                     .font(.headline)
                     .foregroundStyle(ColorTheme.text)
             }
 
-            Text("Target: \(target.roundedIntString)\(suffix == "%" ? "" : " ")\(suffix)")
-                .font(.caption)
-                .foregroundStyle(tint)
+            HStack {
+                Text("Target \(target.roundedIntString)\(suffix == "%" ? "" : " ")\(suffix)")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(tint)
+
+                Spacer()
+
+                Text(gap == 0 ? "On target" : "Gap \(gap.roundedIntString)\(suffix == "%" ? "" : " ")\(suffix)")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(gap == 0 ? ColorTheme.ready : ColorTheme.textFaint)
+            }
+
+            ReadinessMeter(value: ratio, tint: tint, height: 10)
 
             Slider(value: value, in: range)
                 .tint(tint)
         }
         .padding(16)
         .background(Color.black.opacity(0.24), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-    }
-
-    private func snapshotLine(title: String, detail: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title.uppercased())
-                .font(RediTypography.caption)
-                .foregroundStyle(ColorTheme.textFaint)
-            Text(detail)
-                .font(.subheadline)
-                .foregroundStyle(ColorTheme.text)
-                .fixedSize(horizontal: false, vertical: true)
-        }
     }
 }

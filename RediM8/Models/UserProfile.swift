@@ -263,6 +263,244 @@ struct EmergencyMedicalInfo: Codable, Equatable {
     }
 }
 
+enum AccountabilityStatus: String, CaseIterable, Codable, Identifiable, Hashable {
+    case safe
+    case checkingIn = "checking_in"
+    case needHelp = "need_help"
+    case injured
+    case unknown
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .safe:
+            "Safe"
+        case .checkingIn:
+            "Checking In"
+        case .needHelp:
+            "Need Help"
+        case .injured:
+            "Injured"
+        case .unknown:
+            "Unknown"
+        }
+    }
+
+    var buttonTitle: String {
+        switch self {
+        case .safe:
+            "I Am Safe"
+        case .checkingIn:
+            "Checking In"
+        case .needHelp:
+            "Need Help"
+        case .injured:
+            "Injured"
+        case .unknown:
+            "Unknown"
+        }
+    }
+
+    var summaryLabel: String {
+        switch self {
+        case .safe:
+            "SAFE"
+        case .checkingIn:
+            "CHECKING IN"
+        case .needHelp:
+            "NEED HELP"
+        case .injured:
+            "INJURED"
+        case .unknown:
+            "UNKNOWN"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .safe:
+            "checkmark.shield.fill"
+        case .checkingIn:
+            "clock.badge.checkmark.fill"
+        case .needHelp:
+            "exclamationmark.triangle.fill"
+        case .injured:
+            "cross.case.fill"
+        case .unknown:
+            "questionmark.circle.fill"
+        }
+    }
+
+    var sortPriority: Int {
+        switch self {
+        case .needHelp:
+            0
+        case .injured:
+            1
+        case .unknown:
+            2
+        case .checkingIn:
+            3
+        case .safe:
+            4
+        }
+    }
+}
+
+enum AccountabilityMemberSource: String, Codable, Equatable, Hashable {
+    case selfUser = "self"
+    case family
+    case emergencyContact = "emergency_contact"
+    case custom
+    case mesh
+
+    var label: String {
+        switch self {
+        case .selfUser:
+            "This device"
+        case .family:
+            "Family"
+        case .emergencyContact:
+            "Emergency contact"
+        case .custom:
+            "Custom"
+        case .mesh:
+            "Mesh check-in"
+        }
+    }
+}
+
+enum AccountabilityCheckInMethod: String, Codable, Equatable, Hashable {
+    case local
+    case mesh
+    case manual
+
+    var label: String {
+        switch self {
+        case .local:
+            "Local"
+        case .mesh:
+            "Mesh"
+        case .manual:
+            "Manual"
+        }
+    }
+}
+
+struct AccountabilityMember: Identifiable, Codable, Equatable, Hashable {
+    var id: UUID
+    var name: String
+    var phone: String
+    var role: String
+    var status: AccountabilityStatus
+    var note: String
+    var updatedAt: Date?
+    var source: AccountabilityMemberSource
+    var lastCheckInMethod: AccountabilityCheckInMethod
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        phone: String = "",
+        role: String = "",
+        status: AccountabilityStatus = .unknown,
+        note: String = "",
+        updatedAt: Date? = nil,
+        source: AccountabilityMemberSource = .custom,
+        lastCheckInMethod: AccountabilityCheckInMethod = .manual
+    ) {
+        self.id = id
+        self.name = name
+        self.phone = phone
+        self.role = role
+        self.status = status
+        self.note = note
+        self.updatedAt = updatedAt
+        self.source = source
+        self.lastCheckInMethod = lastCheckInMethod
+    }
+}
+
+struct AccountabilityCircle: Codable, Equatable, Hashable {
+    var title: String
+    var members: [AccountabilityMember]
+
+    init(
+        title: String = "Household Status",
+        members: [AccountabilityMember] = []
+    ) {
+        self.title = title
+        self.members = members
+    }
+
+    static let empty = AccountabilityCircle()
+
+    var checkedInCount: Int {
+        members.filter { $0.status != .unknown }.count
+    }
+}
+
+enum PlanWorkspaceID: String, CaseIterable, Codable, Identifiable {
+    case householdBasics = "household_basics"
+    case householdSupplies = "household_supplies"
+    case householdRoles = "household_roles"
+    case householdScenarios = "household_scenarios"
+    case vehicle = "vehicle"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .householdBasics:
+            "Basics"
+        case .householdSupplies:
+            "Supplies"
+        case .householdRoles:
+            "Roles"
+        case .householdScenarios:
+            "Scenarios"
+        case .vehicle:
+            "Vehicle"
+        }
+    }
+}
+
+struct PlanCustomTask: Identifiable, Codable, Equatable {
+    var id: UUID
+    var title: String
+    var note: String
+    var isCompleted: Bool
+
+    init(
+        id: UUID = UUID(),
+        title: String,
+        note: String = "",
+        isCompleted: Bool = false
+    ) {
+        self.id = id
+        self.title = title
+        self.note = note
+        self.isCompleted = isCompleted
+    }
+}
+
+struct PlanWorkspaceCustomData: Identifiable, Codable, Equatable {
+    var id: PlanWorkspaceID
+    var notes: String
+    var tasks: [PlanCustomTask]
+
+    init(
+        id: PlanWorkspaceID,
+        notes: String = "",
+        tasks: [PlanCustomTask] = []
+    ) {
+        self.id = id
+        self.notes = notes
+        self.tasks = tasks
+    }
+}
+
 struct UserProfile: Codable, Equatable {
     var selectedScenarios: [ScenarioKind]
     var household: HouseholdDetails
@@ -274,6 +512,10 @@ struct UserProfile: Codable, Equatable {
     var emergencyMedicalInfo: EmergencyMedicalInfo
     var meetingPoints: MeetingPoints
     var evacuationRoutes: [String]
+    var savedGuideIDs: [String]
+    var recentGuideIDs: [String]
+    var customPlanningWorkspaces: [PlanWorkspaceCustomData]
+    var accountabilityCircle: AccountabilityCircle
     var bushfireReadiness: BushfireReadiness
     var lastAcknowledgedSafetyNoticeAt: Date?
     var lastCompletedOnboardingAt: Date?
@@ -289,6 +531,10 @@ struct UserProfile: Codable, Equatable {
         emergencyMedicalInfo: EmergencyMedicalInfo = .empty,
         meetingPoints: MeetingPoints,
         evacuationRoutes: [String],
+        savedGuideIDs: [String] = [],
+        recentGuideIDs: [String] = [],
+        customPlanningWorkspaces: [PlanWorkspaceCustomData] = UserProfile.defaultCustomPlanningWorkspaces,
+        accountabilityCircle: AccountabilityCircle = .empty,
         bushfireReadiness: BushfireReadiness = .default,
         lastAcknowledgedSafetyNoticeAt: Date? = nil,
         lastCompletedOnboardingAt: Date?
@@ -303,6 +549,10 @@ struct UserProfile: Codable, Equatable {
         self.emergencyMedicalInfo = emergencyMedicalInfo
         self.meetingPoints = meetingPoints
         self.evacuationRoutes = evacuationRoutes
+        self.savedGuideIDs = UserProfile.normalizedGuideIDs(savedGuideIDs)
+        self.recentGuideIDs = UserProfile.normalizedGuideIDs(recentGuideIDs)
+        self.customPlanningWorkspaces = UserProfile.normalizedCustomPlanningWorkspaces(customPlanningWorkspaces)
+        self.accountabilityCircle = accountabilityCircle
         self.bushfireReadiness = bushfireReadiness
         self.lastAcknowledgedSafetyNoticeAt = lastAcknowledgedSafetyNoticeAt
         self.lastCompletedOnboardingAt = lastCompletedOnboardingAt
@@ -319,6 +569,10 @@ struct UserProfile: Codable, Equatable {
         emergencyMedicalInfo: .empty,
         meetingPoints: .empty,
         evacuationRoutes: [],
+        savedGuideIDs: [],
+        recentGuideIDs: [],
+        customPlanningWorkspaces: UserProfile.defaultCustomPlanningWorkspaces,
+        accountabilityCircle: .empty,
         bushfireReadiness: .default,
         lastAcknowledgedSafetyNoticeAt: nil,
         lastCompletedOnboardingAt: nil
@@ -373,6 +627,10 @@ struct UserProfile: Codable, Equatable {
         case emergencyMedicalInfo
         case meetingPoints
         case evacuationRoutes
+        case savedGuideIDs
+        case recentGuideIDs
+        case customPlanningWorkspaces
+        case accountabilityCircle
         case bushfireReadiness
         case lastAcknowledgedSafetyNoticeAt
         case lastCompletedOnboardingAt
@@ -390,8 +648,43 @@ struct UserProfile: Codable, Equatable {
         emergencyMedicalInfo = try container.decodeIfPresent(EmergencyMedicalInfo.self, forKey: .emergencyMedicalInfo) ?? .empty
         meetingPoints = try container.decodeIfPresent(MeetingPoints.self, forKey: .meetingPoints) ?? .empty
         evacuationRoutes = try container.decodeIfPresent([String].self, forKey: .evacuationRoutes) ?? []
+        savedGuideIDs = UserProfile.normalizedGuideIDs(
+            try container.decodeIfPresent([String].self, forKey: .savedGuideIDs) ?? []
+        )
+        recentGuideIDs = UserProfile.normalizedGuideIDs(
+            try container.decodeIfPresent([String].self, forKey: .recentGuideIDs) ?? []
+        )
+        customPlanningWorkspaces = UserProfile.normalizedCustomPlanningWorkspaces(
+            try container.decodeIfPresent([PlanWorkspaceCustomData].self, forKey: .customPlanningWorkspaces)
+                ?? UserProfile.defaultCustomPlanningWorkspaces
+        )
+        accountabilityCircle = try container.decodeIfPresent(AccountabilityCircle.self, forKey: .accountabilityCircle) ?? .empty
         bushfireReadiness = try container.decodeIfPresent(BushfireReadiness.self, forKey: .bushfireReadiness) ?? .default
         lastAcknowledgedSafetyNoticeAt = try container.decodeIfPresent(Date.self, forKey: .lastAcknowledgedSafetyNoticeAt)
         lastCompletedOnboardingAt = try container.decodeIfPresent(Date.self, forKey: .lastCompletedOnboardingAt)
+    }
+
+    func customPlanningWorkspace(_ workspaceID: PlanWorkspaceID) -> PlanWorkspaceCustomData {
+        customPlanningWorkspaces.first(where: { $0.id == workspaceID }) ?? PlanWorkspaceCustomData(id: workspaceID)
+    }
+
+    static var defaultCustomPlanningWorkspaces: [PlanWorkspaceCustomData] {
+        PlanWorkspaceID.allCases.map { PlanWorkspaceCustomData(id: $0) }
+    }
+
+    private static func normalizedGuideIDs(_ ids: [String]) -> [String] {
+        var seen = Set<String>()
+        return ids.compactMap { id in
+            let normalized = id.nilIfBlank
+            guard let normalized, seen.insert(normalized).inserted else {
+                return nil
+            }
+            return normalized
+        }
+    }
+
+    private static func normalizedCustomPlanningWorkspaces(_ workspaces: [PlanWorkspaceCustomData]) -> [PlanWorkspaceCustomData] {
+        let workspaceIndex = Dictionary(uniqueKeysWithValues: workspaces.map { ($0.id, $0) })
+        return PlanWorkspaceID.allCases.map { workspaceIndex[$0] ?? PlanWorkspaceCustomData(id: $0) }
     }
 }

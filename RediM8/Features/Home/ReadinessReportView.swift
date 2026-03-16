@@ -10,13 +10,25 @@ struct ReadinessReportView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var shareSheetPayload: ShareSheetPayload?
     @State private var notice: ReportNotice?
+    @State private var isShowingBreakdown = false
+    @State private var isShowingHighlights = false
+    @State private var isShowingPlanSummary = false
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 headerCard
+                SystemStatusRail(items: reportStatusItems, accent: Self.highlight)
+                reportActionCard
+                executiveSummaryCard
+                priorityActionsCard
 
-                ReportCard(title: "Preparedness Breakdown", subtitle: "Core categories tracked offline") {
+                CollapsiblePanelCard(
+                    title: "Preparedness Breakdown",
+                    subtitle: "Full category scores tracked offline.",
+                    accent: Self.highlight,
+                    isExpanded: $isShowingBreakdown
+                ) {
                     VStack(spacing: 14) {
                         ForEach(report.categoryScores) { score in
                             ReportProgressRow(title: score.category.title, value: score.score)
@@ -24,7 +36,12 @@ struct ReadinessReportView: View {
                     }
                 }
 
-                ReportCard(title: "Preparedness Highlights", subtitle: "Current supplies versus recommended targets") {
+                CollapsiblePanelCard(
+                    title: "Household Targets",
+                    subtitle: "Current supplies versus recommended targets.",
+                    accent: ColorTheme.info,
+                    isExpanded: $isShowingHighlights
+                ) {
                     VStack(spacing: 12) {
                         ForEach(report.highlights) { highlight in
                             HighlightCard(highlight: highlight)
@@ -32,69 +49,18 @@ struct ReadinessReportView: View {
                     }
                 }
 
-                ReportCard(title: "Emergency Plan Summary", subtitle: "Meeting points, contacts and evacuation details") {
+                CollapsiblePanelCard(
+                    title: "Emergency Plan Detail",
+                    subtitle: "Meeting points, contacts, and evacuation coverage.",
+                    accent: ColorTheme.textTertiary,
+                    isExpanded: $isShowingPlanSummary
+                ) {
                     VStack(alignment: .leading, spacing: 16) {
                         ReportLineList(lines: report.planSummary.summaryLines)
                         ReportDetailBlock(title: "Meeting Points", lines: report.planSummary.meetingPoints, emptyState: "No meeting points saved")
                         ReportDetailBlock(title: "Emergency Contacts", lines: report.planSummary.emergencyContacts, emptyState: "No emergency contacts saved")
                         ReportDetailBlock(title: "Evacuation Routes", lines: report.planSummary.evacuationRoutes, emptyState: "No evacuation routes saved")
                     }
-                }
-
-                ReportCard(title: "Priority Actions", subtitle: "Highest-value improvements to lift readiness") {
-                    if report.suggestions.isEmpty {
-                        Text("No priority actions detected. Keep supplies current and review your emergency plan regularly.")
-                            .font(.subheadline)
-                            .foregroundStyle(Self.secondaryText)
-                    } else {
-                        VStack(alignment: .leading, spacing: 10) {
-                            ForEach(Array(report.suggestions.prefix(5)).indices, id: \.self) { index in
-                                let suggestion = report.suggestions[index]
-                                HStack(alignment: .top, spacing: 12) {
-                                    Text("\(index + 1)")
-                                        .font(.subheadline.weight(.bold))
-                                        .foregroundStyle(Self.highlight)
-                                        .frame(width: 22, alignment: .leading)
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(suggestion.title)
-                                            .font(.headline)
-                                            .foregroundStyle(ColorTheme.text)
-                                        Text(suggestion.detail)
-                                            .font(.subheadline)
-                                            .foregroundStyle(Self.secondaryText)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                VStack(spacing: 12) {
-                    Button("Share") {
-                        handleAction(title: "Share Report", action: onShare)
-                    }
-                    .buttonStyle(PrimaryActionButtonStyle())
-
-                    Button("Save PDF") {
-                        do {
-                            let url = try onSavePDF()
-                            notice = ReportNotice(
-                                title: "PDF Saved",
-                                message: "Saved \(url.lastPathComponent) to the app's Readiness Reports folder."
-                            )
-                        } catch {
-                            notice = ReportNotice(
-                                title: "Save Failed",
-                                message: error.localizedDescription
-                            )
-                        }
-                    }
-                    .buttonStyle(SecondaryActionButtonStyle())
-
-                    Button("Send to Family") {
-                        handleAction(title: "Send to Family", action: onSendToFamily)
-                    }
-                    .buttonStyle(SecondaryActionButtonStyle())
                 }
             }
             .padding(20)
@@ -109,12 +75,45 @@ struct ReadinessReportView: View {
             }
         }
         .background(Self.background.ignoresSafeArea())
-        .sheet(item: $shareSheetPayload) { payload in
-            ActivityView(activityItems: payload.items)
+        .sheet(item: $shareSheetPayload, onDismiss: {
+            dismissShareSheet()
+        }) { payload in
+            ActivityView(activityItems: payload.items) {
+                dismissShareSheet()
+            }
         }
         .alert(item: $notice) { notice in
             Alert(title: Text(notice.title), message: Text(notice.message), dismissButton: .default(Text("OK")))
         }
+    }
+
+    private var reportStatusItems: [OperationalStatusItem] {
+        [
+            OperationalStatusItem(
+                iconName: "shield",
+                label: "Tier",
+                value: report.tier.displayTitle,
+                tone: report.overallScore >= 75 ? .ready : .caution
+            ),
+            OperationalStatusItem(
+                iconName: "warning",
+                label: "Actions",
+                value: "\(report.suggestions.count)",
+                tone: report.suggestions.isEmpty ? .ready : .caution
+            ),
+            OperationalStatusItem(
+                iconName: "family",
+                label: "Contacts",
+                value: "\(report.planSummary.emergencyContacts.count)",
+                tone: report.planSummary.emergencyContacts.isEmpty ? .neutral : .info
+            ),
+            OperationalStatusItem(
+                iconName: "map_marker",
+                label: "Routes",
+                value: "\(report.planSummary.evacuationRoutes.count)",
+                tone: report.planSummary.evacuationRoutes.isEmpty ? .neutral : .info
+            )
+        ]
     }
 
     private var headerCard: some View {
@@ -160,6 +159,107 @@ struct ReadinessReportView: View {
         }
     }
 
+    private var reportActionCard: some View {
+        ReportCard(title: "Share & Save", subtitle: "Brief the household now, or export a local PDF snapshot.") {
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    reportPrimaryActionButton(title: "Share", action: {
+                        handleAction(title: "Share Report", action: onShare)
+                    })
+                    reportSecondaryActionButton(title: "Save PDF", action: savePDF)
+                    reportSecondaryActionButton(title: "Send to Family", action: {
+                        handleAction(title: "Send to Family", action: onSendToFamily)
+                    })
+                }
+
+                VStack(spacing: 12) {
+                    reportPrimaryActionButton(title: "Share", action: {
+                        handleAction(title: "Share Report", action: onShare)
+                    })
+                    reportSecondaryActionButton(title: "Save PDF", action: savePDF)
+                    reportSecondaryActionButton(title: "Send to Family", action: {
+                        handleAction(title: "Send to Family", action: onSendToFamily)
+                    })
+                }
+            }
+        }
+    }
+
+    private var executiveSummaryCard: some View {
+        ReportCard(title: "Executive Summary", subtitle: "Strongest coverage, biggest gaps, and the next milestone before you dive into the full report.") {
+            VStack(alignment: .leading, spacing: 16) {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                    reportMetricTile(
+                        title: "Overall",
+                        value: "\(report.overallScore)%",
+                        detail: report.tier.displayTitle,
+                        tint: Self.highlight
+                    )
+                    reportMetricTile(
+                        title: "Next Milestone",
+                        value: nextMilestoneValue,
+                        detail: nextMilestoneSummary,
+                        tint: ColorTheme.warning
+                    )
+                    reportMetricTile(
+                        title: "Focus",
+                        value: report.focusAreas.isEmpty ? "General" : "\(report.focusAreas.count)",
+                        detail: report.focusAreas.isEmpty ? "General emergency plan" : report.focusAreas.joined(separator: ", "),
+                        tint: ColorTheme.info
+                    )
+                    reportMetricTile(
+                        title: "Plan Coverage",
+                        value: "\(report.planSummary.meetingPoints.count + report.planSummary.evacuationRoutes.count)",
+                        detail: "\(report.planSummary.meetingPoints.count) meeting points, \(report.planSummary.evacuationRoutes.count) routes",
+                        tint: ColorTheme.ready
+                    )
+                }
+
+                executiveSummaryBlock(
+                    title: "Strongest Coverage",
+                    entries: strongestCoverageLines,
+                    tint: Self.highlight
+                )
+
+                executiveSummaryBlock(
+                    title: "Needs Attention",
+                    entries: biggestGapLines,
+                    tint: ColorTheme.warning
+                )
+            }
+        }
+    }
+
+    private var priorityActionsCard: some View {
+        ReportCard(title: "Top Actions", subtitle: "Highest-value improvements to lift readiness first.") {
+            if report.suggestions.isEmpty {
+                Text("No priority actions detected. Keep supplies current and review your emergency plan regularly.")
+                    .font(.subheadline)
+                    .foregroundStyle(Self.secondaryText)
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(Array(report.suggestions.prefix(3)).indices, id: \.self) { index in
+                        let suggestion = report.suggestions[index]
+                        HStack(alignment: .top, spacing: 12) {
+                            Text("\(index + 1)")
+                                .font(.subheadline.weight(.bold))
+                                .foregroundStyle(Self.highlight)
+                                .frame(width: 22, alignment: .leading)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(suggestion.title)
+                                    .font(.headline)
+                                    .foregroundStyle(ColorTheme.text)
+                                Text(suggestion.detail)
+                                    .font(.subheadline)
+                                    .foregroundStyle(Self.secondaryText)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private func reportMetaRow(title: String, value: String) -> some View {
         HStack(alignment: .top) {
             Text(title)
@@ -173,12 +273,150 @@ struct ReadinessReportView: View {
         }
     }
 
+    private var nextMilestoneValue: String {
+        report.tier.nextDisplayTitle ?? "Complete"
+    }
+
+    private var nextMilestoneSummary: String {
+        guard let target = report.tier.nextTarget, let title = report.tier.nextDisplayTitle else {
+            return "All readiness milestones complete."
+        }
+
+        return "\(max(target - report.overallScore, 0))% to \(title)"
+    }
+
+    private var strongestCoverageLines: [String] {
+        let scores = report.categoryScores.sorted { lhs, rhs in
+            if lhs.score != rhs.score {
+                return lhs.score > rhs.score
+            }
+            return lhs.category.title < rhs.category.title
+        }
+
+        return Array(scores.prefix(2)).map { score in
+            "\(score.category.title) is currently at \(score.score)%."
+        }
+    }
+
+    private var biggestGapLines: [String] {
+        if !report.suggestions.isEmpty {
+            return Array(report.suggestions.prefix(2)).map { suggestion in
+                "\(suggestion.title) (+\(suggestion.impact)% potential lift)."
+            }
+        }
+
+        let scores = report.categoryScores.sorted { lhs, rhs in
+            if lhs.score != rhs.score {
+                return lhs.score < rhs.score
+            }
+            return lhs.category.title < rhs.category.title
+        }
+
+        return Array(scores.prefix(2)).map { score in
+            "\(score.category.title) is still only at \(score.score)%."
+        }
+    }
+
+    private func reportPrimaryActionButton(title: String, action: @escaping () -> Void) -> some View {
+        Button(title, action: action)
+            .buttonStyle(PrimaryActionButtonStyle())
+    }
+
+    private func reportSecondaryActionButton(title: String, action: @escaping () -> Void) -> some View {
+        Button(title, action: action)
+            .buttonStyle(SecondaryActionButtonStyle())
+    }
+
+    private func reportMetricTile(title: String, value: String, detail: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title.uppercased())
+                .font(RediTypography.metadata)
+                .foregroundStyle(Self.secondaryText)
+
+            Text(value)
+                .font(.headline.weight(.bold))
+                .foregroundStyle(ColorTheme.text)
+
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(tint)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 100, alignment: .leading)
+        .background(Color.black.opacity(0.3), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(tint.opacity(0.12), lineWidth: 1)
+        )
+    }
+
+    private func executiveSummaryBlock(title: String, entries: [String], tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(ColorTheme.text)
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(entries, id: \.self) { entry in
+                    HStack(alignment: .top, spacing: 10) {
+                        Circle()
+                            .fill(tint)
+                            .frame(width: 7, height: 7)
+                            .padding(.top, 6)
+                        Text(entry)
+                            .font(.subheadline)
+                            .foregroundStyle(Self.secondaryText)
+                    }
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.opacity(0.26), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(tint.opacity(0.12), lineWidth: 1)
+        )
+    }
+
     private func handleAction(title: String, action: () throws -> [Any]) {
         do {
-            shareSheetPayload = ShareSheetPayload(title: title, items: try action())
+            let items = try action()
+            shareSheetPayload = ShareSheetPayload(
+                title: title,
+                items: items,
+                cleanupURLs: items.compactMap { item in
+                    guard let url = item as? URL else { return nil }
+                    let temporaryDirectory = FileManager.default.temporaryDirectory.standardizedFileURL
+                    let standardizedURL = url.standardizedFileURL
+                    return standardizedURL.path.hasPrefix(temporaryDirectory.path) ? standardizedURL : nil
+                }
+            )
         } catch {
             notice = ReportNotice(title: "\(title) Failed", message: error.localizedDescription)
         }
+    }
+
+    private func savePDF() {
+        do {
+            let url = try onSavePDF()
+            notice = ReportNotice(
+                title: "PDF Saved",
+                message: "Saved \(url.lastPathComponent) to the app's Readiness Reports folder."
+            )
+        } catch {
+            notice = ReportNotice(
+                title: "Save Failed",
+                message: error.localizedDescription
+            )
+        }
+    }
+
+    private func dismissShareSheet() {
+        guard let shareSheetPayload else { return }
+        shareSheetPayload.cleanupURLs.forEach { try? FileManager.default.removeItem(at: $0) }
+        self.shareSheetPayload = nil
     }
 
     fileprivate static let background = Color.black
@@ -438,6 +676,7 @@ private struct ShareSheetPayload: Identifiable {
     let id = UUID()
     let title: String
     let items: [Any]
+    let cleanupURLs: [URL]
 }
 
 private struct ReportNotice: Identifiable {
@@ -448,9 +687,14 @@ private struct ReportNotice: Identifiable {
 
 private struct ActivityView: UIViewControllerRepresentable {
     let activityItems: [Any]
+    let onComplete: () -> Void
 
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+        controller.completionWithItemsHandler = { _, _, _, _ in
+            onComplete()
+        }
+        return controller
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}

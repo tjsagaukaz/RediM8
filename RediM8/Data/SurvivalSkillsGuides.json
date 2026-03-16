@@ -1,0 +1,215 @@
+{
+  "last_updated": "2026-03-14T00:00:00Z",
+  "guides": [
+    {
+      "id": "fire_starting_methods",
+      "title": "Fire Starting Methods",
+      "category": "bushcraft",
+      "region": "general",
+      "risk_level": "advisory",
+      "summary": "Fire starting is a sequence problem: dry fuel, protected ignition, airflow, and safety discipline matter more than any single gadget.",
+      "steps": [
+        "Build fuel in stages: tinder, kindling, and larger fuel before striking ignition.",
+        "Protect the fire lay from wind and ground moisture before using matches, lighter, or ferro rod.",
+        "Light the tinder first and feed the flame gradually with smaller fuel.",
+        "Keep water, soil, or another extinguishing method ready before the fire grows."
+      ],
+      "notes": "Observe total fire bans, local restrictions, and bushfire conditions. Do not light open flame where fire risk is high or prohibited.",
+      "sources": [
+        {
+          "id": "fire-start-redim8",
+          "title": "RediM8 Survival Skills Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/fire-starting",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["fire starting", "tinder", "kindling", "ferro rod"],
+      "estimated_read_minutes": 5,
+      "related_guide_ids": ["campfire_safety_basics"],
+      "hero_icon_name": "tent"
+    },
+    {
+      "id": "water_collection_basics",
+      "title": "Water Collection Basics",
+      "category": "waterSafety",
+      "region": "general",
+      "risk_level": "advisory",
+      "summary": "Collecting water is about finding the cleanest source first, then moving it safely into storage before treatment.",
+      "steps": [
+        "Use the highest and cleanest source available before resorting to stagnant or flood-affected water.",
+        "Keep raw water containers separate from treated drinking water containers.",
+        "Pre-filter dirty water through cloth or settling before full treatment.",
+        "Treat collected water before drinking unless the source is already trusted and protected."
+      ],
+      "notes": "Floodwater and industrial runoff can remain unsafe after basic filtration. Choose source quality before volume whenever possible.",
+      "sources": [
+        {
+          "id": "water-collect-redim8",
+          "title": "RediM8 Survival Skills Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/water-collection",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["water collection", "water source", "raw water", "storage"],
+      "estimated_read_minutes": 4,
+      "related_guide_ids": ["boil_filter_disinfect_water", "collect_rainwater_safely"],
+      "hero_icon_name": "water"
+    },
+    {
+      "id": "rainwater_harvesting_setup",
+      "title": "Rainwater Harvesting Setup",
+      "category": "waterSafety",
+      "region": "australia",
+      "risk_level": "advisory",
+      "summary": "Rainwater harvesting works best when roof catchment, first-flush diversion, and storage hygiene are handled before heavy rain arrives.",
+      "steps": [
+        "Inspect roof, gutters, and screens before the wet season so debris does not foul the catchment.",
+        "Use a first-flush or discard the first dirty runoff where possible.",
+        "Store water in covered, food-safe containers or tanks that reduce light and contamination.",
+        "Label stored rainwater clearly and decide in advance whether it is for garden, washing, or treated drinking use."
+      ],
+      "notes": "Roof contamination, animal droppings, and ash can make rainwater unsafe. Reassess after storms, smoke, and long dry periods.",
+      "sources": [
+        {
+          "id": "rainwater-redim8",
+          "title": "RediM8 Survival Skills Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/rainwater-harvesting",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["rainwater harvesting", "tank", "gutters", "first flush"],
+      "estimated_read_minutes": 5,
+      "related_guide_ids": ["collect_rainwater_safely"],
+      "hero_icon_name": "water"
+    },
+    {
+      "id": "solar_cooking_basics",
+      "title": "Solar Cooking Basics",
+      "category": "foodCooking",
+      "region": "general",
+      "risk_level": "advisory",
+      "summary": "Solar cooking is slow and weather-dependent, but it can stretch fuel reserves when skies are clear and safe food temperatures are maintained.",
+      "steps": [
+        "Use a reflective cooker or insulated dark pot setup in a stable sunny location.",
+        "Start early in the day and plan for longer cook times than gas or fire.",
+        "Keep lids on and avoid opening the cooker often so heat can build.",
+        "Confirm food is thoroughly cooked before eating, especially meat, beans, and reheated leftovers."
+      ],
+      "notes": "Solar cooking is not suitable for every weather condition. Have a backup method for unsafe temperatures or overcast days.",
+      "sources": [
+        {
+          "id": "solar-cooking-redim8",
+          "title": "RediM8 Survival Skills Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/solar-cooking",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["solar cooking", "fuel saving", "off grid cooking"],
+      "estimated_read_minutes": 4,
+      "related_guide_ids": ["blackout_pan_cooking_basics"],
+      "hero_icon_name": "food"
+    },
+    {
+      "id": "off_grid_power_basics",
+      "title": "Off-Grid Power Basics",
+      "category": "bushcraft",
+      "region": "general",
+      "risk_level": "advisory",
+      "summary": "Off-grid power planning starts with load reduction first, then matching batteries, solar input, and charging order to what actually matters.",
+      "steps": [
+        "List critical loads first such as lights, phone charging, medical devices, and radio.",
+        "Reduce demand before adding batteries or panels by switching off high-draw devices.",
+        "Charge in priority order so communication and medical gear stay online longest.",
+        "Keep cables, power banks, adapters, and stored energy labelled and tested before outages."
+      ],
+      "notes": "Do not run combustion generators indoors or near openings. Carbon monoxide kills quickly in enclosed spaces.",
+      "sources": [
+        {
+          "id": "off-grid-redim8",
+          "title": "RediM8 Survival Skills Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/off-grid-power",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["off grid power", "battery", "solar", "load planning"],
+      "estimated_read_minutes": 5,
+      "related_guide_ids": ["generator_safety_after_storm"],
+      "hero_icon_name": "battery"
+    },
+    {
+      "id": "shelter_building_basics",
+      "title": "Shelter Building Basics",
+      "category": "bushcraft",
+      "region": "general",
+      "risk_level": "advisory",
+      "summary": "Emergency shelter is mainly about wind protection, insulation from the ground, drainage, and keeping work simple enough to finish before dark.",
+      "steps": [
+        "Choose higher ground that avoids flood paths, dead branches, and exposed ridgelines.",
+        "Block wind first with tarp, vehicle, terrain, or vegetation before worrying about comfort.",
+        "Insulate the ground layer with dry material so body heat is not lost downward.",
+        "Keep the shelter low, stable, and easy to repair with the materials you already have."
+      ],
+      "notes": "Do not build in dry creek beds, under unstable trees, or where you cannot evacuate quickly if weather worsens.",
+      "sources": [
+        {
+          "id": "shelter-redim8",
+          "title": "RediM8 Survival Skills Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/shelter-building",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["shelter building", "tarp", "wind protection", "ground insulation"],
+      "estimated_read_minutes": 5,
+      "related_guide_ids": ["tarp_ridgeline_setup"],
+      "hero_icon_name": "tent"
+    },
+    {
+      "id": "food_preservation_without_grid",
+      "title": "Food Preservation Without Grid Power",
+      "category": "foodCooking",
+      "region": "general",
+      "risk_level": "advisory",
+      "summary": "During outages, preserving food starts with triage: eat what spoils first, reduce repeated warming, and switch to drying, pickling, or high-salt methods where appropriate.",
+      "steps": [
+        "Keep fridge and freezer doors closed and move quickly through the most perishable foods first.",
+        "Cook vulnerable foods early if safe heat is available, then consume or preserve them promptly.",
+        "Use drying, pickling, high-salt curing, or jam-making only when you already know the method and have clean gear.",
+        "Discard food that has been warm too long, smells wrong, or shows spoilage."
+      ],
+      "notes": "When in doubt, throw it out. Food poisoning during a disaster creates a second emergency.",
+      "sources": [
+        {
+          "id": "preserve-redim8",
+          "title": "RediM8 Survival Skills Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/food-preservation",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["food preservation", "blackout food", "drying", "pickling"],
+      "estimated_read_minutes": 5,
+      "related_guide_ids": ["blackout_food_safety"],
+      "hero_icon_name": "food"
+    }
+  ]
+}

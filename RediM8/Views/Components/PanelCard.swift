@@ -1,10 +1,221 @@
 import SwiftUI
 
+// MARK: - Command Card
+
+enum RediCommandCardLayout {
+    case block
+    case rail
+}
+
+enum RediCommandCardProminence {
+    case neutral
+    case accented
+    case critical
+
+    func atmosphere(tint: Color, hasImage: Bool, isEnabled: Bool) -> Color { .clear }
+    func edgeColor(tint: Color, isEnabled: Bool) -> Color { ColorTheme.divider }
+    func shadowColor(tint: Color, isEnabled: Bool) -> Color { .clear }
+}
+
+private enum RediCommandCardIcon {
+    case system(String)
+    case redi(String)
+}
+
+struct RediCommandCard: View {
+    let title: String
+    let detail: String?
+    let tint: Color
+    let badge: String?
+    let prominence: RediCommandCardProminence
+    let layout: RediCommandCardLayout
+    let isEnabled: Bool
+    let backgroundAssetName: String?
+    let backgroundImageOffset: CGSize
+    let minHeight: CGFloat?
+
+    private let icon: RediCommandCardIcon
+
+    init(
+        title: String,
+        detail: String? = nil,
+        systemImage: String,
+        tint: Color,
+        badge: String? = nil,
+        prominence: RediCommandCardProminence = .neutral,
+        layout: RediCommandCardLayout = .block,
+        isEnabled: Bool = true,
+        backgroundAssetName: String? = nil,
+        backgroundImageOffset: CGSize = .zero,
+        minHeight: CGFloat? = nil
+    ) {
+        self.title = title
+        self.detail = detail
+        self.tint = tint
+        self.badge = badge
+        self.prominence = prominence
+        self.layout = layout
+        self.isEnabled = isEnabled
+        self.backgroundAssetName = backgroundAssetName
+        self.backgroundImageOffset = backgroundImageOffset
+        self.minHeight = minHeight
+        icon = .system(systemImage)
+    }
+
+    init(
+        title: String,
+        detail: String? = nil,
+        iconName: String,
+        tint: Color,
+        badge: String? = nil,
+        prominence: RediCommandCardProminence = .neutral,
+        layout: RediCommandCardLayout = .block,
+        isEnabled: Bool = true,
+        backgroundAssetName: String? = nil,
+        backgroundImageOffset: CGSize = .zero,
+        minHeight: CGFloat? = nil
+    ) {
+        self.title = title
+        self.detail = detail
+        self.tint = tint
+        self.badge = badge
+        self.prominence = prominence
+        self.layout = layout
+        self.isEnabled = isEnabled
+        self.backgroundAssetName = backgroundAssetName
+        self.backgroundImageOffset = backgroundImageOffset
+        self.minHeight = minHeight
+        icon = .redi(iconName)
+    }
+
+    var body: some View {
+        let commandHeight = minHeight ?? (layout == .block ? 96 : 64)
+
+        Group {
+            switch layout {
+            case .block: blockLayout
+            case .rail: railLayout
+            }
+        }
+        .padding(RediSpacing.card)
+        .frame(maxWidth: .infinity, minHeight: commandHeight, alignment: .leading)
+        .background(ColorTheme.graphite)
+        .clipShape(RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                .stroke(ColorTheme.divider, lineWidth: 0.5)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+        .opacity(isEnabled ? 1 : 0.5)
+    }
+
+    private var blockLayout: some View {
+        VStack(alignment: .leading, spacing: RediSpacing.compact) {
+            HStack(alignment: .top, spacing: RediSpacing.compact) {
+                commandIcon
+                Spacer(minLength: 0)
+                if let badge, !badge.isEmpty {
+                    commandBadge(badge)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: RediSpacing.micro) {
+                Text(title)
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.text)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let detail, !detail.isEmpty {
+                    Text(detail)
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    private var railLayout: some View {
+        HStack(alignment: .center, spacing: RediSpacing.content) {
+            commandIcon
+
+            VStack(alignment: .leading, spacing: RediSpacing.micro) {
+                Text(title)
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.text)
+                    .lineLimit(1)
+
+                if let detail, !detail.isEmpty {
+                    Text(detail)
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.textSecondary)
+                        .lineLimit(2)
+                }
+            }
+
+            Spacer(minLength: RediSpacing.compact)
+
+            if let badge, !badge.isEmpty {
+                commandBadge(badge)
+            }
+        }
+    }
+
+    private var commandIcon: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: RediRadius.button, style: .continuous)
+                .fill(ColorTheme.gunmetal)
+                .frame(width: 36, height: 36)
+
+            RoundedRectangle(cornerRadius: RediRadius.button, style: .continuous)
+                .stroke(ColorTheme.divider, lineWidth: 0.5)
+                .frame(width: 36, height: 36)
+
+            Group {
+                switch icon {
+                case let .system(name):
+                    Image(systemName: name)
+                case let .redi(name):
+                    RediIcon(name)
+                }
+            }
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundStyle(effectiveTint)
+            .frame(width: 16, height: 16)
+        }
+    }
+
+    private func commandBadge(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(RediTypography.label)
+            .tracking(1.2)
+            .foregroundStyle(effectiveTint)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(effectiveTint.opacity(0.10), in: RoundedRectangle(cornerRadius: RediRadius.chip, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: RediRadius.chip, style: .continuous)
+                    .stroke(effectiveTint.opacity(0.16), lineWidth: 0.5)
+            )
+    }
+
+    private var effectiveTint: Color {
+        isEnabled ? tint : ColorTheme.textTertiary
+    }
+}
+
+// MARK: - Panel Card
+
 struct PanelCard<Content: View>: View {
     let title: String?
     let subtitle: String?
     let backgroundAssetName: String?
     let backgroundImageOffset: CGSize
+    let surfaceImageOpacity: Double
+    let surfaceImageBrightness: Double
+    let surfaceAtmosphere: Color?
+    let surfaceEdgeColor: Color?
+    let surfaceShadowColor: Color?
     private let content: Content
 
     init(
@@ -12,28 +223,36 @@ struct PanelCard<Content: View>: View {
         subtitle: String? = nil,
         backgroundAssetName: String? = nil,
         backgroundImageOffset: CGSize = .zero,
+        surfaceImageOpacity: Double = 1,
+        surfaceImageBrightness: Double = -0.04,
+        surfaceAtmosphere: Color? = nil,
+        surfaceEdgeColor: Color? = nil,
+        surfaceShadowColor: Color? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
         self.subtitle = subtitle
         self.backgroundAssetName = backgroundAssetName
         self.backgroundImageOffset = backgroundImageOffset
+        self.surfaceImageOpacity = surfaceImageOpacity
+        self.surfaceImageBrightness = surfaceImageBrightness
+        self.surfaceAtmosphere = surfaceAtmosphere
+        self.surfaceEdgeColor = surfaceEdgeColor
+        self.surfaceShadowColor = surfaceShadowColor
         self.content = content()
     }
 
     var body: some View {
-        let cornerRadius = RediRadius.card
-
-        return VStack(alignment: .leading, spacing: RediSpacing.content) {
+        VStack(alignment: .leading, spacing: RediSpacing.content) {
             if let title {
                 VStack(alignment: .leading, spacing: RediSpacing.micro) {
                     Text(title)
-                        .font(RediTypography.sectionTitle)
+                        .font(RediTypography.heading)
                         .foregroundStyle(ColorTheme.text)
                     if let subtitle {
                         Text(subtitle)
-                            .font(RediTypography.bodyCompact)
-                            .foregroundStyle(ColorTheme.textMuted)
+                            .font(RediTypography.body)
+                            .foregroundStyle(ColorTheme.textSecondary)
                     }
                 }
             }
@@ -42,18 +261,16 @@ struct PanelCard<Content: View>: View {
         }
         .padding(RediSpacing.card)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: cornerRadius,
-                backgroundAssetName: backgroundAssetName,
-                backgroundImageOffset: backgroundImageOffset,
-                atmosphere: backgroundAssetName == nil ? ColorTheme.accent.opacity(0.08) : ColorTheme.premium.opacity(0.1)
-            )
+        .background(ColorTheme.panel)
+        .clipShape(RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                .stroke(ColorTheme.divider, lineWidth: 0.5)
         )
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: cornerRadius))
     }
 }
+
+// MARK: - Hero Panel
 
 struct HeroPanel<Content: View>: View {
     let eyebrow: String?
@@ -66,11 +283,9 @@ struct HeroPanel<Content: View>: View {
     let shimmerColor: Color?
     let backgroundAssetName: String?
     let backgroundImageOffset: CGSize
+    let chromeEdgeColor: Color?
+    let chromeShadowColor: Color?
     private let content: Content
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isBreathing = false
-    @State private var shimmerPhase: CGFloat = -0.24
 
     init(
         eyebrow: String? = nil,
@@ -83,6 +298,8 @@ struct HeroPanel<Content: View>: View {
         shimmerColor: Color? = nil,
         backgroundAssetName: String? = nil,
         backgroundImageOffset: CGSize = .zero,
+        chromeEdgeColor: Color? = nil,
+        chromeShadowColor: Color? = nil,
         @ViewBuilder content: () -> Content
     ) {
         self.eyebrow = eyebrow
@@ -95,54 +312,46 @@ struct HeroPanel<Content: View>: View {
         self.shimmerColor = shimmerColor
         self.backgroundAssetName = backgroundAssetName
         self.backgroundImageOffset = backgroundImageOffset
+        self.chromeEdgeColor = chromeEdgeColor
+        self.chromeShadowColor = chromeShadowColor
         self.content = content()
     }
 
     var body: some View {
-        let cornerRadius = RediRadius.hero
-
-        return VStack(alignment: .leading, spacing: RediSpacing.section) {
+        VStack(alignment: .leading, spacing: RediSpacing.section) {
             HStack(alignment: .top, spacing: RediSpacing.content) {
                 if let iconName {
                     ZStack {
                         RoundedRectangle(cornerRadius: RediRadius.button, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [
-                                        ColorTheme.panelElevated.opacity(0.96),
-                                        accent.opacity(0.14)
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 64, height: 64)
+                            .fill(ColorTheme.gunmetal)
+                            .frame(width: 48, height: 48)
 
                         RoundedRectangle(cornerRadius: RediRadius.button, style: .continuous)
-                            .stroke(accent.opacity(0.3), lineWidth: 1)
-                            .frame(width: 64, height: 64)
+                            .stroke(ColorTheme.divider, lineWidth: 0.5)
+                            .frame(width: 48, height: 48)
 
                         RediIcon(iconName)
-                            .foregroundStyle(accent)
-                            .frame(width: 28, height: 28)
+                            .foregroundStyle(ColorTheme.accent)
+                            .frame(width: 20, height: 20)
                     }
                 }
 
-                VStack(alignment: .leading, spacing: RediSpacing.tight) {
+                VStack(alignment: .leading, spacing: RediSpacing.micro) {
                     if let eyebrow {
                         Text(eyebrow.uppercased())
-                            .font(RediTypography.sectionEyebrow)
+                            .font(RediTypography.label)
+                            .tracking(1.2)
                             .foregroundStyle(accent)
                     }
 
                     Text(title)
-                        .font(RediTypography.heroTitle)
+                        .font(RediTypography.display)
                         .foregroundStyle(ColorTheme.text)
                         .fixedSize(horizontal: false, vertical: true)
 
                     Text(subtitle)
-                        .font(RediTypography.heroSubtitle)
-                        .foregroundStyle(ColorTheme.textMuted)
+                        .font(RediTypography.body)
+                        .foregroundStyle(ColorTheme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -153,268 +362,60 @@ struct HeroPanel<Content: View>: View {
         }
         .padding(RediSpacing.card)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: cornerRadius,
-                backgroundAssetName: backgroundAssetName,
-                backgroundImageOffset: backgroundImageOffset,
-                atmosphere: atmosphere ?? accent.opacity(backgroundAssetName == nil ? 0.24 : 0.16),
-                imageTopShadeOpacity: 0.32,
-                imageBottomShadeOpacity: 0.8,
-                brightness: -0.03,
-                glowScale: reduceMotion || !showsBreathing ? 1 : (isBreathing ? 1.04 : 0.98),
-                glowOpacity: reduceMotion || !showsBreathing ? 0.94 : (isBreathing ? 0.96 : 0.84),
-                shimmerColor: shimmerColor,
-                shimmerPhase: shimmerPhase
-            )
+        .background(ColorTheme.graphite)
+        .clipShape(RoundedRectangle(cornerRadius: RediRadius.hero, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: RediRadius.hero, style: .continuous)
+                .stroke(ColorTheme.dividerStrong, lineWidth: 0.5)
         )
-        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: cornerRadius, edgeColor: accent.opacity(0.16), shadowColor: accent.opacity(0.1)))
-        .onAppear(perform: startHeroMotion)
-        .onChange(of: showsBreathing) { _, _ in
-            startHeroMotion()
-        }
-        .onChange(of: shimmerColor != nil) { _, _ in
-            startHeroMotion()
-        }
-    }
-
-    private func startHeroMotion() {
-        if showsBreathing && !reduceMotion {
-            withAnimation(RediMotion.breathe) {
-                isBreathing = true
-            }
-        } else {
-            isBreathing = false
-        }
-
-        guard shimmerColor != nil else { return }
-
-        if reduceMotion {
-            shimmerPhase = -0.2
-            return
-        }
-
-        shimmerPhase = -1.05
-        withAnimation(RediMotion.shimmer) {
-            shimmerPhase = 1.1
-        }
     }
 }
 
+// MARK: - Legacy Surface Types (no-op for compilation)
+
 struct PremiumSurfaceBackground: View {
     let cornerRadius: CGFloat
-    let backgroundAssetName: String?
-    let backgroundImageOffset: CGSize
-    let atmosphere: Color
-    var imageTopShadeOpacity: Double = 0.28
-    var imageBottomShadeOpacity: Double = 0.76
-    var brightness: Double = -0.04
+    var backgroundAssetName: String? = nil
+    var backgroundImageOffset: CGSize = .zero
+    var atmosphere: Color = .clear
+    var imageOpacity: Double = 1
+    var imageTopShadeOpacity: Double = 0
+    var imageBottomShadeOpacity: Double = 0
+    var brightness: Double = 0
     var glowScale: CGFloat = 1
-    var glowOpacity: Double = 0.92
+    var glowOpacity: Double = 1
     var shimmerColor: Color? = nil
-    var shimmerPhase: CGFloat = -0.2
+    var shimmerPhase: CGFloat = 0
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            ColorTheme.panelElevated.opacity(0.96),
-                            ColorTheme.panelRaised.opacity(0.94),
-                            ColorTheme.panel.opacity(0.96)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-
-            if let backgroundAssetName {
-                GeometryReader { proxy in
-                    Image(backgroundAssetName)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: proxy.size.width, height: proxy.size.height)
-                        .scaleEffect(1.05)
-                        .offset(backgroundImageOffset)
-                        .saturation(0.92)
-                        .contrast(1.04)
-                        .brightness(brightness)
-                        .overlay {
-                            ZStack {
-                                LinearGradient(
-                                    colors: [
-                                        Color.black.opacity(imageTopShadeOpacity),
-                                        Color.black.opacity(0.52),
-                                        Color.black.opacity(imageBottomShadeOpacity)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-
-                                LinearGradient(
-                                    colors: [
-                                        Color.black.opacity(0.52),
-                                        Color.clear,
-                                        Color.black.opacity(0.34)
-                                    ],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-
-                                RadialGradient(
-                                    colors: [
-                                        Color.clear,
-                                        Color.black.opacity(0.12),
-                                        Color.black.opacity(0.34)
-                                    ],
-                                    center: .center,
-                                    startRadius: 36,
-                                    endRadius: max(proxy.size.width, proxy.size.height)
-                                )
-                            }
-                        }
-                        .clipped()
-                }
-                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            }
-
-            Circle()
-                .fill(atmosphere)
-                .blur(radius: 48)
-                .frame(width: 220, height: 220)
-                .offset(x: 88, y: -90)
-                .scaleEffect(glowScale)
-                .opacity(glowOpacity)
-
-            if let shimmerColor {
-                GeometryReader { proxy in
-                    LinearGradient(
-                        colors: [
-                            .clear,
-                            shimmerColor.opacity(0.02),
-                            shimmerColor.opacity(0.28),
-                            shimmerColor.opacity(0.02),
-                            .clear
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(width: proxy.size.width * 0.44, height: proxy.size.height * 1.8)
-                    .rotationEffect(.degrees(-18))
-                    .blur(radius: 5)
-                    .offset(
-                        x: proxy.size.width * shimmerPhase,
-                        y: -proxy.size.height * 0.12
-                    )
-                    .blendMode(.screen)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            }
-
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            ColorTheme.glassHighlight,
-                            Color.clear,
-                            Color.black.opacity(0.08)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-        }
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(ColorTheme.panel)
     }
 }
 
 struct PremiumSurfaceChrome: ViewModifier {
     let cornerRadius: CGFloat
-    var edgeColor: Color = ColorTheme.dividerStrong
-    var shadowColor: Color = ColorTheme.shadow
+    var edgeColor: Color = ColorTheme.divider
+    var shadowColor: Color = .clear
+    var interactionProgress: CGFloat = 0
+    var highlightColor: Color = .clear
 
     func body(content: Content) -> some View {
         content
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(edgeColor, lineWidth: 1)
+                    .stroke(ColorTheme.divider, lineWidth: 0.5)
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(ColorTheme.hairline, lineWidth: 1)
-                    .blur(radius: 0.6)
-            )
-            .shadow(color: shadowColor, radius: 24, y: 12)
-            .shadow(color: ColorTheme.deepShadow.opacity(0.36), radius: 48, y: 24)
     }
 }
 
-private struct PremiumModalBackdrop: View {
-    let style: AmbientBackgroundStyle
-    let accent: Color
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isLit = false
-
-    var body: some View {
-        ZStack {
-            AmbientBackground(style: style)
-
-            LinearGradient(
-                colors: [
-                    Color.white.opacity(0.03),
-                    .clear,
-                    Color.black.opacity(0.2)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-
-            Circle()
-                .fill(accent.opacity(isLit ? 0.14 : 0.08))
-                .blur(radius: isLit ? 64 : 44)
-                .frame(width: 260, height: 260)
-                .offset(x: 0, y: -170)
-
-            VStack(spacing: 0) {
-                Rectangle()
-                    .fill(ColorTheme.glassHighlight.opacity(0.7))
-                    .frame(height: 1)
-                Spacer()
-            }
-        }
-        .ignoresSafeArea()
-        .onAppear {
-            guard !reduceMotion else {
-                isLit = false
-                return
-            }
-
-            withAnimation(RediMotion.breathe) {
-                isLit = true
-            }
-        }
-    }
-}
-
-private struct PremiumSheetPresentationModifier: ViewModifier {
-    let style: AmbientBackgroundStyle
-    let accent: Color
-
-    func body(content: Content) -> some View {
-        content
-            .background {
-                PremiumModalBackdrop(style: style, accent: accent)
-            }
-            .presentationBackground(.clear)
-            .presentationCornerRadius(RediRadius.hero)
-            .presentationDragIndicator(.visible)
-    }
-}
+// MARK: - Sheet Presentation
 
 extension View {
-    func rediSheetPresentation(style: AmbientBackgroundStyle, accent: Color) -> some View {
-        modifier(PremiumSheetPresentationModifier(style: style, accent: accent))
+    func rediSheetPresentation(style: AmbientBackgroundStyle = .neutral, accent: Color = ColorTheme.accent) -> some View {
+        self
+            .presentationBackground(ColorTheme.background)
+            .presentationCornerRadius(RediRadius.hero)
+            .presentationDragIndicator(.visible)
     }
 }

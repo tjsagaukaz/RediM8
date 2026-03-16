@@ -76,7 +76,7 @@ struct Emergency72HourView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Text(section.title)
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(ColorTheme.info)
+                                .foregroundStyle(ColorTheme.accent)
 
                             ForEach(section.items) { item in
                                 Toggle(

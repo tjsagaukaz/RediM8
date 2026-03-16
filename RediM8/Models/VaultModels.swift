@@ -77,6 +77,21 @@ enum VaultCategory: String, CaseIterable, Codable, Identifiable {
             false
         }
     }
+
+    var quickAccessPriority: Int {
+        switch self {
+        case .identity:
+            0
+        case .medical:
+            1
+        case .insurance:
+            2
+        case .emergencyContacts:
+            3
+        case .property, .vehicle, .pets:
+            9
+        }
+    }
 }
 
 enum VaultDocumentSource: String, Codable, CaseIterable {

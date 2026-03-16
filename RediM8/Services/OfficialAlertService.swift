@@ -122,18 +122,22 @@ final class OfficialAlertService: ObservableObject {
         }
 
         if mergedAlerts.isEmpty {
-            if !hasCachedData {
+            if availableSources.isEmpty, !hasCachedData {
                 lastRefreshError = "No cached official warnings available yet. Connect once to mirror current public alerts."
-            } else if !failures.isEmpty {
+            } else if availableSources.isEmpty, !failures.isEmpty {
                 lastRefreshError = "Official warning refresh failed. Showing the last cached snapshot."
             }
+        }
+
+        guard !availableSources.isEmpty else {
             return
         }
 
-        library = OfficialAlertLibrary(
-            lastUpdated: .now,
-            sources: availableSources,
-            alerts: Self.deduplicate(alerts: mergedAlerts)
+        library = mergedLibrary(
+            refreshedAlerts: mergedAlerts,
+            refreshedSources: availableSources,
+            failures: failures,
+            referenceDate: .now
         )
         try? store?.save(library, for: StorageKey.library)
 
@@ -147,6 +151,41 @@ final class OfficialAlertService: ObservableObject {
                 lastRefreshError = "Some official feeds could not be refreshed. Showing the latest successful snapshot."
             }
         }
+    }
+
+    private func mergedLibrary(
+        refreshedAlerts: [OfficialAlert],
+        refreshedSources: [OfficialAlertSource],
+        failures: [FeedSource],
+        referenceDate: Date
+    ) -> OfficialAlertLibrary {
+        let preservedSourceMatches: (OfficialAlert, FeedSource) -> Bool = { alert, source in
+            alert.jurisdiction == source.jurisdiction
+                && (alert.sourceName == source.name || alert.sourceURLString == source.url.absoluteString)
+        }
+        let preservedSources = failures.map { failedSource in
+            library.sources.first(where: { $0.id == failedSource.id })
+                ?? OfficialAlertSource(
+                    id: failedSource.id,
+                    name: failedSource.name,
+                    jurisdiction: failedSource.jurisdiction,
+                    urlString: failedSource.url.absoluteString
+                )
+        }
+        let preservedAlerts = library.alerts.filter { alert in
+            failures.contains(where: { preservedSourceMatches(alert, $0) })
+        }
+
+        let combinedSources = (refreshedSources + preservedSources).reduce(into: [OfficialAlertSource]()) { result, source in
+            guard !result.contains(where: { $0.id == source.id }) else { return }
+            result.append(source)
+        }
+
+        return OfficialAlertLibrary(
+            lastUpdated: referenceDate,
+            sources: combinedSources,
+            alerts: Self.deduplicate(alerts: refreshedAlerts + preservedAlerts)
+        )
     }
 
     func nearbyAlerts(currentLocation: CLLocation?, installedPacks: [OfflineMapPack]) -> [OfficialAlert] {

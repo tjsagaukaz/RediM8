@@ -19,7 +19,9 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
     let officialAlerts: [OfficialAlert]
     let beacons: [CommunityBeacon]
     let currentLocation: CLLocation?
+    let heading: CLLocationDirection
     let showsUserLocation: Bool
+    let showsDistanceRings: Bool
     let animatesRegionChanges: Bool
     let onSelectShelter: (String?) -> Void
 
@@ -30,7 +32,7 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
     func updateUIView(_ mapView: MLNMapView, context: Context) {
         context.coordinator.parent = self
         context.coordinator.applyStyleIfNeeded(on: mapView)
-        mapView.showsUserLocation = showsUserLocation
+        mapView.showsUserLocation = false
         context.coordinator.refreshIfNeeded(on: mapView)
     }
 
@@ -43,6 +45,7 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
             static let corridorContext = "redim8-corridor-context-source"
             static let graticule = "redim8-graticule-source"
             static let distanceRings = "redim8-distance-rings-source"
+            static let currentLocation = "redim8-current-location-source"
             static let resources = "redim8-resources-source"
             static let dirtRoads = "redim8-dirt-roads-source"
             static let fireTrails = "redim8-fire-trails-source"
@@ -61,6 +64,9 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
             static let installedPackLabels = "redim8-installed-pack-labels-layer"
             static let graticule = "redim8-graticule-layer"
             static let distanceRings = "redim8-distance-rings-layer"
+            static let currentLocationPulse = "redim8-current-location-pulse-layer"
+            static let currentLocationCore = "redim8-current-location-core-layer"
+            static let currentLocationHeading = "redim8-current-location-heading-layer"
             static let dirtRoads = "redim8-dirt-roads-layer"
             static let fireTrails = "redim8-fire-trails-layer"
             static let resources = "redim8-resources-layer"
@@ -78,6 +84,7 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
             static let capacity = "capacity"
             static let quality = "quality"
             static let kind = "kind"
+            static let heading = "heading"
         }
 
         var parent: MapLibreEmergencyMapView
@@ -189,6 +196,31 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
                 width: 1.2,
                 dashPattern: [1.2, 1.4],
                 opacity: 0.72
+            )
+            ensureCircleLayer(
+                on: style,
+                sourceID: SourceID.currentLocation,
+                layerID: LayerID.currentLocationPulse,
+                fillColor: UIColor(red: 0.99, green: 0.76, blue: 0.24, alpha: 1),
+                radius: 17,
+                opacity: 0.18,
+                strokeColor: UIColor(red: 0.99, green: 0.76, blue: 0.24, alpha: 1),
+                strokeWidth: 1.2
+            )
+            ensureCircleLayer(
+                on: style,
+                sourceID: SourceID.currentLocation,
+                layerID: LayerID.currentLocationCore,
+                fillColor: UIColor.white,
+                radius: 6.5,
+                opacity: 0.96,
+                strokeColor: UIColor(red: 0.99, green: 0.76, blue: 0.24, alpha: 1),
+                strokeWidth: 2.0
+            )
+            ensureUserLocationHeadingLayer(
+                on: style,
+                sourceID: SourceID.currentLocation,
+                layerID: LayerID.currentLocationHeading
             )
             ensureLineLayer(
                 on: style,
@@ -308,6 +340,30 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
             style.addLayer(layer)
         }
 
+        private func ensureCircleLayer(
+            on style: MLNStyle,
+            sourceID: String,
+            layerID: String,
+            fillColor: UIColor,
+            radius: Double,
+            opacity: Double,
+            strokeColor: UIColor,
+            strokeWidth: Double
+        ) {
+            let source = shapeSource(on: style, sourceID: sourceID)
+            guard style.layer(withIdentifier: layerID) == nil else {
+                return
+            }
+
+            let layer = MLNCircleStyleLayer(identifier: layerID, source: source)
+            layer.circleColor = NSExpression(forConstantValue: fillColor)
+            layer.circleRadius = NSExpression(forConstantValue: radius)
+            layer.circleOpacity = NSExpression(forConstantValue: opacity)
+            layer.circleStrokeColor = NSExpression(forConstantValue: strokeColor)
+            layer.circleStrokeWidth = NSExpression(forConstantValue: strokeWidth)
+            style.addLayer(layer)
+        }
+
         private func ensureSymbolLayer(
             on style: MLNStyle,
             sourceID: String,
@@ -331,6 +387,27 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
             style.addLayer(layer)
         }
 
+        private func ensureUserLocationHeadingLayer(
+            on style: MLNStyle,
+            sourceID: String,
+            layerID: String
+        ) {
+            let source = shapeSource(on: style, sourceID: sourceID)
+            guard style.layer(withIdentifier: layerID) == nil else {
+                return
+            }
+
+            let layer = MLNSymbolStyleLayer(identifier: layerID, source: source)
+            layer.iconImageName = NSExpression(forConstantValue: "redim8-current-location-heading")
+            layer.iconScale = NSExpression(forConstantValue: 0.9)
+            layer.iconAllowsOverlap = NSExpression(forConstantValue: true)
+            layer.iconIgnoresPlacement = NSExpression(forConstantValue: true)
+            layer.iconRotation = NSExpression(forKeyPath: FeatureKey.heading)
+            layer.iconRotationAlignment = NSExpression(forConstantValue: "viewport")
+            layer.iconPitchAlignment = NSExpression(forConstantValue: "viewport")
+            style.addLayer(layer)
+        }
+
         private func registerMarkerImages(on style: MLNStyle) {
             let assetNames = Set(
                 parent.resourceMarkers.map { $0.kind.mapMarkerAssetName } +
@@ -346,6 +423,11 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
                     continue
                 }
                 style.setImage(image, forName: assetName)
+            }
+
+            if style.image(forName: "redim8-current-location-heading") == nil,
+               let locationImage = currentLocationHeadingImage() {
+                style.setImage(locationImage, forName: "redim8-current-location-heading")
             }
         }
 
@@ -409,6 +491,30 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
             }
         }
 
+        private func currentLocationHeadingImage() -> UIImage? {
+            let configuration = UIImage.SymbolConfiguration(pointSize: 22, weight: .bold)
+            guard let symbol = UIImage(systemName: "location.north.fill", withConfiguration: configuration)?
+                .withTintColor(UIColor(red: 0.99, green: 0.76, blue: 0.24, alpha: 1), renderingMode: .alwaysOriginal) else {
+                return nil
+            }
+
+            let canvasSize = CGSize(width: 30, height: 30)
+            return UIGraphicsImageRenderer(size: canvasSize).image { context in
+                let iconRect = CGRect(x: 4, y: 2, width: 22, height: 22)
+                symbol.draw(in: iconRect)
+
+                let glowRect = CGRect(x: 8, y: 15, width: 14, height: 14)
+                let glowPath = UIBezierPath(ovalIn: glowRect)
+                UIColor.white.withAlphaComponent(0.2).setFill()
+                glowPath.fill()
+
+                let coreRect = CGRect(x: 10, y: 17, width: 10, height: 10)
+                let corePath = UIBezierPath(ovalIn: coreRect)
+                UIColor.white.setFill()
+                corePath.fill()
+            }
+        }
+
         private func refreshSources(on style: MLNStyle) {
             let regionSignature = "\(parent.region.center.latitude):\(parent.region.center.longitude):\(parent.region.span.latitudeDelta):\(parent.region.span.longitudeDelta)"
             let availablePackSignature = parent.availablePacks.map {
@@ -418,7 +524,7 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
             let corridorContextSignature = (parent.contextDirtRoads + parent.contextFireTrails)
                 .map { "\($0.id):\($0.kind.rawValue)" }
                 .joined(separator: ",")
-            let locationSignature = parent.currentLocation.map { "\($0.coordinate.latitude):\($0.coordinate.longitude)" } ?? "no-location"
+            let locationSignature = parent.currentLocation.map { "\($0.coordinate.latitude):\($0.coordinate.longitude):\(parent.heading)" } ?? "no-location"
             let resourceSignature = parent.resourceMarkers.map { "\($0.id.uuidString):\($0.kind.rawValue):\($0.latitude):\($0.longitude)" }.joined(separator: ",")
             let dirtRoadSignature = parent.dirtRoads.map { "\($0.id):\($0.kind.rawValue)" }.joined(separator: ",")
             let fireTrailSignature = parent.fireTrails.map { "\($0.id):\($0.kind.rawValue)" }.joined(separator: ",")
@@ -435,6 +541,7 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
                 installedPackSignature,
                 corridorContextSignature,
                 locationSignature,
+                parent.showsDistanceRings ? "rings-on" : "rings-off",
                 resourceSignature,
                 dirtRoadSignature,
                 fireTrailSignature,
@@ -455,6 +562,7 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
             updateShapeSource(on: style, sourceID: SourceID.corridorContext, shapes: lineShapes(from: parent.contextDirtRoads + parent.contextFireTrails))
             updateShapeSource(on: style, sourceID: SourceID.graticule, shapes: graticuleShapes())
             updateShapeSource(on: style, sourceID: SourceID.distanceRings, shapes: distanceRingShapes())
+            updateShapeSource(on: style, sourceID: SourceID.currentLocation, shapes: currentLocationShapes())
             updateShapeSource(on: style, sourceID: SourceID.resources, shapes: resourceShapes())
             updateShapeSource(on: style, sourceID: SourceID.dirtRoads, shapes: lineShapes(from: parent.dirtRoads))
             updateShapeSource(on: style, sourceID: SourceID.fireTrails, shapes: lineShapes(from: parent.fireTrails))
@@ -506,6 +614,19 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
 
         private var installedPacks: [OfflineMapPack] {
             parent.availablePacks.filter { parent.installedPackIDs.contains($0.id) }
+        }
+
+        private func currentLocationShapes() -> [MLNShape] {
+            guard parent.showsUserLocation, let coordinate = parent.currentLocation?.coordinate else {
+                return []
+            }
+
+            let feature = MLNPointFeature()
+            feature.coordinate = coordinate
+            feature.attributes = [
+                FeatureKey.heading: parent.heading
+            ]
+            return [feature]
         }
 
         private func resourceShapes() -> [MLNShape] {
@@ -662,11 +783,11 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
         }
 
         private func distanceRingShapes() -> [MLNShape] {
-            guard let center = parent.currentLocation?.coordinate else {
+            guard parent.showsDistanceRings, let center = parent.currentLocation?.coordinate else {
                 return []
             }
 
-            return [10_000.0, 25_000.0, 50_000.0].map { radius in
+            return [1_000.0, 5_000.0, 10_000.0].map { radius in
                 var coordinates = circleCoordinates(center: center, radiusMeters: radius)
                 return MLNPolylineFeature(coordinates: &coordinates, count: UInt(coordinates.count))
             }
@@ -740,7 +861,7 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
         mapView.delegate = context.coordinator
         mapView.isPitchEnabled = false
         mapView.isRotateEnabled = false
-        mapView.showsUserLocation = showsUserLocation
+        mapView.showsUserLocation = false
         mapView.tintColor = UIColor(ColorTheme.accent)
 
         let tapRecognizer = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleMapTap(_:)))
@@ -773,7 +894,9 @@ struct AppleEmergencyMapView: UIViewRepresentable {
     let officialAlerts: [OfficialAlert]
     let beacons: [CommunityBeacon]
     let currentLocation: CLLocation?
+    let heading: CLLocationDirection
     let showsUserLocation: Bool
+    let showsDistanceRings: Bool
     let animatesRegionChanges: Bool
     let onSelectShelter: (String?) -> Void
 
@@ -803,6 +926,7 @@ struct AppleEmergencyMapView: UIViewRepresentable {
         }
         mapView.showsUserLocation = showsUserLocation
         context.coordinator.refreshIfNeeded(on: mapView)
+        context.coordinator.updateUserLocationHeading()
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
@@ -810,6 +934,7 @@ struct AppleEmergencyMapView: UIViewRepresentable {
         weak var mapView: MKMapView?
         private var lastRenderedSignature = ""
         private var lastRegionRevision = -1
+        private weak var userLocationView: AppleUserLocationAnnotationView?
 
         init(parent: AppleEmergencyMapView) {
             self.parent = parent
@@ -831,7 +956,9 @@ struct AppleEmergencyMapView: UIViewRepresentable {
                 waterPointSignature(for: parent.waterPoints),
                 shelterSignature(for: parent.shelters),
                 officialAlertSignature(for: parent.officialAlerts),
-                beaconSignature(for: parent.beacons)
+                beaconSignature(for: parent.beacons),
+                parent.showsDistanceRings ? "rings-on" : "rings-off",
+                parent.currentLocation.map { "\($0.coordinate.latitude):\($0.coordinate.longitude)" } ?? "no-location"
             ].joined(separator: "|")
 
             guard signature != lastRenderedSignature else {
@@ -845,6 +972,7 @@ struct AppleEmergencyMapView: UIViewRepresentable {
                 + beaconAnnotations()
 
             let overlays = packCoverageOverlays()
+                + distanceRingOverlays()
                 + officialAlertAreaOverlays()
                 + dirtRoadOverlays()
                 + fireTrailOverlays()
@@ -856,6 +984,10 @@ struct AppleEmergencyMapView: UIViewRepresentable {
             mapView.addAnnotations(annotations)
 
             lastRenderedSignature = signature
+        }
+
+        func updateUserLocationHeading() {
+            userLocationView?.updateHeading(parent.heading)
         }
 
         private func applyRegionIfNeeded(on mapView: MKMapView) {
@@ -975,6 +1107,18 @@ struct AppleEmergencyMapView: UIViewRepresentable {
             return availableOverlays + installedOverlays
         }
 
+        private func distanceRingOverlays() -> [MKOverlay] {
+            guard parent.showsDistanceRings, let coordinate = parent.currentLocation?.coordinate else {
+                return []
+            }
+
+            return [1_000.0, 5_000.0, 10_000.0].map { radius in
+                let circle = MKCircle(center: coordinate, radius: radius)
+                circle.title = AppleMapOverlayKind.distanceRing.rawValue
+                return circle
+            }
+        }
+
         private func officialAlertAreaOverlays() -> [MKOverlay] {
             parent.officialAlerts.compactMap { alert in
                 guard let coordinate = alert.coordinate, let area = alert.area else {
@@ -1056,6 +1200,14 @@ struct AppleEmergencyMapView: UIViewRepresentable {
                 renderer.lineWidth = 2.8
                 renderer.lineDashPattern = [3, 2]
                 return renderer
+            case AppleMapOverlayKind.distanceRing.rawValue:
+                let renderer = MKCircleRenderer(overlay: overlay)
+                let tint = UIColor(red: 0.16, green: 1.0, blue: 0.64, alpha: 1)
+                renderer.fillColor = .clear
+                renderer.strokeColor = tint.withAlphaComponent(0.7)
+                renderer.lineWidth = 1.2
+                renderer.lineDashPattern = [3, 3]
+                return renderer
             case AppleMapOverlayKind.alertAdviceArea.rawValue,
                  AppleMapOverlayKind.alertWatchArea.rawValue,
                  AppleMapOverlayKind.alertEmergencyArea.rawValue:
@@ -1072,6 +1224,16 @@ struct AppleEmergencyMapView: UIViewRepresentable {
         }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            if annotation is MKUserLocation {
+                let identifier = "user-location"
+                let view = (mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? AppleUserLocationAnnotationView)
+                    ?? AppleUserLocationAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                view.annotation = annotation
+                view.updateHeading(parent.heading)
+                userLocationView = view
+                return view
+            }
+
             guard let annotation = annotation as? AppleMapFeatureAnnotation else {
                 return nil
             }
@@ -1178,6 +1340,7 @@ private enum AppleMapOverlayKind: String {
     case installedPackCoverage = "installed-pack-coverage"
     case dirtRoad = "dirt-road"
     case fireTrail = "fire-trail"
+    case distanceRing = "distance-ring"
     case alertAdviceArea = "alert-advice-area"
     case alertWatchArea = "alert-watch-area"
     case alertEmergencyArea = "alert-emergency-area"
@@ -1202,6 +1365,81 @@ private enum AppleMapOverlayKind: String {
         default:
             UIColor(ColorTheme.info)
         }
+    }
+}
+
+private final class AppleUserLocationAnnotationView: MKAnnotationView {
+    private let pulseLayer = CAShapeLayer()
+    private let ringLayer = CAShapeLayer()
+    private let coreLayer = CAShapeLayer()
+    private let arrowImageView = UIImageView()
+
+    override init(annotation: (any MKAnnotation)?, reuseIdentifier: String?) {
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
+        frame = CGRect(x: 0, y: 0, width: 44, height: 44)
+        centerOffset = .zero
+        collisionMode = .circle
+        displayPriority = .required
+        isOpaque = false
+        canShowCallout = false
+
+        pulseLayer.fillColor = UIColor(red: 0.99, green: 0.76, blue: 0.24, alpha: 0.16).cgColor
+        layer.addSublayer(pulseLayer)
+
+        ringLayer.fillColor = UIColor.clear.cgColor
+        ringLayer.strokeColor = UIColor(red: 0.99, green: 0.76, blue: 0.24, alpha: 0.8).cgColor
+        ringLayer.lineWidth = 2
+        layer.addSublayer(ringLayer)
+
+        coreLayer.fillColor = UIColor.white.cgColor
+        coreLayer.strokeColor = UIColor(red: 0.99, green: 0.76, blue: 0.24, alpha: 1).cgColor
+        coreLayer.lineWidth = 2
+        layer.addSublayer(coreLayer)
+
+        arrowImageView.image = UIImage(
+            systemName: "location.north.fill",
+            withConfiguration: UIImage.SymbolConfiguration(pointSize: 18, weight: .bold)
+        )?.withTintColor(UIColor(red: 0.99, green: 0.76, blue: 0.24, alpha: 1), renderingMode: .alwaysOriginal)
+        arrowImageView.frame = CGRect(x: 11, y: 5, width: 22, height: 22)
+        arrowImageView.contentMode = .scaleAspectFit
+        addSubview(arrowImageView)
+
+        let scaleAnimation = CABasicAnimation(keyPath: "transform.scale")
+        scaleAnimation.fromValue = 0.92
+        scaleAnimation.toValue = 1.12
+        scaleAnimation.duration = 1.4
+        scaleAnimation.autoreverses = true
+        scaleAnimation.repeatCount = .infinity
+
+        let opacityAnimation = CABasicAnimation(keyPath: "opacity")
+        opacityAnimation.fromValue = 0.22
+        opacityAnimation.toValue = 0.08
+        opacityAnimation.duration = 1.4
+        opacityAnimation.autoreverses = true
+        opacityAnimation.repeatCount = .infinity
+
+        pulseLayer.add(scaleAnimation, forKey: "pulse-scale")
+        pulseLayer.add(opacityAnimation, forKey: "pulse-opacity")
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        let pulseRect = CGRect(x: 7, y: 7, width: 30, height: 30)
+        pulseLayer.path = UIBezierPath(ovalIn: pulseRect).cgPath
+
+        let ringRect = CGRect(x: 11, y: 11, width: 22, height: 22)
+        ringLayer.path = UIBezierPath(ovalIn: ringRect).cgPath
+
+        let coreRect = CGRect(x: 15, y: 15, width: 14, height: 14)
+        coreLayer.path = UIBezierPath(ovalIn: coreRect).cgPath
+    }
+
+    func updateHeading(_ heading: CLLocationDirection) {
+        arrowImageView.transform = CGAffineTransform(rotationAngle: CGFloat(heading * .pi / 180))
     }
 }
 

@@ -90,6 +90,17 @@ enum GuideDifficulty: String, Codable, Equatable {
             "Extended Skill"
         }
     }
+
+    var skillLevelTitle: String {
+        switch self {
+        case .quickStart:
+            "Beginner"
+        case .standard:
+            "Core Skill"
+        case .advanced:
+            "Advanced Skill"
+        }
+    }
 }
 
 enum GuideRegionScope: String, Codable, Equatable {
@@ -322,6 +333,10 @@ struct Guide: Identifiable, Codable, Equatable {
 
     var readingTimeText: String {
         "\(estimatedReadMinutes) min"
+    }
+
+    var skillTimeText: String {
+        "Practice \(estimatedReadMinutes) min"
     }
 
     var sourceKinds: [GuideSourceKind] {

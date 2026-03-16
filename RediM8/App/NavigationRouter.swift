@@ -2,11 +2,13 @@ import Foundation
 
 enum AppTab: Hashable {
     case home
+    case ask
+    case map
+    case signal
+    case more
     case plan
     case vault
     case library
-    case map
-    case signal
 }
 
 enum PlanFocus: Hashable {
@@ -25,6 +27,7 @@ final class NavigationRouter: ObservableObject {
     @Published var isShowingLeaveNowMode = false
     @Published var isShowingEmergencyGuides = false
     @Published var highlightedGuideCategory: GuideCategory?
+    @Published private var tabScrollToTopRequests: [AppTab: Int] = [:]
 
     func handlePendingQuickAction(from appState: AppState) {
         guard let action = appState.consumePendingQuickAction() else {
@@ -38,6 +41,11 @@ final class NavigationRouter: ObservableObject {
 
     func handleBackgroundTransition(appState: AppState) {
         appState.endEmergencyAccessSession()
+    }
+
+    func openAsk() {
+        requestedPlanFocus = nil
+        selectedTab = .ask
     }
 
     func openPlan() {
@@ -188,6 +196,14 @@ final class NavigationRouter: ObservableObject {
         if tab != .plan {
             requestedPlanFocus = nil
         }
+    }
+
+    func requestScrollToTop(for tab: AppTab) {
+        tabScrollToTopRequests[tab, default: 0] += 1
+    }
+
+    func scrollToTopRequestID(for tab: AppTab) -> Int {
+        tabScrollToTopRequests[tab, default: 0]
     }
 
     private func performQuickAction(_ action: EmergencyQuickAction, appState: AppState) {

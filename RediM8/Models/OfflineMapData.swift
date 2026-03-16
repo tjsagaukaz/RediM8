@@ -117,9 +117,38 @@ struct OfflineMapPack: Identifiable, Codable, Equatable, Hashable {
     let supportedLayers: [MapLayer]
     let isBundledByDefault: Bool
     let lastUpdated: Date
+    let routingGraphFilename: String?
 
     var supportedLayerSummary: String {
         supportedLayers.map(\.title).joined(separator: ", ")
+    }
+
+    var hasRoutingGraph: Bool {
+        routingGraphFilename?.nilIfBlank != nil
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, subtitle, kind, sizeMB, center
+        case latitudeDelta, longitudeDelta, coverageSummary
+        case supportedLayers, isBundledByDefault, lastUpdated
+        case routingGraphFilename
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        subtitle = try container.decode(String.self, forKey: .subtitle)
+        kind = try container.decode(MapPackKind.self, forKey: .kind)
+        sizeMB = try container.decode(Int.self, forKey: .sizeMB)
+        center = try container.decode(GeoPoint.self, forKey: .center)
+        latitudeDelta = try container.decode(Double.self, forKey: .latitudeDelta)
+        longitudeDelta = try container.decode(Double.self, forKey: .longitudeDelta)
+        coverageSummary = try container.decode(String.self, forKey: .coverageSummary)
+        supportedLayers = try container.decode([MapLayer].self, forKey: .supportedLayers)
+        isBundledByDefault = try container.decode(Bool.self, forKey: .isBundledByDefault)
+        lastUpdated = try container.decode(Date.self, forKey: .lastUpdated)
+        routingGraphFilename = try container.decodeIfPresent(String.self, forKey: .routingGraphFilename)
     }
 }
 
@@ -574,6 +603,54 @@ struct ShelterDataset: Codable, Equatable {
 struct OfflineMapPackCatalog: Codable, Equatable {
     let lastUpdated: Date
     let packs: [OfflineMapPack]
+}
+
+enum OfflineBasemapCatalogAvailability: String, Codable, Equatable, Hashable {
+    case availableNow
+    case comingSoon
+
+    var sortPriority: Int {
+        switch self {
+        case .availableNow:
+            0
+        case .comingSoon:
+            1
+        }
+    }
+
+    var displayTitle: String {
+        switch self {
+        case .availableNow:
+            "Available now"
+        case .comingSoon:
+            "Coming soon"
+        }
+    }
+}
+
+struct OfflineBasemapCatalogPackage: Identifiable, Codable, Equatable, Hashable {
+    let id: String
+    let name: String
+    let subtitle: String
+    let summary: String
+    let coverageSummary: String
+    let region: String
+    let sizeMB: Int
+    let version: String
+    let manifestReference: String?
+    let backgroundAssetName: String?
+    let isFeatured: Bool
+    let availability: OfflineBasemapCatalogAvailability
+    let highlights: [String]
+
+    var isInstallable: Bool {
+        availability == .availableNow && manifestReference?.nilIfBlank != nil
+    }
+}
+
+struct OfflineBasemapCatalog: Codable, Equatable {
+    let lastUpdated: Date
+    let packages: [OfflineBasemapCatalogPackage]
 }
 
 struct StoredMapLayerSelection: Codable, Equatable {

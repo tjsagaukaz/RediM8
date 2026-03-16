@@ -2,6 +2,10 @@ import XCTest
 @testable import RediM8
 
 final class AssistantIntentClassifierTests: XCTestCase {
+    func testAssistantPoliciesJSONIsBundledIntoTheHostApp() {
+        XCTAssertNotNil(Bundle.main.url(forResource: "AssistantPolicies", withExtension: "json"))
+    }
+
     func testBundledPolicyLibraryLoadsReviewAndTrustMetadata() {
         let dataService = PreparednessDataService(store: nil, bundle: .main)
 

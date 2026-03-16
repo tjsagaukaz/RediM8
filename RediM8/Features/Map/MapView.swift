@@ -3,6 +3,8 @@ import SwiftUI
 struct MapView: View {
     @Environment(\.openURL) private var openURL
     @StateObject private var viewModel: MapViewModel
+    private let appState: AppState
+    private let scrollToTopRequestID: Int
     private let openEvacuationRoutes: () -> Void
     @State private var isShowingFullScreenMap = false
     @State private var isShowingLayers = false
@@ -16,99 +18,95 @@ struct MapView: View {
     @State private var isShowingBeacons = false
     @State private var isShowingMarkers = false
     @State private var isShowingResources = false
+    @State private var isShowingMapBrief = false
+    @State private var isShowingRouteInspector = false
+    @State private var isShowingNearestResource = false
+    @State private var isShowingRoutePlanner = false
+    @State private var isShowingEvacuationPlan = false
+    private let mapQuickActionColumns = [
+        GridItem(.adaptive(minimum: 148, maximum: 240), spacing: 12)
+    ]
 
-    init(appState: AppState, openEvacuationRoutes: @escaping () -> Void = {}) {
+    init(appState: AppState, scrollToTopRequestID: Int = 0, openEvacuationRoutes: @escaping () -> Void = {}) {
+        self.appState = appState
+        self.scrollToTopRequestID = scrollToTopRequestID
         self.openEvacuationRoutes = openEvacuationRoutes
         _viewModel = StateObject(wrappedValue: MapViewModel(appState: appState))
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                if viewModel.isStealthModeEnabled {
-                    StealthModeIndicatorView()
-                }
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Color.clear
+                        .frame(height: 0)
+                        .id(MapScrollAnchor.top)
 
-                mapStatusBanner
-
-                ModeHeroCard(
-                    eyebrow: "Field Navigation",
-                    title: "Offline Map",
-                    subtitle: "Start with the map and nearest verified fallbacks. Expand the rest only when you need more detail.",
-                    iconName: "map_marker",
-                    accent: ColorTheme.info,
-                    backgroundAssetName: "map_forest_route",
-                    backgroundImageOffset: CGSize(width: -22, height: 0)
-                ) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        TrustPillGroup(items: viewModel.mapTrustItems)
-                        operationalLine(label: "Basemap", detail: viewModel.workingBasemapSummary)
-                        operationalLine(label: "Routes", detail: viewModel.savedRouteSummary)
-                        operationalLine(label: "Coverage", detail: viewModel.workingCoverageSummary)
-                        operationalLine(label: "Position", detail: viewModel.workingPositionSummary)
+                    if viewModel.isStealthModeEnabled {
+                        StealthModeIndicatorView()
                     }
-                }
 
-                if !mapFailureRows.isEmpty {
-                    PanelCard(title: "Failure Modes", subtitle: "What still works right now") {
-                        VStack(alignment: .leading, spacing: 12) {
-                            ForEach(Array(mapFailureRows.enumerated()), id: \.offset) { _, row in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(row.title)
-                                        .font(RediTypography.bodyStrong)
-                                        .foregroundStyle(ColorTheme.text)
-                                    Text(row.detail)
-                                        .font(.subheadline)
-                                        .foregroundStyle(ColorTheme.textMuted)
+                    CinematicBanner("map_remote_track", height: 160)
+
+                    mapStatusBanner
+
+                    embeddedMapPanel
+
+                    if viewModel.isLayerEnabled(.evacuationPoints), let selectedShelter = viewModel.selectedShelter {
+                        PanelCard(title: "Selected Evacuation Point", subtitle: "Tapped directly from the offline map") {
+                            ShelterCard(
+                                shelter: selectedShelter,
+                                distanceText: viewModel.distanceText(to: selectedShelter.coordinate),
+                                tint: viewModel.shelterTint(for: selectedShelter.type),
+                                isSelected: true,
+                                trustItems: viewModel.shelterTrustItems(for: selectedShelter),
+                                openNavigation: {
+                                    guard let url = viewModel.shelterNavigationURL(for: selectedShelter) else {
+                                        return
+                                    }
+                                    openURL(url)
                                 }
-                            }
+                            )
                         }
                     }
-                }
 
-                savedRoutesPanel
+                    criticalNearbyPanel
 
-                officialAlertsPanel
-
-                if let bushfireMapSummary = viewModel.bushfireMapSummary {
-                    PanelCard(title: "Bushfire Map Priorities", subtitle: "Mode-specific offline routing focus") {
-                        Text(bushfireMapSummary)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                    CollapsiblePanelCard(
+                        title: "Field Brief",
+                        subtitle: "Surface, coverage, and fallback detail for the current map mode.",
+                        accent: ColorTheme.textTertiary,
+                        isExpanded: $isShowingMapBrief
+                    ) {
+                        mapBriefContent
                     }
-                }
 
-                embeddedMapPanel
-
-                criticalNearbyPanel
-
-                if viewModel.isLayerEnabled(.evacuationPoints), let selectedShelter = viewModel.selectedShelter {
-                    PanelCard(title: "Selected Evacuation Point", subtitle: "Tapped directly from the offline map") {
-                        ShelterCard(
-                            shelter: selectedShelter,
-                            distanceText: viewModel.distanceText(to: selectedShelter.coordinate),
-                            tint: viewModel.shelterTint(for: selectedShelter.type),
-                            isSelected: true,
-                            trustItems: viewModel.shelterTrustItems(for: selectedShelter),
-                            openNavigation: {
-                                guard let url = viewModel.shelterNavigationURL(for: selectedShelter) else {
-                                    return
-                                }
-                                openURL(url)
-                            }
-                        )
+                    CollapsiblePanelCard(
+                        title: "Routes & Alerts",
+                        subtitle: "Saved routes, official warnings, and known map failures.",
+                        accent: officialAlertColor,
+                        isExpanded: $isShowingRouteInspector
+                    ) {
+                        routeInspectorContent
                     }
-                }
 
-                advancedMapSections
+                    advancedMapSections
+                }
+                .padding(.horizontal, RediSpacing.screen)
+                .padding(.top, RediSpacing.screen)
+                .padding(.bottom, RediLayout.commandDockContentInset)
             }
-            .padding(.horizontal, RediSpacing.screen)
-            .padding(.top, RediSpacing.screen)
-            .padding(.bottom, RediLayout.commandDockContentInset)
+            .onChange(of: scrollToTopRequestID) { _, _ in
+                DispatchQueue.main.async {
+                    withAnimation(RediMotion.selection) {
+                        proxy.scrollTo(MapScrollAnchor.top, anchor: .top)
+                    }
+                }
+            }
         }
         .navigationTitle("Map")
         .safeAreaInset(edge: .top, spacing: 0) {
-            OperationalStatusRail(items: mapStatusItems, accent: ColorTheme.info)
+            OperationalStatusRail(items: mapStatusItems, accent: ColorTheme.textTertiary)
         }
         .background(
             LinearGradient(
@@ -123,6 +121,52 @@ struct MapView: View {
         .fullScreenCover(isPresented: $isShowingFullScreenMap) {
             fullScreenMapView
         }
+        .sheet(isPresented: $isShowingNearestResource) {
+            NavigationStack {
+                NearestResourceView(
+                    appState: appState,
+                    currentLocation: viewModel.currentLocation
+                )
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") { isShowingNearestResource = false }
+                            .foregroundStyle(ColorTheme.accent)
+                    }
+                }
+            }
+            .rediSheetPresentation()
+        }
+        .sheet(isPresented: $isShowingRoutePlanner) {
+            NavigationStack {
+                RoutePlanningView(
+                    appState: appState,
+                    currentLocation: viewModel.currentLocation
+                )
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") { isShowingRoutePlanner = false }
+                            .foregroundStyle(ColorTheme.accent)
+                    }
+                }
+            }
+            .rediSheetPresentation()
+        }
+        .sheet(isPresented: $isShowingEvacuationPlan) {
+            NavigationStack {
+                EvacuationPlanView(appState: appState, currentLocation: viewModel.currentLocation)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Done") { isShowingEvacuationPlan = false }
+                                .foregroundStyle(ColorTheme.accent)
+                        }
+                    }
+            }
+            .rediSheetPresentation()
+        }
+    }
+
+    private enum MapScrollAnchor {
+        static let top = "map-scroll-top"
     }
 
     private func layerBinding(for layer: MapLayer) -> Binding<Bool> {
@@ -140,81 +184,44 @@ struct MapView: View {
     }
 
     private var embeddedMapPanel: some View {
-        PanelCard(title: "Offline Emergency Map", subtitle: "Local packs first, tactical fallback second") {
+        VStack(alignment: .leading, spacing: 14) {
             embeddedMapSurface
 
-            VStack(alignment: .leading, spacing: 10) {
-                mapSurfaceSelector
-
-                TrustPillGroup(items: viewModel.mapTrustItems)
-
-                HStack(alignment: .center, spacing: 12) {
-                    Label("\(viewModel.installedPacks.count) map pack(s) installed", systemImage: "externaldrive.fill.badge.checkmark")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+            Button {
+                isShowingFullScreenMap = true
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("Open Full Screen Map")
+                        .font(.subheadline.weight(.bold))
                     Spacer()
-                    Button("Open Full Screen") {
-                        isShowingFullScreenMap = true
-                    }
-                    .font(.subheadline.weight(.semibold))
-                    Button("Recenter") {
-                        viewModel.recenter()
-                    }
-                    .font(.subheadline.weight(.semibold))
-                }
-
-                Text("Offline layers last updated: \(viewModel.lastUpdatedText)")
-                    .font(.subheadline)
-                    .foregroundStyle(ColorTheme.text)
-
-                Text(viewModel.basemapStatusMessage)
-                    .font(.caption)
-                    .foregroundStyle(viewModel.surfaceTint)
-
-                Text(viewModel.coverageLimitSummary)
-                    .font(.caption)
-                    .foregroundStyle(ColorTheme.text)
-
-                if let surfaceAvailabilityNote = viewModel.surfaceAvailabilityNote {
-                    Text(surfaceAvailabilityNote)
-                        .font(.caption)
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.bold))
                         .foregroundStyle(ColorTheme.textMuted)
                 }
-
-                installedCoveragePreview
-
-                Text(TrustLayer.mapFreshnessNotice)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                Text(TrustLayer.mapCoverageNotice)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if viewModel.isLayerEnabled(.fireTrails) {
-                    Text(TrustLayer.fireTrailSafetyReminder)
-                        .font(.caption)
-                        .foregroundStyle(ColorTheme.warning)
-                }
-
-                if viewModel.isLayerEnabled(.evacuationPoints) {
-                    Text(TrustLayer.shelterAvailabilityReminder)
-                        .font(.caption)
-                        .foregroundStyle(ColorTheme.warning)
-                }
-
-                if viewModel.isStealthModeEnabled {
-                    Text("Stealth Mode reduces location accuracy and map motion to conserve battery while keeping offline maps readable.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+                .foregroundStyle(ColorTheme.text)
+                .padding(16)
+                .background(ColorTheme.textTertiary.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(ColorTheme.textTertiary.opacity(0.22), lineWidth: 1)
+                )
             }
+            .buttonStyle(CardPressButtonStyle())
+
+            mapQuickStatusStrip
+            mapSurfaceSelector
+            if let mapPriorityCallout {
+                mapPriorityCallout
+            }
+            mapQuickActions
         }
     }
 
     private var embeddedMapSurface: some View {
         mapSurface
-            .frame(height: 420)
+            .frame(height: 520)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(alignment: .topLeading) {
                 mapModeBadge
@@ -225,12 +232,15 @@ struct MapView: View {
                     Button {
                         isShowingFullScreenMap = true
                     } label: {
-                        Label("Full Screen", systemImage: "arrow.up.left.and.arrow.down.right")
-                            .font(.caption.weight(.semibold))
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(ColorTheme.text)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.black.opacity(0.82), in: Capsule())
+                            .padding(12)
+                            .background(Color.black.opacity(0.86), in: Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            )
                     }
 
                     if viewModel.currentLocation != nil {
@@ -281,6 +291,244 @@ struct MapView: View {
         )
     }
 
+    private var mapQuickStatusStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                mapSummaryCard(
+                    title: "Official",
+                    value: viewModel.topOfficialAlert?.severity.title ?? viewModel.officialAlertStatusValue,
+                    detail: viewModel.officialAlertHeadline,
+                    accent: officialAlertColor
+                )
+
+                mapSummaryCard(
+                    title: "Routes",
+                    value: viewModel.savedRoutes.isEmpty ? "Missing" : "Ready",
+                    detail: viewModel.savedRoutes.first ?? "Create one in Plan",
+                    accent: viewModel.savedRoutes.isEmpty ? ColorTheme.warning : ColorTheme.ready
+                )
+
+                mapSummaryCard(
+                    title: "Coverage",
+                    value: viewModel.installedPacks.isEmpty ? "Fallback" : "\(viewModel.installedPacks.count) pack(s)",
+                    detail: viewModel.installedPacks.first?.name ?? "No regional pack installed",
+                    accent: viewModel.installedPacks.isEmpty ? ColorTheme.warning : ColorTheme.info
+                )
+
+                mapSummaryCard(
+                    title: "Confidence",
+                    value: viewModel.mapConfidenceValue,
+                    detail: viewModel.mapConfidenceDetail,
+                    accent: statusColor(for: viewModel.mapConfidenceTone)
+                )
+            }
+            .padding(.vertical, 2)
+        }
+    }
+
+    private var mapQuickActions: some View {
+        LazyVGrid(columns: mapQuickActionColumns, spacing: 12) {
+            Button {
+                isShowingFullScreenMap = true
+            } label: {
+                RediCommandCard(
+                    title: "Full Screen",
+                    detail: "Open the live map canvas with the maximum visible field area.",
+                    systemImage: "arrow.up.left.and.arrow.down.right",
+                    tint: ColorTheme.textTertiary,
+                    badge: "Canvas",
+                    prominence: .accented,
+                    minHeight: 102
+                )
+            }
+            .buttonStyle(CardPressButtonStyle())
+
+            Button {
+                viewModel.recenter()
+            } label: {
+                RediCommandCard(
+                    title: "Recenter",
+                    detail: "Snap back to your current location and heading reference.",
+                    systemImage: "location.fill",
+                    tint: ColorTheme.textTertiary,
+                    badge: viewModel.currentLocation == nil ? "Waiting" : "Live",
+                    prominence: .neutral,
+                    minHeight: 102
+                )
+            }
+            .buttonStyle(CardPressButtonStyle())
+
+            Button {
+                isShowingNearestResource = true
+            } label: {
+                RediCommandCard(
+                    title: "Find Nearest",
+                    detail: "Locate nearest water, shelter, road, or town from your position.",
+                    systemImage: "scope",
+                    tint: ColorTheme.accent,
+                    badge: "KNN",
+                    prominence: .accented,
+                    minHeight: 102
+                )
+            }
+            .buttonStyle(CardPressButtonStyle())
+
+            Button {
+                isShowingRoutePlanner = true
+            } label: {
+                RediCommandCard(
+                    title: "Route Planner",
+                    detail: "Compute offline evacuation routes using CH routing engine.",
+                    systemImage: "route",
+                    tint: appState.offlineRoutingService.isGraphLoaded ? ColorTheme.ready : ColorTheme.accent,
+                    badge: appState.offlineRoutingService.isGraphLoaded ? "Ready" : "Offline",
+                    prominence: .accented,
+                    minHeight: 102
+                )
+            }
+            .buttonStyle(CardPressButtonStyle())
+
+            Button {
+                isShowingEvacuationPlan = true
+            } label: {
+                RediCommandCard(
+                    title: "Evacuation Plan",
+                    detail: "Full survival corridor — route, water, shelters, and terrain.",
+                    systemImage: "figure.run",
+                    tint: appState.offlineRoutingService.isGraphLoaded ? ColorTheme.danger : ColorTheme.accent,
+                    badge: "Survival",
+                    prominence: .accented,
+                    minHeight: 102
+                )
+            }
+            .buttonStyle(CardPressButtonStyle())
+
+            Button {
+                viewModel.toggleDistanceRings()
+            } label: {
+                RediCommandCard(
+                    title: viewModel.showsDistanceRings ? "Hide Rings" : "Show Rings",
+                    detail: "Toggle the 1 km, 5 km, and 10 km tactical distance guides.",
+                    systemImage: viewModel.showsDistanceRings ? "circle.hexagongrid.circle.fill" : "circle.hexagongrid.circle",
+                    tint: ColorTheme.textTertiary,
+                    badge: viewModel.showsDistanceRings ? "On" : "Off",
+                    prominence: .neutral,
+                    minHeight: 102
+                )
+            }
+            .buttonStyle(CardPressButtonStyle())
+
+            Button {
+                withAnimation(RediMotion.reveal) {
+                    isShowingLayers = true
+                }
+            } label: {
+                RediCommandCard(
+                    title: "Map Layers",
+                    detail: "Choose water, shelters, alerts, reports, and evacuation overlays.",
+                    systemImage: "square.3.layers.3d",
+                    tint: ColorTheme.textTertiary,
+                    badge: "Layers",
+                    prominence: .neutral,
+                    minHeight: 102
+                )
+            }
+            .buttonStyle(CardPressButtonStyle())
+
+            Button {
+                withAnimation(RediMotion.reveal) {
+                    isShowingMapBrief = true
+                    isShowingRouteInspector = true
+                }
+            } label: {
+                RediCommandCard(
+                    title: "Open Brief",
+                    detail: "See confidence, saved routes, official warnings, and trust detail.",
+                    systemImage: "slider.horizontal.3",
+                    tint: ColorTheme.textTertiary,
+                    badge: "Brief",
+                    prominence: .accented,
+                    minHeight: 102
+                )
+            }
+            .buttonStyle(CardPressButtonStyle())
+        }
+    }
+
+    private var mapPriorityCallout: AnyView? {
+        if let topOfficialAlert = viewModel.topOfficialAlert {
+            return AnyView(
+                mapInlineCallout(
+                    title: topOfficialAlert.isAreaScoped ? "Official warning mirrored on map" : "Official feed active",
+                    detail: viewModel.officialAlertSafetyNote(for: topOfficialAlert),
+                    accent: officialAlertColor
+                )
+            )
+        }
+
+        if let firstFailure = mapFailureRows.first {
+            return AnyView(
+                mapInlineCallout(
+                    title: firstFailure.title,
+                    detail: firstFailure.detail,
+                    accent: ColorTheme.warning
+                )
+            )
+        }
+
+        return nil
+    }
+
+    private func mapSummaryCard(title: String, value: String, detail: String, accent: Color) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title.uppercased())
+                .font(RediTypography.caption)
+                .foregroundStyle(accent)
+
+            Text(value)
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.text)
+
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(ColorTheme.textMuted)
+                .lineLimit(2)
+        }
+        .padding(14)
+        .frame(width: 184, alignment: .leading)
+        .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(accent.opacity(0.18), lineWidth: 1)
+        )
+    }
+
+    private func mapInlineCallout(title: String, detail: String, accent: Color) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Circle()
+                .fill(accent)
+                .frame(width: 10, height: 10)
+                .padding(.top, 5)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(ColorTheme.text)
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(ColorTheme.textMuted)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .background(Color.black.opacity(0.18), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(accent.opacity(0.18), lineWidth: 1)
+        )
+    }
+
     private var mapSurface: some View {
         Group {
             if viewModel.surfaceMode.usesAppleTiles {
@@ -298,7 +546,9 @@ struct MapView: View {
                     officialAlerts: viewModel.visibleOfficialAlerts,
                     beacons: viewModel.visibleBeacons,
                     currentLocation: viewModel.currentLocation,
+                    heading: viewModel.heading,
                     showsUserLocation: viewModel.currentLocation != nil,
+                    showsDistanceRings: viewModel.showsDistanceRings,
                     animatesRegionChanges: !viewModel.reducesMapAnimations,
                     onSelectShelter: viewModel.selectShelter(withID:)
                 )
@@ -319,7 +569,9 @@ struct MapView: View {
                     officialAlerts: viewModel.visibleOfficialAlerts,
                     beacons: viewModel.visibleBeacons,
                     currentLocation: viewModel.currentLocation,
+                    heading: viewModel.heading,
                     showsUserLocation: viewModel.currentLocation != nil,
+                    showsDistanceRings: viewModel.showsDistanceRings,
                     animatesRegionChanges: !viewModel.reducesMapAnimations,
                     onSelectShelter: viewModel.selectShelter(withID:)
                 )
@@ -342,33 +594,33 @@ struct MapView: View {
         }
         .background(Color.black.ignoresSafeArea())
         .safeAreaInset(edge: .top, spacing: 0) {
-            HStack(alignment: .center, spacing: 10) {
-                mapModeBadge
+            ViewThatFits(in: .horizontal) {
+                HStack(alignment: .center, spacing: 10) {
+                    mapModeBadge
 
-                Spacer(minLength: 10)
+                    Spacer(minLength: 10)
 
-                if viewModel.currentLocation != nil {
-                    headingBadge
+                    if viewModel.currentLocation != nil {
+                        headingBadge
+                    }
+
+                    recenterMapButton
+                    closeFullScreenMapButton
                 }
 
-                Button {
-                    viewModel.recenter()
-                } label: {
-                    Image(systemName: "location.fill")
-                        .font(.headline)
-                        .foregroundStyle(ColorTheme.text)
-                        .frame(width: 42, height: 42)
-                        .background(Color.black.opacity(0.84), in: Circle())
-                }
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .center, spacing: 10) {
+                        mapModeBadge
+                        Spacer(minLength: 10)
+                        if viewModel.currentLocation != nil {
+                            headingBadge
+                        }
+                    }
 
-                Button {
-                    isShowingFullScreenMap = false
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.headline.weight(.bold))
-                        .foregroundStyle(ColorTheme.text)
-                        .frame(width: 42, height: 42)
-                        .background(Color.black.opacity(0.84), in: Circle())
+                    HStack(spacing: 10) {
+                        recenterMapButton
+                        closeFullScreenMapButton
+                    }
                 }
             }
             .padding(.horizontal, 16)
@@ -384,21 +636,32 @@ struct MapView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(viewModel.surfaceMode.title)
-                            .font(RediTypography.bodyStrong)
-                            .foregroundStyle(ColorTheme.text)
-                        Text(viewModel.workingBasemapSummary)
-                            .font(.caption)
-                            .foregroundStyle(ColorTheme.textMuted)
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .top, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(viewModel.surfaceMode.title)
+                                .font(RediTypography.bodyStrong)
+                                .foregroundStyle(ColorTheme.text)
+                            Text(viewModel.workingBasemapSummary)
+                                .font(.caption)
+                                .foregroundStyle(ColorTheme.textMuted)
+                        }
+                        Spacer()
+                        openPacksButton
                     }
-                    Spacer()
-                    Button("Open Packs") {
-                        isShowingFullScreenMap = false
-                        isShowingMapPacks = true
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(viewModel.surfaceMode.title)
+                                .font(RediTypography.bodyStrong)
+                                .foregroundStyle(ColorTheme.text)
+                            Text(viewModel.workingBasemapSummary)
+                                .font(.caption)
+                                .foregroundStyle(ColorTheme.textMuted)
+                        }
+
+                        openPacksButton
                     }
-                    .buttonStyle(SecondaryActionButtonStyle())
                 }
 
                 TrustPillGroup(items: viewModel.mapTrustItems)
@@ -437,10 +700,27 @@ struct MapView: View {
         .statusBarHidden()
     }
 
+    private func statusColor(for tone: OperationalStatusTone) -> Color {
+        switch tone {
+        case .ready:
+            ColorTheme.ready
+        case .info:
+            ColorTheme.info
+        case .caution:
+            ColorTheme.warning
+        case .danger:
+            ColorTheme.danger
+        case .neutral:
+            ColorTheme.textFaint
+        }
+    }
+
     private var mapModeBadge: some View {
         Text(viewModel.surfaceBadgeTitle)
             .font(.caption.weight(.semibold))
             .foregroundStyle(viewModel.surfaceTint)
+            .lineLimit(1)
+            .minimumScaleFactor(0.82)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(Color.black.opacity(0.82), in: Capsule())
@@ -453,18 +733,20 @@ struct MapView: View {
     private var headingBadge: some View {
         HStack(spacing: 8) {
             RediIcon("compass")
-                .foregroundStyle(ColorTheme.ready)
+                .foregroundStyle(ColorTheme.textTertiary)
                 .frame(width: 16, height: 16)
             Text(viewModel.headingText)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(ColorTheme.text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.82)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(Color.black.opacity(0.78), in: Capsule())
         .overlay(
             Capsule()
-                .stroke(ColorTheme.ready.opacity(0.28), lineWidth: 1)
+                .stroke(ColorTheme.textTertiary.opacity(0.28), lineWidth: 1)
         )
     }
 
@@ -473,9 +755,12 @@ struct MapView: View {
             Text(viewModel.surfaceMode.title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(ColorTheme.text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
             Text(mapSummarySubtitle)
                 .font(.caption2)
                 .foregroundStyle(ColorTheme.textMuted)
+                .lineLimit(2)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -565,7 +850,7 @@ struct MapView: View {
 
     private var mapReferenceOverlay: some View {
         VStack(alignment: .trailing, spacing: 10) {
-            if viewModel.currentLocation != nil, viewModel.isTacticalSurfaceActive {
+            if viewModel.currentLocation != nil, viewModel.showsDistanceRings {
                 distanceRingLegend
             }
 
@@ -578,14 +863,14 @@ struct MapView: View {
                     title: "Water",
                     detail: viewModel.featuredWaterPoints.first.map { viewModel.waterDistanceText(for: $0) } ?? "None",
                     iconName: "water",
-                    accent: ColorTheme.info
+                    accent: ColorTheme.textTertiary
                 )
 
                 referenceChip(
                     title: "Shelter",
                     detail: viewModel.featuredShelters.first.map { viewModel.shelterDistanceText(for: $0) } ?? "None",
                     iconName: "shelter",
-                    accent: ColorTheme.ready
+                    accent: ColorTheme.textTertiary
                 )
 
                 referenceChip(
@@ -605,10 +890,42 @@ struct MapView: View {
         .frame(maxWidth: 180)
     }
 
+    private var recenterMapButton: some View {
+        Button {
+            viewModel.recenter()
+        } label: {
+            Image(systemName: "location.fill")
+                .font(.headline)
+                .foregroundStyle(ColorTheme.text)
+                .frame(width: 42, height: 42)
+                .background(Color.black.opacity(0.84), in: Circle())
+        }
+    }
+
+    private var closeFullScreenMapButton: some View {
+        Button {
+            isShowingFullScreenMap = false
+        } label: {
+            Image(systemName: "xmark")
+                .font(.headline.weight(.bold))
+                .foregroundStyle(ColorTheme.text)
+                .frame(width: 42, height: 42)
+                .background(Color.black.opacity(0.84), in: Circle())
+        }
+    }
+
+    private var openPacksButton: some View {
+        Button("Open Packs") {
+            isShowingFullScreenMap = false
+            isShowingMapPacks = true
+        }
+        .buttonStyle(SecondaryActionButtonStyle())
+    }
+
     private var distanceRingLegend: some View {
         HStack(spacing: 8) {
             RediIcon("compass")
-                .foregroundStyle(ColorTheme.ready)
+                .foregroundStyle(ColorTheme.textTertiary)
                 .frame(width: 14, height: 14)
 
             Text(viewModel.distanceRingLabels.joined(separator: " • "))
@@ -620,7 +937,7 @@ struct MapView: View {
         .background(Color.black.opacity(0.82), in: Capsule())
         .overlay(
             Capsule()
-                .stroke(ColorTheme.ready.opacity(0.2), lineWidth: 1)
+                .stroke(ColorTheme.textTertiary.opacity(0.2), lineWidth: 1)
         )
     }
 
@@ -661,7 +978,7 @@ struct MapView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(viewModel.waterPriorityHeading(for: point))
                 .font(.caption.weight(.bold))
-                .foregroundStyle(ColorTheme.info)
+                .foregroundStyle(ColorTheme.textTertiary)
 
             HStack(alignment: .top, spacing: 14) {
                 MapAssetIcon(assetName: point.kind.mapMarkerAssetName, size: 26)
@@ -680,7 +997,7 @@ struct MapView: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(viewModel.waterDistanceText(for: point))
                         .font(.title3.weight(.bold))
-                        .foregroundStyle(ColorTheme.info)
+                        .foregroundStyle(ColorTheme.textSecondary)
                     Text(viewModel.waterReferenceLabel(for: point))
                         .font(.caption)
                         .foregroundStyle(ColorTheme.textFaint)
@@ -698,10 +1015,10 @@ struct MapView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(16)
-        .background(ColorTheme.info.opacity(0.10), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(ColorTheme.info.opacity(0.2), lineWidth: 1)
+                .stroke(ColorTheme.textTertiary.opacity(0.2), lineWidth: 1)
         )
     }
 
@@ -766,87 +1083,213 @@ struct MapView: View {
         return rows
     }
 
-    private var savedRoutesPanel: some View {
-        PanelCard(title: "Saved Evacuation Routes", subtitle: "Offline route notes from your plan") {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(viewModel.savedRouteSummary)
+    private var mapBriefContent: some View {
+        VStack(spacing: 14) {
+            inspectorGroup(
+                title: "Surface & Trust",
+                subtitle: "What the map is relying on right now.",
+                accent: ColorTheme.textTertiary
+            ) {
+                TrustPillGroup(items: viewModel.mapTrustItems)
+                operationalLine(label: "Confidence", detail: viewModel.mapConfidenceDetail)
+                operationalLine(label: "Basemap", detail: viewModel.workingBasemapSummary)
+                operationalLine(label: "Coverage", detail: viewModel.workingCoverageSummary)
+                operationalLine(label: "Position", detail: viewModel.workingPositionSummary)
+                operationalLine(label: "Distance Rings", detail: viewModel.showsDistanceRings ? "1 km, 5 km, and 10 km rings are visible around your live position." : "Distance rings are hidden to keep the map canvas cleaner.")
+                operationalLine(label: "Motion", detail: viewModel.workingMotionSummary)
+            }
+
+            inspectorGroup(
+                title: "Coverage Limits",
+                subtitle: "Where the offline map gets stronger or weaker.",
+                accent: viewModel.installedPacks.isEmpty ? ColorTheme.warning : ColorTheme.info
+            ) {
+                Text("Offline layers last updated: \(viewModel.lastUpdatedText)")
                     .font(.subheadline)
                     .foregroundStyle(ColorTheme.text)
 
-                TrustPillGroup(items: viewModel.savedRouteTrustItems)
+                Text(viewModel.basemapStatusMessage)
+                    .font(.caption)
+                    .foregroundStyle(viewModel.surfaceTint)
 
-                if viewModel.savedRoutes.isEmpty {
-                    Button {
-                        openEvacuationRoutes()
-                    } label: {
-                        Label("Create Evacuation Route", systemImage: "route")
-                    }
-                    .buttonStyle(PrimaryActionButtonStyle())
+                Text(viewModel.coverageLimitSummary)
+                    .font(.caption)
+                    .foregroundStyle(ColorTheme.text)
 
-                    Text("No route has been saved on this device yet.")
+                if let surfaceAvailabilityNote = viewModel.surfaceAvailabilityNote {
+                    Text(surfaceAvailabilityNote)
                         .font(.caption)
-                        .foregroundStyle(ColorTheme.warning)
-                } else {
-                    Button {
-                        openEvacuationRoutes()
-                    } label: {
-                        Label("Edit Routes", systemImage: "square.and.pencil")
-                    }
-                    .buttonStyle(SecondaryActionButtonStyle())
+                        .foregroundStyle(ColorTheme.textMuted)
+                }
 
-                    ForEach(Array(viewModel.savedRoutes.prefix(3).enumerated()), id: \.offset) { index, route in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(index == 0 ? "Primary route" : "Backup route \(index)")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(ColorTheme.textFaint)
-                            Text(route)
-                                .font(RediTypography.bodyStrong)
-                                .foregroundStyle(ColorTheme.text)
-                        }
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                installedCoveragePreview
+
+                Text(TrustLayer.mapFreshnessNotice)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Text(TrustLayer.mapCoverageNotice)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let bushfireMapSummary = viewModel.bushfireMapSummary {
+                inspectorGroup(
+                    title: "Scenario Priority",
+                    subtitle: "Mode-specific routing focus now in effect.",
+                    accent: ColorTheme.textTertiary
+                ) {
+                    Text(bushfireMapSummary)
+                        .font(.subheadline)
+                        .foregroundStyle(ColorTheme.text)
+                }
+            }
+
+            if viewModel.isLayerEnabled(.fireTrails) || viewModel.isLayerEnabled(.evacuationPoints) || viewModel.isStealthModeEnabled {
+                inspectorGroup(
+                    title: "Operating Notes",
+                    subtitle: "Extra cautions based on active layers and device mode.",
+                    accent: ColorTheme.textTertiary
+                ) {
+                    if viewModel.isLayerEnabled(.fireTrails) {
+                        Text(TrustLayer.fireTrailSafetyReminder)
+                            .font(.caption)
+                            .foregroundStyle(ColorTheme.warning)
+                    }
+
+                    if viewModel.isLayerEnabled(.evacuationPoints) {
+                        Text(TrustLayer.shelterAvailabilityReminder)
+                            .font(.caption)
+                            .foregroundStyle(ColorTheme.warning)
+                    }
+
+                    if viewModel.isStealthModeEnabled {
+                        Text("Stealth Mode reduces location accuracy and map motion to conserve battery while keeping offline maps readable.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
         }
     }
 
-    private var officialAlertsPanel: some View {
-        PanelCard(title: "Official Alerts", subtitle: "Mirrored Australian public warnings cached for offline map use") {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top, spacing: 12) {
-                    RediIcon(viewModel.topOfficialAlert?.kind.systemImage ?? "warning")
-                        .foregroundStyle(officialAlertColor)
-                        .frame(width: 18, height: 18)
-                        .padding(10)
-                        .background(officialAlertColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    private var routeInspectorContent: some View {
+        VStack(spacing: 14) {
+            savedRoutesInspector
+            officialAlertsInspector
 
+            if !mapFailureRows.isEmpty {
+                failureModesInspector
+            }
+        }
+    }
+
+    private var savedRoutesInspector: some View {
+        inspectorGroup(
+            title: "Saved Evacuation Routes",
+            subtitle: "Offline route notes from your plan.",
+            accent: viewModel.savedRoutes.isEmpty ? ColorTheme.warning : ColorTheme.ready
+        ) {
+            Text(viewModel.savedRouteSummary)
+                .font(.subheadline)
+                .foregroundStyle(ColorTheme.text)
+
+            TrustPillGroup(items: viewModel.savedRouteTrustItems)
+
+            if viewModel.savedRoutes.isEmpty {
+                Button {
+                    openEvacuationRoutes()
+                } label: {
+                    Label("Create Evacuation Route", systemImage: "route")
+                }
+                .buttonStyle(PrimaryActionButtonStyle())
+
+                Text("No route has been saved on this device yet.")
+                    .font(.caption)
+                    .foregroundStyle(ColorTheme.warning)
+            } else {
+                Button {
+                    openEvacuationRoutes()
+                } label: {
+                    Label("Edit Routes", systemImage: "square.and.pencil")
+                }
+                .buttonStyle(SecondaryActionButtonStyle())
+
+                ForEach(Array(viewModel.savedRoutes.prefix(3).enumerated()), id: \.offset) { index, route in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("OFFICIAL ALERTS")
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(officialAlertColor)
-                        Text(viewModel.officialAlertHeadline)
-                            .font(.headline)
+                        Text(index == 0 ? "Primary route" : "Backup route \(index)")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(ColorTheme.textFaint)
+                        Text(route)
+                            .font(RediTypography.bodyStrong)
                             .foregroundStyle(ColorTheme.text)
-                        Text(viewModel.officialAlertDetail)
-                            .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textMuted)
                     }
+                    .padding(12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+            }
+        }
+    }
 
-                    Spacer(minLength: 0)
+    private var officialAlertsInspector: some View {
+        inspectorGroup(
+            title: "Official Alerts",
+            subtitle: "Mirrored public warnings cached for offline map use.",
+            accent: officialAlertColor
+        ) {
+            HStack(alignment: .top, spacing: 12) {
+                RediIcon(viewModel.topOfficialAlert?.kind.systemImage ?? "warning")
+                    .foregroundStyle(officialAlertColor)
+                    .frame(width: 18, height: 18)
+                    .padding(10)
+                    .background(officialAlertColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("OFFICIAL ALERTS")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(officialAlertColor)
+                    Text(viewModel.officialAlertHeadline)
+                        .font(.headline)
+                        .foregroundStyle(ColorTheme.text)
+                    Text(viewModel.officialAlertDetail)
+                        .font(.subheadline)
+                        .foregroundStyle(ColorTheme.textMuted)
                 }
 
-                TrustPillGroup(items: viewModel.officialAlertOverviewTrustItems)
+                Spacer(minLength: 0)
+            }
 
-                if let topOfficialAlert = viewModel.topOfficialAlert {
-                    Text(viewModel.officialAlertSafetyNote(for: topOfficialAlert))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("RediM8 mirrors public warnings when a recent snapshot is available. It does not replace official emergency alerts.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            TrustPillGroup(items: viewModel.officialAlertOverviewTrustItems)
+
+            if let topOfficialAlert = viewModel.topOfficialAlert {
+                Text(viewModel.officialAlertSafetyNote(for: topOfficialAlert))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("RediM8 mirrors public warnings when a recent snapshot is available. It does not replace official emergency alerts.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            officialAlertsContent
+        }
+    }
+
+    private var failureModesInspector: some View {
+        inspectorGroup(
+            title: "Failure Modes",
+            subtitle: "What still works when a dependency drops out.",
+            accent: ColorTheme.textTertiary
+        ) {
+            ForEach(Array(mapFailureRows.enumerated()), id: \.offset) { _, row in
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(row.title)
+                        .font(RediTypography.bodyStrong)
+                        .foregroundStyle(ColorTheme.text)
+                    Text(row.detail)
+                        .font(.subheadline)
+                        .foregroundStyle(ColorTheme.textMuted)
                 }
             }
         }
@@ -899,7 +1342,7 @@ struct MapView: View {
             CollapsiblePanelCard(
                 title: "Map Packs",
                 subtitle: "Install regional coverage and inspect its limits.",
-                accent: ColorTheme.info,
+                accent: ColorTheme.textTertiary,
                 isExpanded: $isShowingMapPacks
             ) {
                 Text(viewModel.coverageLimitSummary)
@@ -921,7 +1364,7 @@ struct MapView: View {
             CollapsiblePanelCard(
                 title: "Map Layers",
                 subtitle: "Advanced layer toggles for the offline map.",
-                accent: ColorTheme.info,
+                accent: ColorTheme.textTertiary,
                 isExpanded: $isShowingLayers
             ) {
                 ForEach(viewModel.availableLayers) { layer in
@@ -939,14 +1382,14 @@ struct MapView: View {
                         }
                     }
                     .toggleStyle(.switch)
-                    .tint(ColorTheme.info)
+                    .tint(ColorTheme.accent)
                 }
             }
 
             CollapsiblePanelCard(
                 title: "Marker Legend",
                 subtitle: "Color roles used on the offline map.",
-                accent: ColorTheme.info,
+                accent: ColorTheme.textTertiary,
                 isExpanded: $isShowingLegend
             ) {
                 VStack(alignment: .leading, spacing: 12) {
@@ -977,7 +1420,7 @@ struct MapView: View {
                 CollapsiblePanelCard(
                     title: "Evacuation Points",
                     subtitle: "Offline reference shelters plus nearby baseline facilities when live data is available.",
-                    accent: ColorTheme.ready,
+                    accent: ColorTheme.textTertiary,
                     isExpanded: $isShowingEvacuationPoints
                 ) {
                     evacuationPointsContent
@@ -988,7 +1431,7 @@ struct MapView: View {
                 CollapsiblePanelCard(
                     title: "Water Points",
                     subtitle: "Installed offline water points plus live nearby search when available.",
-                    accent: ColorTheme.info,
+                    accent: ColorTheme.textTertiary,
                     isExpanded: $isShowingWaterPoints
                 ) {
                     waterPointsContent
@@ -999,7 +1442,7 @@ struct MapView: View {
                 CollapsiblePanelCard(
                     title: "Dirt Roads & Remote Tracks",
                     subtitle: "Unsealed roads, 4WD routes and station tracks.",
-                    accent: ColorTheme.info,
+                    accent: ColorTheme.textTertiary,
                     isExpanded: $isShowingDirtRoads
                 ) {
                     dirtRoadsContent
@@ -1010,7 +1453,7 @@ struct MapView: View {
                 CollapsiblePanelCard(
                     title: "Fire Access Trails",
                     subtitle: "Emergency-service access routes shown with caution.",
-                    accent: ColorTheme.warning,
+                    accent: ColorTheme.textTertiary,
                     isExpanded: $isShowingFireTrails
                 ) {
                     fireTrailsContent
@@ -1032,7 +1475,7 @@ struct MapView: View {
                 CollapsiblePanelCard(
                     title: "Community Situation Reports",
                     subtitle: "Temporary local reports discovered over the mesh.",
-                    accent: ColorTheme.warning,
+                    accent: ColorTheme.textTertiary,
                     isExpanded: $isShowingBeacons
                 ) {
                     communityBeaconsContent
@@ -1042,7 +1485,7 @@ struct MapView: View {
             CollapsiblePanelCard(
                 title: "Personal Markers",
                 subtitle: "Your add-on markers and saved local references.",
-                accent: ColorTheme.accent,
+                accent: ColorTheme.textTertiary,
                 isExpanded: $isShowingMarkers
             ) {
                 personalMarkersContent
@@ -1052,7 +1495,7 @@ struct MapView: View {
                 CollapsiblePanelCard(
                     title: "Offline Resource List",
                     subtitle: "Critical fallback if map packs are limited.",
-                    accent: ColorTheme.info,
+                    accent: ColorTheme.textTertiary,
                     isExpanded: $isShowingResources
                 ) {
                     resourceListContent
@@ -1298,6 +1741,33 @@ struct MapView: View {
         }
     }
 
+    private func inspectorGroup<Content: View>(
+        title: String,
+        subtitle: String,
+        accent: Color,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.text)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(ColorTheme.textMuted)
+            }
+
+            content()
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(accent.opacity(0.18), lineWidth: 1)
+        )
+    }
+
     private func nearbySummaryCard(
         title: String,
         subtitle: String,
@@ -1470,9 +1940,27 @@ struct MapView: View {
                 Text(beacon.statusText)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(ColorTheme.text)
+
+                if !beacon.signalHighlights.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(Array(beacon.signalHighlights.enumerated()), id: \.offset) { _, item in
+                            HStack(alignment: .top, spacing: 8) {
+                                Text(item.label)
+                                    .font(RediTypography.caption)
+                                    .foregroundStyle(ColorTheme.textFaint)
+                                    .frame(width: 72, alignment: .leading)
+                                Text(item.value)
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(ColorTheme.text)
+                            }
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+
                 Text(beacon.locationName)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(ColorTheme.info)
+                    .foregroundStyle(ColorTheme.textSecondary)
                 if let message = beacon.message.nilIfBlank {
                     Text(message)
                         .font(.caption)
@@ -1694,7 +2182,7 @@ private struct ShelterCard: View {
                     if isSelected {
                         Text("Selected on map")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(ColorTheme.info)
+                            .foregroundStyle(ColorTheme.textSecondary)
                     }
                 }
 

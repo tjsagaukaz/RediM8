@@ -8,101 +8,106 @@ struct ScenarioSelectionView: View {
         GridItem(.flexible(), spacing: 12)
     ]
 
+    private var selectedScenarioNames: [String] {
+        viewModel.selectedScenarioModels.map(\.name)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             ModeHeroCard(
-                eyebrow: "Risk Profile",
-                title: "Tell RediM8 what to prioritize.",
-                subtitle: "Choose the situations you’re actually likely to face. RediM8 will use them to tune targets, Priority Mode, map emphasis, and the kinds of gaps it surfaces first.",
+                eyebrow: "Risks",
+                title: "Pick the situations you actually plan for.",
+                subtitle: "Choose all that apply. RediM8 will use this to tune targets, guides, and emergency shortcuts.",
                 iconName: "situation",
-                accent: ColorTheme.warning
+                accent: ColorTheme.textTertiary,
+                backgroundAssetName: "community_storm_town",
+                backgroundImageOffset: CGSize(width: 10, height: 0)
             ) {
-                VStack(alignment: .leading, spacing: 12) {
-                    TrustPillGroup(items: [
-                        TrustPillItem(title: "All that apply", tone: .verified),
-                        TrustPillItem(title: "General fallback", tone: .neutral),
-                        TrustPillItem(title: "Priority tuned", tone: .info)
-                    ])
+                TrustPillGroup(items: [
+                    TrustPillItem(title: "All that apply", tone: .verified),
+                    TrustPillItem(title: "General fallback", tone: .neutral),
+                    TrustPillItem(title: "Editable later", tone: .info)
+                ])
+            }
 
-                    if let highlighted = viewModel.highlightedPrioritySituation {
-                        HStack(alignment: .top, spacing: 12) {
-                            RediIcon(highlighted.systemImage)
-                                .foregroundStyle(ColorTheme.warning)
-                                .frame(width: 22, height: 22)
+            PanelCard(
+                title: "Selected",
+                subtitle: selectedScenarioNames.isEmpty ? "General emergencies will stay as the baseline." : "Your current setup focus."
+            ) {
+                if selectedScenarioNames.isEmpty {
+                    Text("General emergencies")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(ColorTheme.text)
+                } else {
+                    TrustPillGroup(items: selectedScenarioNames.map { TrustPillItem(title: $0, tone: .info) })
+                }
 
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("\(highlighted.title) will be surfaced first")
-                                    .font(RediTypography.bodyStrong)
-                                    .foregroundStyle(ColorTheme.text)
-                                Text(priorityCopy(for: highlighted))
-                                    .font(.subheadline)
-                                    .foregroundStyle(ColorTheme.textMuted)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
-                    } else {
-                        Text("If you’re unsure, keep a general emergency baseline and you can refine it later.")
-                            .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textMuted)
-                    }
+                if let highlighted = viewModel.highlightedPrioritySituation {
+                    Text("\(highlighted.title) will be pushed closer to the front in emergency flows.")
+                        .font(.caption)
+                        .foregroundStyle(ColorTheme.textMuted)
+                        .padding(.top, 6)
                 }
             }
 
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(viewModel.availableScenarios) { scenario in
-                    Button {
-                        viewModel.toggle(scenario.kind)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack(alignment: .top) {
-                                scenarioBadge(for: scenario.kind)
-                                Spacer()
-                                if viewModel.selectedScenarios.contains(scenario.kind) {
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.system(size: 20, weight: .semibold))
-                                        .foregroundStyle(ColorTheme.background)
-                                }
-                            }
-
-                            Text(scenario.name)
-                                .font(.headline)
-                                .foregroundStyle(viewModel.selectedScenarios.contains(scenario.kind) ? Color.black : ColorTheme.text)
-
-                            Text(scenario.description)
-                                .font(.caption)
-                                .foregroundStyle(viewModel.selectedScenarios.contains(scenario.kind) ? Color.black.opacity(0.75) : ColorTheme.textMuted)
-                                .multilineTextAlignment(.leading)
-
-                            Text(scenarioFooter(for: scenario.kind))
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(viewModel.selectedScenarios.contains(scenario.kind) ? Color.black.opacity(0.78) : ColorTheme.info)
-                        }
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 14)
-                        .frame(maxWidth: .infinity, minHeight: 152, alignment: .leading)
-                        .background(
-                            viewModel.selectedScenarios.contains(scenario.kind)
-                                ? scenarioAccent(for: scenario.kind)
-                                : ColorTheme.panelRaised,
-                            in: RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                                .stroke(viewModel.selectedScenarios.contains(scenario.kind) ? Color.clear : scenarioAccent(for: scenario.kind).opacity(0.18), lineWidth: 1)
-                        )
-                    }
-                    .buttonStyle(.plain)
+                    scenarioCard(scenario)
                 }
             }
 
-            PanelCard(title: "How Selection Works", subtitle: "Calm defaults when you’re not sure") {
-                VStack(alignment: .leading, spacing: 10) {
-                    infoLine("You can select more than one situation if your risks overlap.")
-                    infoLine("General Emergency stays as the fallback when nothing else is selected.")
-                    infoLine("You can rerun onboarding later from Home if seasons or travel plans change.")
-                }
-            }
+            Text("Leave it broad if you are unsure. You can tune this again later.")
+                .font(.caption)
+                .foregroundStyle(ColorTheme.textFaint)
         }
+    }
+
+    private func scenarioCard(_ scenario: PrepScenario) -> some View {
+        let isSelected = viewModel.selectedScenarios.contains(scenario.kind)
+        let tint = scenarioAccent(for: scenario.kind)
+
+        return Button {
+            viewModel.toggle(scenario.kind)
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top) {
+                    scenarioBadge(for: scenario.kind)
+                    Spacer()
+                    if isSelected {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(ColorTheme.background)
+                    }
+                }
+
+                Text(scenario.name)
+                    .font(.headline)
+                    .foregroundStyle(isSelected ? Color.black : ColorTheme.text)
+
+                Text(scenario.description)
+                    .font(.caption)
+                    .foregroundStyle(isSelected ? Color.black.opacity(0.75) : ColorTheme.textMuted)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(3)
+
+                Text(scenarioFooter(for: scenario.kind))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(isSelected ? Color.black.opacity(0.78) : tint)
+                    .lineLimit(2)
+            }
+            .padding(.vertical, 16)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, minHeight: 136, alignment: .leading)
+            .background(
+                isSelected ? tint : ColorTheme.panelRaised,
+                in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(isSelected ? Color.clear : tint.opacity(0.18), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private func scenarioBadge(for scenario: ScenarioKind) -> some View {
@@ -148,7 +153,7 @@ struct ScenarioSelectionView: View {
     private func scenarioTag(for scenario: ScenarioKind) -> String {
         switch scenario {
         case .bushfires, .floods, .powerOutages, .remoteTravel:
-            "Priority Mode"
+            "Priority"
         case .generalEmergencies:
             "Fallback"
         default:
@@ -176,43 +181,17 @@ struct ScenarioSelectionView: View {
     private func scenarioFooter(for scenario: ScenarioKind) -> String {
         switch scenario {
         case .bushfires:
-            "Faster Leave Now, shelters, and route emphasis"
+            "Leave now and route focus"
         case .floods:
-            "Higher-ground movement and shelter emphasis"
+            "Movement and shelter focus"
         case .powerOutages:
-            "Battery, low-draw, and blackout emphasis"
+            "Battery and blackout focus"
         case .remoteTravel:
-            "Vehicle kit, fuel, and water emphasis"
+            "Vehicle, fuel, and water focus"
         case .generalEmergencies:
-            "Safe default if you’re not sure yet"
+            "Safe default baseline"
         default:
-            "Adjusts targets, tasks, and guides"
-        }
-    }
-
-    private func priorityCopy(for situation: PrioritySituation) -> String {
-        switch situation {
-        case .bushfire:
-            "Leave Now, evacuation routes, shelters, and grab-folder prompts will move closer to the front."
-        case .flood:
-            "Movement, shelter context, and route checking will be emphasized earlier."
-        case .blackout:
-            "Battery preservation, torch access, and reduced-motion tools will matter more."
-        case .remoteTravel:
-            "Vehicle readiness, water, fuel, and offline navigation will carry more weight."
-        }
-    }
-
-    private func infoLine(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(ColorTheme.ready)
-                .font(.system(size: 14, weight: .semibold))
-                .padding(.top, 2)
-
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(ColorTheme.text)
+            "Adjusts targets and guides"
         }
     }
 }

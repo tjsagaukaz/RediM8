@@ -25,6 +25,9 @@ struct StealthModeIndicatorView: View {
 }
 
 struct HiddenModeIndicatorView: View {
+    var actionTitle: String? = nil
+    var action: (() -> Void)? = nil
+
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "eye.slash.fill")
@@ -33,9 +36,23 @@ struct HiddenModeIndicatorView: View {
                 .font(RediTypography.bodyStrong)
                 .foregroundStyle(ColorTheme.text)
             Spacer()
-            Text("Not Broadcasting")
-                .font(RediTypography.caption)
-                .foregroundStyle(SettingsPalette.accent)
+            if let actionTitle, let action {
+                Button(actionTitle, action: action)
+                    .font(RediTypography.caption)
+                    .foregroundStyle(SettingsPalette.accent)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(SettingsPalette.mutedAccent, in: Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke(SettingsPalette.accent.opacity(0.22), lineWidth: 1)
+                    )
+                    .buttonStyle(.plain)
+            } else {
+                Text("Not Broadcasting")
+                    .font(RediTypography.caption)
+                    .foregroundStyle(SettingsPalette.accent)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)

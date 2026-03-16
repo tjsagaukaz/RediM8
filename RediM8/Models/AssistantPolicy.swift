@@ -13,6 +13,9 @@ enum AssistantIntentTopic: String, CaseIterable, Codable, Equatable {
     case waterPlanning = "water_planning"
     case routePlanning = "route_planning"
     case preparednessPlanning = "preparedness_planning"
+    case bushMedicine = "bush_medicine"
+    case foodGrowing = "food_growing"
+    case survivalSkills = "survival_skills"
     case unknown
 }
 

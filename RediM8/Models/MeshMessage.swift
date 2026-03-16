@@ -4,12 +4,35 @@ enum MeshMessageKind: String, Codable, Equatable {
     case direct
     case broadcastAlert
     case locationShare
+    case accountabilityStatus = "accountability_status"
 }
 
 struct SharedLocation: Codable, Equatable {
     var latitude: Double
     var longitude: Double
     var label: String
+}
+
+struct AccountabilityMeshStatus: Codable, Equatable {
+    var circleTitle: String
+    var memberName: String
+    var status: AccountabilityStatus
+    var note: String
+    var updatedAt: Date
+
+    init(
+        circleTitle: String,
+        memberName: String,
+        status: AccountabilityStatus,
+        note: String = "",
+        updatedAt: Date = .now
+    ) {
+        self.circleTitle = circleTitle
+        self.memberName = memberName
+        self.status = status
+        self.note = note
+        self.updatedAt = updatedAt
+    }
 }
 
 struct MeshMessage: Identifiable, Codable, Equatable {
@@ -20,6 +43,7 @@ struct MeshMessage: Identifiable, Codable, Equatable {
     let timestamp: Date
     let kind: MeshMessageKind
     let location: SharedLocation?
+    let accountabilityStatus: AccountabilityMeshStatus?
 
     init(
         id: UUID = UUID(),
@@ -28,7 +52,8 @@ struct MeshMessage: Identifiable, Codable, Equatable {
         body: String,
         timestamp: Date = .now,
         kind: MeshMessageKind,
-        location: SharedLocation? = nil
+        location: SharedLocation? = nil,
+        accountabilityStatus: AccountabilityMeshStatus? = nil
     ) {
         self.id = id
         self.sender = sender
@@ -37,5 +62,6 @@ struct MeshMessage: Identifiable, Codable, Equatable {
         self.timestamp = timestamp
         self.kind = kind
         self.location = location
+        self.accountabilityStatus = accountabilityStatus
     }
 }

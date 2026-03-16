@@ -1,0 +1,184 @@
+import SwiftUI
+
+enum MoreWorkspace: String, CaseIterable, Identifiable {
+    case plan
+    case vault
+    case library
+    case settings
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .plan: "Plan"
+        case .vault: "Vault"
+        case .library: "Library"
+        case .settings: "Settings"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .plan: "Household readiness, supplies, and scenarios"
+        case .vault: "Secure identity and emergency documents"
+        case .library: "Offline survival and first aid guides"
+        case .settings: "Privacy, signal, maps, and device options"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .plan: "checklist"
+        case .vault: "lock.doc.fill"
+        case .library: "books.vertical.fill"
+        case .settings: "gearshape.fill"
+        }
+    }
+}
+
+struct MoreView: View {
+    let appState: AppState
+    @ObservedObject var router: NavigationRouter
+    let scrollToTopRequestID: Int
+
+    @State private var selectedWorkspace: MoreWorkspace = .plan
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: RediSpacing.section) {
+                    Color.clear
+                        .frame(height: 0)
+                        .id("more-scroll-top")
+
+                    workspacePicker
+
+                    activeWorkspaceContent
+                }
+                .padding(.horizontal, RediSpacing.screen)
+                .padding(.top, RediSpacing.screen)
+                .padding(.bottom, RediLayout.commandDockContentInset)
+            }
+            .scrollIndicators(.hidden)
+            .onChange(of: scrollToTopRequestID) { _, _ in
+                withAnimation(RediMotion.selection) {
+                    proxy.scrollTo("more-scroll-top", anchor: .top)
+                }
+            }
+        }
+        .navigationTitle("Workspace")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            handlePendingNavigation()
+        }
+        .onChange(of: router.selectedTab) { _, newTab in
+            if newTab == .more {
+                handlePendingNavigation()
+            }
+        }
+    }
+
+    private func handlePendingNavigation() {
+        if router.selectedTab == .plan {
+            selectedWorkspace = .plan
+            router.selectedTab = .more
+        } else if router.selectedTab == .vault {
+            selectedWorkspace = .vault
+            router.selectedTab = .more
+        } else if router.selectedTab == .library {
+            selectedWorkspace = .library
+            router.selectedTab = .more
+        }
+    }
+
+    // MARK: - Workspace Picker
+
+    private var workspacePicker: some View {
+        CommandPanel(eyebrow: "Preparedness") {
+            VStack(alignment: .leading, spacing: RediSpacing.compact) {
+                ForEach(MoreWorkspace.allCases) { workspace in
+                    workspaceButton(workspace)
+                }
+            }
+        }
+    }
+
+    private func workspaceButton(_ workspace: MoreWorkspace) -> some View {
+        let isSelected = selectedWorkspace == workspace
+
+        return Button {
+            withAnimation(RediMotion.reveal) {
+                selectedWorkspace = workspace
+            }
+        } label: {
+            HStack(alignment: .center, spacing: RediSpacing.content) {
+                Image(systemName: workspace.systemImage)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(ColorTheme.textTertiary)
+                    .frame(width: 28, height: 28)
+                    .background(ColorTheme.gunmetal, in: RoundedRectangle(cornerRadius: RediRadius.chip, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(workspace.title)
+                        .font(RediTypography.bodyStrong)
+                        .foregroundStyle(ColorTheme.text)
+                    Text(workspace.subtitle)
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.textTertiary)
+                }
+
+                Spacer(minLength: 0)
+
+                if isSelected {
+                    Text("OPEN")
+                        .font(RediTypography.label)
+                        .tracking(1.2)
+                        .foregroundStyle(ColorTheme.accent)
+                        .padding(.horizontal, RediSpacing.compact)
+                        .padding(.vertical, RediSpacing.tight)
+                        .background(ColorTheme.gunmetal, in: RoundedRectangle(cornerRadius: RediRadius.chip, style: .continuous))
+                }
+            }
+            .padding(RediSpacing.card)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                isSelected ? ColorTheme.panelElevated : ColorTheme.panelRaised,
+                in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                    .stroke(
+                        isSelected ? ColorTheme.dividerStrong : ColorTheme.divider,
+                        lineWidth: 0.5
+                    )
+            )
+        }
+        .buttonStyle(CardPressButtonStyle())
+    }
+
+    // MARK: - Active Content
+
+    @ViewBuilder
+    private var activeWorkspaceContent: some View {
+        switch selectedWorkspace {
+        case .plan:
+            PlanView(
+                appState: appState,
+                requestedFocus: $router.requestedPlanFocus,
+                scrollToTopRequestID: router.scrollToTopRequestID(for: .plan)
+            )
+        case .vault:
+            SecureVaultView(
+                service: appState.documentVaultService,
+                scrollToTopRequestID: router.scrollToTopRequestID(for: .vault)
+            )
+        case .library:
+            GuideLibraryView(
+                appState: appState,
+                scrollToTopRequestID: router.scrollToTopRequestID(for: .library)
+            )
+        case .settings:
+            SettingsView(appState: appState)
+        }
+    }
+}

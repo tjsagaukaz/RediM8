@@ -358,6 +358,113 @@
       ],
       "base_confidence" : 0.58,
       "minimum_confidence" : 0.56
+    },
+    {
+      "id" : "bush_medicine",
+      "intent" : "bush_medicine",
+      "risk_band" : "advisory",
+      "answer_mode" : "summarized_retrieval",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "tea_tree_field_antiseptic",
+        "eucalyptus_field_uses",
+        "lemon_myrtle_and_paperbark",
+        "bush_tucker_medicinal_plants"
+      ],
+      "trust_label" : "approximate",
+      "last_reviewed" : "2026-03-14T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : "Bush medicine guidance is supportive only. Use standard first aid and seek medical help for serious illness, bites, burns, or allergic reactions.",
+      "match_phrases" : [
+        "bush medicine",
+        "tea tree antiseptic",
+        "eucalyptus uses",
+        "lemon myrtle medicinal use",
+        "paperbark wound dressing",
+        "native analgesic plants"
+      ],
+      "token_groups" : [
+        ["bush", "medicine"],
+        ["tea", "tree"],
+        ["eucalyptus", "uses"],
+        ["paperbark", "wound"],
+        ["native", "analgesic"]
+      ],
+      "base_confidence" : 0.57,
+      "minimum_confidence" : 0.55
+    },
+    {
+      "id" : "food_growing",
+      "intent" : "food_growing",
+      "risk_band" : "advisory",
+      "answer_mode" : "summarized_retrieval",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "backyard_vegetable_garden_start",
+        "drought_ready_food_garden",
+        "native_edible_plants_basics",
+        "urban_food_production_small_spaces"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-03-14T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "grow food",
+        "backyard vegetable gardening",
+        "water efficient gardening",
+        "growing food in drought",
+        "native edible plants",
+        "urban food production"
+      ],
+      "token_groups" : [
+        ["grow", "food"],
+        ["vegetable", "garden"],
+        ["food", "drought"],
+        ["native", "edible", "plants"],
+        ["urban", "food"]
+      ],
+      "base_confidence" : 0.58,
+      "minimum_confidence" : 0.56
+    },
+    {
+      "id" : "survival_skills",
+      "intent" : "survival_skills",
+      "risk_band" : "advisory",
+      "answer_mode" : "summarized_retrieval",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "fire_starting_methods",
+        "water_collection_basics",
+        "rainwater_harvesting_setup",
+        "shelter_building_basics",
+        "off_grid_power_basics"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-03-14T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "survival skills",
+        "fire starting methods",
+        "water collection",
+        "rainwater harvesting",
+        "solar cooking",
+        "off grid power basics",
+        "shelter building",
+        "food preservation"
+      ],
+      "token_groups" : [
+        ["survival", "skills"],
+        ["fire", "starting"],
+        ["water", "collection"],
+        ["rainwater", "harvesting"],
+        ["solar", "cooking"],
+        ["off", "grid", "power"],
+        ["shelter", "building"]
+      ],
+      "base_confidence" : 0.58,
+      "minimum_confidence" : 0.56
     }
   ]
 }

@@ -188,21 +188,25 @@ struct MapSettings: Codable, Equatable {
     var defaultLayers: Set<MapLayer>
     var showsAirstrips: Bool
     var surfaceMode: MapSurfaceMode
+    var showsDistanceRings: Bool
 
     init(
         defaultLayers: Set<MapLayer>,
         showsAirstrips: Bool,
-        surfaceMode: MapSurfaceMode = .liveTiles
+        surfaceMode: MapSurfaceMode = .liveTiles,
+        showsDistanceRings: Bool = true
     ) {
         self.defaultLayers = defaultLayers
         self.showsAirstrips = showsAirstrips
         self.surfaceMode = surfaceMode
+        self.showsDistanceRings = showsDistanceRings
     }
 
     private enum CodingKeys: String, CodingKey {
         case defaultLayers
         case showsAirstrips
         case surfaceMode
+        case showsDistanceRings
     }
 
     init(from decoder: Decoder) throws {
@@ -211,6 +215,7 @@ struct MapSettings: Codable, Equatable {
             ?? Set(MapLayer.allCases.filter(\.defaultEnabled))
         showsAirstrips = try container.decodeIfPresent(Bool.self, forKey: .showsAirstrips) ?? false
         surfaceMode = try container.decodeIfPresent(MapSurfaceMode.self, forKey: .surfaceMode) ?? .liveTiles
+        showsDistanceRings = try container.decodeIfPresent(Bool.self, forKey: .showsDistanceRings) ?? true
     }
 
     func encode(to encoder: Encoder) throws {
@@ -218,12 +223,14 @@ struct MapSettings: Codable, Equatable {
         try container.encode(defaultLayers, forKey: .defaultLayers)
         try container.encode(showsAirstrips, forKey: .showsAirstrips)
         try container.encode(surfaceMode, forKey: .surfaceMode)
+        try container.encode(showsDistanceRings, forKey: .showsDistanceRings)
     }
 
     static let `default` = MapSettings(
         defaultLayers: Set(MapLayer.allCases.filter(\.defaultEnabled)),
         showsAirstrips: false,
-        surfaceMode: .liveTiles
+        surfaceMode: .liveTiles,
+        showsDistanceRings: true
     )
 }
 
@@ -236,6 +243,14 @@ struct PreparednessSettings: Codable, Equatable {
         prepScoreNotificationsEnabled: true,
         seventyTwoHourPlanAlertsEnabled: true,
         goBagRemindersEnabled: true
+    )
+}
+
+struct AssistantSettings: Codable, Equatable {
+    var offlineAISummariesEnabled: Bool
+
+    static let `default` = AssistantSettings(
+        offlineAISummariesEnabled: true
     )
 }
 
@@ -256,13 +271,60 @@ struct AppSettings: Codable, Equatable {
     var signalDiscovery: SignalDiscoverySettings
     var maps: MapSettings
     var preparedness: PreparednessSettings
+    var assistant: AssistantSettings
     var battery: BatterySettings
+
+    init(
+        privacy: PrivacySettings,
+        signalDiscovery: SignalDiscoverySettings,
+        maps: MapSettings,
+        preparedness: PreparednessSettings,
+        assistant: AssistantSettings,
+        battery: BatterySettings
+    ) {
+        self.privacy = privacy
+        self.signalDiscovery = signalDiscovery
+        self.maps = maps
+        self.preparedness = preparedness
+        self.assistant = assistant
+        self.battery = battery
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case privacy
+        case signalDiscovery
+        case maps
+        case preparedness
+        case assistant
+        case battery
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        privacy = try container.decodeIfPresent(PrivacySettings.self, forKey: .privacy) ?? .default
+        signalDiscovery = try container.decodeIfPresent(SignalDiscoverySettings.self, forKey: .signalDiscovery) ?? .default
+        maps = try container.decodeIfPresent(MapSettings.self, forKey: .maps) ?? .default
+        preparedness = try container.decodeIfPresent(PreparednessSettings.self, forKey: .preparedness) ?? .default
+        assistant = try container.decodeIfPresent(AssistantSettings.self, forKey: .assistant) ?? .default
+        battery = try container.decodeIfPresent(BatterySettings.self, forKey: .battery) ?? .default
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(privacy, forKey: .privacy)
+        try container.encode(signalDiscovery, forKey: .signalDiscovery)
+        try container.encode(maps, forKey: .maps)
+        try container.encode(preparedness, forKey: .preparedness)
+        try container.encode(assistant, forKey: .assistant)
+        try container.encode(battery, forKey: .battery)
+    }
 
     static let `default` = AppSettings(
         privacy: .default,
         signalDiscovery: .default,
         maps: .default,
         preparedness: .default,
+        assistant: .default,
         battery: .default
     )
 }

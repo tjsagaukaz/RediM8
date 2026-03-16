@@ -1,0 +1,76 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "NSW/VIC", "type": "state-border" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [141.00, -34.00], [141.00, -36.00], [143.50, -38.60],
+          [146.00, -38.80], [148.00, -37.50], [150.00, -37.30]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "NSW/QLD", "type": "state-border" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [141.00, -29.00], [149.00, -29.00], [151.00, -29.00], [153.50, -28.50]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "SA/WA", "type": "state-border" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [129.00, -13.50], [129.00, -20.00], [129.00, -26.00], [129.00, -31.60]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "SA/NSW", "type": "state-border" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [141.00, -29.00], [141.00, -34.00], [140.50, -38.00]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "SA/NT", "type": "state-border" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [129.00, -26.00], [138.00, -26.00]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "NT/QLD", "type": "state-border" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [138.00, -26.00], [138.00, -20.00], [138.00, -16.00]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "QLD/SA", "type": "state-border" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [138.00, -26.00], [141.00, -26.00], [141.00, -29.00]
+        ]
+      }
+    }
+  ]
+}

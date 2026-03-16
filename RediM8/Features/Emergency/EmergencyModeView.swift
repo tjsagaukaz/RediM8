@@ -15,11 +15,6 @@ struct EmergencyModeView: View {
     @State private var isShowingFirstAidLibrary = false
     @State private var isShowingSecondaryTools = false
 
-    private let survivalDeckColumns = [
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10)
-    ]
-
     private var isBushfireModeEnabled: Bool {
         appState.profile.isBushfireModeEnabled
     }
@@ -39,8 +34,10 @@ struct EmergencyModeView: View {
     }
 
     var body: some View {
-        GeometryReader { _ in
+        ScrollView {
             VStack(spacing: 16) {
+                CinematicBanner("emergency_mode_gear", height: 200)
+
                 if appState.isStealthModeEnabled {
                     StealthModeIndicatorView()
                 }
@@ -54,156 +51,35 @@ struct EmergencyModeView: View {
                     .frame(width: 110)
                 }
 
-                ModeHeroCard(
-                    eyebrow: "Immediate Actions",
-                    title: "Emergency Mode",
-                    subtitle: "Emergency session is active. RediM8 lifts brightness, keeps the screen awake, and stages map, contacts, guides, and signal in one place.",
-                    iconName: "emergency",
-                    accent: ColorTheme.danger,
-                    backgroundAssetName: "emergency_mode_phone"
-                ) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        TrustPillGroup(
-                            items: [
-                                TrustPillItem(title: "Screen stays awake", tone: .verified),
-                                TrustPillItem(title: "High visibility", tone: .info),
-                                TrustPillItem(title: "One-tap tools", tone: .info)
-                            ]
-                        )
-
-                        emergencySequenceLine(number: 1, title: "Leave Now", detail: "Open the no-scroll evacuation checklist.")
-                        emergencySequenceLine(number: 2, title: "Grab Folder", detail: "Take IDs, medications, contacts, chargers, and keys together.")
-                        emergencySequenceLine(number: 3, title: "Open Map", detail: "Confirm saved routes, shelter coverage, and water before you move.")
-                        emergencySequenceLine(number: 4, title: "Call or Signal", detail: "Use the fastest channel still working on this device.")
-                    }
-                }
-
-                survivalDeck
-
-                VStack(spacing: 12) {
-                    primaryEmergencyActionButton(
-                        title: "1. LEAVE NOW",
-                        detail: "Large-button evacuation flow with Grab Folder, Map, and Call or Signal already staged.",
-                        iconName: "route",
-                        tint: ColorTheme.danger,
-                        action: openLeaveNow
-                    )
-
-                    primaryEmergencyActionButton(
-                        title: "2. OPEN OFFLINE MAP",
-                        detail: "\(appState.mapDataService.loadInstalledPackIDs().count) pack(s) available. Check route coverage before you move.",
-                        iconName: "map_marker",
-                        tint: ColorTheme.info,
-                        action: openMap
-                    )
-
-                    primaryEmergencyActionButton(
-                        title: "3. CALL \(TrustLayer.emergencyCallNumber)",
-                        detail: "Fastest option if mobile coverage is still available.",
-                        iconName: "emergency",
-                        tint: ColorTheme.danger,
-                        action: callEmergencyServices
-                    )
-
-                    primaryEmergencyActionButton(
-                        title: "4. SIGNAL NEARBY",
-                        detail: appState.isStealthModeEnabled || appState.settings.privacy.isAnonymousModeEnabled
-                            ? "Currently receive-only. Check Signal for the current device limits."
-                            : "Assistive short-range messaging only. Delivery is not guaranteed.",
-                        iconName: "signal",
-                        tint: ColorTheme.warning,
-                        action: openSignal
-                    )
-                }
-
-                secondaryEmergencyActionButton(
-                    title: "Contacts & Documents",
-                    systemImage: "documents",
-                    detail: "Open emergency contacts plus local ID, insurance, medical, and document records."
-                ) {
-                    isShowingEmergencyDocuments = true
-                }
-
-                Spacer(minLength: 0)
-
-                CollapsiblePanelCard(
-                    title: "Secondary Support",
-                    subtitle: "Use only after the main flow is moving.",
-                    accent: ColorTheme.warning,
-                    isExpanded: $isShowingSecondaryTools
-                ) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        secondaryEmergencyActionButton(title: "Blackout Mode", systemImage: "flashlight", detail: "Torch, contacts, and battery-preserving actions.") {
-                            openBlackout()
-                        }
-
-                        secondaryEmergencyActionButton(title: "First Aid Guides", systemImage: "first_aid", detail: "Offline treatment and triage reference.") {
-                            isShowingFirstAidLibrary = true
-                        }
-
-                        if let primaryRoleTask {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Your role: \(primaryRoleTask.memberName) - \(primaryRoleTask.role)")
-                                    .font(RediTypography.bodyStrong)
-                                    .foregroundStyle(ColorTheme.text)
-                                Text(primaryRoleTask.taskTitle)
-                                    .font(RediTypography.body)
-                                    .foregroundStyle(ColorTheme.textMuted)
-                            }
-                            .padding(14)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        }
-
-                        if isBushfireModeEnabled {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Bushfire reminders")
-                                    .font(RediTypography.bodyStrong)
-                                    .foregroundStyle(ColorTheme.text)
-
-                                ForEach(Array(bushfireSteps.prefix(3).enumerated()), id: \.offset) { index, step in
-                                    Text("\(index + 1). \(step)")
-                                        .font(.subheadline)
-                                        .foregroundStyle(ColorTheme.textMuted)
-                                }
-                            }
-                            .padding(14)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                        }
-                    }
-                }
+                emergencyHeroCard
+                primaryLaneCard
+                secondarySupportCard
             }
             .padding(24)
             .padding(.top, 12)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(.bottom, 24)
+            .frame(maxWidth: .infinity, alignment: .top)
         }
+        .scrollIndicators(.hidden)
         .safeAreaInset(edge: .top, spacing: 0) {
             OperationalStatusRail(items: emergencyStatusItems, accent: ColorTheme.danger)
         }
-        .background(
-            LinearGradient(
-                colors: [Color.black, Color(red: 0.18, green: 0.05, blue: 0.04)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
-        )
+        .background(ColorTheme.background.ignoresSafeArea())
         .sheet(isPresented: $isShowingFirstAidLibrary) {
             NavigationStack {
                 GuideLibraryView(appState: appState, highlightedCategory: .firstAid)
             }
-            .rediSheetPresentation(style: .library, accent: ColorTheme.info)
+            .rediSheetPresentation()
         }
         .sheet(isPresented: $isShowingContacts) {
             NavigationStack {
                 EmergencyContactsView(contacts: appState.profile.emergencyContacts)
             }
-            .rediSheetPresentation(style: .neutral, accent: ColorTheme.premium)
+            .rediSheetPresentation()
         }
         .sheet(isPresented: $isShowingEmergencyDocuments) {
             EmergencyDocumentsQuickView(service: appState.documentVaultService)
-                .rediSheetPresentation(style: .vault, accent: ColorTheme.secure)
+                .rediSheetPresentation()
         }
     }
 
@@ -246,17 +122,156 @@ struct EmergencyModeView: View {
         openURL(url)
     }
 
-    private var survivalDeck: some View {
-        PanelCard(title: "Survival Deck", subtitle: "The fastest tools stay one tap away while Emergency Mode is active.") {
-            LazyVGrid(columns: survivalDeckColumns, spacing: 10) {
-                compactSurvivalDeckButton(title: "Offline Map", iconName: "map_marker", tint: ColorTheme.info, action: openMap)
-                compactSurvivalDeckButton(title: "Contacts", iconName: "family", tint: ColorTheme.warning) {
-                    isShowingContacts = true
+    private var emergencyHeroCard: some View {
+        ModeHeroCard(
+            eyebrow: "Next Five Minutes",
+            title: "Emergency Mode",
+            subtitle: "Emergency session is active. Use one clear lane first, then open support tools only if the essentials are already moving.",
+            iconName: "emergency",
+            accent: ColorTheme.danger,
+            backgroundAssetName: "emergency_mode_phone"
+        ) {
+            VStack(alignment: .leading, spacing: 12) {
+                TrustPillGroup(
+                    items: [
+                        TrustPillItem(title: "Screen stays awake", tone: .verified),
+                        TrustPillItem(title: "High visibility", tone: .info),
+                        TrustPillItem(title: "Action order staged", tone: .info)
+                    ]
+                )
+
+                emergencySequenceLine(number: 1, title: "Leave Now", detail: "Open the no-scroll evacuation checklist if you need fast movement.")
+                emergencySequenceLine(number: 2, title: "Grab Folder", detail: "Take IDs, medications, chargers, keys, and the documents you cannot replace quickly.")
+                emergencySequenceLine(number: 3, title: "Check Route", detail: "Confirm offline map coverage, evacuation notes, shelter, and water before moving.")
+                emergencySequenceLine(number: 4, title: "Call or Signal", detail: "Use the fastest real channel still working on this device.")
+
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 12) {
+                        heroSupportButton(
+                            title: "Emergency Documents",
+                            iconName: "documents",
+                            tint: ColorTheme.secure
+                        ) {
+                            isShowingEmergencyDocuments = true
+                        }
+
+                        heroSupportButton(
+                            title: "Emergency Contacts",
+                            iconName: "family",
+                            tint: ColorTheme.textTertiary
+                        ) {
+                            isShowingContacts = true
+                        }
+                    }
+
+                    VStack(spacing: 12) {
+                        heroSupportButton(
+                            title: "Emergency Documents",
+                            iconName: "documents",
+                            tint: ColorTheme.secure
+                        ) {
+                            isShowingEmergencyDocuments = true
+                        }
+
+                        heroSupportButton(
+                            title: "Emergency Contacts",
+                            iconName: "family",
+                            tint: ColorTheme.textTertiary
+                        ) {
+                            isShowingContacts = true
+                        }
+                    }
                 }
-                compactSurvivalDeckButton(title: "Guides", iconName: "first_aid", tint: ColorTheme.ready) {
+            }
+        }
+    }
+
+    private var primaryLaneCard: some View {
+        PanelCard(title: "Primary Lane", subtitle: "Do these in order. The rest can wait until you are already moving.") {
+            VStack(spacing: 12) {
+                primaryEmergencyActionButton(
+                    title: "1. LEAVE NOW",
+                    detail: "Large-button evacuation flow with Grab Folder, Map, and Call or Signal already staged.",
+                    iconName: "route",
+                    tint: ColorTheme.danger,
+                    action: openLeaveNow
+                )
+
+                primaryEmergencyActionButton(
+                    title: "2. OPEN OFFLINE MAP",
+                    detail: "\(appState.mapDataService.loadInstalledPackIDs().count) pack(s) available. Check route coverage before you move.",
+                    iconName: "map_marker",
+                    tint: ColorTheme.textTertiary,
+                    action: openMap
+                )
+
+                primaryEmergencyActionButton(
+                    title: "3. CALL \(TrustLayer.emergencyCallNumber)",
+                    detail: "Fastest option if mobile coverage is still available.",
+                    iconName: "emergency",
+                    tint: ColorTheme.danger,
+                    action: callEmergencyServices
+                )
+
+                primaryEmergencyActionButton(
+                    title: "4. SIGNAL NEARBY",
+                    detail: appState.isStealthModeEnabled || appState.settings.privacy.isAnonymousModeEnabled
+                        ? "Currently receive-only. Check Signal for the current device limits."
+                        : "Assistive short-range messaging only. Delivery is not guaranteed.",
+                    iconName: "signal",
+                    tint: ColorTheme.warning,
+                    action: openSignal
+                )
+            }
+        }
+    }
+
+    private var secondarySupportCard: some View {
+        CollapsiblePanelCard(
+            title: "Support & References",
+            subtitle: "Open only after the primary lane is underway.",
+            accent: ColorTheme.textTertiary,
+            isExpanded: $isShowingSecondaryTools
+        ) {
+            VStack(alignment: .leading, spacing: 12) {
+                secondaryEmergencyActionButton(title: "Blackout Mode", systemImage: "flashlight", detail: "Torch, contacts, and battery-preserving actions.") {
+                    openBlackout()
+                }
+
+                secondaryEmergencyActionButton(title: "First Aid Guides", systemImage: "first_aid", detail: "Offline treatment and triage reference.") {
                     isShowingFirstAidLibrary = true
                 }
-                compactSurvivalDeckButton(title: "Signal Mesh", iconName: "signal", tint: ColorTheme.warning, action: openSignal)
+
+                if let primaryRoleTask {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Your role: \(primaryRoleTask.memberName) - \(primaryRoleTask.role)")
+                            .font(RediTypography.bodyStrong)
+                            .foregroundStyle(ColorTheme.text)
+                        Text(primaryRoleTask.taskTitle)
+                            .font(RediTypography.body)
+                            .foregroundStyle(ColorTheme.textMuted)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                }
+
+                if isBushfireModeEnabled {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Bushfire reminders")
+                            .font(RediTypography.bodyStrong)
+                            .foregroundStyle(ColorTheme.text)
+
+                        ForEach(Array(bushfireSteps.prefix(3).enumerated()), id: \.offset) { index, step in
+                            Text("\(index + 1). \(step)")
+                                .font(.subheadline)
+                                .foregroundStyle(ColorTheme.textMuted)
+                        }
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                }
             }
         }
     }
@@ -278,7 +293,7 @@ struct EmergencyModeView: View {
         }
     }
 
-    private func compactSurvivalDeckButton(
+    private func heroSupportButton(
         title: String,
         iconName: String,
         tint: Color,
@@ -366,7 +381,7 @@ struct EmergencyModeView: View {
         Button(action: action) {
             HStack(alignment: .top, spacing: 12) {
                 RediIcon(systemImage)
-                    .foregroundStyle(ColorTheme.warning)
+                    .foregroundStyle(ColorTheme.textTertiary)
                     .frame(width: 22, height: 22)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -380,12 +395,12 @@ struct EmergencyModeView: View {
 
                 Spacer()
             }
-            .padding(16)
+            .padding(RediSpacing.card)
             .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
-            .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(ColorTheme.warning.opacity(0.16), lineWidth: 1)
+                RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                    .stroke(ColorTheme.divider, lineWidth: 0.5)
             )
         }
         .buttonStyle(.plain)

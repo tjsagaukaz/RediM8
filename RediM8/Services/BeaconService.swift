@@ -1,7 +1,6 @@
 import Combine
 import CoreLocation
 import Foundation
-import MultipeerConnectivity
 
 enum BeaconServiceError: LocalizedError {
     case locationUnavailable
@@ -97,6 +96,8 @@ final class BeaconService: ObservableObject {
     private var inviteTimestamps: [String: Date] = [:]
     private var relayBacklog: [RelayBacklogEntry]
     private var activeBroadcastInterval: TimeInterval?
+    private var isMeshServiceActive = false
+    private var isLocationServiceActive = false
 
     init(meshService: MeshService, locationService: LocationService, store: SQLiteStore?) {
         self.meshService = meshService
@@ -266,7 +267,8 @@ final class BeaconService: ObservableObject {
         resources: Set<BeaconResource>,
         showsName: Bool,
         displayName: String?,
-        emergencyMedicalSummary: String?
+        emergencyMedicalSummary: String?,
+        signalMetadata: BeaconSignalMetadata
     ) throws -> CommunityBeacon {
         guard runtimeSettings.locationShareMode != .off else {
             throw BeaconServiceError.locationSharingDisabled
@@ -298,7 +300,8 @@ final class BeaconService: ObservableObject {
             relayDepth: 0,
             displayName: runtimeSettings.showsDeviceName && showsName ? displayName?.nilIfBlank : nil,
             showsName: runtimeSettings.showsDeviceName && showsName,
-            emergencyMedicalSummary: emergencyMedicalSummary?.nilIfBlank
+            emergencyMedicalSummary: emergencyMedicalSummary?.nilIfBlank,
+            signalMetadata: signalMetadata
         )
 
         activeBeacon = beacon
@@ -477,7 +480,7 @@ final class BeaconService: ObservableObject {
         syncOperatingServices()
     }
 
-    private func autoConnect(nearby: [MCPeerID], connected: [MCPeerID]) {
+    private func autoConnect(nearby: [MeshPeer], connected: [MeshPeer]) {
         guard shouldRunMeshService, !runtimeSettings.isStealthModeEnabled else { return }
 
         let connectedNames = Set(connected.map(\.displayName))
@@ -572,15 +575,23 @@ final class BeaconService: ObservableObject {
 
     private func syncOperatingServices() {
         if shouldRunMeshService {
-            meshService.start()
-        } else {
+            if !isMeshServiceActive {
+                meshService.start()
+                isMeshServiceActive = true
+            }
+        } else if isMeshServiceActive {
             meshService.stop()
+            isMeshServiceActive = false
         }
 
         if shouldRunLocationService {
-            locationService.start()
-        } else {
+            if !isLocationServiceActive {
+                locationService.start()
+                isLocationServiceActive = true
+            }
+        } else if isLocationServiceActive {
             locationService.stop()
+            isLocationServiceActive = false
         }
 
         if shouldRunMaintenanceLoop {
@@ -684,6 +695,9 @@ final class BeaconService: ObservableObject {
             if lhs.type.priority != rhs.type.priority {
                 return lhs.type.priority < rhs.type.priority
             }
+            if lhs.severity.rank != rhs.severity.rank {
+                return lhs.severity.rank > rhs.severity.rank
+            }
             if lhs.updatedAt != rhs.updatedAt {
                 return lhs.updatedAt > rhs.updatedAt
             }
@@ -695,6 +709,9 @@ final class BeaconService: ObservableObject {
         entries.sorted { lhs, rhs in
             if lhs.beacon.type.priority != rhs.beacon.type.priority {
                 return lhs.beacon.type.priority < rhs.beacon.type.priority
+            }
+            if lhs.beacon.severity.rank != rhs.beacon.severity.rank {
+                return lhs.beacon.severity.rank > rhs.beacon.severity.rank
             }
             if lhs.beacon.updatedAt != rhs.beacon.updatedAt {
                 return lhs.beacon.updatedAt > rhs.beacon.updatedAt

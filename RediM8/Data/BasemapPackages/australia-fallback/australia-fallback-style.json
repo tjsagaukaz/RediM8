@@ -1,0 +1,120 @@
+{
+  "version": 8,
+  "name": "RediM8 Australia Fallback",
+  "metadata": {
+    "redim8Package": "australia_fallback",
+    "description": "Low-res offline Australia basemap with coastline, state boundaries, and major places."
+  },
+  "center": [133.7751, -25.2744],
+  "zoom": 3.5,
+  "pitch": 0,
+  "bearing": 0,
+  "sources": {
+    "coastline": {
+      "type": "geojson",
+      "data": "australia-coastline.geojson"
+    },
+    "states": {
+      "type": "geojson",
+      "data": "australia-states.geojson"
+    },
+    "places": {
+      "type": "geojson",
+      "data": "australia-places.geojson"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#08090A"
+      }
+    },
+    {
+      "id": "ocean-fill",
+      "type": "background",
+      "paint": {
+        "background-color": "#08090A"
+      }
+    },
+    {
+      "id": "land-fill",
+      "type": "fill",
+      "source": "coastline",
+      "paint": {
+        "fill-color": "#111214",
+        "fill-opacity": 1
+      }
+    },
+    {
+      "id": "coastline-outline",
+      "type": "line",
+      "source": "coastline",
+      "paint": {
+        "line-color": "#363839",
+        "line-width": 1.2,
+        "line-opacity": 0.8
+      }
+    },
+    {
+      "id": "state-borders",
+      "type": "line",
+      "source": "states",
+      "paint": {
+        "line-color": "#252729",
+        "line-width": 0.8,
+        "line-dasharray": [4, 3],
+        "line-opacity": 0.6
+      }
+    },
+    {
+      "id": "place-dots",
+      "type": "circle",
+      "source": "places",
+      "paint": {
+        "circle-radius": [
+          "match", ["get", "rank"],
+          1, 4,
+          2, 3,
+          2
+        ],
+        "circle-color": "#6B6E72",
+        "circle-opacity": 0.6,
+        "circle-stroke-width": 0.5,
+        "circle-stroke-color": "#A0A3A8",
+        "circle-stroke-opacity": 0.3
+      }
+    },
+    {
+      "id": "place-labels",
+      "type": "symbol",
+      "source": "places",
+      "layout": {
+        "text-field": ["get", "name"],
+        "text-font": ["Open Sans Regular"],
+        "text-size": [
+          "match", ["get", "rank"],
+          1, 12,
+          2, 10,
+          9
+        ],
+        "text-offset": [0, 1.2],
+        "text-anchor": "top",
+        "text-max-width": 8,
+        "text-allow-overlap": false
+      },
+      "paint": {
+        "text-color": "#6B6E72",
+        "text-halo-color": "#08090A",
+        "text-halo-width": 1.5,
+        "text-opacity": [
+          "match", ["get", "rank"],
+          1, 0.9,
+          2, 0.7,
+          0.5
+        ]
+      }
+    }
+  ]
+}

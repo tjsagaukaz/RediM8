@@ -2,7 +2,9 @@ import Foundation
 
 @MainActor
 struct AppServices {
+    let assistantService: AssistantService
     let assistantIntentClassifier: AssistantIntentClassifier
+    let assistantModel: OfflineAssistantModel
     let offlineBasemapService: OfflineBasemapService
     let officialAlertService: OfficialAlertService
     let documentVaultService: DocumentVaultService
@@ -30,6 +32,8 @@ struct AppServices {
     let locationService: LocationService
     let torchService: TorchService
     let motionService: MotionService
+    let tileCacheService: TileCacheService
+    let offlineRoutingService: OfflineRoutingService
 }
 
 @MainActor
@@ -82,6 +86,10 @@ struct AppEnvironment {
         let familyService = FamilyService(store: store)
         let guideService = GuideService(dataService: preparednessDataService)
         let assistantIntentClassifier = AssistantIntentClassifier(dataService: preparednessDataService, guideService: guideService)
+        let assistantModel = OfflineAssistantModel(bundle: bundle)
+        let assistantSafetyFilter = AssistantSafetyFilter()
+        let guideSummarizer = GuideSummarizer()
+        let assistantAnswerComposer = AssistantAnswerComposer(summarizer: guideSummarizer)
         let scenarioEngine = ScenarioEngine(dataService: preparednessDataService)
         let prepService = PrepService()
         let preparednessInsightsService = PreparednessInsightsService()
@@ -103,6 +111,23 @@ struct AppEnvironment {
             shelterService: shelterService
         )
         let beaconService = BeaconService(meshService: meshService, locationService: locationService, store: store)
+        let assistantContextEnricher = AssistantContextEnricher(
+            waterPointService: waterPointService,
+            shelterService: shelterService,
+            fireTrailService: fireTrailService,
+            officialAlertService: officialAlertService,
+            beaconService: beaconService,
+            mapDataService: mapDataService,
+            locationProvider: { locationService.currentLocation }
+        )
+        let assistantService = AssistantService(
+            classifier: assistantIntentClassifier,
+            guideService: guideService,
+            composer: assistantAnswerComposer,
+            assistantModel: assistantModel,
+            safetyFilter: assistantSafetyFilter,
+            contextProvider: assistantContextEnricher
+        )
         let emergencyPlanService = EmergencyPlanService(
             dataService: preparednessDataService,
             scenarioEngine: scenarioEngine,
@@ -120,6 +145,8 @@ struct AppEnvironment {
             emergencyPlanService: emergencyPlanService,
             goBagService: goBagService
         )
+        let tileCacheService = TileCacheService()
+        let offlineRoutingService = OfflineRoutingService()
         let torchService = TorchService()
         let motionService = MotionService(
             permissionsManager: permissionsManager,
@@ -127,7 +154,9 @@ struct AppEnvironment {
         )
 
         return AppServices(
+            assistantService: assistantService,
             assistantIntentClassifier: assistantIntentClassifier,
+            assistantModel: assistantModel,
             offlineBasemapService: offlineBasemapService,
             officialAlertService: officialAlertService,
             documentVaultService: documentVaultService,
@@ -154,7 +183,9 @@ struct AppEnvironment {
             meshService: meshService,
             locationService: locationService,
             torchService: torchService,
-            motionService: motionService
+            motionService: motionService,
+            tileCacheService: tileCacheService,
+            offlineRoutingService: offlineRoutingService
         )
     }
 }

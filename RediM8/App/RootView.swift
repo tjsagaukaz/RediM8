@@ -5,6 +5,13 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject var appState: AppState
     @ObservedObject var router: NavigationRouter
+    @State private var loadedTabs: Set<AppTab>
+
+    init(appState: AppState, router: NavigationRouter) {
+        self.appState = appState
+        self.router = router
+        _loadedTabs = State(initialValue: [router.selectedTab])
+    }
 
     var body: some View {
         Group {
@@ -65,6 +72,15 @@ struct RootView: View {
                     .allowsHitTesting(false)
             }
         }
+        // Emergency mode: subtle danger tint on top safe area
+        .overlay(alignment: .top) {
+            if router.isShowingEmergencyMode {
+                ColorTheme.danger.opacity(0.06)
+                    .frame(height: 1)
+                    .ignoresSafeArea(edges: .top)
+                    .allowsHitTesting(false)
+            }
+        }
         .transaction { transaction in
             if appState.isStealthModeEnabled {
                 transaction.disablesAnimations = true
@@ -86,61 +102,61 @@ struct RootView: View {
     }
 
     private var mainTabView: some View {
-        TabView(selection: $router.selectedTab) {
-            NavigationStack {
-                HomeView(
-                    appState: appState,
-                    openPlan: { router.openPlan() },
-                    openVault: { router.openVault() },
-                    openLibrary: { router.openLibrary() },
-                    openMap: { router.openMap() },
-                    openVehicleReadiness: { router.openVehicleReadiness() },
-                    openWaterRuntime: { router.openWaterRuntime() },
-                    openBlackout: { router.presentBlackout(appState: appState) },
-                    openSignalNearby: { router.openSignalNearby() },
-                    openEmergencyGuides: { router.presentEmergencyGuides(appState: appState) },
-                    openEmergency: { router.presentEmergencyMode(appState: appState) },
-                    openLeaveNow: { router.presentLeaveNowMode(appState: appState) }
-                )
-            }
-            .tag(AppTab.home)
-            .tabItem { Label("Home", systemImage: "house.fill") }
+        VStack(spacing: 0) {
+            SituationHeader(
+                appState: appState,
+                isEmergencyActive: router.isShowingEmergencyMode
+            )
 
-            NavigationStack {
-                PlanView(appState: appState, requestedFocus: $router.requestedPlanFocus)
-            }
-            .tag(AppTab.plan)
-            .tabItem { Label("Plan", systemImage: "checklist") }
+            ZStack {
+                tabLayer(.home) {
+                    HomeView(
+                        appState: appState,
+                        router: router,
+                        scrollToTopRequestID: router.scrollToTopRequestID(for: .home)
+                    )
+                }
 
-            NavigationStack {
-                SecureVaultView(service: appState.documentVaultService)
-            }
-            .tag(AppTab.vault)
-            .tabItem { Label("Vault", systemImage: "lock.doc.fill") }
+                tabLayer(.ask) {
+                    AskRediView(
+                        appState: appState,
+                        scrollToTopRequestID: router.scrollToTopRequestID(for: .ask),
+                        router: router
+                    )
+                }
 
-            NavigationStack {
-                GuideLibraryView(appState: appState)
-            }
-            .tag(AppTab.library)
-            .tabItem { Label("Library", systemImage: "books.vertical.fill") }
+                tabLayer(.more) {
+                    MoreView(
+                        appState: appState,
+                        router: router,
+                        scrollToTopRequestID: router.scrollToTopRequestID(for: .more)
+                    )
+                }
 
-            NavigationStack {
-                MapView(
-                    appState: appState,
-                    openEvacuationRoutes: { router.openEvacuationRoutes() }
-                )
-            }
-            .tag(AppTab.map)
-            .tabItem { Label("Map", systemImage: "map.fill") }
+                tabLayer(.map) {
+                    MapView(
+                        appState: appState,
+                        scrollToTopRequestID: router.scrollToTopRequestID(for: .map),
+                        openEvacuationRoutes: { router.openEvacuationRoutes() }
+                    )
+                }
 
-            NavigationStack {
-                SignalView(appState: appState)
+                tabLayer(.signal) {
+                    SignalView(
+                        appState: appState,
+                        scrollToTopRequestID: router.scrollToTopRequestID(for: .signal)
+                    )
+                }
             }
-            .tag(AppTab.signal)
-            .tabItem { Label("Signal", systemImage: "antenna.radiowaves.left.and.right") }
+            .frame(maxHeight: .infinity)
         }
-        .toolbar(.hidden, for: .tabBar)
-        .background(AmbientBackground(style: ambientBackgroundStyle))
+        .onAppear {
+            loadedTabs.insert(router.selectedTab)
+        }
+        .onChange(of: router.selectedTab) { _, newTab in
+            loadedTabs.insert(newTab)
+        }
+        .background(ColorTheme.background.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) {
             mainTabBar
         }
@@ -178,24 +194,39 @@ struct RootView: View {
             NavigationStack {
                 GuideLibraryView(appState: appState, highlightedCategory: router.highlightedGuideCategory)
             }
-            .rediSheetPresentation(style: .library, accent: ColorTheme.archive)
+            .rediSheetPresentation()
         }
         .fullScreenCover(isPresented: onboardingPresentationBinding) {
             OnboardingContainerView(appState: appState)
         }
     }
 
+    @ViewBuilder
+    private func tabLayer<Content: View>(_ tab: AppTab, @ViewBuilder content: () -> Content) -> some View {
+        if loadedTabs.contains(tab) {
+            NavigationStack {
+                content()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .opacity(router.selectedTab == tab ? 1 : 0)
+            .allowsHitTesting(router.selectedTab == tab)
+            .accessibilityHidden(router.selectedTab != tab)
+            .zIndex(router.selectedTab == tab ? 1 : 0)
+        }
+    }
+
     private var mainTabBar: some View {
         let items: [CommandDockItemModel<AppTab>] = [
             CommandDockItemModel(dockID: .home, title: "Home", systemImage: "house.fill", accent: ColorTheme.accent),
-            CommandDockItemModel(dockID: .plan, title: "Plan", systemImage: "checklist", accent: ColorTheme.warning),
-            CommandDockItemModel(dockID: .vault, title: "Vault", systemImage: "lock.doc.fill", accent: ColorTheme.secure),
-            CommandDockItemModel(dockID: .library, title: "Library", systemImage: "books.vertical.fill", accent: ColorTheme.archive),
-            CommandDockItemModel(dockID: .map, title: "Map", systemImage: "map.fill", accent: ColorTheme.terrain),
-            CommandDockItemModel(dockID: .signal, title: "Signal", systemImage: "antenna.radiowaves.left.and.right", accent: ColorTheme.comms)
+            CommandDockItemModel(dockID: .ask, title: "Ask Redi", systemImage: "sparkles", accent: ColorTheme.accent),
+            CommandDockItemModel(dockID: .map, title: "Map", systemImage: "map.fill", accent: ColorTheme.accent),
+            CommandDockItemModel(dockID: .signal, title: "Signal", systemImage: "antenna.radiowaves.left.and.right", accent: ColorTheme.accent),
+            CommandDockItemModel(dockID: .more, title: "More", systemImage: "square.grid.2x2.fill", accent: ColorTheme.accent)
         ]
 
         return CommandDock(items: items, selectedID: router.selectedTab) { tab in
+            router.requestScrollToTop(for: tab)
+
             guard router.selectedTab != tab else { return }
 
             let updateSelection = {
@@ -219,23 +250,6 @@ struct RootView: View {
 
     private var shouldAnimateShellMotion: Bool {
         !reduceMotion && !appState.isStealthModeEnabled
-    }
-
-    private var ambientBackgroundStyle: AmbientBackgroundStyle {
-        switch router.selectedTab {
-        case .home:
-            .home
-        case .plan:
-            .plan
-        case .vault:
-            .vault
-        case .library:
-            .library
-        case .map:
-            .map
-        case .signal:
-            .signal
-        }
     }
 
     private var survivalPromptBinding: Binding<Bool> {

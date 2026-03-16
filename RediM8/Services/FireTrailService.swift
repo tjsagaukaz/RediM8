@@ -16,6 +16,10 @@ final class FireTrailService {
         !trailDataset.tracks.isEmpty
     }
 
+    var allTrails: [TrackSegment] {
+        trailDataset.tracks
+    }
+
     func fireTrails(for installedPackIDs: Set<String>) -> [TrackSegment] {
         trailDataset.tracks.filter { trail in
             trail.isFireAccessTrail && isFeatureAvailable(trail.packIDs, within: installedPackIDs)

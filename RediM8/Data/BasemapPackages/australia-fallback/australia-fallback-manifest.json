@@ -1,0 +1,14 @@
+{
+  "package": {
+    "id": "australia_fallback",
+    "name": "Australia Fallback",
+    "summary": "Low-resolution offline basemap showing Australia coastline, state borders, and major population centres.",
+    "version": "1.0"
+  },
+  "files": [
+    { "path": "australia-fallback-style.json", "url": "australia-fallback-style.json" },
+    { "path": "australia-coastline.geojson", "url": "australia-coastline.geojson" },
+    { "path": "australia-states.geojson", "url": "australia-states.geojson" },
+    { "path": "australia-places.geojson", "url": "australia-places.geojson" }
+  ]
+}

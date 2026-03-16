@@ -41,14 +41,17 @@ final class WaterPointService {
     }
 
     private let waterPointDataset: WaterPointDataset
+    private let spatialIndex: SpatialIndex<WaterPoint>
     private let session: URLSession
     private var nearbyNetworkCache: NearbyWaterNetworkCache?
 
     private(set) var lastNearbyNetworkError: String?
 
     init(bundle: Bundle = .main, session: URLSession = .shared) {
-        waterPointDataset = (try? bundle.decode("WaterPoints.json", as: WaterPointDataset.self))
+        let dataset = (try? bundle.decode("WaterPoints.json", as: WaterPointDataset.self))
             ?? WaterPointDataset(lastUpdated: .distantPast, waterPoints: [])
+        self.waterPointDataset = dataset
+        self.spatialIndex = SpatialIndex(items: dataset.waterPoints) { $0.coordinate.coordinate }
         self.session = session
     }
 
@@ -95,21 +98,34 @@ final class WaterPointService {
         kinds: Set<WaterPointKind> = [],
         limit: Int = 3
     ) -> [NearbyWaterPoint] {
-        let anchor = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        // Use R-tree for fast nearest-neighbor query on offline data
+        let offlineResults = spatialIndex.nearest(to: coordinate, limit: limit * 4)
+            .filter { entry in
+                let point = entry.item
+                guard isFeatureAvailable(point.packIDs, within: installedPackIDs) else { return false }
+                return kinds.isEmpty || kinds.contains(point.kind)
+            }
+            .prefix(limit)
+            .map { NearbyWaterPoint(point: $0.item, distanceMetres: $0.distanceMetres) }
 
-        return waterPoints(for: installedPackIDs, near: coordinate, kinds: kinds)
+        // Merge with network nearby results if available
+        let networkPoints = cachedNearbyNetworkPoints(near: coordinate, maxAge: NetworkConfig.displayMaxAge) ?? []
+        guard !networkPoints.isEmpty else {
+            return Array(offlineResults)
+        }
+
+        let anchor = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let networkResults = networkPoints
+            .filter { kinds.isEmpty || kinds.contains($0.kind) }
             .map { point in
                 NearbyWaterPoint(
                     point: point,
                     distanceMetres: anchor.distance(from: CLLocation(latitude: point.coordinate.latitude, longitude: point.coordinate.longitude))
                 )
             }
-            .sorted { lhs, rhs in
-                if lhs.distanceMetres == rhs.distanceMetres {
-                    return lhs.point.name < rhs.point.name
-                }
-                return lhs.distanceMetres < rhs.distanceMetres
-            }
+
+        return (Array(offlineResults) + networkResults)
+            .sorted { $0.distanceMetres < $1.distanceMetres }
             .prefix(limit)
             .map { $0 }
     }

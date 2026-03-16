@@ -100,6 +100,10 @@ final class MapDataService {
         availablePacks.filter { packIDs.contains($0.id) }
     }
 
+    var allTracks: [TrackSegment] {
+        trackDataset.tracks + fireTrailService.allTrails
+    }
+
     func dirtRoads(for installedPackIDs: Set<String>) -> [TrackSegment] {
         trackDataset.tracks.filter { track in
             guard !track.isFireAccessTrail else { return false }

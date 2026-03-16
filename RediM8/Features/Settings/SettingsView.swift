@@ -1,11 +1,91 @@
 import SwiftUI
 
 struct SettingsView: View {
+    private enum SettingsWorkspace: String, CaseIterable, Identifiable {
+        case overview
+        case privacy
+        case signal
+        case maps
+        case preparedness
+        case device
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .overview:
+                "Overview"
+            case .privacy:
+                "Privacy"
+            case .signal:
+                "Signal"
+            case .maps:
+                "Maps"
+            case .preparedness:
+                "Preparedness"
+            case .device:
+                "Device"
+            }
+        }
+
+        var detail: String {
+            switch self {
+            case .overview:
+                "Pro, safety, profile"
+            case .privacy:
+                "Visibility and sharing"
+            case .signal:
+                "Mesh and reports"
+            case .maps:
+                "Offline packs and layers"
+            case .preparedness:
+                "Household reminders"
+            case .device:
+                "Battery, data, app"
+            }
+        }
+
+        var iconName: String {
+            switch self {
+            case .overview:
+                "shield"
+            case .privacy:
+                "lock.shield"
+            case .signal:
+                "signal"
+            case .maps:
+                "map_marker"
+            case .preparedness:
+                "checklist"
+            case .device:
+                "battery.100"
+            }
+        }
+
+        var accent: Color {
+            switch self {
+            case .overview:
+                ColorTheme.textTertiary
+            case .privacy:
+                ColorTheme.textTertiary
+            case .signal:
+                ColorTheme.textTertiary
+            case .maps:
+                ColorTheme.textTertiary
+            case .preparedness:
+                ColorTheme.textTertiary
+            case .device:
+                ColorTheme.textTertiary
+            }
+        }
+    }
+
     @Environment(\.dismiss) private var dismiss
 
     let appState: AppState
 
     @StateObject private var viewModel: SettingsViewModel
+    @State private var selectedWorkspace: SettingsWorkspace = .overview
     private let monetizationCatalog = RediM8MonetizationCatalog.launch
 
     init(appState: AppState) {
@@ -24,16 +104,10 @@ struct SettingsView: View {
                     HiddenModeIndicatorView()
                 }
 
-                proSection
-                safetySection
-                emergencyProfileSection
-                privacySection
-                signalSection
-                mapsSection
-                preparednessSection
-                batterySection
-                dataSection
-                aboutSection
+                settingsHeroCard
+                SystemStatusRail(items: settingsStatusItems, accent: ColorTheme.textTertiary)
+                workspaceHubCard
+                activeWorkspaceContent
             }
             .padding(20)
         }
@@ -66,6 +140,251 @@ struct SettingsView: View {
         } message: {
             Text("This keeps your preparedness data and offline packs, but clears temporary signal and community report history.")
         }
+    }
+
+    private var settingsHeroCard: some View {
+        ModeHeroCard(
+            eyebrow: "Device Console",
+            title: "Settings",
+            subtitle: "Tune privacy, offline readiness, mesh behavior, and device safeguards without losing the core emergency tools.",
+            iconName: "shield",
+            accent: ColorTheme.textTertiary
+        ) {
+            VStack(alignment: .leading, spacing: 10) {
+                TrustPillGroup(items: [
+                    TrustPillItem(title: "Local-first", tone: .verified),
+                    TrustPillItem(title: "Offline aware", tone: .info),
+                    TrustPillItem(title: "Emergency-safe defaults", tone: .caution)
+                ])
+
+                VStack(alignment: .leading, spacing: 8) {
+                    settingsHeroLine(title: "Privacy", detail: privacySummaryLine)
+                    settingsHeroLine(title: "Maps", detail: mapsSummaryLine)
+                    settingsHeroLine(title: "Preparedness", detail: preparednessSummaryLine)
+                }
+            }
+        }
+    }
+
+    private var settingsStatusItems: [OperationalStatusItem] {
+        [
+            OperationalStatusItem(
+                iconName: "lock.shield",
+                label: "Stealth",
+                value: appState.isStealthModeEnabled ? "On" : "Off",
+                tone: appState.isStealthModeEnabled ? .caution : .neutral
+            ),
+            OperationalStatusItem(
+                iconName: "person.crop.circle.badge.questionmark",
+                label: "Anonymous",
+                value: appState.settings.privacy.isAnonymousModeEnabled ? "On" : "Off",
+                tone: appState.settings.privacy.isAnonymousModeEnabled ? .info : .neutral
+            ),
+            OperationalStatusItem(
+                iconName: "map_marker",
+                label: "Offline Packs",
+                value: viewModel.installedPackSummary,
+                tone: .info
+            ),
+            OperationalStatusItem(
+                iconName: "battery.100",
+                label: "Battery",
+                value: appState.batteryStatus.percentageText,
+                tone: appState.batteryStatus.isBelowSurvivalThreshold ? .caution : .ready
+            )
+        ]
+    }
+
+    private var workspaceHubCard: some View {
+        PanelCard(title: "Settings Areas", subtitle: "Open one workspace at a time so system controls feel like focused tools, not a long wall of toggles.") {
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                ForEach(SettingsWorkspace.allCases) { workspace in
+                    workspaceButton(workspace)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var activeWorkspaceContent: some View {
+        switch selectedWorkspace {
+        case .overview:
+            overviewWorkspace
+        case .privacy:
+            privacyWorkspace
+        case .signal:
+            signalWorkspace
+        case .maps:
+            mapsWorkspace
+        case .preparedness:
+            preparednessWorkspace
+        case .device:
+            deviceWorkspace
+        }
+    }
+
+    private func workspaceButton(_ workspace: SettingsWorkspace) -> some View {
+        let isSelected = selectedWorkspace == workspace
+
+        return Button {
+            withAnimation(RediMotion.selection) {
+                selectedWorkspace = workspace
+            }
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    RediIcon(workspace.iconName)
+                        .foregroundStyle(isSelected ? workspace.accent : ColorTheme.textTertiary)
+                        .frame(width: 18, height: 18)
+                    Spacer(minLength: 0)
+                    Text(workspaceValueLabel(workspace))
+                        .font(RediTypography.label)
+                        .tracking(1.2)
+                        .foregroundStyle(isSelected ? workspace.accent : ColorTheme.textSecondary)
+                        .multilineTextAlignment(.trailing)
+                }
+
+                Text(workspace.title)
+                    .font(RediTypography.heading)
+                    .foregroundStyle(ColorTheme.text)
+
+                Text(workspaceSummary(workspace))
+                    .font(.caption)
+                    .foregroundStyle(isSelected ? workspace.accent : ColorTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
+            .background(
+                (isSelected ? workspace.accent.opacity(0.16) : Color.black.opacity(0.22)),
+                in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                    .stroke((isSelected ? workspace.accent : ColorTheme.dividerStrong).opacity(0.22), lineWidth: 1)
+            )
+        }
+        .buttonStyle(CardPressButtonStyle())
+    }
+
+    private var overviewWorkspace: some View {
+        VStack(spacing: 18) {
+            proSection
+            safetySection
+            emergencyProfileSection
+            assistantSection
+        }
+    }
+
+    private var privacyWorkspace: some View {
+        VStack(spacing: 18) {
+            privacySection
+        }
+    }
+
+    private var signalWorkspace: some View {
+        VStack(spacing: 18) {
+            signalSection
+        }
+    }
+
+    private var mapsWorkspace: some View {
+        VStack(spacing: 18) {
+            mapsSection
+        }
+    }
+
+    private var preparednessWorkspace: some View {
+        VStack(spacing: 18) {
+            preparednessSection
+        }
+    }
+
+    private var deviceWorkspace: some View {
+        VStack(spacing: 18) {
+            batterySection
+            dataSection
+            aboutSection
+        }
+    }
+
+    private func settingsHeroLine(title: String, detail: String) -> some View {
+        HStack(alignment: .top) {
+            Text(title.uppercased())
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textTertiary)
+                .frame(width: 92, alignment: .leading)
+            Text(detail)
+                .font(RediTypography.body)
+                .foregroundStyle(ColorTheme.text)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func workspaceSummary(_ workspace: SettingsWorkspace) -> String {
+        switch workspace {
+        case .overview:
+            "Pro access, safety scope, and emergency profile."
+        case .privacy:
+            privacySummaryLine
+        case .signal:
+            signalSummaryLine
+        case .maps:
+            mapsSummaryLine
+        case .preparedness:
+            preparednessSummaryLine
+        case .device:
+            deviceSummaryLine
+        }
+    }
+
+    private func workspaceValueLabel(_ workspace: SettingsWorkspace) -> String {
+        switch workspace {
+        case .overview:
+            return appState.emergencyUnlockState.isActive ? "Unlocked" : "Ready"
+        case .privacy:
+            return appState.isStealthModeEnabled ? "Hardened" : "Standard"
+        case .signal:
+            return appState.settings.signalDiscovery.rangeMode.title
+        case .maps:
+            return "\(appState.settings.maps.defaultLayers.count) on"
+        case .preparedness:
+            return "\(preparednessEnabledCount)/3"
+        case .device:
+            return appState.batteryStatus.percentageText
+        }
+    }
+
+    private var privacySummaryLine: String {
+        let locationTitle = appState.settings.privacy.locationShareMode.title
+        let visibility = appState.isStealthModeEnabled ? "Stealth active" : "Visible by default"
+        return "\(visibility), location \(locationTitle.lowercased()), device name \(appState.settings.privacy.showsDeviceName ? "shown" : "hidden")."
+    }
+
+    private var signalSummaryLine: String {
+        "\(appState.settings.signalDiscovery.rangeMode.title) mesh, nearby discovery \(appState.settings.signalDiscovery.discoversNearbyUsers ? "on" : "off"), reports \(appState.settings.signalDiscovery.allowsBeaconBroadcasts ? "on" : "off")."
+    }
+
+    private var mapsSummaryLine: String {
+        "\(viewModel.installedPackSummary), \(appState.settings.maps.surfaceMode.title), \(appState.settings.maps.defaultLayers.count) default layers enabled."
+    }
+
+    private var preparednessSummaryLine: String {
+        "\(preparednessEnabledCount) of 3 reminder systems active for a household of \(appState.profile.household.totalPeople)."
+    }
+
+    private var deviceSummaryLine: String {
+        "Battery \(appState.batteryStatus.percentageText), Survival Mode prompt \(appState.settings.battery.enablesSurvivalModeAtFifteenPercent ? "on" : "off"), app \(viewModel.appVersionText)."
+    }
+
+    private var preparednessEnabledCount: Int {
+        [
+            appState.settings.preparedness.prepScoreNotificationsEnabled,
+            appState.settings.preparedness.seventyTwoHourPlanAlertsEnabled,
+            appState.settings.preparedness.goBagRemindersEnabled
+        ]
+        .filter { $0 }
+        .count
     }
 
     private var proSection: some View {
@@ -152,6 +471,28 @@ struct SettingsView: View {
         }
     }
 
+    private var assistantSection: some View {
+        PanelCard(title: "Offline Assistant", subtitle: "Keep the assistant fully local while optionally allowing safe on-device AI summaries for low-risk guide answers.") {
+            SettingsToggleRow(
+                title: "Offline AI Summaries",
+                subtitle: "Use on-device AI to summarize guides and interpret questions. All processing stays on your device.",
+                isOn: binding(\.assistant.offlineAISummariesEnabled)
+            )
+
+            SettingsDivider()
+
+            SettingsInfoRow(
+                title: "Model Status",
+                subtitle: appState.assistantModel.isAvailable
+                    ? "The local CoreML assistant model is available for advisory summaries."
+                    : "No local model bundle is loaded in this build, so RediM8 will stay guide-only until one is bundled.",
+                value: appState.settings.assistant.offlineAISummariesEnabled
+                    ? (appState.assistantModel.isAvailable ? "Ready" : "Standby")
+                    : "Off"
+            )
+        }
+    }
+
     private var proSubtitle: String {
         if appState.emergencyUnlockState.isActive {
             return "Emergency Unlock active. Pro tools are temporarily available without billing."
@@ -229,7 +570,7 @@ struct SettingsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .tint(SettingsPalette.accent)
+                .tint(ColorTheme.accent)
 
                 Text(appState.settings.privacy.locationShareMode.subtitle)
                     .font(.caption)
@@ -257,7 +598,7 @@ struct SettingsView: View {
                     title: "Reset Node ID",
                     subtitle: "Generate a new anonymous node identifier for this device",
                     value: appState.beaconService.localNodeLabel,
-                    tint: SettingsPalette.accent
+                    tint: ColorTheme.textTertiary
                 )
             }
             .buttonStyle(.plain)
@@ -302,7 +643,7 @@ struct SettingsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .tint(SettingsPalette.accent)
+                .tint(ColorTheme.accent)
 
                 Text(appState.settings.signalDiscovery.rangeMode.subtitle)
                     .font(.caption)
@@ -338,7 +679,7 @@ struct SettingsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .tint(SettingsPalette.accent)
+                .tint(ColorTheme.accent)
 
                 Text(appState.settings.maps.surfaceMode.subtitle)
                     .font(.caption)
@@ -403,16 +744,16 @@ struct SettingsView: View {
                     )
                     Spacer()
                     Text("\(appState.profile.household.totalPeople)")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(SettingsPalette.accent)
+                        .font(RediTypography.bodyStrong)
+                        .foregroundStyle(ColorTheme.textTertiary)
                 }
 
                 Stepper(value: householdSizeBinding, in: 1...12) {
                     Text("Adjust household size")
-                        .font(.subheadline)
+                        .font(RediTypography.body)
                         .foregroundStyle(ColorTheme.text)
                 }
-                .tint(SettingsPalette.accent)
+                .tint(ColorTheme.accent)
             }
 
             SettingsDivider()
@@ -510,7 +851,7 @@ struct SettingsView: View {
                     title: "Clear Cached Data",
                     subtitle: "Remove cached reports and local signal session history",
                     value: "Clear",
-                    tint: ColorTheme.warning
+                    tint: ColorTheme.textTertiary
                 )
             }
             .buttonStyle(.plain)
@@ -524,7 +865,7 @@ struct SettingsView: View {
                     title: "Export Preparedness Report",
                     subtitle: "Create a PDF version of your current readiness report",
                     value: "Export",
-                    tint: SettingsPalette.accent
+                    tint: ColorTheme.textTertiary
                 )
             }
             .buttonStyle(.plain)
@@ -620,10 +961,10 @@ private struct SettingsRowLabel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.headline)
+                .font(RediTypography.heading)
                 .foregroundStyle(ColorTheme.text)
             Text(subtitle)
-                .font(.subheadline)
+                .font(RediTypography.body)
                 .foregroundStyle(.secondary)
         }
     }
@@ -639,7 +980,7 @@ private struct SettingsToggleRow: View {
             SettingsRowLabel(title: title, subtitle: subtitle)
         }
         .toggleStyle(.switch)
-        .tint(SettingsPalette.accent)
+        .tint(ColorTheme.accent)
     }
 }
 
@@ -653,10 +994,11 @@ private struct SettingsNavigationRow: View {
             SettingsRowLabel(title: title, subtitle: subtitle)
             Spacer()
             Text(value)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(SettingsPalette.accent)
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.textTertiary)
             Image(systemName: "chevron.right")
-                .font(.caption.weight(.bold))
+                .font(RediTypography.label)
+                .tracking(1.2)
                 .foregroundStyle(.secondary)
         }
         .contentShape(Rectangle())
@@ -674,7 +1016,7 @@ private struct SettingsActionRow: View {
             SettingsRowLabel(title: title, subtitle: subtitle)
             Spacer()
             Text(value)
-                .font(.subheadline.weight(.semibold))
+                .font(RediTypography.bodyStrong)
                 .foregroundStyle(tint)
         }
         .contentShape(Rectangle())
@@ -691,8 +1033,8 @@ private struct SettingsInfoRow: View {
             SettingsRowLabel(title: title, subtitle: subtitle)
             Spacer()
             Text(value)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(SettingsPalette.accent)
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.textTertiary)
                 .multilineTextAlignment(.trailing)
         }
     }
@@ -717,7 +1059,7 @@ private struct SettingsTextDetailView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                             Text(line)
-                                .font(.subheadline)
+                                .font(RediTypography.body)
                                 .foregroundStyle(ColorTheme.text)
                         }
                     }
@@ -765,8 +1107,8 @@ private struct EmergencyProfileView: View {
                 PanelCard(title: "Critical Health Information", subtitle: "Do not use this as a full medical history") {
                     VStack(alignment: .leading, spacing: 14) {
                         Text(TrustLayer.emergencyMedicalInfoScopeNotice)
-                            .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textMuted)
+                            .font(RediTypography.body)
+                            .foregroundStyle(ColorTheme.textSecondary)
 
                         LazyVGrid(columns: columns, alignment: .leading, spacing: 10) {
                             ForEach(CriticalMedicalCondition.allCases) { condition in
@@ -774,7 +1116,7 @@ private struct EmergencyProfileView: View {
                                     draft.emergencyMedicalInfo.toggle(condition)
                                 } label: {
                                     Text(condition.title)
-                                        .font(.subheadline.weight(.semibold))
+                                        .font(RediTypography.bodyStrong)
                                         .foregroundStyle(ColorTheme.text)
                                         .frame(maxWidth: .infinity)
                                         .padding(.horizontal, 14)
@@ -811,15 +1153,15 @@ private struct EmergencyProfileView: View {
 
                         HStack(alignment: .top, spacing: 10) {
                             Image(systemName: "lock.shield")
-                                .foregroundStyle(ColorTheme.info)
+                                .foregroundStyle(ColorTheme.textTertiary)
                             Text(TrustLayer.emergencyMedicalInfoPrivacyNotice)
                                 .font(.caption)
-                                .foregroundStyle(ColorTheme.textMuted)
+                                .foregroundStyle(ColorTheme.textSecondary)
                         }
 
                         Text("Store prescriptions, records, and longer medical details in Secure Vault instead.")
                             .font(.caption)
-                            .foregroundStyle(ColorTheme.textFaint)
+                            .foregroundStyle(ColorTheme.textTertiary)
                     }
                 }
 
@@ -827,8 +1169,8 @@ private struct EmergencyProfileView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         if draft.emergencyContacts.isEmpty {
                             Text("No emergency contacts saved yet.")
-                                .font(.subheadline)
-                                .foregroundStyle(ColorTheme.textMuted)
+                                .font(RediTypography.body)
+                                .foregroundStyle(ColorTheme.textSecondary)
                         } else {
                             ForEach($draft.emergencyContacts) { $contact in
                                 VStack(alignment: .leading, spacing: 10) {
@@ -841,11 +1183,11 @@ private struct EmergencyProfileView: View {
                                     Button("Remove Contact") {
                                         draft.emergencyContacts.removeAll { $0.id == contact.id }
                                     }
-                                    .font(.subheadline.weight(.semibold))
+                                    .font(RediTypography.bodyStrong)
                                     .foregroundStyle(ColorTheme.danger)
                                 }
                                 .padding(14)
-                                .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
                             }
                         }
 
@@ -863,13 +1205,13 @@ private struct EmergencyProfileView: View {
                                 .font(RediTypography.caption)
                                 .foregroundStyle(ColorTheme.danger)
                             Text(broadcastSummary)
-                                .font(.subheadline)
+                                .font(RediTypography.body)
                                 .foregroundStyle(ColorTheme.text)
                         }
                     } else {
                         Text("No emergency medical info will be attached until you add some here and explicitly choose to include it from Signal.")
-                            .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textMuted)
+                            .font(RediTypography.body)
+                            .foregroundStyle(ColorTheme.textSecondary)
                     }
                 }
             }
@@ -896,8 +1238,8 @@ private struct SafetyTransparencyRow: View {
             SettingsRowLabel(title: title, subtitle: detail)
             Spacer()
             Text(value)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(SettingsPalette.accent)
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.textTertiary)
                 .multilineTextAlignment(.trailing)
         }
     }
@@ -926,7 +1268,7 @@ private struct SafetyLimitationsView: View {
                     title: "Assistive, Not Authoritative",
                     subtitle: "RediM8 supports preparedness, navigation, community awareness, and emergency reference access. It does not replace official services or professional care.",
                     iconName: "shield",
-                    accent: ColorTheme.warning
+                    accent: ColorTheme.textTertiary
                 ) {
                     TrustPillGroup(items: [
                         TrustPillItem(title: "Official alerts first", tone: .verified),
@@ -955,7 +1297,7 @@ private struct SafetyLimitationsView: View {
                     VStack(alignment: .leading, spacing: 14) {
                         SafetyTransparencyRow(
                             title: "Offline map packs",
-                            detail: "Bundled and downloaded local packs for shelters, water points, routes, and offline overlays.",
+                            detail: "Bundled regional data packs plus a curated basemap catalog for downloadable local map packages covering shelters, water points, routes, overlays, and offline cartography.",
                             value: "\(installedPackCount) installed"
                         )
 
@@ -1006,7 +1348,7 @@ private struct SafetyLimitationsView: View {
                 .foregroundStyle(ColorTheme.warning)
                 .padding(.top, 2)
             Text(text)
-                .font(.subheadline)
+                .font(RediTypography.body)
                 .foregroundStyle(ColorTheme.text)
                 .fixedSize(horizontal: false, vertical: true)
         }

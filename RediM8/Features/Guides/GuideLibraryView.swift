@@ -2,11 +2,14 @@ import SwiftUI
 
 struct GuideLibraryView: View {
     let appState: AppState
+    let scrollToTopRequestID: Int
     var highlightedCategory: GuideCategory?
 
     @State private var selectedGuide: Guide?
     @State private var searchText = ""
     @State private var selectedCategory: GuideCategory?
+    @State private var isShowingFullLibrary = false
+    @State private var assistantContext: AssistantLaunchContext?
 
     private var isFocusedEmergencySheet: Bool {
         highlightedCategory != nil
@@ -50,49 +53,151 @@ struct GuideLibraryView: View {
     }
 
     private var featuredCollections: [GuideCollection] {
-        guard highlightedCategory == nil, trimmedSearchText.isEmpty else {
+        guard highlightedCategory == nil, selectedCategory == nil, trimmedSearchText.isEmpty else {
             return []
         }
 
         return GuideCollection.allCases
     }
 
+    private var isBrowsingFullLibrary: Bool {
+        effectiveCategory == nil && trimmedSearchText.isEmpty
+    }
+
+    private var criticalNowGuides: [Guide] {
+        guard highlightedCategory == nil, selectedCategory == nil, trimmedSearchText.isEmpty else {
+            return []
+        }
+
+        return Array(appState.guideService.allEmergencyCards().prefix(4))
+    }
+
+    private var savedGuides: [Guide] {
+        guard isBrowsingFullLibrary, !isFocusedEmergencySheet else {
+            return []
+        }
+
+        return appState.guideService.guides(ids: appState.profile.savedGuideIDs)
+    }
+
+    private var recentlyViewedGuides: [Guide] {
+        guard isBrowsingFullLibrary, !isFocusedEmergencySheet else {
+            return []
+        }
+
+        let savedIDs = Set(savedGuides.map(\.id))
+        return appState.guideService.guides(ids: appState.profile.recentGuideIDs)
+            .filter { !savedIDs.contains($0.id) }
+    }
+
+    private var illustratedSpotlightGuides: [Guide] {
+        guard isBrowsingFullLibrary else {
+            return []
+        }
+
+        return Array(appState.guideService.illustratedGuides().prefix(4))
+    }
+
+    private var categoryDirectory: [(category: GuideCategory, guides: [Guide])] {
+        GuideCategory.allCases.compactMap { category in
+            let guides = appState.guideService.guides(in: category)
+            guard !guides.isEmpty else {
+                return nil
+            }
+
+            return (category, guides)
+        }
+    }
+
+    init(appState: AppState, highlightedCategory: GuideCategory? = nil, scrollToTopRequestID: Int = 0) {
+        self.appState = appState
+        self.highlightedCategory = highlightedCategory
+        self.scrollToTopRequestID = scrollToTopRequestID
+    }
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                headerCard
-                libraryStatusRail
-                searchCard
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Color.clear
+                        .frame(height: 0)
+                        .id(LibraryScrollAnchor.top)
 
-                if !featuredCollections.isEmpty {
-                    featuredCollectionsSection
+                    headerCard
+                    libraryStatusRail
+                    searchCard
+
+                    if !savedGuides.isEmpty {
+                        savedGuidesSection
+                    }
+
+                    if !recentlyViewedGuides.isEmpty {
+                        recentlyViewedSection
+                    }
+
+                    if !criticalNowGuides.isEmpty {
+                        criticalNowSection
+                    }
+
+                    if !featuredCollections.isEmpty {
+                        featuredCollectionsSection
+                    }
+
+                    if !isFocusedEmergencySheet && trimmedSearchText.isEmpty {
+                        topicDirectorySection
+                    }
+
+                    if displayedGuides.isEmpty {
+                        emptyStateCard
+                    } else if isBrowsingFullLibrary {
+                        if !illustratedSpotlightGuides.isEmpty {
+                            illustratedSpotlightSection
+                        }
+
+                        fullLibrarySection
+                    } else {
+                        resultsSection
+                    }
                 }
-
-                if !isFocusedEmergencySheet {
-                    categoryFilterSection
-                }
-
-                if displayedGuides.isEmpty {
-                    emptyStateCard
-                } else if effectiveCategory == nil && trimmedSearchText.isEmpty {
-                    browseSections
-                } else {
-                    resultsSection
+                .padding(.horizontal, RediSpacing.screen)
+                .padding(.top, RediSpacing.screen)
+                .padding(.bottom, RediLayout.commandDockContentInset)
+            }
+            .onChange(of: scrollToTopRequestID) { _, _ in
+                DispatchQueue.main.async {
+                    withAnimation(RediMotion.selection) {
+                        proxy.scrollTo(LibraryScrollAnchor.top, anchor: .top)
+                    }
                 }
             }
-            .padding(.horizontal, RediSpacing.screen)
-            .padding(.top, RediSpacing.screen)
-            .padding(.bottom, RediLayout.commandDockContentInset)
         }
         .background(Color.clear)
         .navigationTitle(libraryTitle)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $selectedGuide) { guide in
             NavigationStack {
-                GuideDetailView(guide: guide)
+                GuideDetailView(
+                    guide: guide,
+                    isSaved: isGuideSaved(guide.id),
+                    onToggleSaved: { toggleSavedGuide(guide.id) }
+                )
             }
-            .rediSheetPresentation(style: .library, accent: accent(for: guide.category))
+            .rediSheetPresentation()
         }
+        .sheet(item: $assistantContext) { context in
+            NavigationStack {
+                AssistantView(
+                    appState: appState,
+                    initialQuery: context.initialQuery,
+                    sourceLabel: context.sourceLabel
+                )
+            }
+            .rediSheetPresentation()
+        }
+    }
+
+    private enum LibraryScrollAnchor {
+        static let top = "library-scroll-top"
     }
 
     private var headerCard: some View {
@@ -103,49 +208,47 @@ struct GuideLibraryView: View {
                 ? "Fast offline guidance for the category you opened from emergency mode."
                 : "Search, browse, and keep illustrated field guides ready offline. Safety content stays source-labeled instead of pretending every answer is authoritative.",
             iconName: highlightedCategory?.systemImage ?? "documents",
-            accent: highlightedCategory.map(accent(for:)) ?? ColorTheme.archive,
-            backgroundAssetName: "marketing_coast_storm",
-            backgroundImageOffset: CGSize(width: 12, height: 0)
+            accent: highlightedCategory.map(accent(for:)) ?? ColorTheme.textTertiary
         ) {
             LazyVGrid(columns: libraryMetricColumns, spacing: 12) {
                 libraryMetric(
-                    title: "Guides",
-                    value: "\(totalGuideCount)",
-                    detail: "Bundled offline",
-                    iconName: "documents",
-                    tint: ColorTheme.archive
+                    title: "Critical",
+                    value: "\(emergencyGuideCount)",
+                    detail: "Open-first cards",
+                    iconName: "cross.case.fill",
+                    tint: ColorTheme.textTertiary
                 )
                 libraryMetric(
                     title: "Illustrated",
                     value: "\(illustratedGuideCount)",
                     detail: "Diagram-led references",
                     iconName: "photo.on.rectangle.angled",
-                    tint: ColorTheme.info
+                    tint: ColorTheme.textTertiary
                 )
                 libraryMetric(
                     title: "Official",
                     value: "\(officialGuideCount)",
                     detail: "Source-backed guides",
                     iconName: "checkmark.shield.fill",
-                    tint: ColorTheme.ready
+                    tint: ColorTheme.textTertiary
                 )
                 libraryMetric(
                     title: "Coverage",
                     value: "\(GuideCategory.allCases.count)",
                     detail: "Core categories",
                     iconName: "square.grid.2x2.fill",
-                    tint: ColorTheme.accent
+                    tint: ColorTheme.textTertiary
                 )
             }
 
             Text(TrustLayer.librarySourceTransparencyNotice)
                 .font(.caption)
-                .foregroundStyle(ColorTheme.textFaint)
+                .foregroundStyle(ColorTheme.textTertiary)
         }
     }
 
     private var libraryStatusRail: some View {
-        SystemStatusRail(items: libraryStatusItems, accent: ColorTheme.archive)
+        SystemStatusRail(items: libraryStatusItems, accent: ColorTheme.textTertiary)
     }
 
     private var searchCard: some View {
@@ -158,7 +261,7 @@ struct GuideLibraryView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 12) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(trimmedSearchText.isEmpty ? ColorTheme.textFaint : ColorTheme.archive)
+                        .foregroundStyle(trimmedSearchText.isEmpty ? ColorTheme.textTertiary : ColorTheme.textTertiary)
 
                     TextField("Search offline guides", text: $searchText)
                         .textInputAutocapitalization(.never)
@@ -170,31 +273,142 @@ struct GuideLibraryView: View {
                             searchText = ""
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(ColorTheme.textFaint)
+                                .foregroundStyle(ColorTheme.textTertiary)
                         }
                         .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
-                .background(
-                    PremiumSurfaceBackground(
-                        cornerRadius: RediRadius.field,
-                        backgroundAssetName: nil,
-                        backgroundImageOffset: .zero,
-                        atmosphere: (effectiveCategory.map(accent(for:)) ?? ColorTheme.archive).opacity(trimmedSearchText.isEmpty ? 0.08 : 0.16)
-                    )
-                )
-                .clipShape(RoundedRectangle(cornerRadius: RediRadius.field, style: .continuous))
-                .modifier(
-                    PremiumSurfaceChrome(
-                        cornerRadius: RediRadius.field,
-                        edgeColor: (effectiveCategory.map(accent(for:)) ?? ColorTheme.archive).opacity(trimmedSearchText.isEmpty ? 0.12 : 0.18),
-                        shadowColor: ColorTheme.archive.opacity(0.04)
-                    )
-                )
+                .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.field, style: .continuous))
 
                 TrustPillGroup(items: searchContextItems)
+
+                if trimmedSearchText.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(searchSuggestions, id: \.query) { suggestion in
+                                Button {
+                                    searchText = suggestion.query
+                                } label: {
+                                    Text(suggestion.label)
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(ColorTheme.text)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(ColorTheme.panelRaised, in: Capsule())
+                                        .overlay(
+                                            Capsule()
+                                                .stroke(ColorTheme.textTertiary.opacity(0.18), lineWidth: 1)
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 2)
+                    }
+                } else {
+                    Button {
+                        assistantContext = AssistantLaunchContext(
+                            initialQuery: trimmedSearchText,
+                            sourceLabel: "Library search"
+                        )
+                    } label: {
+                        RediCommandCard(
+                            title: "Ask RediM8",
+                            detail: displayedGuides.isEmpty
+                                ? "Route this search to the offline assistant instead of guessing."
+                                : "Use the assistant to turn this search into a guide-linked answer.",
+                            systemImage: "bubble.left.and.text.bubble.right.fill",
+                            tint: effectiveCategory.map(accent(for:)) ?? ColorTheme.textTertiary,
+                            badge: displayedGuides.isEmpty ? "Fallback" : "Assist",
+                            prominence: .accented,
+                            layout: .rail
+                        )
+                    }
+                    .buttonStyle(CardPressButtonStyle())
+                }
+            }
+        }
+    }
+
+    private var criticalNowSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Critical Now")
+                    .font(RediTypography.heading)
+                    .foregroundStyle(ColorTheme.text)
+                Text("High-stress guides surfaced first so the fastest actions are always within one tap.")
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.textSecondary)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    ForEach(criticalNowGuides) { guide in
+                        spotlightGuideCard(
+                            guide,
+                            eyebrow: "Open First",
+                            detail: guide.readingTimeText,
+                            tint: accent(for: guide.category)
+                        )
+                    }
+                }
+                .padding(.horizontal, 2)
+            }
+        }
+    }
+
+    private var savedGuidesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Saved Guides")
+                    .font(RediTypography.heading)
+                    .foregroundStyle(ColorTheme.text)
+                Text("Bookmarked references stay one tap away for repeat practice and fast recall.")
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.textSecondary)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    ForEach(Array(savedGuides.prefix(6))) { guide in
+                        spotlightGuideCard(
+                            guide,
+                            eyebrow: "Saved",
+                            detail: guide.skillTimeText,
+                            tint: accent(for: guide.category)
+                        )
+                    }
+                }
+                .padding(.horizontal, 2)
+            }
+        }
+    }
+
+    private var recentlyViewedSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Recently Viewed")
+                    .font(RediTypography.heading)
+                    .foregroundStyle(ColorTheme.text)
+                Text("Reopen the same guide fast when you are checking steps more than once.")
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.textSecondary)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 14) {
+                    ForEach(Array(recentlyViewedGuides.prefix(6))) { guide in
+                        spotlightGuideCard(
+                            guide,
+                            eyebrow: "Recent",
+                            detail: guide.readingTimeText,
+                            tint: accent(for: guide.category)
+                        )
+                    }
+                }
+                .padding(.horizontal, 2)
             }
         }
     }
@@ -203,11 +417,11 @@ struct GuideLibraryView: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Collections")
-                    .font(RediTypography.sectionTitle)
+                    .font(RediTypography.heading)
                     .foregroundStyle(ColorTheme.text)
                 Text("Curated bundles for high-stress reference, field skills, and offline learning.")
-                    .font(RediTypography.bodyCompact)
-                    .foregroundStyle(ColorTheme.textMuted)
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.textSecondary)
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -221,58 +435,75 @@ struct GuideLibraryView: View {
         }
     }
 
-    private var categoryFilterSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Categories")
-                        .font(RediTypography.sectionTitle)
-                        .foregroundStyle(ColorTheme.text)
-                    Text("Narrow the library by operational topic without losing offline access.")
-                        .font(RediTypography.bodyCompact)
-                        .foregroundStyle(ColorTheme.textMuted)
+    private var topicDirectorySection: some View {
+        PanelCard(
+            title: "Topic Directory",
+            subtitle: selectedCategory == nil
+                ? "Browse by topic when you know the lane but not the exact guide title."
+                : "Switch focus without losing your offline shelf."
+        ) {
+            VStack(alignment: .leading, spacing: 14) {
+                LazyVGrid(columns: directoryColumns, spacing: 12) {
+                    ForEach(categoryDirectory, id: \.category.rawValue) { entry in
+                        categoryDirectoryCard(category: entry.category, guides: entry.guides)
+                    }
                 }
-
-                Spacer()
 
                 if selectedCategory != nil {
-                    Button("Show All") {
+                    Button {
                         selectedCategory = nil
+                    } label: {
+                        RediCommandCard(
+                            title: "Show All Topics",
+                            detail: "Clear the focused topic and return to the full offline directory.",
+                            systemImage: "square.grid.2x2.fill",
+                            tint: ColorTheme.textTertiary,
+                            badge: "Reset",
+                            prominence: .neutral,
+                            layout: .rail
+                        )
                     }
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(ColorTheme.info)
+                    .buttonStyle(CardPressButtonStyle())
                 }
+            }
+        }
+    }
+
+    private var illustratedSpotlightSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Illustrated Field Guides")
+                    .font(RediTypography.heading)
+                    .foregroundStyle(ColorTheme.text)
+                Text("Diagram-led references stay close to the top for quick scanning in the field.")
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.textSecondary)
             }
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(GuideCategory.allCases) { category in
-                        Button {
-                            selectedCategory = selectedCategory == category ? nil : category
-                        } label: {
-                            HStack(spacing: 8) {
-                                RediIcon(category.systemImage)
-                                    .font(.caption.weight(.bold))
-                                Text(category.title)
-                                    .font(.subheadline.weight(.semibold))
-                            }
-                            .foregroundStyle(selectedCategory == category ? ColorTheme.background : ColorTheme.text)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 10)
-                            .background(
-                                selectedCategory == category ? accent(for: category) : ColorTheme.panelRaised,
-                                in: Capsule()
-                            )
-                            .overlay(
-                                Capsule()
-                                    .stroke(accent(for: category).opacity(selectedCategory == category ? 0.0 : 0.26), lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(.plain)
+                HStack(spacing: 14) {
+                    ForEach(illustratedSpotlightGuides) { guide in
+                        spotlightGuideCard(
+                            guide,
+                            eyebrow: "Diagram-Led",
+                            detail: "\(guide.diagrams.count) diagrams",
+                            tint: accent(for: guide.category)
+                        )
                     }
                 }
                 .padding(.horizontal, 2)
             }
+        }
+    }
+
+    private var fullLibrarySection: some View {
+        CollapsiblePanelCard(
+            title: "All Topics",
+            subtitle: "Open the full offline shelf when you want to browse beyond fast lanes and collections.",
+            accent: ColorTheme.textTertiary,
+            isExpanded: $isShowingFullLibrary
+        ) {
+            browseSections
         }
     }
 
@@ -310,19 +541,43 @@ struct GuideLibraryView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("RediM8 keeps the full library offline, but the current query did not match any bundled guide.")
                     .font(.subheadline)
-                    .foregroundStyle(ColorTheme.textMuted)
+                    .foregroundStyle(ColorTheme.textSecondary)
 
                 TrustPillGroup(items: [
                     TrustPillItem(title: "Offline indexed", tone: .verified),
                     TrustPillItem(title: "Search terms matter", tone: .neutral),
                     TrustPillItem(title: effectiveCategory?.title ?? "All categories", tone: .info)
                 ])
+
+                if !trimmedSearchText.isEmpty {
+                    Button {
+                        assistantContext = AssistantLaunchContext(
+                            initialQuery: trimmedSearchText,
+                            sourceLabel: "Library fallback"
+                        )
+                    } label: {
+                        RediCommandCard(
+                            title: "Ask RediM8 Instead",
+                            detail: "Open the offline assistant with this search so it can route the closest safe guides.",
+                            systemImage: "bubble.left.and.text.bubble.right.fill",
+                            tint: ColorTheme.textTertiary,
+                            badge: "Offline",
+                            prominence: .accented,
+                            layout: .rail
+                        )
+                    }
+                    .buttonStyle(CardPressButtonStyle())
+                }
             }
         }
     }
 
     private var totalGuideCount: Int {
         appState.guideService.allGuides().count
+    }
+
+    private var emergencyGuideCount: Int {
+        appState.guideService.allEmergencyCards().count
     }
 
     private var illustratedGuideCount: Int {
@@ -336,6 +591,13 @@ struct GuideLibraryView: View {
     }
 
     private var libraryMetricColumns: [GridItem] {
+        [
+            GridItem(.flexible(), spacing: 12),
+            GridItem(.flexible(), spacing: 12)
+        ]
+    }
+
+    private var directoryColumns: [GridItem] {
         [
             GridItem(.flexible(), spacing: 12),
             GridItem(.flexible(), spacing: 12)
@@ -372,16 +634,16 @@ struct GuideLibraryView: View {
     }
 
     private var searchContextItems: [TrustPillItem] {
-        var items = [TrustPillItem(title: "Offline indexed", tone: .verified)]
+        var items = [TrustPillItem(title: "Offline indexed", tone: .neutral)]
 
         if trimmedSearchText.isEmpty {
             items.append(TrustPillItem(title: "Browse all", tone: .neutral))
         } else {
-            items.append(TrustPillItem(title: "\(displayedGuides.count) matches", tone: .info))
+            items.append(TrustPillItem(title: "\(displayedGuides.count) matches", tone: .neutral))
         }
 
         if let effectiveCategory {
-            items.append(TrustPillItem(title: effectiveCategory.title, tone: .info))
+            items.append(TrustPillItem(title: effectiveCategory.title, tone: .neutral))
         }
 
         if highlightedCategory != nil {
@@ -389,6 +651,17 @@ struct GuideLibraryView: View {
         }
 
         return items
+    }
+
+    private var searchSuggestions: [(label: String, query: String)] {
+        [
+            ("Bleeding Control", "bleeding"),
+            ("CPR", "cpr"),
+            ("Water Purification", "water purification"),
+            ("Compass Bearing", "compass"),
+            ("Damper", "damper"),
+            ("Raised Beds", "raised beds")
+        ]
     }
 
     private func collectionCard(_ collection: GuideCollection) -> some View {
@@ -402,14 +675,14 @@ struct GuideLibraryView: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top, spacing: 10) {
                     Text(collection.title.uppercased())
-                        .font(RediTypography.metadata)
-                        .foregroundStyle(tint)
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.textTertiary)
 
                     Spacer(minLength: 0)
 
                     Text("\(guides.count) guides")
                         .font(RediTypography.caption)
-                        .foregroundStyle(ColorTheme.textFaint)
+                        .foregroundStyle(ColorTheme.textTertiary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 6)
                         .background(ColorTheme.panel.opacity(0.8), in: Capsule())
@@ -421,7 +694,7 @@ struct GuideLibraryView: View {
                         .foregroundStyle(ColorTheme.text)
                     Text(collection.subtitle)
                         .font(.subheadline)
-                        .foregroundStyle(ColorTheme.textMuted)
+                        .foregroundStyle(ColorTheme.textSecondary)
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -449,7 +722,7 @@ struct GuideLibraryView: View {
                 HStack(spacing: 8) {
                     Text(collection == .emergency ? "High-stress first" : "Curated offline bundle")
                         .font(.caption)
-                        .foregroundStyle(ColorTheme.textFaint)
+                        .foregroundStyle(ColorTheme.textTertiary)
 
                     Spacer(minLength: 0)
 
@@ -460,16 +733,7 @@ struct GuideLibraryView: View {
             }
             .frame(width: 244, alignment: .leading)
             .padding(18)
-            .background(
-                PremiumSurfaceBackground(
-                    cornerRadius: 24,
-                    backgroundAssetName: nil,
-                    backgroundImageOffset: .zero,
-                    atmosphere: tint.opacity(0.12)
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .modifier(PremiumSurfaceChrome(cornerRadius: 24, edgeColor: tint.opacity(0.16), shadowColor: tint.opacity(0.06)))
+            .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.hero, style: .continuous))
         }
         .buttonStyle(CardPressButtonStyle())
     }
@@ -477,73 +741,230 @@ struct GuideLibraryView: View {
     private func guideRow(_ guide: Guide) -> some View {
         let tint = accent(for: guide.category)
 
-        return Button {
-            selectedGuide = guide
-        } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top, spacing: 12) {
+        return ZStack(alignment: .topTrailing) {
+            Button {
+                openGuide(guide)
+            } label: {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .top, spacing: 12) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(tint.opacity(0.16))
+                                .frame(width: 48, height: 48)
+
+                            RediIcon(guide.heroIconName)
+                                .font(.headline.weight(.semibold))
+                                .foregroundStyle(tint)
+                        }
+
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(guide.category.title.uppercased())
+                                .font(RediTypography.caption)
+                                .foregroundStyle(ColorTheme.textTertiary)
+
+                            Text(guide.title)
+                                .font(.headline)
+                                .foregroundStyle(ColorTheme.text)
+
+                            Text(guide.summary)
+                                .font(.subheadline)
+                                .foregroundStyle(ColorTheme.textSecondary)
+                                .multilineTextAlignment(.leading)
+                        }
+
+                        Spacer(minLength: 0)
+                    }
+
+                    TrustPillGroup(items: trustItems(for: guide))
+
+                    HStack(spacing: 12) {
+                        Label("Stored offline", systemImage: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(ColorTheme.textTertiary)
+
+                        Text("Reviewed \(guide.lastReviewed)")
+                            .font(.caption)
+                            .foregroundStyle(ColorTheme.textTertiary)
+
+                        if !guide.sources.isEmpty {
+                            Text("\(guide.sources.count) sources")
+                                .font(.caption)
+                                .foregroundStyle(ColorTheme.textTertiary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(ColorTheme.textTertiary)
+                    }
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+            }
+            .buttonStyle(CardPressButtonStyle())
+
+            guideSaveButton(for: guide)
+                .padding(12)
+        }
+    }
+
+    private func spotlightGuideCard(
+        _ guide: Guide,
+        eyebrow: String,
+        detail: String,
+        tint: Color
+    ) -> some View {
+        ZStack(alignment: .topTrailing) {
+            Button {
+                openGuide(guide)
+            } label: {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top, spacing: 10) {
+                        Text(eyebrow.uppercased())
+                            .font(RediTypography.caption)
+                            .foregroundStyle(ColorTheme.textTertiary)
+
+                        Spacer(minLength: 0)
+
+                        Text(detail)
+                            .font(RediTypography.caption)
+                            .foregroundStyle(ColorTheme.textTertiary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(ColorTheme.panel.opacity(0.84), in: Capsule())
+                    }
+
                     ZStack {
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(tint.opacity(0.16))
-                            .frame(width: 48, height: 48)
+                            .fill(tint.opacity(0.15))
+                            .frame(width: 46, height: 46)
 
                         RediIcon(guide.heroIconName)
                             .font(.headline.weight(.semibold))
                             .foregroundStyle(tint)
+                            .frame(width: 18, height: 18)
                     }
 
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(guide.category.title.uppercased())
-                            .font(RediTypography.metadata)
-                            .foregroundStyle(tint)
-
+                    VStack(alignment: .leading, spacing: 6) {
                         Text(guide.title)
                             .font(.headline)
                             .foregroundStyle(ColorTheme.text)
+                            .lineLimit(2)
 
                         Text(guide.summary)
                             .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textMuted)
-                            .multilineTextAlignment(.leading)
+                            .foregroundStyle(ColorTheme.textSecondary)
+                            .lineLimit(3)
+                    }
+
+                    TrustPillGroup(items: Array(trustItems(for: guide).prefix(3)))
+
+                    HStack(spacing: 8) {
+                        Label("Stored offline", systemImage: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(ColorTheme.textTertiary)
+
+                        Spacer(minLength: 0)
+
+                        Image(systemName: "arrow.up.right")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(tint)
+                    }
+                }
+                .frame(width: 252, alignment: .leading)
+                .padding(18)
+                .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.hero, style: .continuous))
+            }
+            .buttonStyle(CardPressButtonStyle())
+
+            guideSaveButton(for: guide)
+                .padding(12)
+        }
+    }
+
+    private func categoryDirectoryCard(category: GuideCategory, guides: [Guide]) -> some View {
+        let tint = accent(for: category)
+        let isSelected = selectedCategory == category
+        let officialCount = guides.filter { guide in
+            guide.sources.contains(where: { $0.kind == .official })
+        }.count
+
+        return Button {
+            selectedCategory = isSelected ? nil : category
+        } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 10) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill((isSelected ? ColorTheme.background : tint).opacity(isSelected ? 0.14 : 0.14))
+                            .frame(width: 40, height: 40)
+
+                        RediIcon(category.systemImage)
+                            .foregroundStyle(isSelected ? ColorTheme.background : tint)
+                            .frame(width: 18, height: 18)
                     }
 
                     Spacer(minLength: 0)
+
+                    Text("\(guides.count)")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(isSelected ? ColorTheme.background : ColorTheme.text)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background((isSelected ? Color.white.opacity(0.16) : ColorTheme.panelRaised), in: Capsule())
                 }
 
-                TrustPillGroup(items: trustItems(for: guide))
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(category.title)
+                        .font(.headline)
+                        .foregroundStyle(isSelected ? ColorTheme.background : ColorTheme.text)
 
-                HStack(spacing: 12) {
-                    Text("Reviewed \(guide.lastReviewed)")
-                        .font(.caption)
-                        .foregroundStyle(ColorTheme.textFaint)
+                    Text(categorySummary(for: category))
+                        .font(.subheadline)
+                        .foregroundStyle(isSelected ? ColorTheme.background.opacity(0.82) : ColorTheme.textSecondary)
+                        .lineLimit(3)
+                }
 
-                    if !guide.sources.isEmpty {
-                        Text("\(guide.sources.count) sources")
-                            .font(.caption)
-                            .foregroundStyle(ColorTheme.textFaint)
-                    }
+                HStack(spacing: 8) {
+                    Text(officialCount == 0 ? "Offline shelf" : "\(officialCount) official")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(isSelected ? ColorTheme.background.opacity(0.92) : tint)
 
-                    Spacer()
+                    Spacer(minLength: 0)
 
-                    Image(systemName: "arrow.up.right")
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "arrow.right")
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(ColorTheme.textFaint)
+                        .foregroundStyle(isSelected ? ColorTheme.background : tint)
                 }
             }
+            .frame(maxWidth: .infinity, minHeight: 188, alignment: .leading)
             .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                PremiumSurfaceBackground(
-                    cornerRadius: 18,
-                    backgroundAssetName: nil,
-                    backgroundImageOffset: .zero,
-                    atmosphere: tint.opacity(0.08)
-                )
+            .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.hero, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: RediRadius.hero, style: .continuous)
+                    .stroke(isSelected ? tint.opacity(0.16) : ColorTheme.dividerStrong, lineWidth: 1)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .modifier(PremiumSurfaceChrome(cornerRadius: 18, edgeColor: tint.opacity(0.12), shadowColor: tint.opacity(0.04)))
         }
         .buttonStyle(CardPressButtonStyle())
+    }
+
+    private func guideSaveButton(for guide: Guide) -> some View {
+        Button {
+            _ = toggleSavedGuide(guide.id)
+        } label: {
+            Image(systemName: isGuideSaved(guide.id) ? "bookmark.fill" : "bookmark")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(isGuideSaved(guide.id) ? ColorTheme.accent : ColorTheme.textTertiary)
+                .frame(width: 34, height: 34)
+                .background(ColorTheme.panel.opacity(0.92), in: Circle())
+                .overlay(
+                    Circle()
+                        .stroke(ColorTheme.dividerStrong, lineWidth: 1)
+                )
+        }
+        .buttonStyle(.plain)
     }
 
     private func activateCollection(_ collection: GuideCollection) {
@@ -561,22 +982,62 @@ struct GuideLibraryView: View {
         }
     }
 
+    private func isGuideSaved(_ guideID: String) -> Bool {
+        appState.profile.savedGuideIDs.contains(guideID)
+    }
+
+    @discardableResult
+    private func toggleSavedGuide(_ guideID: String) -> Bool {
+        var isSaved = false
+
+        appState.mutateProfile { profile in
+            if let existingIndex = profile.savedGuideIDs.firstIndex(of: guideID) {
+                profile.savedGuideIDs.remove(at: existingIndex)
+                isSaved = false
+            } else {
+                profile.savedGuideIDs.removeAll { $0 == guideID }
+                profile.savedGuideIDs.insert(guideID, at: 0)
+                profile.savedGuideIDs = Array(profile.savedGuideIDs.prefix(16))
+                isSaved = true
+            }
+        }
+
+        RediHaptics.selection()
+        return isSaved
+    }
+
+    private func recordGuideView(_ guideID: String) {
+        appState.mutateProfile { profile in
+            profile.recentGuideIDs.removeAll { $0 == guideID }
+            profile.recentGuideIDs.insert(guideID, at: 0)
+            profile.recentGuideIDs = Array(profile.recentGuideIDs.prefix(12))
+        }
+    }
+
+    private func openGuide(_ guide: Guide) {
+        recordGuideView(guide.id)
+        selectedGuide = guide
+    }
+
     private func trustItems(for guide: Guide) -> [TrustPillItem] {
         var items = [
-            TrustPillItem(title: guide.category.title, tone: .info),
-            TrustPillItem(title: guide.readingTimeText, tone: .neutral),
-            TrustPillItem(title: guide.difficulty.title, tone: .neutral),
-            TrustPillItem(title: guide.regionScope.title, tone: .neutral)
+            TrustPillItem(title: "Stored offline", tone: .neutral),
+            TrustPillItem(title: guide.difficulty.skillLevelTitle, tone: .neutral),
+            TrustPillItem(title: guide.isIllustrated ? guide.skillTimeText : guide.readingTimeText, tone: .neutral)
         ]
 
         if guide.isIllustrated {
-            items.append(TrustPillItem(title: "Illustrated", tone: .verified))
+            items.append(TrustPillItem(title: "Illustrated", tone: .neutral))
         }
 
         if guide.sources.contains(where: { $0.kind == .official }) {
             items.append(TrustPillItem(title: "Official sources", tone: .verified))
         } else if !guide.sources.isEmpty {
-            items.append(TrustPillItem(title: "Source-labeled", tone: .info))
+            items.append(TrustPillItem(title: "Source-labeled", tone: .neutral))
+        }
+
+        if guide.regionScope == .regional {
+            items.append(TrustPillItem(title: guide.regionScope.title, tone: .neutral))
         }
 
         return items
@@ -634,64 +1095,76 @@ struct GuideLibraryView: View {
             }
 
             Text(title.uppercased())
-                .font(RediTypography.metadata)
-                .foregroundStyle(ColorTheme.textFaint)
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textTertiary)
             Text(value)
-                .font(RediTypography.metricCompact)
+                .font(RediTypography.dataLarge)
                 .foregroundStyle(ColorTheme.text)
                 .contentTransition(.numericText())
             Text(detail)
                 .font(.caption)
-                .foregroundStyle(ColorTheme.textMuted)
+                .foregroundStyle(ColorTheme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
         .padding(16)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 20,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: tint.opacity(0.1)
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 20, edgeColor: tint.opacity(0.14), shadowColor: tint.opacity(0.05)))
+        .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
     }
 
     private func accent(for category: GuideCategory) -> Color {
         switch category {
         case .firstAid, .medical:
-            ColorTheme.danger
+            ColorTheme.textTertiary
         case .disasterResponse, .fireSafety, .stormSafety, .floodSafety:
-            ColorTheme.warning
+            ColorTheme.textTertiary
         case .bushcraft, .foodCooking, .foodGrowing:
-            ColorTheme.accent
+            ColorTheme.textTertiary
         case .navigation, .waterSafety:
-            ColorTheme.info
+            ColorTheme.textTertiary
         case .heatSafety:
-            ColorTheme.warning
+            ColorTheme.textTertiary
         }
     }
 
     private func collectionAccent(for collection: GuideCollection) -> Color {
         switch collection {
         case .emergency:
-            ColorTheme.danger
+            ColorTheme.textTertiary
         case .illustrated:
-            ColorTheme.info
+            ColorTheme.textTertiary
         case .bushcraft:
-            ColorTheme.accent
+            ColorTheme.textTertiary
         case .food:
-            ColorTheme.warning
+            ColorTheme.textTertiary
         case .growing:
-            ColorTheme.ready
+            ColorTheme.textTertiary
         }
     }
 }
 
+private enum GuideReadingMode: String, Hashable {
+    case field
+    case reference
+}
+
 struct GuideDetailView: View {
     let guide: Guide
+    let onToggleSaved: (() -> Bool)?
+    @State private var readingMode: GuideReadingMode
+    @State private var selectedSectionID: String?
+    @State private var isShowingReferenceSections = true
+    @State private var isShowingIllustrations: Bool
+    @State private var isShowingSources = false
+    @State private var isSaved: Bool
+
+    init(guide: Guide, isSaved: Bool = false, onToggleSaved: (() -> Bool)? = nil) {
+        self.guide = guide
+        self.onToggleSaved = onToggleSaved
+        _readingMode = State(initialValue: .field)
+        _selectedSectionID = State(initialValue: guide.contentSections.first?.id)
+        _isShowingIllustrations = State(initialValue: guide.isIllustrated)
+        _isSaved = State(initialValue: isSaved)
+    }
 
     var body: some View {
         ScrollView {
@@ -706,6 +1179,15 @@ struct GuideDetailView: View {
                     TrustPillGroup(items: trustItems)
                 }
 
+                SystemStatusRail(items: detailStatusItems, accent: accent)
+
+                PanelCard(
+                    title: "Reading Mode",
+                    subtitle: "Field mode keeps one action lane open at a time. Reference mode surfaces diagrams, section summaries, and source traceability."
+                ) {
+                    PremiumSegmentedControl(items: readingModeOptions, selection: $readingMode)
+                }
+
                 if !guide.notes.isEmpty {
                     PanelCard(title: "Important", subtitle: "Keep this limitation or caution in mind while using the guide.") {
                         Text(guide.notes)
@@ -714,87 +1196,10 @@ struct GuideDetailView: View {
                     }
                 }
 
-                if guide.isIllustrated {
-                    PanelCard(title: "Diagrams", subtitle: "Original offline diagrams to make field steps easier to scan.") {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 14) {
-                                ForEach(guide.diagrams) { diagram in
-                                    GuideDiagramPanel(diagram: diagram, accent: accent)
-                                }
-                            }
-                            .padding(.horizontal, 2)
-                        }
-                    }
-                }
-
-                PanelCard(title: "Guide Steps", subtitle: "Structured to stay readable when you are tired, rushed, or offline.") {
-                    VStack(alignment: .leading, spacing: 18) {
-                        ForEach(guide.contentSections) { section in
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text(section.title)
-                                    .font(.headline)
-                                    .foregroundStyle(ColorTheme.text)
-
-                                if let summary = section.summary, !summary.isEmpty {
-                                    Text(summary)
-                                        .font(.subheadline)
-                                        .foregroundStyle(ColorTheme.textMuted)
-                                }
-
-                                ForEach(Array(section.steps.enumerated()), id: \.offset) { index, step in
-                                    HStack(alignment: .top, spacing: 12) {
-                                        Text("\(index + 1).")
-                                            .font(.headline)
-                                            .foregroundStyle(accent)
-                                        Text(step)
-                                            .font(.body)
-                                            .foregroundStyle(ColorTheme.text)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if !guide.sources.isEmpty {
-                    PanelCard(title: "Sources", subtitle: "Traceability matters. RediM8 shows where this guide was reviewed against.") {
-                        VStack(alignment: .leading, spacing: 12) {
-                            ForEach(guide.sources) { source in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack(spacing: 8) {
-                                        Text(source.kind.title)
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(accent)
-                                        Text(source.publisher)
-                                            .font(.caption)
-                                            .foregroundStyle(ColorTheme.textFaint)
-                                    }
-
-                                    Text(source.title)
-                                        .font(.headline)
-                                        .foregroundStyle(ColorTheme.text)
-
-                                    Text(source.url)
-                                        .font(.caption)
-                                        .foregroundStyle(ColorTheme.info)
-                                        .textSelection(.enabled)
-
-                                    if let license = source.license, !license.isEmpty {
-                                        Text(license)
-                                            .font(.caption)
-                                            .foregroundStyle(ColorTheme.textFaint)
-                                    }
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(14)
-                                .background(Color.black.opacity(0.24), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            }
-
-                            Text(TrustLayer.guideEndorsementNotice)
-                                .font(.caption)
-                                .foregroundStyle(ColorTheme.textFaint)
-                        }
-                    }
+                if readingMode == .field {
+                    fieldModeContent
+                } else {
+                    referenceModeContent
                 }
             }
             .padding(20)
@@ -802,6 +1207,20 @@ struct GuideDetailView: View {
         .background(ColorTheme.background.ignoresSafeArea())
         .navigationTitle("Guide")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    if let onToggleSaved {
+                        isSaved = onToggleSaved()
+                    } else {
+                        isSaved.toggle()
+                    }
+                } label: {
+                    Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                        .foregroundStyle(isSaved ? ColorTheme.warning : ColorTheme.text)
+                }
+            }
+        }
     }
 
     private var accent: Color {
@@ -813,21 +1232,392 @@ struct GuideDetailView: View {
         case .bushcraft, .foodCooking, .foodGrowing:
             ColorTheme.accent
         case .navigation, .waterSafety:
-            ColorTheme.info
+            ColorTheme.accent
         }
+    }
+
+    private var readingModeOptions: [PremiumSegmentedControlOption<GuideReadingMode>] {
+        [
+            PremiumSegmentedControlOption(
+                segmentID: .field,
+                title: "Field",
+                detail: "One lane at a time",
+                iconName: "bolt.fill",
+                accent: accent
+            ),
+            PremiumSegmentedControlOption(
+                segmentID: .reference,
+                title: "Reference",
+                detail: "Full supporting context",
+                iconName: "book.pages.fill",
+                accent: accent
+            )
+        ]
+    }
+
+    private var detailStatusItems: [OperationalStatusItem] {
+        [
+            OperationalStatusItem(
+                iconName: readingMode == .field ? "bolt.fill" : "book.pages.fill",
+                label: "Mode",
+                value: readingMode == .field ? "Field Steps" : "Reference View",
+                tone: .info
+            ),
+            OperationalStatusItem(
+                iconName: "list.number",
+                label: "Sections",
+                value: guide.contentSections.count == 1 ? "1 Section" : "\(guide.contentSections.count) Sections",
+                tone: .neutral
+            ),
+            OperationalStatusItem(
+                iconName: "figure.walk.motion",
+                label: "Focus",
+                value: selectedSection?.title ?? "Guide Steps",
+                tone: .ready
+            ),
+            OperationalStatusItem(
+                iconName: "checkmark.shield.fill",
+                label: "Sources",
+                value: guide.sources.isEmpty ? "Bundled Guide" : "\(guide.sources.count) Linked",
+                tone: guide.sources.isEmpty ? .neutral : .info
+            )
+        ]
+    }
+
+    private var selectedSection: GuideSection? {
+        if let selectedSectionID,
+           let section = guide.contentSections.first(where: { $0.id == selectedSectionID }) {
+            return section
+        }
+
+        return guide.contentSections.first
+    }
+
+    private var totalStepCount: Int {
+        guide.contentSections.reduce(0) { $0 + $1.steps.count }
+    }
+
+    private var fieldModeContent: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            if guide.contentSections.count > 1 {
+                PanelCard(
+                    title: "Section Navigator",
+                    subtitle: "Keep one action lane open at a time so the next move stays obvious."
+                ) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(guide.contentSections) { section in
+                                fieldSectionButton(section)
+                            }
+                        }
+                        .padding(.horizontal, 2)
+                    }
+                }
+            }
+
+            if guide.isIllustrated {
+                PanelCard(title: "Scan First", subtitle: "Illustrations stay up front in field mode for quick visual checks.") {
+                    diagramStrip
+                }
+            }
+
+            if let selectedSection {
+                PanelCard(
+                    title: selectedSection.title,
+                    subtitle: selectedSection.summary ?? "Work this lane from top to bottom before moving on."
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(Array(selectedSection.steps.enumerated()), id: \.offset) { index, step in
+                            fieldStepCard(number: index + 1, step: step)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var referenceModeContent: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            PanelCard(title: "Reference Overview", subtitle: "A fuller briefing for planning, reviewing, or training before the next incident.") {
+                LazyVGrid(columns: detailMetricColumns, spacing: 12) {
+                    detailMetricTile(
+                        title: "Steps",
+                        value: "\(totalStepCount)",
+                        detail: "Action items",
+                        iconName: "list.number"
+                    )
+                    detailMetricTile(
+                        title: "Diagrams",
+                        value: guide.isIllustrated ? "\(guide.diagrams.count)" : "0",
+                        detail: guide.isIllustrated ? "Visual aids" : "Text-only guide",
+                        iconName: "photo.on.rectangle.angled"
+                    )
+                    detailMetricTile(
+                        title: "Sources",
+                        value: guide.sources.isEmpty ? "0" : "\(guide.sources.count)",
+                        detail: guide.sources.isEmpty ? "Bundled only" : "Traceable links",
+                        iconName: "checkmark.shield.fill"
+                    )
+                    detailMetricTile(
+                        title: "Review",
+                        value: guide.readingTimeText,
+                        detail: guide.lastReviewed,
+                        iconName: "clock.fill"
+                    )
+                }
+            }
+
+            if guide.isIllustrated {
+                CollapsiblePanelCard(
+                    title: "Diagrams",
+                    subtitle: "Original offline diagrams that support the guide steps.",
+                    accent: accent,
+                    isExpanded: $isShowingIllustrations
+                ) {
+                    diagramStrip
+                }
+            }
+
+            CollapsiblePanelCard(
+                title: "Guide Sections",
+                subtitle: "Jump between sections or read them end to end when you have more time.",
+                accent: accent,
+                isExpanded: $isShowingReferenceSections
+            ) {
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(guide.contentSections) { section in
+                        referenceSectionCard(section)
+                    }
+                }
+            }
+
+            if !guide.sources.isEmpty {
+                CollapsiblePanelCard(
+                    title: "Sources",
+                    subtitle: "Traceability matters. RediM8 shows where this guide was reviewed against.",
+                    accent: accent,
+                    isExpanded: $isShowingSources
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(guide.sources) { source in
+                            sourceCard(source)
+                        }
+
+                        Text(TrustLayer.guideEndorsementNotice)
+                            .font(.caption)
+                            .foregroundStyle(ColorTheme.textTertiary)
+                    }
+                }
+            }
+        }
+    }
+
+    private var detailMetricColumns: [GridItem] {
+        [
+            GridItem(.flexible(), spacing: 12),
+            GridItem(.flexible(), spacing: 12)
+        ]
+    }
+
+    private var diagramStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 14) {
+                ForEach(guide.diagrams) { diagram in
+                    GuideDiagramPanel(diagram: diagram, accent: accent)
+                }
+            }
+            .padding(.horizontal, 2)
+        }
+    }
+
+    private func fieldSectionButton(_ section: GuideSection) -> some View {
+        let isSelected = selectedSection?.id == section.id
+
+        return Button {
+            selectedSectionID = section.id
+        } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(section.title)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(isSelected ? ColorTheme.background : ColorTheme.text)
+                    .lineLimit(2)
+
+                Text(section.steps.count == 1 ? "1 step" : "\(section.steps.count) steps")
+                    .font(RediTypography.caption)
+                    .foregroundStyle(isSelected ? ColorTheme.background.opacity(0.82) : accent)
+            }
+            .frame(width: 168, alignment: .leading)
+            .padding(14)
+            .background(
+                PremiumSurfaceBackground(
+                    cornerRadius: 20,
+                    backgroundAssetName: nil,
+                    backgroundImageOffset: .zero,
+                    atmosphere: isSelected ? accent.opacity(0.34) : accent.opacity(0.1)
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(isSelected ? accent.opacity(0.0) : accent.opacity(0.18), lineWidth: 1)
+            )
+        }
+        .buttonStyle(CardPressButtonStyle())
+    }
+
+    private func fieldStepCard(number: Int, step: String) -> some View {
+        HStack(alignment: .top, spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(accent.opacity(0.18))
+                    .frame(width: 42, height: 42)
+
+                Text("\(number)")
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(accent)
+            }
+
+            Text(step)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(ColorTheme.text)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func referenceSectionCard(_ section: GuideSection) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                Text(section.title)
+                    .font(.headline)
+                    .foregroundStyle(ColorTheme.text)
+
+                Spacer(minLength: 0)
+
+                Text(section.steps.count == 1 ? "1 step" : "\(section.steps.count) steps")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(accent)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(accent.opacity(0.14), in: Capsule())
+            }
+
+            if let summary = section.summary, !summary.isEmpty {
+                Text(summary)
+                    .font(.subheadline)
+                    .foregroundStyle(ColorTheme.textSecondary)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(section.steps.enumerated()), id: \.offset) { index, step in
+                    HStack(alignment: .top, spacing: 10) {
+                        Text("\(index + 1).")
+                            .font(.subheadline.weight(.bold))
+                            .foregroundStyle(accent)
+
+                        Text(step)
+                            .font(.subheadline)
+                            .foregroundStyle(ColorTheme.text)
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+
+    private func detailMetricTile(
+        title: String,
+        value: String,
+        detail: String,
+        iconName: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(accent.opacity(0.14))
+                    .frame(width: 34, height: 34)
+
+                RediIcon(iconName)
+                    .foregroundStyle(accent)
+                    .frame(width: 16, height: 16)
+            }
+
+            Text(title.uppercased())
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textTertiary)
+
+            Text(value)
+                .font(RediTypography.dataLarge)
+                .foregroundStyle(ColorTheme.text)
+                .lineLimit(1)
+
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(ColorTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
+        .padding(16)
+        .background(
+            PremiumSurfaceBackground(
+                cornerRadius: 20,
+                backgroundAssetName: nil,
+                backgroundImageOffset: .zero,
+                atmosphere: accent.opacity(0.1)
+            )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .modifier(PremiumSurfaceChrome(cornerRadius: 20, edgeColor: accent.opacity(0.14), shadowColor: accent.opacity(0.05)))
+    }
+
+    private func sourceCard(_ source: GuideSource) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Text(source.kind.title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(accent)
+                Text(source.publisher)
+                    .font(.caption)
+                    .foregroundStyle(ColorTheme.textTertiary)
+            }
+
+            Text(source.title)
+                .font(.headline)
+                .foregroundStyle(ColorTheme.text)
+
+            Text(source.url)
+                .font(.caption)
+                .foregroundStyle(ColorTheme.accent)
+                .textSelection(.enabled)
+
+            if let license = source.license, !license.isEmpty {
+                Text(license)
+                    .font(.caption)
+                    .foregroundStyle(ColorTheme.textTertiary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Color.black.opacity(0.24), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var trustItems: [TrustPillItem] {
         var items = [
-            TrustPillItem(title: guide.confidenceTitle, tone: .info),
+            TrustPillItem(title: "Stored offline", tone: .neutral),
+            TrustPillItem(title: guide.confidenceTitle, tone: .neutral),
             TrustPillItem(title: guide.readingTimeText, tone: .neutral),
-            TrustPillItem(title: guide.difficulty.title, tone: .neutral),
+            TrustPillItem(title: guide.difficulty.skillLevelTitle, tone: .neutral),
             TrustPillItem(title: guide.regionScope.title, tone: .neutral),
             TrustPillItem(title: "Reviewed \(guide.lastReviewed)", tone: .neutral)
         ]
 
         if guide.isIllustrated {
-            items.append(TrustPillItem(title: "Illustrated", tone: .verified))
+            items.append(TrustPillItem(title: guide.skillTimeText, tone: .neutral))
+            items.append(TrustPillItem(title: "Illustrated", tone: .neutral))
         }
 
         if guide.sources.contains(where: { $0.kind == .official }) {
@@ -865,7 +1655,7 @@ private struct GuideDiagramPanel: View {
 
             Text(diagram.caption)
                 .font(.subheadline)
-                .foregroundStyle(ColorTheme.textMuted)
+                .foregroundStyle(ColorTheme.textSecondary)
         }
         .frame(width: 248, alignment: .leading)
     }
@@ -969,7 +1759,7 @@ private struct GuideDiagramArtwork: View {
     private func bowlineArt(in size: CGSize) -> some View {
         ZStack {
             Circle()
-                .stroke(ColorTheme.info, lineWidth: 10)
+                .stroke(ColorTheme.accent, lineWidth: 10)
                 .frame(width: size.width * 0.34, height: size.width * 0.34)
                 .offset(x: -34, y: -4)
 
@@ -1045,7 +1835,7 @@ private struct GuideDiagramArtwork: View {
                     control2: CGPoint(x: size.width * 0.72, y: size.height * 0.72)
                 )
             }
-            .stroke(ColorTheme.info, style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round))
+            .stroke(ColorTheme.accent, style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round))
         }
     }
 
@@ -1066,7 +1856,7 @@ private struct GuideDiagramArtwork: View {
                     path.move(to: CGPoint(x: size.width * 0.50 + offset, y: size.height * 0.46))
                     path.addLine(to: CGPoint(x: size.width * 0.50 + offset, y: size.height * 0.76))
                 }
-                .stroke(ColorTheme.info, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                .stroke(ColorTheme.accent, style: StrokeStyle(lineWidth: 5, lineCap: .round))
             }
         }
     }
@@ -1095,7 +1885,7 @@ private struct GuideDiagramArtwork: View {
             middle: "Water",
             end: "Pinch salt",
             leftColor: accent,
-            middleColor: ColorTheme.info,
+            middleColor: ColorTheme.accent,
             endColor: ColorTheme.warning
         )
     }
@@ -1108,11 +1898,11 @@ private struct GuideDiagramArtwork: View {
                 end: "Water",
                 leftColor: accent,
                 middleColor: ColorTheme.warning,
-                endColor: ColorTheme.info
+                endColor: ColorTheme.accent
             )
 
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(ColorTheme.textFaint, lineWidth: 4)
+                .stroke(ColorTheme.textTertiary, lineWidth: 4)
                 .frame(width: size.width * 0.28, height: size.height * 0.16)
                 .offset(y: 42)
         }
@@ -1161,7 +1951,7 @@ private struct GuideDiagramArtwork: View {
     private func seedTrayArt(in size: CGSize) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(ColorTheme.info, lineWidth: 4)
+                .stroke(ColorTheme.accent, lineWidth: 4)
                 .frame(width: size.width * 0.66, height: size.height * 0.42)
 
             ForEach(0..<3, id: \.self) { row in
@@ -1226,10 +2016,10 @@ private struct GuideDiagramArtwork: View {
                     .fill(ColorTheme.warning)
                     .frame(width: 52, height: 10)
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(ColorTheme.textFaint)
+                    .fill(ColorTheme.textTertiary)
                     .frame(width: 52, height: 10)
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(ColorTheme.info)
+                    .fill(ColorTheme.accent)
                     .frame(width: 52, height: 10)
             }
         }

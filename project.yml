@@ -31,6 +31,16 @@ targets:
           - Data/*.json
       - path: RediM8/Data/Emergency72HourPlan.json
         buildPhase: resources
+      - path: RediM8/Data/AssistantPolicies.json
+        buildPhase: resources
+      - path: RediM8/Data/BasemapCatalog.json
+        buildPhase: resources
+      - path: RediM8/Data/BasemapPackages
+        buildPhase: resources
+      - path: RediM8/Data/BushMedicineGuides.json
+        buildPhase: resources
+      - path: RediM8/Data/FoodGrowingGuides.json
+        buildPhase: resources
       - path: RediM8/Data/Gear.json
         buildPhase: resources
       - path: RediM8/Data/GoBagItems.json
@@ -48,6 +58,8 @@ targets:
       - path: RediM8/Data/Scenarios.json
         buildPhase: resources
       - path: RediM8/Data/Shelters.json
+        buildPhase: resources
+      - path: RediM8/Data/SurvivalSkillsGuides.json
         buildPhase: resources
       - path: RediM8/Data/Tasks.json
         buildPhase: resources

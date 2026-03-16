@@ -1,0 +1,155 @@
+{
+  "last_updated": "2026-03-14T00:00:00Z",
+  "guides": [
+    {
+      "id": "tea_tree_field_antiseptic",
+      "title": "Tea Tree as a Field Antiseptic",
+      "category": "medical",
+      "region": "australia",
+      "risk_level": "advisory",
+      "summary": "Tea tree preparations can support minor skin-cleaning routines in the field, but they do not replace proper first aid, wound irrigation, or medical treatment.",
+      "steps": [
+        "Wash hands and irrigate the minor skin area with the cleanest water you have first.",
+        "Use only diluted, skin-safe tea tree preparation on small intact skin areas unless a clinician has told you otherwise.",
+        "Stop immediately if stinging, rash, or breathing symptoms appear.",
+        "Cover the area with a clean dressing and monitor for infection or worsening pain."
+      ],
+      "notes": "Do not use concentrated oils in eyes, deep wounds, large burns, or on infants. Seek medical care if infection, fever, spreading redness, or severe pain develops.",
+      "sources": [
+        {
+          "id": "tea-tree-redim8",
+          "title": "RediM8 Bush Medicine Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/tea-tree",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["tea tree", "minor wound care", "field hygiene", "bush medicine"],
+      "estimated_read_minutes": 4,
+      "related_guide_ids": ["major_bleeding_control", "burns_first_aid"],
+      "hero_icon_name": "medical"
+    },
+    {
+      "id": "eucalyptus_field_uses",
+      "title": "Eucalyptus Field Uses",
+      "category": "medical",
+      "region": "australia",
+      "risk_level": "advisory",
+      "summary": "Eucalyptus is best treated as a comfort or hygiene aid in the field, not as a replacement for asthma care, infection treatment, or emergency airway management.",
+      "steps": [
+        "Use eucalyptus only in low-intensity ways such as steam inhalation nearby or topical products already known to be safe for you.",
+        "Keep use well away from children, pets, eyes, and flames.",
+        "Stop if coughing, wheezing, rash, or dizziness worsens.",
+        "Return to standard first aid and prescribed medication plans first if someone is unwell."
+      ],
+      "notes": "Do not treat breathing distress, asthma attack, or serious infection with bush remedies alone. Call emergency services for severe breathing trouble.",
+      "sources": [
+        {
+          "id": "eucalyptus-redim8",
+          "title": "RediM8 Bush Medicine Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/eucalyptus",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["eucalyptus", "steam", "field comfort", "bush medicine"],
+      "estimated_read_minutes": 4,
+      "related_guide_ids": ["asthma_attack_response"],
+      "hero_icon_name": "medical"
+    },
+    {
+      "id": "lemon_myrtle_and_paperbark",
+      "title": "Lemon Myrtle and Paperbark Field Uses",
+      "category": "bushcraft",
+      "region": "australia",
+      "risk_level": "advisory",
+      "summary": "Lemon myrtle and paperbark are best used as practical field materials for comfort, wrapping, and scent-based hygiene support when standard supplies are limited.",
+      "steps": [
+        "Use clean paperbark as a temporary outer wrap only when you do not have a proper sterile dressing.",
+        "Keep any leaf or bark material away from deep wounds until the area is irrigated and covered properly.",
+        "Use lemon myrtle only in known-safe food or diluted wash contexts, not as an emergency medicine substitute.",
+        "Replace natural wraps with standard first-aid dressings as soon as possible."
+      ],
+      "notes": "Natural materials can carry dirt and irritation risk. Do not rely on them for serious wounds, burns, bites, or infections.",
+      "sources": [
+        {
+          "id": "paperbark-redim8",
+          "title": "RediM8 Bush Medicine Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/paperbark",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["paperbark", "lemon myrtle", "field wrap", "bushcraft"],
+      "estimated_read_minutes": 4,
+      "related_guide_ids": ["burns_first_aid"],
+      "hero_icon_name": "tent"
+    },
+    {
+      "id": "bush_tucker_medicinal_plants",
+      "title": "Bush Tucker Medicinal Plant Basics",
+      "category": "bushcraft",
+      "region": "australia",
+      "risk_level": "advisory",
+      "summary": "Native medicinal plants should be treated conservatively. Correct identification matters, and supportive use is safer than trying to improvise strong remedies in the field.",
+      "steps": [
+        "Only use plants you can confidently identify from prior learning or a trusted reference.",
+        "Prefer supportive uses like known-safe teas, washes, or soothing compresses over strong ingestion or oils.",
+        "Test only tiny amounts first and stop if irritation or allergy symptoms appear.",
+        "Log what was used in case symptoms worsen and professional help is needed later."
+      ],
+      "notes": "Never guess plant identity in an emergency. Misidentification can be dangerous. Seek medical help for poisoning, bites, serious pain, or infection.",
+      "sources": [
+        {
+          "id": "bush-tucker-redim8",
+          "title": "RediM8 Bush Medicine Notes",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/bush-tucker",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["bush tucker", "medicinal plants", "native analgesic", "identification"],
+      "estimated_read_minutes": 5,
+      "related_guide_ids": ["water_collection_basics"],
+      "hero_icon_name": "tent"
+    },
+    {
+      "id": "snake_bite_bandage_refresh",
+      "title": "Snake Bite Pressure Bandage Refresh",
+      "category": "firstAid",
+      "region": "australia",
+      "risk_level": "critical",
+      "summary": "Pressure immobilisation is a specific first-aid skill used in Australia for certain venomous bites. RediM8 routes full snake-bite questions to the dedicated critical guide.",
+      "steps": [
+        "Keep the person still and calm and call emergency services urgently.",
+        "Apply a firm broad pressure bandage over the bite area and continue up the limb.",
+        "Splint the limb and keep the person completely still until professional help arrives.",
+        "Do not wash the bite, cut the skin, suck venom, or use a tourniquet."
+      ],
+      "notes": "This is a refresher only. Use the full RediM8 snake-bite guide for the complete deterministic first-aid flow.",
+      "sources": [
+        {
+          "id": "snake-refresh-redim8",
+          "title": "RediM8 Snake Bite Refresher",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/snake-bandage",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "last_reviewed": "March 2026",
+      "tags": ["snake bite", "pressure bandage", "pressure immobilisation", "bandage technique"],
+      "estimated_read_minutes": 3,
+      "related_guide_ids": ["snake_bite_first_aid"],
+      "hero_icon_name": "first_aid"
+    }
+  ]
+}

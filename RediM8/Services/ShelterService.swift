@@ -36,14 +36,19 @@ final class ShelterService {
     }
 
     private let shelterDataset: ShelterDataset
+    private let spatialIndex: SpatialIndex<ShelterLocation>
     private let session: URLSession
     private var nearbyNetworkCache: NearbyShelterNetworkCache?
 
     private(set) var lastNearbyNetworkError: String?
 
     init(bundle: Bundle = .main, session: URLSession = .shared) {
-        shelterDataset = (try? bundle.decode("Shelters.json", as: ShelterDataset.self))
+        let dataset = (try? bundle.decode("Shelters.json", as: ShelterDataset.self))
             ?? ShelterDataset(lastUpdated: .distantPast, shelters: [])
+        self.shelterDataset = dataset
+        self.spatialIndex = SpatialIndex(items: dataset.shelters) {
+            CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)
+        }
         self.session = session
     }
 
@@ -95,21 +100,34 @@ final class ShelterService {
         types: Set<ShelterType> = [],
         limit: Int = 3
     ) -> [NearbyShelter] {
-        let anchor = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        // Use R-tree for fast nearest-neighbor query on offline data
+        let offlineResults = spatialIndex.nearest(to: coordinate, limit: limit * 4)
+            .filter { entry in
+                let shelter = entry.item
+                guard isFeatureAvailable(shelter.packIDs, within: installedPackIDs) else { return false }
+                return types.isEmpty || types.contains(shelter.type)
+            }
+            .prefix(limit)
+            .map { NearbyShelter(shelter: $0.item, distanceMetres: $0.distanceMetres) }
 
-        return shelters(for: installedPackIDs, near: coordinate, types: types)
+        // Merge with network nearby results if available
+        let networkShelters = cachedNearbyNetworkShelters(near: coordinate, maxAge: NetworkConfig.displayMaxAge) ?? []
+        guard !networkShelters.isEmpty else {
+            return Array(offlineResults)
+        }
+
+        let anchor = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let networkResults = networkShelters
+            .filter { types.isEmpty || types.contains($0.type) }
             .map { shelter in
                 NearbyShelter(
                     shelter: shelter,
                     distanceMetres: anchor.distance(from: CLLocation(latitude: shelter.latitude, longitude: shelter.longitude))
                 )
             }
-            .sorted { lhs, rhs in
-                if lhs.distanceMetres == rhs.distanceMetres {
-                    return lhs.shelter.name < rhs.shelter.name
-                }
-                return lhs.distanceMetres < rhs.distanceMetres
-            }
+
+        return (Array(offlineResults) + networkResults)
+            .sorted { $0.distanceMetres < $1.distanceMetres }
             .prefix(limit)
             .map { $0 }
     }

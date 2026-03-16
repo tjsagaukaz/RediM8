@@ -22,6 +22,7 @@ final class MapViewModel: ObservableObject {
     @Published private(set) var savedRoutes: [String]
     @Published private(set) var enabledLayers: Set<MapLayer>
     @Published private(set) var surfaceMode: MapSurfaceMode
+    @Published private(set) var showsDistanceRings: Bool
     @Published private(set) var reducesMapAnimations: Bool
     @Published private(set) var isStealthModeEnabled: Bool
     @Published private(set) var availableLayers: [MapLayer]
@@ -33,6 +34,8 @@ final class MapViewModel: ObservableObject {
     @Published private(set) var shelters: [ShelterLocation] = []
     @Published private(set) var selectedShelterID: String?
     @Published private(set) var nearbyOfficialAlerts: [OfficialAlert] = []
+    @Published private(set) var basemapStyleURL: URL
+    @Published private(set) var isPremiumBasemapActive: Bool
 
     private let appState: AppState
     private let officialAlertService: OfficialAlertService
@@ -45,9 +48,7 @@ final class MapViewModel: ObservableObject {
     private let resourceCategoryIndex: [String: ResourceCategoryDefinition]
     private let resourceDatasetLastUpdated: Date
     private var offlineLayerLastUpdated: Date
-    let basemapStyleURL: URL
-    private let offlineBasemapStatusMessage: String
-    let isPremiumBasemapActive: Bool
+    private var offlineBasemapStatusMessage: String
 
     init(appState: AppState) {
         self.appState = appState
@@ -72,6 +73,7 @@ final class MapViewModel: ObservableObject {
         savedRoutes = appState.profile.evacuationRoutes.compactMap(\.nilIfBlank)
         enabledLayers = appState.settings.maps.defaultLayers
         surfaceMode = appState.settings.maps.surfaceMode
+        showsDistanceRings = appState.settings.maps.showsDistanceRings
         isStealthModeEnabled = appState.isStealthModeEnabled
         reducesMapAnimations = appState.settings.battery.reducesMapAnimations || appState.isStealthModeEnabled
         availableLayers = Self.orderedLayers(for: appState.profile.selectedScenarios)
@@ -122,6 +124,7 @@ final class MapViewModel: ObservableObject {
                 guard let self else { return }
                 self.enabledLayers = settings.maps.defaultLayers
                 self.surfaceMode = settings.maps.surfaceMode
+                self.showsDistanceRings = settings.maps.showsDistanceRings
                 self.reducesMapAnimations = settings.battery.reducesMapAnimations || self.isStealthModeEnabled
                 if !settings.maps.defaultLayers.contains(.evacuationPoints) {
                     self.selectedShelterID = nil
@@ -146,6 +149,15 @@ final class MapViewModel: ObservableObject {
         officialAlertService.$lastRefreshError
             .sink { [weak self] _ in
                 self?.reloadOfficialAlerts()
+            }
+            .store(in: &cancellables)
+
+        appState.offlineBasemapService.$configuration
+            .sink { [weak self] configuration in
+                guard let self else { return }
+                self.basemapStyleURL = configuration.styleURL
+                self.isPremiumBasemapActive = configuration.isPremiumActive
+                self.offlineBasemapStatusMessage = configuration.statusMessage
             }
             .store(in: &cancellables)
     }
@@ -199,6 +211,9 @@ final class MapViewModel: ObservableObject {
             if lhs.type.priority != rhs.type.priority {
                 return lhs.type.priority < rhs.type.priority
             }
+            if lhs.severity.rank != rhs.severity.rank {
+                return lhs.severity.rank > rhs.severity.rank
+            }
             return lhs.updatedAt > rhs.updatedAt
         }
     }
@@ -231,7 +246,7 @@ final class MapViewModel: ObservableObject {
         case .hybrid:
             "Hybrid Tiles"
         case .tactical:
-            isPremiumBasemapActive ? "Verified Basemap" : "Tactical Fallback"
+            isPremiumBasemapActive ? "Local Basemap" : "Tactical Fallback"
         }
     }
 
@@ -263,10 +278,59 @@ final class MapViewModel: ObservableObject {
         }
 
         if isPremiumBasemapActive {
-            return "Verified offline basemap remains ready if service drops or tiles fail."
+            return "Local offline basemap remains ready if service drops or tiles fail."
         }
 
         return "Switch to Offline Tactical if live tiles stop loading or coverage drops away."
+    }
+
+    var mapConfidenceValue: String {
+        switch mapConfidenceTone {
+        case .ready:
+            "High"
+        case .info:
+            "Medium"
+        case .caution, .danger, .neutral:
+            "Low"
+        }
+    }
+
+    var mapConfidenceDetail: String {
+        let coverageDetail: String
+        if !installedPacks.isEmpty {
+            coverageDetail = "\(installedPacks.count) offline pack\(installedPacks.count == 1 ? "" : "s") ready"
+        } else if isPremiumBasemapActive {
+            coverageDetail = "local offline basemap ready"
+        } else if surfaceMode.usesAppleTiles {
+            coverageDetail = "live tiles only"
+        } else {
+            coverageDetail = "fallback overlays only"
+        }
+
+        if let accuracyText = locationAccuracySummary {
+            return "\(accuracyText) • \(coverageDetail)"
+        }
+
+        return "Waiting for live GPS • \(coverageDetail)"
+    }
+
+    var mapConfidenceTone: OperationalStatusTone {
+        guard let currentLocation else {
+            return installedPacks.isEmpty && !isPremiumBasemapActive ? .danger : .caution
+        }
+
+        let accuracy = max(currentLocation.horizontalAccuracy, 0)
+        let hasOfflineCoverage = !installedPacks.isEmpty || isPremiumBasemapActive
+
+        if accuracy > 0, accuracy > 120 {
+            return hasOfflineCoverage ? .caution : .danger
+        }
+
+        if hasOfflineCoverage {
+            return accuracy > 40 ? .info : .ready
+        }
+
+        return accuracy > 40 ? .caution : .info
     }
 
     var mapTrustItems: [TrustPillItem] {
@@ -278,6 +342,7 @@ final class MapViewModel: ObservableObject {
                     : .info
             ),
             TrustPillItem(title: surfaceMode.usesAppleTiles ? "Network-assisted" : "Offline only", tone: surfaceMode.usesAppleTiles ? .caution : .info),
+            TrustPillItem(title: "Confidence \(mapConfidenceValue)", tone: confidenceTrustTone),
             TrustPillItem(title: TrustLayer.freshnessLabel(for: max(resourceDatasetLastUpdated, offlineLayerLastUpdated)), tone: .neutral)
         ]
 
@@ -359,10 +424,10 @@ final class MapViewModel: ObservableObject {
         }
 
         if isPremiumBasemapActive {
-            return "Verified cartography is available, but local resource coverage still depends on installed packs."
+            return "Local cartography is available, but local resource coverage still depends on installed packs."
         }
 
-        return "Verified road maps unavailable. RediM8 is showing shelters, water, pack boundaries, and saved references only."
+        return "Local road maps unavailable. RediM8 is showing shelters, water, pack boundaries, and saved references only."
     }
 
     var mapStatusTone: OperationalStatusTone {
@@ -389,7 +454,7 @@ final class MapViewModel: ObservableObject {
             return "Apple hybrid tiles are active for satellite terrain and landmark context."
         case .tactical:
             return isPremiumBasemapActive
-                ? "Premium offline basemap is active."
+                ? "Local offline basemap is active."
                 : "A tactical fallback surface is active. It shows offline packs, tracks, shelters, water, and markers, but not full road or topographic cartography."
         }
     }
@@ -401,7 +466,7 @@ final class MapViewModel: ObservableObject {
         case .hybrid:
             return "Hybrid"
         case .tactical:
-            return isPremiumBasemapActive ? "Verified" : "Fallback"
+            return isPremiumBasemapActive ? "Local" : "Fallback"
         }
     }
 
@@ -438,9 +503,11 @@ final class MapViewModel: ObservableObject {
     }
 
     var workingPositionSummary: String {
-        currentLocation == nil
-            ? "No live position right now. Distances fall back to offline reference mode."
-            : "Live position and heading are available for recentering and distance estimates."
+        if let locationAccuracySummary {
+            return "Live position and heading are available. \(locationAccuracySummary) for recentering and nearby distance estimates."
+        }
+
+        return "No live position right now. Distances fall back to offline reference mode."
     }
 
     var workingMotionSummary: String {
@@ -657,7 +724,7 @@ final class MapViewModel: ObservableObject {
     }
 
     var distanceRingLabels: [String] {
-        ["10 km", "25 km", "50 km"]
+        ["1 km", "5 km", "10 km"]
     }
 
     func onAppear() {
@@ -716,6 +783,12 @@ final class MapViewModel: ObservableObject {
     func setSurfaceMode(_ mode: MapSurfaceMode) {
         appState.mutateSettings { settings in
             settings.maps.surfaceMode = mode
+        }
+    }
+
+    func toggleDistanceRings() {
+        appState.mutateSettings { settings in
+            settings.maps.showsDistanceRings.toggle()
         }
     }
 
@@ -847,13 +920,14 @@ final class MapViewModel: ObservableObject {
     func beaconTrustItems(for beacon: CommunityBeacon) -> [TrustPillItem] {
         var items = [
             TrustPillItem(title: "Community-reported", tone: .caution),
-            TrustPillItem(title: "Not verified", tone: .danger),
+            TrustPillItem(title: beacon.severity.badgeTitle, tone: severityTone(for: beacon.severity)),
+            TrustPillItem(title: beacon.confidence.badgeTitle, tone: confidenceTone(for: beacon.confidence)),
             TrustPillItem(title: beacon.relayTrustLabel, tone: beacon.isRelayed ? .caution : .info),
             TrustPillItem(title: "Approximate", tone: .caution),
             TrustPillItem(title: TrustLayer.freshnessLabel(for: beacon.updatedAt), tone: .neutral)
         ]
         if beacon.sharedEmergencyMedicalSummary != nil {
-            items.insert(TrustPillItem(title: "Medical note shared", tone: .info), at: 3)
+            items.insert(TrustPillItem(title: "Medical note shared", tone: .info), at: 4)
         }
         return items
     }
@@ -905,6 +979,30 @@ final class MapViewModel: ObservableObject {
         }
 
         return "Stale report. Treat this as last known information until you confirm it."
+    }
+
+    private func severityTone(for severity: BeaconSeverity) -> TrustPillTone {
+        switch severity {
+        case .low:
+            .neutral
+        case .moderate:
+            .info
+        case .high:
+            .caution
+        case .critical:
+            .danger
+        }
+    }
+
+    private func confidenceTone(for confidence: BeaconConfidence) -> TrustPillTone {
+        switch confidence {
+        case .low:
+            .danger
+        case .medium:
+            .caution
+        case .high:
+            .verified
+        }
     }
 
     func shelterTint(for type: ShelterType) -> Color {
@@ -1143,6 +1241,38 @@ final class MapViewModel: ObservableObject {
         }
 
         return 0
+    }
+
+    private var confidenceTrustTone: TrustPillTone {
+        switch mapConfidenceTone {
+        case .ready:
+            .verified
+        case .info:
+            .info
+        case .caution:
+            .caution
+        case .danger:
+            .danger
+        case .neutral:
+            .neutral
+        }
+    }
+
+    private var locationAccuracySummary: String? {
+        guard let currentLocation else {
+            return nil
+        }
+
+        let accuracy = max(currentLocation.horizontalAccuracy, 0)
+        guard accuracy > 0 else {
+            return nil
+        }
+
+        if accuracy >= 1_000 {
+            return String(format: "GPS accuracy %.1f km", accuracy / 1_000)
+        }
+
+        return "GPS accuracy \(Int(accuracy.rounded())) m"
     }
 
     private static func orderedLayers(for scenarios: [ScenarioKind]) -> [MapLayer] {

@@ -7,24 +7,27 @@ struct GearChecklistView: View {
 
     @ObservedObject var viewModel: OnboardingViewModel
     @ObservedObject var locationService: LocationService
+    @State private var isShowingGearChecklist = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             ModeHeroCard(
-                eyebrow: "Trust + Defaults",
+                eyebrow: "Defaults",
                 title: "Choose safer defaults before you need them.",
-                subtitle: "RediM8 should feel honest on day one: approximate by default, battery-aware, and very clear that nearby signalling helps but does not guarantee delivery.",
+                subtitle: "Keep signal conservative, battery-aware, and simple on day one.",
                 iconName: "signal",
-                accent: ColorTheme.warning
+                accent: ColorTheme.textTertiary,
+                backgroundAssetName: "signal_vehicle_link",
+                backgroundImageOffset: CGSize(width: 12, height: 0)
             ) {
                 TrustPillGroup(items: [
-                    TrustPillItem(title: "Assistive signal only", tone: .caution),
                     TrustPillItem(title: "Approximate by default", tone: .verified),
-                    TrustPillItem(title: "Large-button emergency", tone: .info)
+                    TrustPillItem(title: "Battery-aware", tone: .info),
+                    TrustPillItem(title: "Editable later", tone: .neutral)
                 ])
             }
 
-            PanelCard(title: "Communication + Privacy", subtitle: "Honest defaults for mesh, maps, and nearby signals") {
+            PanelCard(title: "Privacy + Battery", subtitle: "These are the settings that matter most under stress.") {
                 VStack(alignment: .leading, spacing: 14) {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Location sharing")
@@ -44,63 +47,42 @@ struct GearChecklistView: View {
                     }
 
                     Toggle(isOn: $viewModel.isAnonymousModeEnabled) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Anonymous signal mode")
-                                .font(RediTypography.bodyStrong)
-                                .foregroundStyle(ColorTheme.text)
-                            Text("Hide personal identity and keep nearby discovery more conservative by default.")
-                                .font(.caption)
-                                .foregroundStyle(ColorTheme.textMuted)
-                        }
+                        toggleLabel(
+                            title: "Anonymous signal mode",
+                            detail: "Hide personal identity by default."
+                        )
                     }
                     .toggleStyle(.switch)
                     .tint(ColorTheme.accent)
 
-                    locationPermissionCard
-
-                    Text(TrustLayer.signalAssistiveReminder)
-                        .font(.subheadline)
-                        .foregroundStyle(ColorTheme.text)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text(TrustLayer.signalDeliveryNotice)
-                        .font(.caption)
-                        .foregroundStyle(ColorTheme.textFaint)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            PanelCard(title: "Battery Behaviour", subtitle: "What RediM8 should do when the phone is under pressure") {
-                VStack(alignment: .leading, spacing: 14) {
                     Toggle(isOn: $viewModel.enablesSurvivalModeAtFifteenPercent) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Auto-offer Survival Mode at 15%")
-                                .font(RediTypography.bodyStrong)
-                                .foregroundStyle(ColorTheme.text)
-                            Text("Reduce interface weight when the phone is close to running flat.")
-                                .font(.caption)
-                                .foregroundStyle(ColorTheme.textMuted)
-                        }
+                        toggleLabel(
+                            title: "Offer Survival Mode at 15%",
+                            detail: "Reduce interface weight when battery gets low."
+                        )
                     }
                     .toggleStyle(.switch)
-                    .tint(ColorTheme.warning)
+                    .tint(ColorTheme.accent)
 
                     Toggle(isOn: $viewModel.reducesMapAnimations) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Reduce motion in maps and critical flows")
-                                .font(RediTypography.bodyStrong)
-                                .foregroundStyle(ColorTheme.text)
-                            Text("Helps with glare, stress, and low battery without removing core information.")
-                                .font(.caption)
-                                .foregroundStyle(ColorTheme.textMuted)
-                        }
+                        toggleLabel(
+                            title: "Reduce map motion",
+                            detail: "Make maps calmer and easier to read under stress."
+                        )
                     }
                     .toggleStyle(.switch)
                     .tint(ColorTheme.info)
+
+                    locationPermissionCard
                 }
             }
 
-            PanelCard(title: "Core Grab-And-Go Gear", subtitle: "Mark what you already have so RediM8 can stop guessing") {
+            CollapsiblePanelCard(
+                title: "Core Grab-And-Go Gear",
+                subtitle: "Optional now. Mark what you already have so RediM8 stops guessing.",
+                accent: ColorTheme.textTertiary,
+                isExpanded: $isShowingGearChecklist
+            ) {
                 VStack(alignment: .leading, spacing: 12) {
                     ForEach($viewModel.checklistItems) { $item in
                         Toggle(isOn: $item.isChecked) {
@@ -114,7 +96,7 @@ struct GearChecklistView: View {
                             }
                         }
                         .toggleStyle(.switch)
-                        .tint(ColorTheme.ready)
+                        .tint(ColorTheme.accent)
                     }
                 }
             }
@@ -148,7 +130,7 @@ struct GearChecklistView: View {
             }
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Location Permission")
+                Text("Location permission")
                     .font(RediTypography.bodyStrong)
                     .foregroundStyle(ColorTheme.text)
 
@@ -206,30 +188,42 @@ struct GearChecklistView: View {
     private var permissionDescription: String {
         switch permissionState {
         case .authorized:
-            "Location is enabled. Maps can center faster and RediM8 can use the share mode you choose."
+            "Enabled. Maps can center faster and use the sharing mode you picked."
         case .notDetermined:
-            "Allow location if you want map centering and optional nearby sharing. RediM8 will still work offline without it."
+            "Optional. Offline maps still work even if you skip this."
         case .denied:
-            "Location is currently denied. Map data still works offline, but your position will not auto-center."
+            "Denied. Maps still work offline, but your position will not auto-center."
         case .restricted:
-            "Location access is restricted on this device."
+            "Restricted on this device."
         case .unavailable:
-            "Location access is unavailable on this device."
+            "Unavailable on this device."
+        }
+    }
+
+    private func toggleLabel(title: String, detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.text)
+
+            Text(detail)
+                .font(.caption)
+                .foregroundStyle(ColorTheme.textMuted)
         }
     }
 
     private func gearHint(for kind: ChecklistItemKind) -> String {
         switch kind {
         case .firstAidKit:
-            "Medical basics for injury, burns, and rapid departure."
+            "Medical basics for injury and rapid departure."
         case .batteryRadio:
-            "Warnings and updates when power or mobile coverage drops."
+            "Useful when power or mobile coverage drops."
         case .torch:
-            "Large win for blackout movement and night evacuation."
+            "Big win for blackout movement."
         case .powerBank:
-            "Keeps maps, calls, and vault access available longer."
+            "Keeps maps, calls, and vault access alive longer."
         case .fireBlanket:
-            "Useful for bushfire, kitchen flare-ups, and fast suppression."
+            "Useful for kitchen fires and fast suppression."
         }
     }
 }

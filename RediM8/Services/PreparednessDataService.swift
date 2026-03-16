@@ -6,7 +6,10 @@ final class PreparednessDataService {
         static let scenarios = "preparedness.scenarios.v1"
         static let tasks = "preparedness.tasks.v1"
         static let gear = "preparedness.gear.v1"
-        static let guides = "preparedness.guides.v2"
+        static let guides = "preparedness.guides.v3"
+        static let bushMedicineGuides = "preparedness.bushMedicineGuides.v1"
+        static let foodGrowingGuides = "preparedness.foodGrowingGuides.v1"
+        static let survivalSkillsGuides = "preparedness.survivalSkillsGuides.v1"
         static let emergencyPlan = "preparedness.emergency72hour.v1"
         static let goBag = "preparedness.gobag.v1"
         static let resourceCategories = "preparedness.resourceCategories.v1"
@@ -19,7 +22,11 @@ final class PreparednessDataService {
     private var assistantPolicyLibraryCache: AssistantPolicyLibrary?
     private var taskLibraryCache: TaskLibrary?
     private var gearLibraryCache: GearLibrary?
+    private var bundledGuideLibraryCache: GuideLibrary?
     private var guideLibraryCache: GuideLibrary?
+    private var bushMedicineGuideLibraryCache: AssistantKnowledgeGuideLibrary?
+    private var foodGrowingGuideLibraryCache: AssistantKnowledgeGuideLibrary?
+    private var survivalSkillsGuideLibraryCache: AssistantKnowledgeGuideLibrary?
     private var emergencyPlanCache: Emergency72HourPlanBlueprint?
     private var goBagCache: GoBagLibrary?
     private var resourceCategoryLibraryCache: ResourceCategoryLibrary?
@@ -79,13 +86,31 @@ final class PreparednessDataService {
     }
 
     func guides() -> [Guide] {
-        load(
-            cache: &guideLibraryCache,
-            filename: "Guides.json",
-            storageKey: StorageKey.guides,
-            type: GuideLibrary.self,
-            fallback: GuideLibrary(guides: [])
-        ).guides
+        if let guideLibraryCache {
+            return guideLibraryCache.guides
+        }
+
+        if let store, let stored = try? store.load(GuideLibrary.self, for: StorageKey.guides) {
+            guideLibraryCache = stored
+            return stored.guides
+        }
+
+        let resolved = mergedGuideLibrary()
+        try? store?.save(resolved, for: StorageKey.guides)
+        guideLibraryCache = resolved
+        return resolved.guides
+    }
+
+    func bushMedicineGuides() -> [Guide] {
+        bushMedicineGuideLibrary().guides.map { $0.asGuide() }
+    }
+
+    func foodGrowingKnowledgeGuides() -> [Guide] {
+        foodGrowingGuideLibrary().guides.map { $0.asGuide() }
+    }
+
+    func survivalSkillsGuides() -> [Guide] {
+        survivalSkillsGuideLibrary().guides.map { $0.asGuide() }
     }
 
     func emergency72HourPlanBlueprint() -> Emergency72HourPlanBlueprint {
@@ -186,5 +211,59 @@ final class PreparednessDataService {
         try? store?.save(resolved, for: storageKey)
         cache = resolved
         return resolved
+    }
+
+    private func bundledGuideLibrary() -> GuideLibrary {
+        load(
+            cache: &bundledGuideLibraryCache,
+            filename: "Guides.json",
+            storageKey: StorageKey.guides + ".bundled",
+            type: GuideLibrary.self,
+            fallback: GuideLibrary(guides: [])
+        )
+    }
+
+    private func bushMedicineGuideLibrary() -> AssistantKnowledgeGuideLibrary {
+        load(
+            cache: &bushMedicineGuideLibraryCache,
+            filename: "BushMedicineGuides.json",
+            storageKey: StorageKey.bushMedicineGuides,
+            type: AssistantKnowledgeGuideLibrary.self,
+            fallback: AssistantKnowledgeGuideLibrary(lastUpdated: .distantPast, guides: [])
+        )
+    }
+
+    private func foodGrowingGuideLibrary() -> AssistantKnowledgeGuideLibrary {
+        load(
+            cache: &foodGrowingGuideLibraryCache,
+            filename: "FoodGrowingGuides.json",
+            storageKey: StorageKey.foodGrowingGuides,
+            type: AssistantKnowledgeGuideLibrary.self,
+            fallback: AssistantKnowledgeGuideLibrary(lastUpdated: .distantPast, guides: [])
+        )
+    }
+
+    private func survivalSkillsGuideLibrary() -> AssistantKnowledgeGuideLibrary {
+        load(
+            cache: &survivalSkillsGuideLibraryCache,
+            filename: "SurvivalSkillsGuides.json",
+            storageKey: StorageKey.survivalSkillsGuides,
+            type: AssistantKnowledgeGuideLibrary.self,
+            fallback: AssistantKnowledgeGuideLibrary(lastUpdated: .distantPast, guides: [])
+        )
+    }
+
+    private func mergedGuideLibrary() -> GuideLibrary {
+        let mergedGuides = bundledGuideLibrary().guides
+            + bushMedicineGuides()
+            + foodGrowingKnowledgeGuides()
+            + survivalSkillsGuides()
+
+        var seen = Set<String>()
+        let orderedUniqueGuides = mergedGuides.filter { guide in
+            seen.insert(guide.id).inserted
+        }
+
+        return GuideLibrary(guides: orderedUniqueGuides)
     }
 }

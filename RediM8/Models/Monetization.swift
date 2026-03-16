@@ -41,7 +41,7 @@ enum RediM8PlanInterval: String, CaseIterable, Identifiable {
         case .monthly:
             "Choose Monthly"
         case .annual:
-            "Choose Annual"
+            "Start Annual"
         case .lifetime:
             "Choose Lifetime"
         }
@@ -224,7 +224,7 @@ struct RediM8MonetizationCatalog: Equatable {
                 priceAUD: Decimal(string: "6.99") ?? 6.99,
                 badge: nil,
                 detail: "Flexible month-to-month access for seasonal readiness, remote travel, and storm periods.",
-                supportingLine: "Best for short-term travel or bushfire season prep.",
+                supportingLine: "Best for seasonal or short-term readiness.",
                 highlights: [
                     "Advanced planning tools",
                     "Expanded offline map coverage",

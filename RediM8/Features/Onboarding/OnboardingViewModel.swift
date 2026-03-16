@@ -15,19 +15,19 @@ final class OnboardingViewModel: ObservableObject {
         var nextTitle: String {
             switch self {
             case .welcome:
-                "Start Setup"
+                "Continue"
             case .safety:
                 "I Understand"
             case .scenarios:
-                "Plan My Risks"
+                "Continue"
             case .household:
-                "Review Emergency Health"
+                "Continue"
             case .medicalProfile:
-                "Save Health Info"
+                "Continue"
             case .supplies:
-                "Set Safe Defaults"
+                "Continue"
             case .trust:
-                "Review Launch Summary"
+                "Finish Setup"
             case .result:
                 "Launch RediM8"
             }

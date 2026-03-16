@@ -1,59 +1,48 @@
 import SwiftUI
-import UIKit
 
 struct RediM8ProView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private let catalog = RediM8MonetizationCatalog.launch
     private let emergencyUnlockState: EmergencyUnlockState
-    private let sceneRotationTimer = Timer.publish(every: 11, on: .main, in: .common).autoconnect()
-    private let sceneTransitionDuration = 2.4
-    private let backdropMotionDuration = 24.0
 
     @State private var selectedOffer: RediM8ProOffer?
     @State private var isShowingPricingAlert = false
-    @State private var activeSceneIndex = 0
-    @State private var animateBackdrop = false
+    @State private var hasEntered = false
+    @State private var isPulsingAnnualOffer = false
 
     init(emergencyUnlockState: EmergencyUnlockState = .inactive) {
         self.emergencyUnlockState = emergencyUnlockState
     }
 
     var body: some View {
-        GeometryReader { proxy in
-            let safeTop = max(proxy.safeAreaInsets.top, 12)
-            let safeBottom = max(proxy.safeAreaInsets.bottom, 16)
-            let heroHeight = max(proxy.size.height * 0.58, 360)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                CinematicBanner("marketing_coast_storm", height: 200)
 
-            ZStack(alignment: .top) {
-                ColorTheme.background.ignoresSafeArea()
-
-                cinematicBackdrop(height: heroHeight)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-
-                VStack(spacing: 0) {
-                    Spacer(minLength: max(proxy.size.height * 0.36, 230))
-
-                    paywallCard
-                        .padding(.horizontal, 18)
-                        .padding(.bottom, safeBottom)
-                }
-
-                topBar
-                    .padding(.horizontal, 18)
-                    .padding(.top, safeTop)
+                heroCard
+                accessCard
+                featuresCard
+                footerNote
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 20)
+            .padding(.bottom, 32)
+            .offset(y: hasEntered ? 0 : 40)
+            .opacity(hasEntered ? 1 : 0.01)
+        }
+        .scrollIndicators(.hidden)
+        .background(ColorTheme.background.ignoresSafeArea())
+        .safeAreaInset(edge: .top, spacing: 0) {
+            topBarContainer
         }
         .toolbar(.hidden, for: .navigationBar)
-        .onAppear {
-            animateBackdrop = true
-        }
-        .onReceive(sceneRotationTimer) { _ in
-            guard PaywallScene.allCases.count > 1 else { return }
-            withAnimation(.easeInOut(duration: sceneTransitionDuration)) {
-                activeSceneIndex = (activeSceneIndex + 1) % PaywallScene.allCases.count
-            }
-        }
+        .onAppear(perform: startPaywallPresentation)
+        .animation(
+            reduceMotion ? nil : .spring(response: 0.45, dampingFraction: 0.9),
+            value: hasEntered
+        )
         .alert("Pricing Preview", isPresented: $isShowingPricingAlert, presenting: selectedOffer) { _ in
             Button("OK", role: .cancel) {}
         } message: { offer in
@@ -65,13 +54,34 @@ struct RediM8ProView: View {
         }
     }
 
+    private var topBarContainer: some View {
+        VStack(spacing: 0) {
+            topBar
+                .padding(.horizontal, 20)
+                .padding(.top, 6)
+                .padding(.bottom, 10)
+        }
+        .background(
+            LinearGradient(
+                colors: [
+                    ColorTheme.background.opacity(0.98),
+                    ColorTheme.background.opacity(0.9),
+                    ColorTheme.background.opacity(0.58),
+                    Color.clear
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+    }
+
     private var topBar: some View {
         HStack(spacing: 12) {
             HStack(spacing: 8) {
                 RediM8Wordmark(
                     iconSize: 28,
                     titleFont: .system(size: 14, weight: .black),
-                    titleColor: Color.white.opacity(0.9)
+                    titleColor: Color.white.opacity(0.92)
                 )
 
                 Text("PRO")
@@ -108,278 +118,233 @@ struct RediM8ProView: View {
         }
     }
 
-    private func cinematicBackdrop(height: CGFloat) -> some View {
-        ZStack(alignment: .bottom) {
-            ForEach(Array(PaywallScene.allCases.enumerated()), id: \.offset) { index, scene in
-                cinematicScene(scene)
-                    .opacity(activeSceneIndex == index ? 1 : 0)
-                    .animation(.easeInOut(duration: sceneTransitionDuration), value: activeSceneIndex)
-            }
-
-            LinearGradient(
-                colors: [
-                    Color.black.opacity(0.28),
-                    Color.black.opacity(0.64),
-                    Color.black.opacity(0.88),
-                    ColorTheme.background
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-
-            RadialGradient(
-                colors: [
-                    Color.clear,
-                    Color.black.opacity(0.18),
-                    Color.black.opacity(0.46)
-                ],
-                center: .center,
-                startRadius: 80,
-                endRadius: 740
-            )
-
-            LinearGradient(
-                colors: [
-                    Color.black.opacity(0.34),
-                    Color.clear,
-                    Color.black.opacity(0.18)
-                ],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-
-            HStack(spacing: 8) {
-                ForEach(Array(PaywallScene.allCases.enumerated()), id: \.offset) { index, _ in
-                    Capsule()
-                        .fill(activeSceneIndex == index ? Color.white.opacity(0.95) : Color.white.opacity(0.28))
-                        .frame(width: activeSceneIndex == index ? 24 : 8, height: 5)
-                        .animation(.spring(response: 0.55, dampingFraction: 0.84), value: activeSceneIndex)
-                }
-            }
-            .padding(.bottom, 28)
-        }
-        .frame(height: height)
-        .clipped()
-    }
-
-    private func cinematicScene(_ scene: PaywallScene) -> some View {
-        ZStack {
-            if let image = UIImage(named: scene.assetName) {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .saturation(0.94)
-                    .contrast(1.04)
-                    .brightness(-0.03)
-            } else {
-                fallbackScene(for: scene)
-            }
-        }
-        .overlay {
-            ZStack {
-                LinearGradient(
-                    colors: [
-                        Color.black.opacity(0.16),
-                        Color.clear,
-                        Color.black.opacity(0.12)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-
-                RadialGradient(
-                    colors: [
-                        Color.clear,
-                        Color.black.opacity(0.08),
-                        Color.black.opacity(0.28)
-                    ],
-                    center: .center,
-                    startRadius: 140,
-                    endRadius: 760
-                )
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .scaleEffect(animateBackdrop ? scene.activeScale : scene.idleScale)
-        .offset(
-            x: animateBackdrop ? scene.activeOffset.width : scene.idleOffset.width,
-            y: animateBackdrop ? scene.activeOffset.height : scene.idleOffset.height
-        )
-        .animation(.easeInOut(duration: backdropMotionDuration).repeatForever(autoreverses: true), value: animateBackdrop)
-    }
-
-    private func fallbackScene(for scene: PaywallScene) -> some View {
-        ZStack {
-            LinearGradient(
-                colors: scene.baseColors,
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            scene.tint
-                .opacity(0.3)
-                .blur(radius: 140)
-                .frame(width: 280, height: 280)
-                .offset(x: scene.glowOffset.width, y: scene.glowOffset.height)
-
-            scene.tint
-                .opacity(0.14)
-                .blur(radius: 120)
-                .frame(width: 320, height: 220)
-                .offset(x: -scene.glowOffset.width * 0.6, y: -scene.glowOffset.height * 0.4)
-
-            LinearGradient(
-                colors: [Color.white.opacity(0.22), .clear],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .rotationEffect(scene.highlightAngle)
-            .blur(radius: 36)
-            .offset(x: scene.highlightOffset.width, y: scene.highlightOffset.height)
-
-            Image(systemName: scene.symbolName)
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(Color.white.opacity(0.08))
-                .frame(width: 220, height: 220)
-                .blur(radius: 1.2)
-                .offset(x: scene.symbolOffset.width, y: scene.symbolOffset.height)
-        }
-    }
-
-    private var activeScene: PaywallScene {
-        PaywallScene.allCases[activeSceneIndex]
-    }
-
-    private var paywallAccent: Color {
-        activeScene.tint
-    }
-
-    private var paywallCard: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            if emergencyUnlockState.isVisible {
-                emergencyUnlockBanner
-            }
-
-            VStack(alignment: .leading, spacing: 12) {
-                Text("INFRASTRUCTURE FAILURE UPGRADE")
+    private var heroCard: some View {
+        PanelCard(
+            backgroundAssetName: heroBackgroundAssetName,
+            backgroundImageOffset: heroBackgroundImageOffset,
+            surfaceImageOpacity: 0.88,
+            surfaceImageBrightness: -0.06,
+            surfaceAtmosphere: Color.clear,
+            surfaceEdgeColor: ColorTheme.divider,
+            surfaceShadowColor: ColorTheme.shadow.opacity(0.18)
+        ) {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("REDIM8 PRO")
                     .font(RediTypography.metadata)
-                    .foregroundStyle(paywallAccent)
+                    .foregroundStyle(ColorTheme.textTertiary)
 
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("RediM8 Pro")
-                            .font(.system(size: 34, weight: .black, design: .rounded))
-                            .foregroundStyle(ColorTheme.text)
-
-                        Text("Keep more of your preparedness operating system working when normal coverage, context, and time are under pressure.")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(ColorTheme.textMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Spacer(minLength: 0)
-
-                    if let badge = catalog.recommendedOffer.badge {
-                        Text(badge.uppercased())
-                            .font(RediTypography.caption)
-                            .foregroundStyle(Color.black.opacity(0.82))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(paywallAccent, in: Capsule())
-                    }
-                }
-
-                TrustPillGroup(items: [
-                    TrustPillItem(title: "Core safety stays free", tone: .verified),
-                    TrustPillItem(title: "Offline-first upgrade", tone: .info),
-                    TrustPillItem(title: "Emergency unlock aware", tone: .caution)
-                ])
-            }
-
-            VStack(alignment: .leading, spacing: 14) {
-                Text("Why households upgrade")
-                    .font(RediTypography.sectionTitle)
+                Text("Prepared when networks fail.")
+                    .font(.system(size: 30, weight: .black, design: .rounded))
                     .foregroundStyle(ColorTheme.text)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                LazyVGrid(columns: paywallOutcomeColumns, spacing: 12) {
-                    ForEach(proOutcomes) { outcome in
-                        paywallOutcomeCard(outcome)
+                Text("Offline AI, survival maps, and advanced planning while core safety stays free.")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(ColorTheme.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) {
+                        pricingSummaryPill(
+                            title: "Month",
+                            value: catalog.monthlyOffer.shortPriceText,
+                            tint: ColorTheme.textTertiary,
+                            backgroundAssetName: offerBackgroundAssetName(for: catalog.monthlyOffer)
+                        )
+                        pricingSummaryPill(
+                            title: "Year",
+                            value: catalog.annualOffer.shortPriceText,
+                            tint: ColorTheme.textTertiary,
+                            backgroundAssetName: offerBackgroundAssetName(for: catalog.annualOffer)
+                        )
+                        pricingSummaryPill(
+                            title: "Lifetime",
+                            value: catalog.lifetimeOffer.shortPriceText,
+                            tint: ColorTheme.textTertiary,
+                            backgroundAssetName: offerBackgroundAssetName(for: catalog.lifetimeOffer)
+                        )
+                    }
+
+                    VStack(spacing: 10) {
+                        pricingSummaryPill(
+                            title: "Month",
+                            value: catalog.monthlyOffer.shortPriceText,
+                            tint: ColorTheme.textTertiary,
+                            backgroundAssetName: offerBackgroundAssetName(for: catalog.monthlyOffer)
+                        )
+                        pricingSummaryPill(
+                            title: "Year",
+                            value: catalog.annualOffer.shortPriceText,
+                            tint: ColorTheme.textTertiary,
+                            backgroundAssetName: offerBackgroundAssetName(for: catalog.annualOffer)
+                        )
+                        pricingSummaryPill(
+                            title: "Lifetime",
+                            value: catalog.lifetimeOffer.shortPriceText,
+                            tint: ColorTheme.textTertiary,
+                            backgroundAssetName: offerBackgroundAssetName(for: catalog.lifetimeOffer)
+                        )
                     }
                 }
+
+                if emergencyUnlockState.isVisible {
+                    emergencyUnlockBanner
+                }
+
+                TrustPillGroup(items: heroTrustItems)
             }
+        }
+    }
 
-            paywallSpotlightCard
-
+    private var accessCard: some View {
+        PanelCard(
+            title: "Choose Access",
+            subtitle: "A simple pricing stack. Billing is not active in this build yet, so every option here is still preview-only.",
+            backgroundAssetName: "marketing_command_table",
+            backgroundImageOffset: CGSize(width: 22, height: 0),
+            surfaceImageOpacity: 0.9,
+            surfaceImageBrightness: -0.05,
+            surfaceAtmosphere: Color.clear,
+            surfaceEdgeColor: ColorTheme.dividerStrong,
+            surfaceShadowColor: ColorTheme.shadow.opacity(0.16)
+        ) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Choose access")
-                    .font(RediTypography.sectionTitle)
-                    .foregroundStyle(ColorTheme.text)
+                offerCard(catalog.recommendedOffer, isPrimary: true)
+                offerCard(catalog.monthlyOffer, isPrimary: false)
+                offerCard(catalog.lifetimeOffer, isPrimary: false)
 
-                actionButton(
-                    title: "Upgrade to Pro",
-                    subtitle: "\(catalog.recommendedOffer.billingSummary) • \(catalog.recommendedOffer.supportingLine)",
-                    trailingText: "\(catalog.recommendedOffer.shortPriceText)/yr",
-                    badge: catalog.recommendedOffer.badge,
-                    style: .primary
-                ) {
-                    selectedOffer = catalog.recommendedOffer
-                    isShowingPricingAlert = true
-                }
-
-                actionButton(
-                    title: "Lifetime Access",
-                    subtitle: "\(catalog.lifetimeOffer.billingSummary) • \(catalog.lifetimeOffer.supportingLine)",
-                    trailingText: "\(catalog.lifetimeOffer.shortPriceText) once",
-                    badge: catalog.lifetimeOffer.badge,
-                    style: .highlight
-                ) {
-                    selectedOffer = catalog.lifetimeOffer
-                    isShowingPricingAlert = true
-                }
-
-                actionButton(
-                    title: "Continue Free",
-                    subtitle: "Emergency Mode, official alerts, offline maps, Signal, and core guides stay available.",
-                    trailingText: nil,
-                    badge: nil,
-                    style: .secondary
-                ) {
+                Button("Continue Free") {
                     dismiss()
                 }
+                .buttonStyle(SecondaryActionButtonStyle())
             }
+        }
+    }
 
-            VStack(alignment: .leading, spacing: 10) {
+    private var featuresCard: some View {
+        PanelCard(
+            title: "What Pro Adds",
+            subtitle: "Extra depth for planning and offline use, while core emergency tools remain available for everyone.",
+            backgroundAssetName: "paywall_blackout",
+            backgroundImageOffset: CGSize(width: 18, height: 0),
+            surfaceImageOpacity: 0.9,
+            surfaceImageBrightness: -0.05,
+            surfaceAtmosphere: Color.clear,
+            surfaceEdgeColor: ColorTheme.dividerStrong,
+            surfaceShadowColor: ColorTheme.shadow.opacity(0.16)
+        ) {
+            VStack(alignment: .leading, spacing: 12) {
+                ForEach(proFeatures) { feature in
+                    featureRow(feature)
+                }
+
+                Divider()
+                    .background(ColorTheme.divider)
+
                 paywallTrustRow(
                     title: "Always-free core safety",
                     message: catalog.alwaysFreePromise,
                     systemImage: "checkmark.shield.fill",
-                    tint: ColorTheme.ready
+                    tint: ColorTheme.ready,
+                    backgroundAssetName: "community_shelter_hub"
                 )
+
                 paywallTrustRow(
                     title: emergencyUnlockState.isVisible ? emergencyUnlockState.calloutTitle : "Emergency unlock for real incidents",
                     message: emergencyUnlockState.isVisible ? emergencyUnlockState.calloutDetail : catalog.emergencyUnlockPromise,
                     systemImage: "bolt.shield.fill",
-                    tint: emergencyUnlockState.isActive ? ColorTheme.ready : ColorTheme.warning
+                    tint: emergencyUnlockState.isActive ? ColorTheme.ready : ColorTheme.warning,
+                    backgroundAssetName: emergencyUnlockState.isActive ? "signal_vehicle_link" : "paywall_blackout"
                 )
             }
-
-            Text("\(catalog.billingPreviewNotice) Launch pricing: \(catalog.launchPricingSummary).")
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(ColorTheme.textFaint)
-                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(22)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 30,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: paywallAccent.opacity(0.14)
+    }
+
+    private func startPaywallPresentation() {
+        guard !hasEntered else { return }
+
+        if reduceMotion {
+            hasEntered = true
+            return
+        }
+
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.9)) {
+            hasEntered = true
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
+            withAnimation(.easeInOut(duration: 0.34)) {
+                isPulsingAnnualOffer = true
+            }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            withAnimation(.easeInOut(duration: 0.26)) {
+                isPulsingAnnualOffer = false
+            }
+        }
+    }
+
+    private var footerNote: some View {
+        Text("\(catalog.billingPreviewNotice) Launch pricing: \(catalog.launchPricingSummary).")
+            .font(.footnote.weight(.medium))
+            .foregroundStyle(ColorTheme.textFaint)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, 4)
+    }
+
+    private var heroBackgroundAssetName: String {
+        emergencyUnlockState.isActive ? "paywall_fire" : "paywall_storm"
+    }
+
+    private var heroBackgroundImageOffset: CGSize {
+        emergencyUnlockState.isActive ? CGSize(width: 26, height: 0) : CGSize(width: 18, height: 0)
+    }
+
+    private var heroTrustItems: [TrustPillItem] {
+        [
+            TrustPillItem(title: "Core safety stays free", tone: .verified),
+            TrustPillItem(title: "Offline-first upgrade", tone: .info),
+            TrustPillItem(title: "Emergency unlock aware", tone: .caution)
+        ]
+    }
+
+    private var annualSavingsSummary: String {
+        let monthlyYearlyCost = NSDecimalNumber(decimal: catalog.monthlyOffer.priceAUD).doubleValue * 12
+        let annualCost = NSDecimalNumber(decimal: catalog.annualOffer.priceAUD).doubleValue
+        guard monthlyYearlyCost > 0 else { return "Best value" }
+
+        let savingsPercent = max(0, Int(((monthlyYearlyCost - annualCost) / monthlyYearlyCost * 100).rounded()))
+        return "Save \(savingsPercent)% vs monthly"
+    }
+
+    private var proFeatures: [ProFeature] {
+        [
+            ProFeature(
+                title: "Offline assistant",
+                detail: "Retrieval-first survival summaries when signal is weak or unavailable.",
+                systemImage: "sparkles",
+                tint: ColorTheme.textTertiary,
+                backgroundAssetName: "paywall_blackout",
+                backgroundImageOffset: CGSize(width: 14, height: 0)
             ),
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 30, edgeColor: paywallAccent.opacity(0.18), shadowColor: Color.black.opacity(0.26)))
+            ProFeature(
+                title: "Expanded survival maps",
+                detail: "More tactical map coverage and fallback navigation depth when regular coverage fails.",
+                systemImage: "map.fill",
+                tint: ColorTheme.textTertiary,
+                backgroundAssetName: "map_remote_track",
+                backgroundImageOffset: CGSize(width: 10, height: 0)
+            ),
+            ProFeature(
+                title: "Advanced planning tools",
+                detail: "Richer household planning, exports, and readiness workflows across the app.",
+                systemImage: "checkmark.square.fill",
+                tint: ColorTheme.textTertiary,
+                backgroundAssetName: "marketing_command_table",
+                backgroundImageOffset: CGSize(width: 16, height: 0)
+            )
+        ]
     }
 
     private var emergencyUnlockBanner: some View {
@@ -406,77 +371,109 @@ struct RediM8ProView: View {
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(accent.opacity(0.28), lineWidth: 1)
+        .proInsetSurface(
+            cornerRadius: 20,
+            edgeColor: accent.opacity(0.2),
+            shadowColor: ColorTheme.shadow.opacity(0.12),
+            tintFill: accent.opacity(0.08),
+            backgroundAssetName: emergencyUnlockState.isActive ? "signal_vehicle_link" : "paywall_blackout",
+            backgroundImageOffset: CGSize(width: 18, height: 0),
+            atmosphere: accent.opacity(0.12)
         )
     }
 
-    private var paywallOutcomeColumns: [GridItem] {
-        [
-            GridItem(.flexible(), spacing: 12),
-            GridItem(.flexible(), spacing: 12)
-        ]
+    private func pricingSummaryPill(
+        title: String,
+        value: String,
+        tint: Color,
+        backgroundAssetName: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(RediTypography.metadata)
+                .foregroundStyle(ColorTheme.textFaint)
+
+            Text(value)
+                .font(.headline.weight(.bold))
+                .foregroundStyle(tint)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .proInsetSurface(
+            cornerRadius: 18,
+            edgeColor: ColorTheme.dividerStrong,
+            tintFill: tint.opacity(0.05),
+            backgroundAssetName: backgroundAssetName,
+            backgroundImageOffset: CGSize(width: 12, height: 0),
+            imageOpacity: 0.32,
+            atmosphere: tint.opacity(0.12)
+        )
     }
 
-    private var proOutcomes: [ProOutcome] {
-        [
-            ProOutcome(
-                title: "Ask for offline answers",
-                detail: "Get retrieval-first survival summaries when the internet is down.",
-                systemImage: "sparkles",
-                tint: ColorTheme.info
-            ),
-            ProOutcome(
-                title: "Keep nearby comms alive",
-                detail: "Hold local emergency signalling and structured reports closer at hand.",
-                systemImage: "dot.radiowaves.left.and.right",
-                tint: ColorTheme.ready
-            ),
-            ProOutcome(
-                title: "Open tactical maps faster",
-                detail: "Keep deeper basemaps and fallback navigation available when regular coverage fails.",
-                systemImage: "map.fill",
-                tint: ColorTheme.accent
-            ),
-            ProOutcome(
-                title: "Plan readiness in more depth",
-                detail: "Use richer evacuation, readiness, and vault workflows across the household.",
-                systemImage: "checkmark.square.fill",
-                tint: ColorTheme.warning
-            )
-        ]
-    }
+    private func offerCard(_ offer: RediM8ProOffer, isPrimary: Bool) -> some View {
+        let accent = offerAccent(for: offer)
+        let shouldPulse = offer.isRecommended && isPulsingAnnualOffer
 
-    private var paywallSpotlightCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .center, spacing: 10) {
-                Text("Recommended for year-round preparedness")
-                    .font(RediTypography.bodyStrong)
-                    .foregroundStyle(ColorTheme.text)
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
+                        Text(offer.title)
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundStyle(ColorTheme.text)
+
+                        if let badge = offer.badge {
+                            Text(badge.uppercased())
+                                .font(RediTypography.metadata)
+                                .foregroundStyle(isPrimary ? Color.black.opacity(0.8) : accent)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 5)
+                                .background(
+                                    isPrimary ? AnyShapeStyle(accent.opacity(0.9)) : AnyShapeStyle(accent.opacity(0.12)),
+                                    in: Capsule()
+                                )
+                        }
+                    }
+
+                    Text(offer.billingSummary.uppercased())
+                        .font(RediTypography.metadata)
+                        .foregroundStyle(accent)
+                }
 
                 Spacer(minLength: 0)
 
-                Text(catalog.recommendedOffer.shortPriceText + "/yr")
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(paywallAccent)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(paywallAccent.opacity(0.12), in: Capsule())
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(offer.shortPriceText)
+                        .font(.system(size: 30, weight: .black, design: .rounded))
+                        .foregroundStyle(ColorTheme.text)
+
+                    if let priceCallout = priceCallout(for: offer) {
+                        Text(priceCallout)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(accent.opacity(0.92))
+                            .multilineTextAlignment(.trailing)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
             }
 
-            Text(catalog.recommendedOffer.detail)
-                .font(.subheadline)
+            Text(offer.supportingLine)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(ColorTheme.text)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(offer.detail)
+                .font(.footnote.weight(.medium))
                 .foregroundStyle(ColorTheme.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
 
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(catalog.recommendedOffer.highlights, id: \.self) { highlight in
+                ForEach(offer.highlights.prefix(isPrimary ? 3 : 2), id: \.self) { highlight in
                     HStack(alignment: .top, spacing: 10) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(paywallAccent)
+                            .foregroundStyle(accent)
                             .padding(.top, 2)
 
                         Text(highlight)
@@ -485,60 +482,88 @@ struct RediM8ProView: View {
                     }
                 }
             }
+
+            if isPrimary {
+                Button(offer.ctaTitle) {
+                    selectedOffer = offer
+                    isShowingPricingAlert = true
+                }
+                .buttonStyle(PrimaryActionButtonStyle())
+            } else {
+                Button(offer.ctaTitle) {
+                    selectedOffer = offer
+                    isShowingPricingAlert = true
+                }
+                .buttonStyle(SecondaryActionButtonStyle())
+            }
         }
         .padding(18)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 24,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: paywallAccent.opacity(0.12)
-            )
+        .scaleEffect(shouldPulse ? 1.018 : 1)
+        .proInsetSurface(
+            cornerRadius: 24,
+            edgeColor: accent.opacity(isPrimary ? 0.26 : 0.16),
+            shadowColor: ColorTheme.shadow.opacity(0.14),
+            tintFill: accent.opacity(isPrimary ? 0.08 : 0.04),
+            backgroundAssetName: offerBackgroundAssetName(for: offer),
+            backgroundImageOffset: offerBackgroundImageOffset(for: offer),
+            atmosphere: accent.opacity(isPrimary ? 0.16 : 0.1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 24, edgeColor: paywallAccent.opacity(0.16), shadowColor: paywallAccent.opacity(0.05)))
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.34), value: shouldPulse)
     }
 
-    private func paywallOutcomeCard(_ outcome: ProOutcome) -> some View {
-        return VStack(alignment: .leading, spacing: 10) {
+    private func priceCallout(for offer: RediM8ProOffer) -> String? {
+        switch offer.interval {
+        case .monthly:
+            nil
+        case .annual:
+            annualSavingsSummary
+        case .lifetime:
+            "Limited launch offer"
+        }
+    }
+
+    private func featureRow(_ feature: ProFeature) -> some View {
+        HStack(alignment: .top, spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(outcome.tint.opacity(0.14))
+                    .fill(feature.tint.opacity(0.14))
                     .frame(width: 40, height: 40)
 
-                Image(systemName: outcome.systemImage)
+                Image(systemName: feature.systemImage)
                     .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(outcome.tint)
+                    .foregroundStyle(feature.tint)
             }
 
-            Text(outcome.title)
-                .font(.headline)
-                .foregroundStyle(ColorTheme.text)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(feature.title)
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.text)
 
-            Text(outcome.detail)
-                .font(.subheadline)
-                .foregroundStyle(ColorTheme.textMuted)
-                .fixedSize(horizontal: false, vertical: true)
+                Text(feature.detail)
+                    .font(.footnote.weight(.medium))
+                    .foregroundStyle(ColorTheme.textMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, minHeight: 154, alignment: .leading)
-        .padding(16)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 22,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: outcome.tint.opacity(0.1)
-            )
+        .padding(14)
+        .proInsetSurface(
+            cornerRadius: 20,
+            edgeColor: ColorTheme.dividerStrong,
+            tintFill: feature.tint.opacity(0.04),
+            backgroundAssetName: feature.backgroundAssetName,
+            backgroundImageOffset: feature.backgroundImageOffset,
+            atmosphere: feature.tint.opacity(0.1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 22, edgeColor: outcome.tint.opacity(0.14), shadowColor: outcome.tint.opacity(0.05)))
     }
 
     private func paywallTrustRow(
         title: String,
         message: String,
         systemImage: String,
-        tint: Color
+        tint: Color,
+        backgroundAssetName: String
     ) -> some View {
         HStack(alignment: .top, spacing: 12) {
             ZStack {
@@ -565,353 +590,136 @@ struct RediM8ProView: View {
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 20,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: tint.opacity(0.08)
-            )
+        .proInsetSurface(
+            cornerRadius: 20,
+            edgeColor: tint.opacity(0.12),
+            shadowColor: ColorTheme.shadow.opacity(0.1),
+            tintFill: tint.opacity(0.05),
+            backgroundAssetName: backgroundAssetName,
+            backgroundImageOffset: CGSize(width: 16, height: 0),
+            atmosphere: tint.opacity(0.1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 20, edgeColor: tint.opacity(0.12), shadowColor: tint.opacity(0.04)))
     }
 
-    private func actionButton(
-        title: String,
-        subtitle: String,
-        trailingText: String?,
-        badge: String?,
-        style: PaywallButtonStyleKind,
-        action: @escaping () -> Void
-    ) -> some View {
-        return Button(action: action) {
-            HStack(alignment: .center, spacing: 14) {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 8) {
-                        Text(title)
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundStyle(style.titleColor)
-
-                        if let badge {
-                            Text(badge.uppercased())
-                                .font(RediTypography.metadata)
-                                .foregroundStyle(style.badgeTextColor)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 5)
-                                .background(style.badgeBackground, in: Capsule())
-                        }
-                    }
-
-                    Text(subtitle)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(style.subtitleColor)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 8)
-
-                if let trailingText {
-                    Text(trailingText)
-                        .font(.footnote.weight(.bold))
-                        .foregroundStyle(style.trailingColor)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                        .background(style.trailingBackground, in: Capsule())
-                }
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(style.background, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(style.borderColor, lineWidth: 1)
-            )
-            .shadow(color: style.shadowColor, radius: style.shadowRadius, y: style.shadowYOffset)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-private enum PaywallButtonStyleKind {
-    case primary
-    case secondary
-    case highlight
-
-    var background: some ShapeStyle {
-        switch self {
-        case .primary:
-            return AnyShapeStyle(
-                LinearGradient(
-                    colors: [ColorTheme.accentSoft, ColorTheme.accent],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-        case .secondary:
-            return AnyShapeStyle(Color.white.opacity(0.06))
-        case .highlight:
-            return AnyShapeStyle(ColorTheme.warning.opacity(0.16))
+    private func offerAccent(for offer: RediM8ProOffer) -> Color {
+        switch offer.interval {
+        case .monthly:
+            ColorTheme.textTertiary
+        case .annual:
+            ColorTheme.textTertiary
+        case .lifetime:
+            ColorTheme.textTertiary
         }
     }
 
-    var borderColor: Color {
-        switch self {
-        case .primary:
-            return ColorTheme.accent.opacity(0.26)
-        case .secondary:
-            return Color.white.opacity(0.08)
-        case .highlight:
-            return ColorTheme.warning.opacity(0.28)
+    private func offerBackgroundAssetName(for offer: RediM8ProOffer) -> String {
+        switch offer.interval {
+        case .monthly:
+            "paywall_storm"
+        case .annual:
+            "paywall_fire"
+        case .lifetime:
+            "marketing_command_table"
         }
     }
 
-    var titleColor: Color {
-        switch self {
-        case .primary:
-            return Color.black.opacity(0.88)
-        case .secondary, .highlight:
-            return ColorTheme.text
-        }
-    }
-
-    var subtitleColor: Color {
-        switch self {
-        case .primary:
-            return Color.black.opacity(0.62)
-        case .secondary:
-            return ColorTheme.textFaint
-        case .highlight:
-            return ColorTheme.warning.opacity(0.95)
-        }
-    }
-
-    var trailingColor: Color {
-        switch self {
-        case .primary:
-            return Color.black.opacity(0.82)
-        case .secondary:
-            return ColorTheme.text
-        case .highlight:
-            return ColorTheme.warning
-        }
-    }
-
-    var trailingBackground: some ShapeStyle {
-        switch self {
-        case .primary:
-            return AnyShapeStyle(Color.white.opacity(0.28))
-        case .secondary:
-            return AnyShapeStyle(Color.white.opacity(0.08))
-        case .highlight:
-            return AnyShapeStyle(ColorTheme.warning.opacity(0.14))
-        }
-    }
-
-    var badgeBackground: some ShapeStyle {
-        switch self {
-        case .primary:
-            return AnyShapeStyle(Color.black.opacity(0.12))
-        case .secondary:
-            return AnyShapeStyle(Color.white.opacity(0.08))
-        case .highlight:
-            return AnyShapeStyle(ColorTheme.warning.opacity(0.14))
-        }
-    }
-
-    var badgeTextColor: Color {
-        switch self {
-        case .primary:
-            return Color.black.opacity(0.78)
-        case .secondary:
-            return ColorTheme.textFaint
-        case .highlight:
-            return ColorTheme.warning
-        }
-    }
-
-    var shadowColor: Color {
-        switch self {
-        case .primary:
-            return ColorTheme.glowAmber.opacity(0.2)
-        case .secondary:
-            return Color.clear
-        case .highlight:
-            return ColorTheme.warning.opacity(0.1)
-        }
-    }
-
-    var shadowRadius: CGFloat {
-        switch self {
-        case .primary:
-            18
-        case .secondary:
-            0
-        case .highlight:
-            14
-        }
-    }
-
-    var shadowYOffset: CGFloat {
-        switch self {
-        case .primary:
-            10
-        case .secondary:
-            0
-        case .highlight:
-            8
+    private func offerBackgroundImageOffset(for offer: RediM8ProOffer) -> CGSize {
+        switch offer.interval {
+        case .monthly:
+            CGSize(width: 18, height: 0)
+        case .annual:
+            CGSize(width: 28, height: 0)
+        case .lifetime:
+            CGSize(width: 20, height: 0)
         }
     }
 }
 
-private struct ProOutcome: Identifiable {
+private struct ProFeature: Identifiable {
     let id = UUID()
     let title: String
     let detail: String
     let systemImage: String
     let tint: Color
+    let backgroundAssetName: String
+    let backgroundImageOffset: CGSize
 }
 
-private enum PaywallScene: Int, CaseIterable, Identifiable {
-    case blackout
-    case storm
-    case fire
+private struct ProInsetSurfaceModifier: ViewModifier {
+    let cornerRadius: CGFloat
+    let edgeColor: Color
+    let shadowColor: Color
+    let tintFill: Color
+    let backgroundAssetName: String?
+    let backgroundImageOffset: CGSize
+    let imageOpacity: Double
+    let atmosphere: Color?
 
-    var id: Int { rawValue }
+    func body(content: Content) -> some View {
+        content
+            .background {
+                ZStack {
+                    PremiumSurfaceBackground(
+                        cornerRadius: cornerRadius,
+                        backgroundAssetName: backgroundAssetName,
+                        backgroundImageOffset: backgroundImageOffset,
+                        atmosphere: atmosphere ?? Color.clear,
+                        imageOpacity: imageOpacity,
+                        imageTopShadeOpacity: backgroundAssetName == nil ? 0.28 : 0.36,
+                        imageBottomShadeOpacity: backgroundAssetName == nil ? 0.76 : 0.84,
+                        brightness: backgroundAssetName == nil ? -0.04 : -0.08
+                    )
 
-    var assetName: String {
-        switch self {
-        case .storm:
-            "paywall_storm"
-        case .fire:
-            "paywall_fire"
-        case .blackout:
-            "paywall_blackout"
-        }
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(tintFill)
+
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.03),
+                                    Color.clear,
+                                    Color.black.opacity(0.08)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .modifier(
+                PremiumSurfaceChrome(
+                    cornerRadius: cornerRadius,
+                    edgeColor: edgeColor,
+                    shadowColor: shadowColor
+                )
+            )
     }
+}
 
-    var symbolName: String {
-        switch self {
-        case .storm:
-            "cloud.bolt.rain.fill"
-        case .fire:
-            "flame.fill"
-        case .blackout:
-            "building.2.fill"
-        }
-    }
-
-    var tint: Color {
-        switch self {
-        case .storm:
-            ColorTheme.info
-        case .fire:
-            ColorTheme.warning
-        case .blackout:
-            Color(hex: "AAB1B8")
-        }
-    }
-
-    var baseColors: [Color] {
-        switch self {
-        case .storm:
-            [
-                Color(hex: "17202A"),
-                Color(hex: "0D131A"),
-                ColorTheme.background
-            ]
-        case .fire:
-            [
-                Color(hex: "3A1607"),
-                Color(hex: "120B08"),
-                ColorTheme.background
-            ]
-        case .blackout:
-            [
-                Color(hex: "121A22"),
-                Color(hex: "070B11"),
-                ColorTheme.background
-            ]
-        }
-    }
-
-    var glowOffset: CGSize {
-        switch self {
-        case .storm:
-            CGSize(width: -90, height: -20)
-        case .fire:
-            CGSize(width: 120, height: 40)
-        case .blackout:
-            CGSize(width: 80, height: -50)
-        }
-    }
-
-    var highlightAngle: Angle {
-        switch self {
-        case .storm:
-            .degrees(18)
-        case .fire:
-            .degrees(-4)
-        case .blackout:
-            .degrees(28)
-        }
-    }
-
-    var highlightOffset: CGSize {
-        switch self {
-        case .storm:
-            CGSize(width: -40, height: -80)
-        case .fire:
-            CGSize(width: 0, height: 80)
-        case .blackout:
-            CGSize(width: 80, height: -20)
-        }
-    }
-
-    var symbolOffset: CGSize {
-        switch self {
-        case .storm:
-            CGSize(width: 90, height: -20)
-        case .fire:
-            CGSize(width: -70, height: 80)
-        case .blackout:
-            CGSize(width: 60, height: 70)
-        }
-    }
-
-    var idleScale: CGFloat { 1.03 }
-
-    var activeScale: CGFloat {
-        switch self {
-        case .storm:
-            1.1
-        case .fire:
-            1.08
-        case .blackout:
-            1.12
-        }
-    }
-
-    var idleOffset: CGSize {
-        switch self {
-        case .storm:
-            CGSize(width: -16, height: -6)
-        case .fire:
-            CGSize(width: 10, height: 10)
-        case .blackout:
-            CGSize(width: -8, height: 6)
-        }
-    }
-
-    var activeOffset: CGSize {
-        switch self {
-        case .storm:
-            CGSize(width: 18, height: 8)
-        case .fire:
-            CGSize(width: -18, height: -10)
-        case .blackout:
-            CGSize(width: 16, height: -12)
-        }
+private extension View {
+    func proInsetSurface(
+        cornerRadius: CGFloat,
+        edgeColor: Color = ColorTheme.dividerStrong,
+        shadowColor: Color = ColorTheme.shadow.opacity(0.14),
+        tintFill: Color = .clear,
+        backgroundAssetName: String? = nil,
+        backgroundImageOffset: CGSize = .zero,
+        imageOpacity: Double = 1,
+        atmosphere: Color? = nil
+    ) -> some View {
+        modifier(
+            ProInsetSurfaceModifier(
+                cornerRadius: cornerRadius,
+                edgeColor: edgeColor,
+                shadowColor: shadowColor,
+                tintFill: tintFill,
+                backgroundAssetName: backgroundAssetName,
+                backgroundImageOffset: backgroundImageOffset,
+                imageOpacity: imageOpacity,
+                atmosphere: atmosphere
+            )
+        )
     }
 }

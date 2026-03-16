@@ -8,6 +8,7 @@ import VisionKit
 
 struct SecureVaultView: View {
     @ObservedObject var service: DocumentVaultService
+    let scrollToTopRequestID: Int
 
     @State private var selectedCategory: VaultCategory = .identity
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -16,23 +17,45 @@ struct SecureVaultView: View {
     @State private var isShowingEmergencyInfoEditor = false
     @State private var notice: VaultNotice?
     @State private var previewItem: VaultPreviewItem?
+    @State private var isShowingPrivacyModel = false
+
+    init(service: DocumentVaultService, scrollToTopRequestID: Int = 0) {
+        self.service = service
+        self.scrollToTopRequestID = scrollToTopRequestID
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                heroCard
-                vaultStatusRail
-                privacyCard
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Color.clear
+                        .frame(height: 0)
+                        .id(VaultScrollAnchor.top)
 
-                if service.isUnlocked {
-                    unlockedContent
-                } else {
-                    lockedContent
+                    CinematicBanner("vault_essentials", height: 160)
+
+                    heroCard
+                    vaultStatusRail
+
+                    if service.isUnlocked {
+                        unlockedContent
+                    } else {
+                        lockedContent
+                    }
+
+                    privacyCard
+                }
+                .padding(.horizontal, RediSpacing.screen)
+                .padding(.top, RediSpacing.screen)
+                .padding(.bottom, RediLayout.commandDockContentInset)
+            }
+            .onChange(of: scrollToTopRequestID) { _, _ in
+                DispatchQueue.main.async {
+                    withAnimation(RediMotion.selection) {
+                        proxy.scrollTo(VaultScrollAnchor.top, anchor: .top)
+                    }
                 }
             }
-            .padding(.horizontal, RediSpacing.screen)
-            .padding(.top, RediSpacing.screen)
-            .padding(.bottom, RediLayout.commandDockContentInset)
         }
         .navigationTitle("Secure Vault")
         .background(Color.clear)
@@ -72,10 +95,10 @@ struct SecureVaultView: View {
                     }
                 }
             }
-            .rediSheetPresentation(style: .vault, accent: ColorTheme.secure)
+            .rediSheetPresentation()
         }
         .sheet(item: $previewItem, onDismiss: {
-            previewItem = nil
+            dismissPreview()
         }) { item in
             VaultQuickLookPreview(item: item)
         }
@@ -84,23 +107,40 @@ struct SecureVaultView: View {
         }
     }
 
+    private enum VaultScrollAnchor {
+        static let top = "vault-scroll-top"
+    }
+
+    private enum VaultHealthAction {
+        case emergencyInfo
+        case category(VaultCategory)
+    }
+
+    private struct VaultHealthItem: Identifiable {
+        let title: String
+        let detail: String
+        let systemImage: String
+        let tint: Color
+        let isComplete: Bool
+        let action: VaultHealthAction
+
+        var id: String { title }
+    }
+
     private var heroCard: some View {
         ModeHeroCard(
             eyebrow: "Offline Protection",
             title: "Secure Vault",
             subtitle: "Encrypted local copies of the documents you need when networks fail or home access is cut off.",
             iconName: "documents",
-            accent: ColorTheme.secure,
-            shimmerColor: service.isUnlocked ? nil : ColorTheme.secure,
-            backgroundAssetName: "vault_pouch",
-            backgroundImageOffset: CGSize(width: 22, height: 0)
+            accent: ColorTheme.textTertiary
         ) {
             VStack(alignment: .leading, spacing: 10) {
                 TrustPillGroup(items: [
-                    TrustPillItem(title: "Encrypted locally", tone: .verified),
-                    TrustPillItem(title: "Offline ready", tone: .info),
+                    TrustPillItem(title: "Encrypted locally", tone: .neutral),
+                    TrustPillItem(title: "Offline ready", tone: .neutral),
                     TrustPillItem(title: "Biometric unlock", tone: .neutral),
-                    TrustPillItem(title: "Local only", tone: .caution)
+                    TrustPillItem(title: "Local only", tone: .neutral)
                 ])
 
                 vaultHeroMetrics
@@ -114,29 +154,36 @@ struct SecureVaultView: View {
     }
 
     private var vaultStatusRail: some View {
-        SystemStatusRail(items: vaultStatusItems, accent: ColorTheme.secure)
+        SystemStatusRail(items: vaultStatusItems, accent: ColorTheme.textTertiary)
     }
 
     private var privacyCard: some View {
-        PanelCard(title: "Privacy Model", subtitle: "What RediM8 promises and what it does not.") {
+        CollapsiblePanelCard(
+            title: "Privacy Model",
+            subtitle: service.isUnlocked
+                ? "Local-only storage promises and limits once the vault is open."
+                : "What stays hidden while the vault is locked.",
+            accent: ColorTheme.textTertiary,
+            isExpanded: $isShowingPrivacyModel
+        ) {
             VStack(alignment: .leading, spacing: 12) {
                 vaultPromiseRow(
                     title: "Encrypted locally on this device",
                     message: "Vault documents stay encrypted at rest and only open after device-owner authentication succeeds.",
                     systemImage: "lock.shield.fill",
-                    tint: ColorTheme.secure
+                    tint: ColorTheme.textTertiary
                 )
                 vaultPromiseRow(
                     title: "RediM8 cannot read your contents",
                     message: "The app manages the encrypted container and preview access, but it cannot inspect your document contents remotely.",
                     systemImage: "eye.slash.fill",
-                    tint: ColorTheme.info
+                    tint: ColorTheme.textTertiary
                 )
                 vaultPromiseRow(
                     title: "Excluded from cloud backup by default",
                     message: "Vault storage remains local-only unless you explicitly add a future backup option later.",
                     systemImage: "icloud.slash.fill",
-                    tint: ColorTheme.warning
+                    tint: ColorTheme.textTertiary
                 )
             }
         }
@@ -148,13 +195,41 @@ struct SecureVaultView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     TrustPillGroup(items: [
                         TrustPillItem(title: "Names hidden", tone: .neutral),
-                        TrustPillItem(title: "Encrypted at rest", tone: .verified),
-                        TrustPillItem(title: "Ready for offline access", tone: .info)
+                        TrustPillItem(title: "Encrypted at rest", tone: .neutral),
+                        TrustPillItem(title: "Ready for offline access", tone: .neutral)
                     ])
 
                     Text("When locked, RediM8 hides document names, keeps emergency records encrypted at rest, and leaves the vault ready for fast owner-confirmed access.")
                         .font(.subheadline)
-                        .foregroundStyle(ColorTheme.textMuted)
+                        .foregroundStyle(ColorTheme.textSecondary)
+
+                    HStack(spacing: 12) {
+                        lockedStateBadge(
+                            title: "Docs",
+                            value: service.state.documents.isEmpty ? "Empty" : "Hidden",
+                            tint: service.state.documents.isEmpty ? ColorTheme.warning : ColorTheme.textTertiary
+                        )
+                        lockedStateBadge(
+                            title: "Emergency Card",
+                            value: service.state.emergencyInfo.hasAnyContent ? "Saved" : "Empty",
+                            tint: service.state.emergencyInfo.hasAnyContent ? ColorTheme.ready : ColorTheme.warning
+                        )
+                    }
+
+                    Button {
+                        Task { await unlockVault() }
+                    } label: {
+                        RediCommandCard(
+                            title: "Unlock Vault",
+                            detail: "Use Face ID, Touch ID, or device passcode to open local documents.",
+                            systemImage: "lock.open.fill",
+                            tint: ColorTheme.textTertiary,
+                            badge: "Biometric",
+                            prominence: .accented,
+                            layout: .rail
+                        )
+                    }
+                    .buttonStyle(CardPressButtonStyle())
 
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 12) {
                         ForEach(service.categories) { category in
@@ -168,50 +243,16 @@ struct SecureVaultView: View {
 
     private var unlockedContent: some View {
         VStack(alignment: .leading, spacing: 18) {
+            vaultSetupCard
+
             emergencyInfoSummaryCard
-
-            PanelCard(title: "Import", subtitle: "Add a document to \(selectedCategory.title)") {
-                VStack(alignment: .leading, spacing: 12) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
-                            ForEach(service.categories) { category in
-                                Button {
-                                    selectedCategory = category
-                                } label: {
-                                    categoryChip(category)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 12) {
-                        quickActionButton(title: "Scan", subtitle: "Camera to PDF", iconName: "camera", tint: ColorTheme.info) {
-                            isShowingScanner = true
-                        }
-                        quickActionButton(title: "Import PDF", subtitle: "Files app", iconName: "documents", tint: ColorTheme.info) {
-                            isShowingFileImporter = true
-                        }
-                        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                            quickActionButtonLabel(title: "Import Photo", subtitle: "Photo library", iconName: "image", tint: ColorTheme.ready)
-                        }
-                        .buttonStyle(.plain)
-
-                        quickActionButton(title: "Import File", subtitle: "Any local file", iconName: "folder", tint: ColorTheme.warning) {
-                            isShowingFileImporter = true
-                        }
-                    }
-                }
-            }
 
             PanelCard(
                 title: "Quick Access",
-                subtitle: "First things you usually need during evacuation",
-                backgroundAssetName: "vault_essentials",
-                backgroundImageOffset: CGSize(width: 16, height: 0)
+                subtitle: "Identity, medical, insurance, and contact records first during evacuation"
             ) {
                 if service.quickAccessDocuments.isEmpty {
-                    Text("No quick-access documents yet. Add identity, insurance, medical, or contact records to surface them here.")
+                    Text("No quick-access documents yet. Add identity, medical, insurance, or contact records to surface them here.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 } else {
@@ -219,6 +260,19 @@ struct SecureVaultView: View {
                         ForEach(service.quickAccessDocuments) { document in
                             documentRow(document, largeButtons: true)
                         }
+                    }
+                }
+            }
+
+            PanelCard(title: "Vault Sections", subtitle: "Pick the document set you need right now, then import or open from there.") {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+                    ForEach(service.categories) { category in
+                        Button {
+                            selectedCategory = category
+                        } label: {
+                            categoryTile(category: category, count: service.categoryCount(category), isSelected: selectedCategory == category)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -237,12 +291,89 @@ struct SecureVaultView: View {
                     }
                 }
             }
+
+            PanelCard(title: "Add to \(selectedCategory.title)", subtitle: "Scan or import a local file into the currently selected vault section.") {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 12) {
+                    quickActionButton(title: "Scan", subtitle: "Camera to PDF", iconName: "camera", tint: ColorTheme.textTertiary) {
+                        isShowingScanner = true
+                    }
+                    quickActionButton(title: "Import PDF", subtitle: "Files app", iconName: "documents", tint: ColorTheme.textTertiary) {
+                        isShowingFileImporter = true
+                    }
+                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                        quickActionButtonLabel(title: "Import Photo", subtitle: "Photo library", iconName: "image", tint: ColorTheme.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+
+                    quickActionButton(title: "Import File", subtitle: "Any local file", iconName: "folder", tint: ColorTheme.textTertiary) {
+                        isShowingFileImporter = true
+                    }
+                }
+            }
+        }
+    }
+
+    private var vaultSetupCard: some View {
+        PanelCard(
+            title: "Vault Setup",
+            subtitle: "\(vaultSetupCompletedCount)/\(vaultHealthItems.count) essentials ready for evacuation"
+        ) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("VAULT READINESS")
+                            .font(RediTypography.caption)
+                            .foregroundStyle(ColorTheme.textTertiary)
+
+                        Text("\(vaultReadinessPercentage)%")
+                            .font(RediTypography.dataLarge)
+                            .foregroundStyle(ColorTheme.text)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Text(vaultNextActionText)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(ColorTheme.textSecondary)
+                        .multilineTextAlignment(.trailing)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                vaultProgressBar
+
+                VStack(spacing: 10) {
+                    ForEach(vaultHealthItems) { item in
+                        Button {
+                            handleVaultHealthSelection(item)
+                        } label: {
+                            vaultHealthRow(item)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
         }
     }
 
     private var emergencyInfoSummaryCard: some View {
-        PanelCard(title: "Emergency Info Card", subtitle: "Fast summary for you, family, or responders.") {
+        PanelCard(
+            title: "Emergency Info",
+            subtitle: "Medical and contact summary for you, family, or responders."
+        ) {
             VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    vaultMiniStatus(
+                        title: "Status",
+                        value: service.state.emergencyInfo.hasAnyContent ? "Saved" : "Add now",
+                        tint: service.state.emergencyInfo.hasAnyContent ? ColorTheme.ready : ColorTheme.warning
+                    )
+                    vaultMiniStatus(
+                        title: "Priority",
+                        value: "Responder first",
+                        tint: ColorTheme.textTertiary
+                    )
+                }
+
                 if service.state.emergencyInfo.hasAnyContent {
                     emergencyInfoLine(label: "Blood Type", value: service.state.emergencyInfo.bloodType)
                     emergencyInfoLine(label: "Allergies", value: service.state.emergencyInfo.allergies)
@@ -255,10 +386,20 @@ struct SecureVaultView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Button("Edit Emergency Info") {
+                Button {
                     isShowingEmergencyInfoEditor = true
+                } label: {
+                    RediCommandCard(
+                        title: "Edit Emergency Info",
+                        detail: "Update blood type, allergies, medications, and emergency contacts.",
+                        systemImage: "heart.text.square.fill",
+                        tint: ColorTheme.ready,
+                        badge: service.state.emergencyInfo.hasAnyContent ? "Saved" : "Add Now",
+                        prominence: .accented,
+                        layout: .rail
+                    )
                 }
-                .buttonStyle(SecondaryActionButtonStyle())
+                .buttonStyle(CardPressButtonStyle())
             }
         }
     }
@@ -270,14 +411,14 @@ struct SecureVaultView: View {
                 value: totalDocumentLabel,
                 detail: service.isUnlocked ? "Stored locally" : "Names hidden",
                 iconName: "documents",
-                tint: ColorTheme.secure
+                tint: ColorTheme.textTertiary
             )
             vaultMetricTile(
                 title: "Quick Access",
                 value: quickAccessLabel,
                 detail: service.isUnlocked ? "Evacuation-first set" : "Unlock to reveal",
                 iconName: "shield",
-                tint: ColorTheme.info
+                tint: ColorTheme.textTertiary
             )
             vaultMetricTile(
                 title: "Emergency Card",
@@ -291,7 +432,7 @@ struct SecureVaultView: View {
                 value: "Local Only",
                 detail: "Cloud excluded by default",
                 iconName: "internaldrive.fill",
-                tint: ColorTheme.warning
+                tint: ColorTheme.textTertiary
             )
         }
     }
@@ -299,21 +440,43 @@ struct SecureVaultView: View {
     @ViewBuilder
     private func vaultHeroActionButtons(axis: Axis.Set) -> some View {
         let stack = Group {
-            Button(service.isUnlocked ? "Lock Vault" : "Unlock Vault") {
+            Button {
                 if service.isUnlocked {
                     service.lock()
                     RediHaptics.softImpact()
                 } else {
                     Task { await unlockVault() }
                 }
+            } label: {
+                RediCommandCard(
+                    title: service.isUnlocked ? "Lock Vault" : "Unlock Vault",
+                    detail: service.isUnlocked
+                        ? "Secure the local vault again and hide all document names."
+                        : "Use owner authentication to open encrypted local documents.",
+                    systemImage: service.isUnlocked ? "lock.fill" : "lock.open.fill",
+                    tint: ColorTheme.textTertiary,
+                    badge: service.isUnlocked ? "Secure" : "Open",
+                    prominence: .accented,
+                    layout: .rail
+                )
             }
-            .buttonStyle(PrimaryActionButtonStyle())
+            .buttonStyle(CardPressButtonStyle())
 
             if service.isUnlocked {
-                Button("Emergency Info") {
+                Button {
                     isShowingEmergencyInfoEditor = true
+                } label: {
+                    RediCommandCard(
+                        title: "Emergency Info",
+                        detail: "Open the responder-facing medical and contact summary.",
+                        systemImage: "heart.text.square.fill",
+                        tint: ColorTheme.ready,
+                        badge: service.state.emergencyInfo.hasAnyContent ? "Saved" : "Add Now",
+                        prominence: .neutral,
+                        layout: .rail
+                    )
                 }
-                .buttonStyle(SecondaryActionButtonStyle())
+                .buttonStyle(CardPressButtonStyle())
             }
         }
 
@@ -332,11 +495,40 @@ struct SecureVaultView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label.uppercased())
                 .font(RediTypography.caption)
-                .foregroundStyle(ColorTheme.textFaint)
+                .foregroundStyle(ColorTheme.textTertiary)
             Text(value.nilIfBlank ?? "Not set")
                 .font(.subheadline)
                 .foregroundStyle(ColorTheme.text)
         }
+    }
+
+    private func lockedStateBadge(title: String, value: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textTertiary)
+            Text(value)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(tint)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.black.opacity(0.26), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func vaultMiniStatus(title: String, value: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textTertiary)
+
+            Text(value)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(tint)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color.black.opacity(0.2), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var vaultMetricColumns: [GridItem] {
@@ -392,10 +584,145 @@ struct SecureVaultView: View {
 
     private var emergencyInfoTint: Color {
         if !service.isUnlocked {
-            return ColorTheme.textFaint
+            return ColorTheme.textTertiary
         }
 
         return service.state.emergencyInfo.hasAnyContent ? ColorTheme.ready : ColorTheme.warning
+    }
+
+    private var vaultHealthItems: [VaultHealthItem] {
+        [
+            VaultHealthItem(
+                title: "Emergency Info",
+                detail: service.state.emergencyInfo.hasAnyContent
+                    ? "Responder summary saved"
+                    : "Add blood type, medications, and contacts",
+                systemImage: "heart.text.square.fill",
+                tint: ColorTheme.ready,
+                isComplete: service.state.emergencyInfo.hasAnyContent,
+                action: .emergencyInfo
+            ),
+            VaultHealthItem(
+                title: "Identity",
+                detail: vaultCategoryHealthDetail(.identity, missingMessage: "Add passport or driver licence"),
+                systemImage: "person.text.rectangle.fill",
+                tint: ColorTheme.textTertiary,
+                isComplete: service.categoryCount(.identity) > 0,
+                action: .category(.identity)
+            ),
+            VaultHealthItem(
+                title: "Medical",
+                detail: vaultCategoryHealthDetail(.medical, missingMessage: "Add prescriptions and care records"),
+                systemImage: "cross.case.fill",
+                tint: ColorTheme.textTertiary,
+                isComplete: service.categoryCount(.medical) > 0,
+                action: .category(.medical)
+            ),
+            VaultHealthItem(
+                title: "Insurance",
+                detail: vaultCategoryHealthDetail(.insurance, missingMessage: "Add policy numbers and claim details"),
+                systemImage: "shield.fill",
+                tint: ColorTheme.textTertiary,
+                isComplete: service.categoryCount(.insurance) > 0,
+                action: .category(.insurance)
+            ),
+            VaultHealthItem(
+                title: "Emergency Contacts",
+                detail: vaultCategoryHealthDetail(.emergencyContacts, missingMessage: "Add a call tree or contact list"),
+                systemImage: "person.2.fill",
+                tint: ColorTheme.textSecondary,
+                isComplete: service.categoryCount(.emergencyContacts) > 0,
+                action: .category(.emergencyContacts)
+            )
+        ]
+    }
+
+    private var vaultSetupCompletedCount: Int {
+        vaultHealthItems.filter(\.isComplete).count
+    }
+
+    private var vaultReadinessPercentage: Int {
+        guard !vaultHealthItems.isEmpty else { return 0 }
+        return Int((Double(vaultSetupCompletedCount) / Double(vaultHealthItems.count) * 100).rounded())
+    }
+
+    private var vaultNextActionText: String {
+        if let firstIncomplete = vaultHealthItems.first(where: { !$0.isComplete }) {
+            return "Add \(firstIncomplete.title.lowercased()) next"
+        }
+
+        return "All essentials stored offline"
+    }
+
+    private var vaultProgressBar: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(ColorTheme.panelElevated)
+
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(ColorTheme.ready)
+                    .frame(width: proxy.size.width * CGFloat(vaultReadinessPercentage) / 100)
+            }
+        }
+        .frame(height: 14)
+    }
+
+    private func vaultHealthRow(_ item: VaultHealthItem) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(item.isComplete ? item.tint.opacity(0.14) : ColorTheme.panelElevated)
+                    .frame(width: 40, height: 40)
+
+                Image(systemName: item.systemImage)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(item.isComplete ? item.tint : ColorTheme.textTertiary)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(item.title)
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.text)
+
+                Text(item.detail)
+                    .font(.caption)
+                    .foregroundStyle(ColorTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+
+            VStack(alignment: .trailing, spacing: 4) {
+                Image(systemName: item.isComplete ? "checkmark.circle.fill" : "arrow.right.circle")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(item.isComplete ? ColorTheme.ready : ColorTheme.warning)
+
+                Text(item.isComplete ? "Ready" : "Add")
+                    .font(RediTypography.caption)
+                    .foregroundStyle(item.isComplete ? ColorTheme.ready : ColorTheme.warning)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+    }
+
+    private func vaultCategoryHealthDetail(_ category: VaultCategory, missingMessage: String) -> String {
+        let count = service.categoryCount(category)
+        guard count > 0 else { return missingMessage }
+        return count == 1 ? "1 document stored" : "\(count) documents stored"
+    }
+
+    private func handleVaultHealthSelection(_ item: VaultHealthItem) {
+        switch item.action {
+        case .emergencyInfo:
+            isShowingEmergencyInfoEditor = true
+        case let .category(category):
+            selectedCategory = category
+        }
+
+        RediHaptics.selection()
     }
 
     private func vaultMetricTile(
@@ -421,31 +748,22 @@ struct SecureVaultView: View {
             }
 
             Text(title.uppercased())
-                .font(RediTypography.metadata)
-                .foregroundStyle(ColorTheme.textFaint)
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textTertiary)
 
             Text(value)
-                .font(RediTypography.metricCompact)
+                .font(RediTypography.dataLarge)
                 .foregroundStyle(ColorTheme.text)
                 .contentTransition(.numericText())
 
             Text(detail)
                 .font(.caption)
-                .foregroundStyle(ColorTheme.textMuted)
+                .foregroundStyle(ColorTheme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, minHeight: 132, alignment: .leading)
         .padding(16)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 22,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: tint.opacity(0.12)
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 22, edgeColor: tint.opacity(0.14), shadowColor: tint.opacity(0.06)))
+        .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.hero, style: .continuous))
     }
 
     private func vaultPromiseRow(
@@ -472,31 +790,22 @@ struct SecureVaultView: View {
 
                 Text(message)
                     .font(.subheadline)
-                    .foregroundStyle(ColorTheme.textMuted)
+                    .foregroundStyle(ColorTheme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 20,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: tint.opacity(0.1)
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 20, edgeColor: tint.opacity(0.12), shadowColor: tint.opacity(0.04)))
+        .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
     }
 
     private func categoryTile(category: VaultCategory, count: Int?, isSelected: Bool) -> some View {
-        let tint = isSelected ? ColorTheme.secure : ColorTheme.textFaint
+        let tint = isSelected ? ColorTheme.textTertiary : ColorTheme.textTertiary
 
         return VStack(alignment: .leading, spacing: 8) {
             ZStack {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill((isSelected ? ColorTheme.secure : ColorTheme.panelElevated).opacity(isSelected ? 0.16 : 0.92))
+                    .fill((isSelected ? ColorTheme.textTertiary : ColorTheme.panelElevated).opacity(isSelected ? 0.16 : 0.92))
                     .frame(width: 40, height: 40)
 
                 RediIcon(category.iconName)
@@ -510,43 +819,34 @@ struct SecureVaultView: View {
 
             Text(count.map { "\($0) stored" } ?? "Unlock to view")
                 .font(.caption)
-                .foregroundStyle(ColorTheme.textMuted)
+                .foregroundStyle(ColorTheme.textSecondary)
         }
         .padding(16)
         .frame(maxWidth: .infinity, minHeight: 104, alignment: .leading)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 20,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: (isSelected ? ColorTheme.secure : ColorTheme.premium).opacity(isSelected ? 0.12 : 0.06)
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 20, edgeColor: tint.opacity(0.12), shadowColor: tint.opacity(0.04)))
+        .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
     }
 
     private func categoryChip(_ category: VaultCategory) -> some View {
         HStack(spacing: 8) {
             RediIcon(category.iconName)
-                .foregroundStyle(selectedCategory == category ? ColorTheme.secure : ColorTheme.textFaint)
+                .foregroundStyle(selectedCategory == category ? ColorTheme.textTertiary : ColorTheme.textTertiary)
                 .frame(width: 16, height: 16)
             Text(category.title)
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(ColorTheme.text)
             Text("\(service.categoryCount(category))")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(ColorTheme.textMuted)
+                .foregroundStyle(ColorTheme.textSecondary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(
-            selectedCategory == category ? ColorTheme.secure.opacity(0.16) : ColorTheme.panel.opacity(0.82),
+            selectedCategory == category ? ColorTheme.textTertiary.opacity(0.16) : ColorTheme.panel.opacity(0.82),
             in: Capsule()
         )
         .overlay(
             Capsule()
-                .stroke((selectedCategory == category ? ColorTheme.secure : ColorTheme.dividerStrong).opacity(0.26), lineWidth: 1)
+                .stroke((selectedCategory == category ? ColorTheme.textTertiary : ColorTheme.dividerStrong).opacity(0.26), lineWidth: 1)
         )
     }
 
@@ -564,46 +864,21 @@ struct SecureVaultView: View {
     }
 
     private func quickActionButtonLabel(title: String, subtitle: String, iconName: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(tint.opacity(0.14))
-                    .frame(width: 40, height: 40)
-
-                RediIcon(iconName)
-                    .foregroundStyle(tint)
-                    .frame(width: 18, height: 18)
-            }
-
-            Spacer(minLength: 0)
-
-            Text(title)
-                .font(RediTypography.bodyStrong)
-                .foregroundStyle(ColorTheme.text)
-
-            Text(subtitle)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, minHeight: 110, alignment: .leading)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 22,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: tint.opacity(0.1)
-            )
+        RediCommandCard(
+            title: title,
+            detail: subtitle,
+            iconName: iconName,
+            tint: tint,
+            prominence: .neutral,
+            minHeight: 110
         )
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 22, edgeColor: tint.opacity(0.16), shadowColor: tint.opacity(0.05)))
     }
 
     private func documentRow(_ document: VaultDocument, largeButtons: Bool) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
                 RediIcon(document.category.iconName)
-                    .foregroundStyle(ColorTheme.info)
+                    .foregroundStyle(ColorTheme.textTertiary)
                     .frame(width: 22, height: 22)
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -613,15 +888,38 @@ struct SecureVaultView: View {
                     Text("\(document.source.title) • \(document.formattedSize)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 12) {
+                            vaultDocumentMetaLabel(
+                                "Added \(DateFormatter.rediM8MonthYear.string(from: document.createdAt))",
+                                systemImage: "calendar"
+                            )
+                            vaultDocumentMetaLabel(
+                                document.updatedAt.rediM8FreshnessLabel(),
+                                systemImage: "clock"
+                            )
+                        }
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            vaultDocumentMetaLabel(
+                                "Added \(DateFormatter.rediM8MonthYear.string(from: document.createdAt))",
+                                systemImage: "calendar"
+                            )
+                            vaultDocumentMetaLabel(
+                                document.updatedAt.rediM8FreshnessLabel(),
+                                systemImage: "clock"
+                            )
+                        }
+                    }
                 }
 
                 Spacer()
             }
 
             TrustPillGroup(items: [
-                TrustPillItem(title: "Encrypted locally", tone: .verified),
-                TrustPillItem(title: "Offline only", tone: .info),
-                TrustPillItem(title: TrustLayer.freshnessLabel(for: document.updatedAt), tone: .neutral)
+                TrustPillItem(title: "Encrypted locally", tone: .neutral),
+                TrustPillItem(title: "Offline ready", tone: .neutral)
             ])
 
             if let pageCount = document.pageCount {
@@ -654,16 +952,13 @@ struct SecureVaultView: View {
             }
         }
         .padding(16)
-        .background(
-            PremiumSurfaceBackground(
-                cornerRadius: 20,
-                backgroundAssetName: nil,
-                backgroundImageOffset: .zero,
-                atmosphere: ColorTheme.secure.opacity(0.08)
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .modifier(PremiumSurfaceChrome(cornerRadius: 20, edgeColor: ColorTheme.secure.opacity(0.1), shadowColor: ColorTheme.secure.opacity(0.04)))
+        .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+    }
+
+    private func vaultDocumentMetaLabel(_ text: String, systemImage: String) -> some View {
+        Label(text, systemImage: systemImage)
+            .font(.caption)
+            .foregroundStyle(ColorTheme.textSecondary)
     }
 
     private func unlockVault() async {
@@ -749,6 +1044,13 @@ struct SecureVaultView: View {
             notice = VaultNotice(message: error.localizedDescription)
         }
     }
+
+    private func dismissPreview() {
+        if let previewItem {
+            service.releaseTemporaryPreviewURL(previewItem.url)
+        }
+        previewItem = nil
+    }
 }
 
 struct EmergencyDocumentsQuickView: View {
@@ -766,13 +1068,11 @@ struct EmergencyDocumentsQuickView: View {
                         title: "Emergency Documents",
                         subtitle: "Open local ID, insurance, and medical records quickly, without pretending the device is safer than it is.",
                         iconName: "documents",
-                        accent: ColorTheme.danger,
-                        backgroundAssetName: "vault_essentials",
-                        backgroundImageOffset: CGSize(width: 18, height: 0)
+                        accent: ColorTheme.danger
                     ) {
                         TrustPillGroup(items: [
-                            TrustPillItem(title: "Encrypted locally", tone: .verified),
-                            TrustPillItem(title: "Offline only", tone: .info),
+                            TrustPillItem(title: "Encrypted locally", tone: .neutral),
+                            TrustPillItem(title: "Offline only", tone: .neutral),
                             TrustPillItem(title: "Biometric unlock", tone: .neutral)
                         ])
                     }
@@ -801,7 +1101,7 @@ struct EmergencyDocumentsQuickView: View {
                                         } label: {
                                             HStack(alignment: .top, spacing: 12) {
                                                 RediIcon(document.category.iconName)
-                                                    .foregroundStyle(ColorTheme.info)
+                                                    .foregroundStyle(ColorTheme.accent)
                                                     .frame(width: 22, height: 22)
 
                                                 VStack(alignment: .leading, spacing: 4) {
@@ -849,7 +1149,9 @@ struct EmergencyDocumentsQuickView: View {
                     }
                 }
             }
-            .sheet(item: $previewItem) { item in
+            .sheet(item: $previewItem, onDismiss: {
+                dismissPreview()
+            }) { item in
                 VaultQuickLookPreview(item: item)
             }
             .alert(item: $notice) { notice in
@@ -872,7 +1174,7 @@ struct EmergencyDocumentsQuickView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label.uppercased())
                 .font(RediTypography.caption)
-                .foregroundStyle(ColorTheme.textFaint)
+                .foregroundStyle(ColorTheme.textTertiary)
             Text(value.nilIfBlank ?? "Not set")
                 .font(.subheadline)
                 .foregroundStyle(ColorTheme.text)
@@ -886,6 +1188,13 @@ struct EmergencyDocumentsQuickView: View {
         } catch {
             notice = VaultNotice(message: error.localizedDescription)
         }
+    }
+
+    private func dismissPreview() {
+        if let previewItem {
+            service.releaseTemporaryPreviewURL(previewItem.url)
+        }
+        previewItem = nil
     }
 }
 

@@ -13,7 +13,11 @@ final class AssistantIntentClassifier {
 
         init(policy: AssistantPolicy) {
             self.policy = policy
-            normalizedPhrases = policy.matchPhrases.map(AssistantIntentClassifier.normalize)
+            let canonicalPhrases = [
+                policy.id,
+                policy.intent.rawValue
+            ]
+            normalizedPhrases = Array(Set((policy.matchPhrases + canonicalPhrases).map(AssistantIntentClassifier.normalize)))
             tokenGroups = policy.tokenGroups.map { Set($0.map(AssistantIntentClassifier.normalize)) }
         }
 
