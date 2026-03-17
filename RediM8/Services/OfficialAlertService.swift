@@ -543,8 +543,7 @@ final class OfficialAlertService: ObservableObject {
         ]
         return raw.compactMap { item in
             guard let url = URL(string: item.urlString) else {
-                assertionFailure("Invalid feed source URL: \(item.urlString)")
-                return nil
+                preconditionFailure("Invalid feed source URL: \(item.urlString)")
             }
             return FeedSource(id: item.id, name: item.name, jurisdiction: item.jurisdiction, url: url, format: item.format)
         }

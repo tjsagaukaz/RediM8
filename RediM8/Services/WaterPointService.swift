@@ -25,13 +25,8 @@ struct WaterPointGuide: Equatable {
 
 final class WaterPointService {
     private enum NetworkConfig {
-        static let endpoint: URL = {
-            guard let url = URL(string: "https://overpass-api.de/api/interpreter") else {
-                assertionFailure("Invalid Overpass API endpoint URL")
-                return URL(fileURLWithPath: "/dev/null")
-            }
-            return url
-        }()
+        // swiftlint:disable:next force_unwrap
+        static let endpoint = URL(string: "https://overpass-api.de/api/interpreter")!
         static let refreshMaxAge: TimeInterval = 15 * 60
         static let displayMaxAge: TimeInterval = 6 * 60 * 60
         static let cacheReuseDistanceMetres: CLLocationDistance = 2_500

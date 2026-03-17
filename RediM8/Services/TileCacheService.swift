@@ -54,7 +54,9 @@ final class TileCacheService: ObservableObject {
     private func configureAmbientCache() {
         storage.setMaximumAmbientCacheSize(Config.ambientCacheSizeBytes) { error in
             if let error {
+                #if DEBUG
                 print("[TileCacheService] Failed to set ambient cache size: \(error.localizedDescription)")
+                #endif
             }
         }
     }
