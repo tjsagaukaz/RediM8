@@ -4,15 +4,17 @@ struct RediM8ProView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    @ObservedObject var storeKitService: StoreKitService
     private let catalog = RediM8MonetizationCatalog.launch
     private let emergencyUnlockState: EmergencyUnlockState
 
-    @State private var selectedOffer: RediM8ProOffer?
-    @State private var isShowingPricingAlert = false
+    @State private var purchaseError: String?
+    @State private var isShowingError = false
     @State private var hasEntered = false
     @State private var isPulsingAnnualOffer = false
 
-    init(emergencyUnlockState: EmergencyUnlockState = .inactive) {
+    init(storeKitService: StoreKitService, emergencyUnlockState: EmergencyUnlockState = .inactive) {
+        self.storeKitService = storeKitService
         self.emergencyUnlockState = emergencyUnlockState
     }
 
@@ -39,17 +41,28 @@ struct RediM8ProView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear(perform: startPaywallPresentation)
+        .task { await storeKitService.loadProducts() }
         .animation(
             reduceMotion ? nil : .spring(response: 0.45, dampingFraction: 0.9),
             value: hasEntered
         )
-        .alert("Pricing Preview", isPresented: $isShowingPricingAlert, presenting: selectedOffer) { _ in
+        .alert("Purchase Error", isPresented: $isShowingError) {
             Button("OK", role: .cancel) {}
-        } message: { offer in
-            if emergencyUnlockState.isActive {
-                Text("\(offer.title) normally costs \(offer.priceText), but Emergency Unlock is active right now, so Pro tools are temporarily available without billing.")
-            } else {
-                Text("\(offer.title) is set to \(offer.priceText). Billing is not active in this build yet, so this screen is a launch pricing preview only.")
+        } message: {
+            Text(purchaseError ?? "An unknown error occurred.")
+        }
+    }
+
+    private func purchase(_ offer: RediM8ProOffer) {
+        Task {
+            do {
+                try await storeKitService.purchase(offer.interval.productID)
+                dismiss()
+            } catch let error as PurchaseError where error == .purchaseCancelled {
+                // User cancelled — no error needed
+            } catch {
+                purchaseError = error.localizedDescription
+                isShowingError = true
             }
         }
     }
@@ -115,6 +128,7 @@ struct RediM8ProView: View {
                     )
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Close")
         }
     }
 
@@ -199,7 +213,7 @@ struct RediM8ProView: View {
     private var accessCard: some View {
         PanelCard(
             title: "Choose Access",
-            subtitle: "A simple pricing stack. Billing is not active in this build yet, so every option here is still preview-only.",
+            subtitle: "Pick the plan that suits your household. Core safety features stay free.",
             backgroundAssetName: "marketing_command_table",
             backgroundImageOffset: CGSize(width: 22, height: 0),
             surfaceImageOpacity: 0.9,
@@ -217,8 +231,42 @@ struct RediM8ProView: View {
                     dismiss()
                 }
                 .buttonStyle(SecondaryActionButtonStyle())
+
+                Button("Restore Purchases") {
+                    Task { await storeKitService.restorePurchases() }
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(ColorTheme.textTertiary)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 4)
+
+                subscriptionTerms
             }
         }
+    }
+
+    private var subscriptionTerms: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period. Your Apple ID account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel subscriptions in your App Store account settings.")
+                .font(.caption2.weight(.medium))
+                .foregroundStyle(ColorTheme.textFaint)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 12) {
+                Link("Privacy Policy", destination: URL(string: "https://redim8.com.au/privacy")!)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(ColorTheme.textTertiary)
+
+                Link("Terms of Use", destination: URL(string: "https://redim8.com.au/terms")!)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(ColorTheme.textTertiary)
+
+                Link("Manage Subscription", destination: URL(string: "https://apps.apple.com/account/subscriptions")!)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(ColorTheme.textTertiary)
+            }
+        }
+        .padding(.top, 4)
     }
 
     private var featuresCard: some View {
@@ -286,7 +334,7 @@ struct RediM8ProView: View {
     }
 
     private var footerNote: some View {
-        Text("\(catalog.billingPreviewNotice) Launch pricing: \(catalog.launchPricingSummary).")
+        Text("Prices shown in AUD. Payment is charged to your Apple ID account at confirmation of purchase.")
             .font(.footnote.weight(.medium))
             .foregroundStyle(ColorTheme.textFaint)
             .fixedSize(horizontal: false, vertical: true)
@@ -484,17 +532,13 @@ struct RediM8ProView: View {
             }
 
             if isPrimary {
-                Button(offer.ctaTitle) {
-                    selectedOffer = offer
-                    isShowingPricingAlert = true
-                }
-                .buttonStyle(PrimaryActionButtonStyle())
+                Button(offer.ctaTitle) { purchase(offer) }
+                    .buttonStyle(PrimaryActionButtonStyle())
+                    .disabled(storeKitService.isLoading)
             } else {
-                Button(offer.ctaTitle) {
-                    selectedOffer = offer
-                    isShowingPricingAlert = true
-                }
-                .buttonStyle(SecondaryActionButtonStyle())
+                Button(offer.ctaTitle) { purchase(offer) }
+                    .buttonStyle(SecondaryActionButtonStyle())
+                    .disabled(storeKitService.isLoading)
             }
         }
         .padding(18)

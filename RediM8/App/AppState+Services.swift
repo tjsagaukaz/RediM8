@@ -39,4 +39,5 @@ extension AppState {
     var safeZoneService: SafeZoneService { map.safeZoneService }
     var predictiveCollapseService: PredictiveCollapseService { map.predictiveCollapseService }
     var autoGuidanceService: AutoGuidanceService { map.autoGuidanceService }
+    var storeKitService: StoreKitService { services.storeKitService }
 }

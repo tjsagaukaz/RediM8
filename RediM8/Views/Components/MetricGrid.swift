@@ -59,6 +59,8 @@ struct MetricGrid: View {
                         .lineLimit(1)
                 }
                 .frame(height: 32)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("\(item.label): \(item.value)")
             }
         }
     }

@@ -171,7 +171,7 @@ final class AssistantViewModel: ObservableObject {
     private func submit(query: String) {
         let response = appState.assistant.ask(
             query,
-            allowsSafeSummaries: appState.settings.assistant.offlineAISummariesEnabled
+            allowsSafeSummaries: appState.isProUser && appState.settings.assistant.offlineAISummariesEnabled
         )
         conversation.append(
             AssistantConversationTurn(

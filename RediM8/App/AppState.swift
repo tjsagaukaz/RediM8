@@ -25,6 +25,9 @@ final class AppState: ObservableObject {
     @Published private(set) var stealthNodeID: String
     @Published private(set) var activePrioritySituation: PrioritySituation?
     @Published private(set) var emergencyUnlockState: EmergencyUnlockState
+    @Published private(set) var proEntitlement: ProEntitlement = .free
+
+    var isProUser: Bool { proEntitlement.isPro }
 
     let featureFlags: AppFeatureFlags
     let permissionsManager: PermissionsManager
@@ -333,6 +336,11 @@ final class AppState: ObservableObject {
         map.$emergencyUnlockState
             .sink { [weak self] state in
                 self?.emergencyUnlockState = state
+                if state.isActive {
+                    self?.services.storeKitService.applyEmergencyUnlock()
+                } else if !state.isActive {
+                    self?.services.storeKitService.clearEmergencyUnlock()
+                }
             }
             .store(in: &cancellables)
 
@@ -353,11 +361,22 @@ final class AppState: ObservableObject {
                 self?.isLowBatterySurvivalModeEnabled = isEnabled
             }
             .store(in: &cancellables)
+
+        services.storeKitService.$entitlement
+            .sink { [weak self] entitlement in
+                self?.proEntitlement = entitlement
+            }
+            .store(in: &cancellables)
     }
 
     private func startSystems() {
         let systems: [any AppSystem] = [preparedness, signal, map, vault, power]
         systems.forEach { $0.start() }
+
+        Task { [weak self] in
+            await self?.services.storeKitService.loadProducts()
+            await self?.services.storeKitService.refreshEntitlement()
+        }
     }
 
     private func activateEmergencyDevicePresentation() {

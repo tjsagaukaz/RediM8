@@ -46,6 +46,14 @@ enum RediM8PlanInterval: String, CaseIterable, Identifiable {
             "Choose Lifetime"
         }
     }
+
+    var productID: ProProductID {
+        switch self {
+        case .monthly: .monthly
+        case .annual: .annual
+        case .lifetime: .lifetime
+        }
+    }
 }
 
 struct RediM8ProOffer: Identifiable, Equatable {
@@ -179,7 +187,6 @@ struct RediM8MonetizationCatalog: Equatable {
     let alwaysFreePromise: String
     let proPromise: String
     let emergencyUnlockPromise: String
-    let billingPreviewNotice: String
 
     var monthlyOffer: RediM8ProOffer {
         offers.first(where: { $0.interval == .monthly }) ?? offers[0]
@@ -359,8 +366,7 @@ struct RediM8MonetizationCatalog: Equatable {
         ],
         alwaysFreePromise: "Emergency Mode, official alerts, guide library, basic tactical maps, community reports, and emergency document essentials stay free.",
         proPromise: "RediM8 Pro funds premium maps, advanced planning, expanded vault tools, analytics, and the offline assistant without putting core safety behind a paywall.",
-        emergencyUnlockPromise: "During nearby severe official emergencies, RediM8 can temporarily unlock Pro upgrades so people can access more help without thinking about payment first.",
-        billingPreviewNotice: "Launch pricing is defined, but billing is not active in this internal build yet."
+        emergencyUnlockPromise: "During nearby severe official emergencies, RediM8 can temporarily unlock Pro upgrades so people can access more help without thinking about payment first."
     )
 }
 

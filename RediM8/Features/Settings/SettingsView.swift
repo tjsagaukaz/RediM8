@@ -390,7 +390,7 @@ struct SettingsView: View {
     private var proSection: some View {
         PanelCard(title: "RediM8 Pro", subtitle: "Core safety stays free. Pro funds premium planning, maps, vault upgrades, and the offline assistant.") {
             NavigationLink {
-                RediM8ProView(emergencyUnlockState: appState.emergencyUnlockState)
+                RediM8ProView(storeKitService: appState.storeKitService, emergencyUnlockState: appState.emergencyUnlockState)
             } label: {
                 SettingsNavigationRow(
                     title: "View Plans",
@@ -415,6 +415,30 @@ struct SettingsView: View {
                 subtitle: emergencyUnlockSubtitle,
                 value: emergencyUnlockValue
             )
+
+            SettingsDivider()
+
+            Button {
+                Task { await appState.storeKitService.restorePurchases() }
+            } label: {
+                SettingsNavigationRow(
+                    title: "Restore Purchases",
+                    subtitle: "Recover previous Pro purchases from your Apple ID",
+                    value: "Restore"
+                )
+            }
+            .buttonStyle(.plain)
+
+            SettingsDivider()
+
+            Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
+                SettingsNavigationRow(
+                    title: "Manage Subscription",
+                    subtitle: "Change or cancel your plan in App Store settings",
+                    value: "Open"
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -475,9 +499,12 @@ struct SettingsView: View {
         PanelCard(title: "Offline Assistant", subtitle: "Keep the assistant fully local while optionally allowing safe on-device AI summaries for low-risk guide answers.") {
             SettingsToggleRow(
                 title: "Offline AI Summaries",
-                subtitle: "Use on-device AI to summarize guides and interpret questions. All processing stays on your device.",
-                isOn: binding(\.assistant.offlineAISummariesEnabled)
+                subtitle: appState.isProUser
+                    ? "Use on-device AI to summarize guides and interpret questions. All processing stays on your device."
+                    : "Upgrade to RediM8 Pro to enable on-device AI summaries.",
+                isOn: appState.isProUser ? binding(\.assistant.offlineAISummariesEnabled) : .constant(false)
             )
+            .disabled(!appState.isProUser)
 
             SettingsDivider()
 
@@ -494,23 +521,29 @@ struct SettingsView: View {
     }
 
     private var proSubtitle: String {
+        if appState.isProUser, case .pro = appState.proEntitlement {
+            return "RediM8 Pro is active. Thank you for supporting the project."
+        }
         if appState.emergencyUnlockState.isActive {
-            return "Emergency Unlock active. Pro tools are temporarily available without billing."
+            return "Emergency Unlock active. Pro tools are temporarily available."
         }
         if appState.emergencyUnlockState.isRecentlyEnded {
             return "Emergency access ended. Upgrade to keep Pro tools available anytime."
         }
-        return "Launch pricing: \(monetizationCatalog.launchPricingSummary)"
+        return "Upgrade for premium maps, analytics, and the offline assistant."
     }
 
     private var proValueLabel: String {
+        if case .pro = appState.proEntitlement {
+            return "Active"
+        }
         if appState.emergencyUnlockState.isActive {
             return "Unlocked"
         }
         if appState.emergencyUnlockState.isRecentlyEnded {
             return "Ended"
         }
-        return monetizationCatalog.recommendedOffer.badge ?? "Open"
+        return "Upgrade"
     }
 
     private var emergencyUnlockSubtitle: String {
@@ -885,13 +918,13 @@ struct SettingsView: View {
             NavigationLink {
                 SettingsTextDetailView(
                     title: "Privacy Policy",
-                    subtitle: "Local-first storage and nearby communication",
-                    lines: TrustLayer.privacyTransparencyLines
+                    subtitle: "Effective 18 March 2026",
+                    lines: TrustLayer.fullPrivacyPolicyLines
                 )
             } label: {
                 SettingsNavigationRow(
                     title: "Privacy Policy",
-                    subtitle: "How RediM8 stores data and uses location",
+                    subtitle: "How RediM8 stores data and uses permissions",
                     value: "Open"
                 )
             }
@@ -899,11 +932,14 @@ struct SettingsView: View {
 
             SettingsDivider()
 
-            SettingsInfoRow(
-                title: "Contact Support",
-                subtitle: "Support contact is not configured in this build",
-                value: "Unavailable"
-            )
+            Link(destination: TrustLayer.supportURL) {
+                SettingsNavigationRow(
+                    title: "Contact Support",
+                    subtitle: "support@redim8.com.au",
+                    value: "Email"
+                )
+            }
+            .buttonStyle(.plain)
 
             SettingsDivider()
 

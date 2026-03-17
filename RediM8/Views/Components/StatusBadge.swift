@@ -17,6 +17,7 @@ struct StatusBadge: View {
                 RoundedRectangle(cornerRadius: RediRadius.chip, style: .continuous)
                     .stroke(foreground.opacity(0.16), lineWidth: 0.5)
             )
+            .accessibilityLabel("Readiness tier: \(tier.displayTitle)")
     }
 
     private var foreground: Color {

@@ -40,6 +40,7 @@ struct AppServices {
     let safeZoneService: SafeZoneService
     let predictiveCollapseService: PredictiveCollapseService
     let autoGuidanceService: AutoGuidanceService
+    let storeKitService: StoreKitService
 }
 
 @MainActor
@@ -213,6 +214,7 @@ struct AppEnvironment {
             permissionsManager: permissionsManager,
             isEnabled: featureFlags.enablesMotionFeatures
         )
+        let storeKitService = StoreKitService()
 
         return AppServices(
             assistantService: assistantService,
@@ -252,7 +254,8 @@ struct AppEnvironment {
             nearestResourceService: nearestResourceService,
             safeZoneService: safeZoneService,
             predictiveCollapseService: predictiveCollapseService,
-            autoGuidanceService: autoGuidanceService
+            autoGuidanceService: autoGuidanceService,
+            storeKitService: storeKitService
         )
     }
 }

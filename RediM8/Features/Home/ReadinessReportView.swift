@@ -3,6 +3,7 @@ import UIKit
 
 struct ReadinessReportView: View {
     let report: ReadinessReport
+    let isProUser: Bool
     let onShare: () throws -> [Any]
     let onSavePDF: () throws -> URL
     let onSendToFamily: () throws -> [Any]
@@ -23,28 +24,30 @@ struct ReadinessReportView: View {
                 executiveSummaryCard
                 priorityActionsCard
 
-                CollapsiblePanelCard(
-                    title: "Preparedness Breakdown",
-                    subtitle: "Full category scores tracked offline.",
-                    accent: Self.highlight,
-                    isExpanded: $isShowingBreakdown
-                ) {
-                    VStack(spacing: 14) {
-                        ForEach(report.categoryScores) { score in
-                            ReportProgressRow(title: score.category.title, value: score.score)
+                if isProUser {
+                    CollapsiblePanelCard(
+                        title: "Preparedness Breakdown",
+                        subtitle: "Full category scores tracked offline.",
+                        accent: Self.highlight,
+                        isExpanded: $isShowingBreakdown
+                    ) {
+                        VStack(spacing: 14) {
+                            ForEach(report.categoryScores) { score in
+                                ReportProgressRow(title: score.category.title, value: score.score)
+                            }
                         }
                     }
-                }
 
-                CollapsiblePanelCard(
-                    title: "Household Targets",
-                    subtitle: "Current supplies versus recommended targets.",
-                    accent: ColorTheme.info,
-                    isExpanded: $isShowingHighlights
-                ) {
-                    VStack(spacing: 12) {
-                        ForEach(report.highlights) { highlight in
-                            HighlightCard(highlight: highlight)
+                    CollapsiblePanelCard(
+                        title: "Household Targets",
+                        subtitle: "Current supplies versus recommended targets.",
+                        accent: ColorTheme.info,
+                        isExpanded: $isShowingHighlights
+                    ) {
+                        VStack(spacing: 12) {
+                            ForEach(report.highlights) { highlight in
+                                HighlightCard(highlight: highlight)
+                            }
                         }
                     }
                 }
@@ -167,9 +170,11 @@ struct ReadinessReportView: View {
                         handleAction(title: "Share Report", action: onShare)
                     })
                     reportSecondaryActionButton(title: "Save PDF", action: savePDF)
-                    reportSecondaryActionButton(title: "Send to Family", action: {
-                        handleAction(title: "Send to Family", action: onSendToFamily)
-                    })
+                    if isProUser {
+                        reportSecondaryActionButton(title: "Send to Family", action: {
+                            handleAction(title: "Send to Family", action: onSendToFamily)
+                        })
+                    }
                 }
 
                 VStack(spacing: 12) {
@@ -177,9 +182,11 @@ struct ReadinessReportView: View {
                         handleAction(title: "Share Report", action: onShare)
                     })
                     reportSecondaryActionButton(title: "Save PDF", action: savePDF)
-                    reportSecondaryActionButton(title: "Send to Family", action: {
-                        handleAction(title: "Send to Family", action: onSendToFamily)
-                    })
+                    if isProUser {
+                        reportSecondaryActionButton(title: "Send to Family", action: {
+                            handleAction(title: "Send to Family", action: onSendToFamily)
+                        })
+                    }
                 }
             }
         }

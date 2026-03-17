@@ -58,6 +58,68 @@ enum TrustLayer {
         "No personal data is sent to external servers."
     ]
 
+    static let privacyPolicyURL = URL(string: "https://redim8.com.au/privacy")!
+    static let termsOfUseURL = URL(string: "https://redim8.com.au/terms")!
+    static let supportURL = URL(string: "mailto:support@redim8.com.au")!
+
+    static let fullPrivacyPolicyLines = [
+        "PRIVACY POLICY",
+        "Effective date: 18 March 2026",
+        "",
+        "RediM8 Pty Ltd (ABN pending) (\"we\", \"us\", \"our\") operates the RediM8 mobile application. This policy explains how we handle your information.",
+        "",
+        "1. INFORMATION WE COLLECT",
+        "",
+        "1.1 Information You Provide",
+        "Household profiles, emergency contacts, preparedness checklists, go-bag inventories, and documents you store in Secure Vault are created and stored entirely on your device. We do not have access to this data.",
+        "",
+        "1.2 Location Data",
+        "RediM8 accesses your location only while the app is in use, for map features, compass heading, nearby resource discovery, and mesh peer positioning. Location data is never transmitted to our servers.",
+        "",
+        "1.3 Bluetooth & Local Network",
+        "RediM8 uses Bluetooth and local Wi-Fi to discover nearby devices for offline emergency mesh messaging. Your chosen display name is shared with nearby peers during mesh sessions. No other personal data is transmitted.",
+        "",
+        "1.4 Camera & Photo Library",
+        "Camera access is used for the torch in Blackout Mode and to scan documents into Secure Vault. Photo Library access lets you import photos of IDs and documents. These files are encrypted and stored locally.",
+        "",
+        "1.5 Motion Data",
+        "Device motion is used solely to stabilise compass and blackout tools. Motion data is not stored or transmitted.",
+        "",
+        "2. INFORMATION WE DO NOT COLLECT",
+        "",
+        "We do not collect analytics, crash reports, advertising identifiers, IP addresses, device fingerprints, or usage telemetry. RediM8 contains no third-party analytics SDKs, no tracking pixels, and no advertising frameworks.",
+        "",
+        "3. DATA STORAGE & SECURITY",
+        "",
+        "All user data is stored on-device using SQLite with iOS Data Protection. Secure Vault documents are encrypted with AES-256-GCM using keys stored in the device Keychain with biometric or passcode protection. Vault data is excluded from iCloud backup.",
+        "",
+        "4. THIRD-PARTY SERVICES",
+        "",
+        "RediM8 fetches publicly available emergency alert feeds from Australian government agencies (BOM, RFS, SES, ESA) over HTTPS. RediM8 queries the OpenStreetMap Overpass API for water and shelter point-of-interest data. No personal information is included in these requests.",
+        "",
+        "5. IN-APP PURCHASES",
+        "",
+        "RediM8 Pro subscriptions are processed by Apple through StoreKit. We do not receive or store your payment details. Purchase history is managed by your Apple ID.",
+        "",
+        "6. CHILDREN'S PRIVACY",
+        "",
+        "RediM8 is not directed at children under 13. We do not knowingly collect personal information from children.",
+        "",
+        "7. DATA RETENTION & DELETION",
+        "",
+        "Since all data is stored locally, deleting the app removes all your data. There is no server-side data to request deletion of.",
+        "",
+        "8. CHANGES TO THIS POLICY",
+        "",
+        "We may update this policy from time to time. Changes will be reflected in the app and on our website.",
+        "",
+        "9. CONTACT US",
+        "",
+        "If you have questions about this policy, contact us at support@redim8.com.au.",
+        "",
+        "RediM8 Pty Ltd, Australia."
+    ]
+
     static let beaconVerificationReminder = "Information shared through community reports may not be verified. Always confirm when possible."
     static let blackoutSafetyReminder = "If you are in immediate danger, contact emergency services."
     static let fireTrailSafetyReminder = "Fire trails may not be safe evacuation routes. Always follow instructions from emergency services."

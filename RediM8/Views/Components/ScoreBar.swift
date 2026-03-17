@@ -31,7 +31,11 @@ struct ScoreBar: View {
                 }
             }
             .frame(height: 12)
+            .accessibilityHidden(true)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(score.category.title): \(score.score.percentageText)")
+        .accessibilityValue("\(score.score) percent")
     }
 
     private var color: Color {

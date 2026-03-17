@@ -107,6 +107,9 @@ struct RediCommandCard: View {
         )
         .contentShape(RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
         .opacity(isEnabled ? 1 : 0.5)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityHint(detail ?? "")
     }
 
     private var blockLayout: some View {

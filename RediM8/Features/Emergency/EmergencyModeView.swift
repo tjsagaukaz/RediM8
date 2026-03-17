@@ -49,6 +49,7 @@ struct EmergencyModeView: View {
                     }
                     .buttonStyle(SecondaryActionButtonStyle())
                     .frame(width: 110)
+                    .accessibilityLabel("Close emergency mode")
                 }
 
                 emergencyHeroCard

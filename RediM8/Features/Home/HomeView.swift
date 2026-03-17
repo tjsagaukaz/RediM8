@@ -127,6 +127,7 @@ struct HomeView: View {
                 NavigationStack {
                     ReadinessReportView(
                         report: viewModel.readinessReport,
+                        isProUser: appState.isProUser,
                         onShare: viewModel.shareReadinessReportItems,
                         onSavePDF: viewModel.saveReadinessReportPDF,
                         onSendToFamily: viewModel.sendToFamilyItems
@@ -140,7 +141,7 @@ struct HomeView: View {
                 .rediSheetPresentation()
             case .pro:
                 NavigationStack {
-                    RediM8ProView(emergencyUnlockState: appState.emergencyUnlockState)
+                    RediM8ProView(storeKitService: appState.storeKitService, emergencyUnlockState: appState.emergencyUnlockState)
                 }
                 .rediSheetPresentation()
             case let .assistant(context):

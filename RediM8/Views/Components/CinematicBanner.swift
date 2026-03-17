@@ -36,6 +36,7 @@ struct CinematicBanner: View {
                 )
                 .frame(height: height * 0.3)
             }
+            .accessibilityHidden(true)
     }
 }
 
