@@ -177,7 +177,9 @@ final class DocumentVaultService: ObservableObject {
         do {
             try ensureStorageDirectories()
         } catch {
-            assertionFailure("DocumentVaultService: failed to create storage directories: \(error)")
+            #if DEBUG
+            print("[DocumentVaultService] Failed to create storage directories: \(error)")
+            #endif
         }
     }
 

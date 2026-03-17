@@ -51,7 +51,21 @@ struct AppEnvironment {
         bundle: Bundle = .main,
         notificationCenter: NotificationCenter = .default
     ) -> AppEnvironment {
-        let resolvedStore = store ?? (featureFlags.usesPersistentSQLiteStorage ? try? SQLiteStore(filename: AppConstants.Storage.databaseFilename) : nil)
+        let resolvedStore: SQLiteStore?
+        if let store {
+            resolvedStore = store
+        } else if featureFlags.usesPersistentSQLiteStorage {
+            do {
+                resolvedStore = try SQLiteStore(filename: AppConstants.Storage.databaseFilename)
+            } catch {
+                #if DEBUG
+                print("[AppEnvironment] Failed to initialise SQLite store: \(error)")
+                #endif
+                resolvedStore = nil
+            }
+        } else {
+            resolvedStore = nil
+        }
         return AppEnvironment(
             store: resolvedStore,
             featureFlags: featureFlags,
