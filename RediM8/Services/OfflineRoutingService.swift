@@ -108,6 +108,16 @@ final class OfflineRoutingService: ObservableObject {
         let profile: RoutingProfile
     }
 
+    /// A ranked evacuation route with label and hazard scoring.
+    struct RankedRoute: Identifiable {
+        let id = UUID()
+        let route: Route
+        let label: String          // "FASTEST", "SAFEST", "LEAST HAZARD"
+        let rank: Int              // 1 = primary
+        let hazardExposure: Double // 0.0 = no hazards, higher = more exposure
+        let corridorAnalysis: RouteCorridor.CorridorAnalysis?
+    }
+
     struct RouteStep {
         let instruction: String
         let maneuver: Maneuver
@@ -455,6 +465,172 @@ final class OfflineRoutingService: ObservableObject {
             steps: steps,
             profile: routeProfile
         )
+    }
+
+    /// Compute up to 3 ranked alternative routes between origin and destination.
+    ///
+    /// Strategy: penalty-based alternative search.
+    ///   1. Compute primary route (fastest)
+    ///   2. Penalize edges used by the primary route (2x weight) and re-route → alternative A
+    ///   3. Penalize edges from both routes and re-route → alternative B
+    ///
+    /// Each route is scored for hazard exposure and labeled:
+    ///   - Route A: FASTEST (primary)
+    ///   - Route B: ALTERNATE (first alternative)
+    ///   - Route C: ALTERNATE (second alternative, if sufficiently different)
+    func routeAlternatives(
+        from origin: CLLocationCoordinate2D,
+        to destination: CLLocationCoordinate2D,
+        profile: RoutingProfile? = nil,
+        corridor: RouteCorridor? = nil
+    ) throws -> [RankedRoute] {
+        guard let graph else { throw RoutingError.noGraphLoaded }
+
+        let routeProfile = profile ?? activeProfile
+
+        guard graph.header.contains(origin) else {
+            throw RoutingError.originOutsideBounds
+        }
+        guard graph.header.contains(destination) else {
+            throw RoutingError.destinationOutsideBounds
+        }
+
+        isRouting = true
+        defer { isRouting = false }
+
+        // Snap once
+        guard let originEntry = graph.nodeIndex.nearest(to: origin),
+              originEntry.distanceMetres < Config.maxSnapDistanceMetres
+        else { throw RoutingError.originUnreachable }
+
+        guard let destEntry = graph.nodeIndex.nearest(to: destination),
+              destEntry.distanceMetres < Config.maxSnapDistanceMetres
+        else { throw RoutingError.destinationUnreachable }
+
+        let originNode = originEntry.item.id
+        let destNode = destEntry.item.id
+        let baseHazards = buildHazardPenalties(graph: graph)
+
+        var rankedRoutes: [RankedRoute] = []
+        var usedEdgeSets: [[UInt32]] = [] // node paths of previously found routes
+
+        for attempt in 0 ..< 3 {
+            let deadline = CFAbsoluteTimeGetCurrent() + Config.queryTimeoutSeconds
+
+            // Build penalties: base hazards + penalties on previously used edges
+            var penalties = baseHazards
+            for previousPath in usedEdgeSets {
+                for nodeID in previousPath {
+                    let existing = penalties[nodeID] ?? 1.0
+                    penalties[nodeID] = existing * 2.0 // Double the cost of reusing edges
+                }
+            }
+
+            do {
+                let path = try bidirectionalDijkstra(
+                    graph: graph,
+                    origin: originNode,
+                    destination: destNode,
+                    deadline: deadline,
+                    hazardPenalties: penalties
+                )
+
+                let coordinates = unpackPath(path, graph: graph)
+                let (totalDistance, steps) = buildRouteSteps(coordinates: coordinates)
+                let duration = totalDistance / routeProfile.averageSpeed
+
+                // Sanity checks
+                guard totalDistance <= Config.maxRouteDistanceMetres else { continue }
+                guard duration <= Config.maxRouteDurationSeconds else { continue }
+
+                // Check route is sufficiently different from existing routes (>15% overlap threshold)
+                if attempt > 0 {
+                    let pathSet = Set(path)
+                    let isDuplicate = usedEdgeSets.contains { previous in
+                        let prevSet = Set(previous)
+                        let overlap = Double(pathSet.intersection(prevSet).count) / Double(max(pathSet.count, 1))
+                        return overlap > 0.85
+                    }
+                    if isDuplicate { usedEdgeSets.append(path); continue }
+                }
+
+                let route = Route(
+                    coordinates: coordinates,
+                    distanceMetres: totalDistance,
+                    durationSeconds: duration,
+                    steps: steps,
+                    profile: routeProfile
+                )
+
+                // Compute hazard exposure score (sum of hazard penalties along route nodes)
+                let hazardExposure = path.reduce(0.0) { sum, nodeID in
+                    sum + (baseHazards[nodeID].map { $0 - 1.0 } ?? 0.0)
+                }
+
+                // Compute corridor analysis if service provided
+                let analysis = corridor?.analyze(route: route, corridorWidthMetres: 200)
+
+                let label: String
+                if attempt == 0 {
+                    label = "FASTEST"
+                } else if hazardExposure < (rankedRoutes.first?.hazardExposure ?? 0) {
+                    label = "LEAST HAZARD"
+                } else {
+                    label = "ALTERNATE"
+                }
+
+                rankedRoutes.append(RankedRoute(
+                    route: route,
+                    label: label,
+                    rank: rankedRoutes.count + 1,
+                    hazardExposure: hazardExposure,
+                    corridorAnalysis: analysis
+                ))
+
+                usedEdgeSets.append(path)
+
+            } catch RoutingError.queryTimeout {
+                continue // Try next alternative with shorter deadline
+            } catch RoutingError.noRouteFound where attempt > 0 {
+                break // No more alternatives possible
+            }
+        }
+
+        // Sort: primary first, then by hazard exposure (safest second)
+        if rankedRoutes.count > 1 {
+            let primary = rankedRoutes[0]
+            var rest = Array(rankedRoutes.dropFirst())
+            rest.sort { $0.hazardExposure < $1.hazardExposure }
+
+            // Re-label: if the safest route has less hazard exposure, label it "SAFEST"
+            if let safest = rest.first, safest.hazardExposure < primary.hazardExposure {
+                rest[0] = RankedRoute(
+                    route: safest.route,
+                    label: "SAFEST",
+                    rank: 2,
+                    hazardExposure: safest.hazardExposure,
+                    corridorAnalysis: safest.corridorAnalysis
+                )
+            }
+
+            // Re-number ranks
+            rankedRoutes = [primary]
+            for (i, r) in rest.enumerated() {
+                rankedRoutes.append(RankedRoute(
+                    route: r.route,
+                    label: r.label,
+                    rank: i + 2,
+                    hazardExposure: r.hazardExposure,
+                    corridorAnalysis: r.corridorAnalysis
+                ))
+            }
+        }
+
+        guard !rankedRoutes.isEmpty else {
+            throw RoutingError.noRouteFound
+        }
+
+        return rankedRoutes
     }
 
     /// Pre-compute hazard penalty multipliers for graph nodes.

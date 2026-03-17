@@ -81,6 +81,8 @@
 		C3D4E5F6A7B8C9D0E1F2A3B4 /* NearestResourceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* NearestResourceService.swift */; };
 		E1F2A3B4C5D6E7F8A9B0C1D2 /* NearestResourceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B9C0D1E2F3A4B5C6D7E8F /* NearestResourceView.swift */; };
 		85F957B9A4B245BCAF6936A8 /* OfflineRoutingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B7A52DC90F4B36ADD3CDF5 /* OfflineRoutingService.swift */; };
+		3E7A9C1F2D8B4056BC91D4E7 /* ElevationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6B8A3E1C7F4520EA83C5F6 /* ElevationService.swift */; };
+		4F8B0D2E3A9C5167CD02E5F8 /* HazardIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5C7B4F2D8A3916FB40D6E9 /* HazardIntelligenceService.swift */; };
 		DC9906DB56BD4D31AE19004D /* RoutePlanningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07BA5410AE1C4AEE96951DA6 /* RoutePlanningView.swift */; };
 		7C4E8F2A1B3D5069AE72C841 /* RouteCorridor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2D3C4B5A6978869504132 /* RouteCorridor.swift */; };
 		B2C3D4E5F6A7B8C9D0E1F3A4 /* EvacuationPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D3C4B5A697887A60413243 /* EvacuationPlanView.swift */; };
@@ -365,6 +367,8 @@
 		AD59F029CF42FCB8D3E650BF /* ResourceLocations.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = ResourceLocations.json; sourceTree = "<group>"; };
 		B2C3D4E5F6A7B8C9D0E1F2A3 /* NearestResourceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearestResourceService.swift; sourceTree = "<group>"; };
 		D3B7A52DC90F4B36ADD3CDF5 /* OfflineRoutingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineRoutingService.swift; sourceTree = "<group>"; };
+		9D6B8A3E1C7F4520EA83C5F6 /* ElevationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevationService.swift; sourceTree = "<group>"; };
+		AE5C7B4F2D8A3916FB40D6E9 /* HazardIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardIntelligenceService.swift; sourceTree = "<group>"; };
 		07BA5410AE1C4AEE96951DA6 /* RoutePlanningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePlanningView.swift; sourceTree = "<group>"; };
 		F1E2D3C4B5A6978869504132 /* RouteCorridor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteCorridor.swift; sourceTree = "<group>"; };
 		E2D3C4B5A697887A60413243 /* EvacuationPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvacuationPlanView.swift; sourceTree = "<group>"; };
@@ -521,6 +525,8 @@
 				17C1A710B704531E4525896F /* MotionService.swift */,
 				B2C3D4E5F6A7B8C9D0E1F2A3 /* NearestResourceService.swift */,
 				D3B7A52DC90F4B36ADD3CDF5 /* OfflineRoutingService.swift */,
+				9D6B8A3E1C7F4520EA83C5F6 /* ElevationService.swift */,
+				AE5C7B4F2D8A3916FB40D6E9 /* HazardIntelligenceService.swift */,
 				F1E2D3C4B5A6978869504132 /* RouteCorridor.swift */,
 				0DFE6EC643DCC827EC95F8F7 /* OfficialAlertService.swift */,
 				5BE782B0F2E3BB2D2EC6143F /* OfflineAssistantModel.swift */,
@@ -1060,6 +1066,8 @@
 				59AEDBE60DDAA9FCC211E484 /* MotionService.swift in Sources */,
 				C3D4E5F6A7B8C9D0E1F2A3B4 /* NearestResourceService.swift in Sources */,
 				85F957B9A4B245BCAF6936A8 /* OfflineRoutingService.swift in Sources */,
+				3E7A9C1F2D8B4056BC91D4E7 /* ElevationService.swift in Sources */,
+				4F8B0D2E3A9C5167CD02E5F8 /* HazardIntelligenceService.swift in Sources */,
 				E1F2A3B4C5D6E7F8A9B0C1D2 /* NearestResourceView.swift in Sources */,
 				DC9906DB56BD4D31AE19004D /* RoutePlanningView.swift in Sources */,
 				7C4E8F2A1B3D5069AE72C841 /* RouteCorridor.swift in Sources */,

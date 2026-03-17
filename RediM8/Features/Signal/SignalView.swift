@@ -2658,6 +2658,10 @@ private extension MeshMessage {
             "Location"
         case .accountabilityStatus:
             "Roll Call"
+        case .routeShare:
+            "Route"
+        case .hazardReport:
+            "Hazard"
         }
     }
 }

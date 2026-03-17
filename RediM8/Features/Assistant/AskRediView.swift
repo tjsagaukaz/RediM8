@@ -34,7 +34,7 @@ struct AskRediView: View {
                             .id(scrollTarget)
                     }
                     .padding(.horizontal, RediSpacing.screen)
-                    .padding(.bottom, 80)
+                    .padding(.bottom, 80 + RediLayout.commandDockContentInset)
                 }
                 .scrollDismissesKeyboard(.interactively)
                 .onChange(of: viewModel.conversation.count) { _, _ in
@@ -347,7 +347,7 @@ struct AskRediView: View {
         }
         .padding(.horizontal, RediSpacing.screen)
         .padding(.top, RediSpacing.compact)
-        .padding(.bottom, RediSpacing.content)
+        .padding(.bottom, max(RediSpacing.content, RediLayout.commandDockContentInset))
         .background(
             ColorTheme.charcoal
                 .overlay(alignment: .top) {
@@ -355,6 +355,7 @@ struct AskRediView: View {
                         .fill(ColorTheme.divider)
                         .frame(height: 0.5)
                 }
+                .ignoresSafeArea(.container, edges: .bottom)
         )
     }
 

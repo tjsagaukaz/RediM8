@@ -5,6 +5,8 @@ enum MeshMessageKind: String, Codable, Equatable {
     case broadcastAlert
     case locationShare
     case accountabilityStatus = "accountability_status"
+    case routeShare = "route_share"
+    case hazardReport = "hazard_report"
 }
 
 struct SharedLocation: Codable, Equatable {
@@ -35,6 +37,31 @@ struct AccountabilityMeshStatus: Codable, Equatable {
     }
 }
 
+/// Shared evacuation route data sent over mesh network.
+struct SharedRouteData: Codable, Equatable {
+    let destination: String
+    let distanceMetres: Double
+    let durationSeconds: Double
+    let profile: String // vehicle, 4wd, foot, emergency
+    let waterSourceCount: Int
+    let shelterCount: Int
+    let hazardExposure: Double
+    /// Simplified waypoints (max 20) for map display — not full polyline.
+    let waypoints: [SharedLocation]
+    let computedAt: Date
+}
+
+/// Shared hazard report sent over mesh network.
+struct SharedHazardReport: Codable, Equatable {
+    let kind: String // flood, fire, storm_surge, road_closure
+    let latitude: Double
+    let longitude: Double
+    let radiusMetres: Double
+    let severity: String // low, moderate, high, critical
+    let description: String
+    let reportedAt: Date
+}
+
 struct MeshMessage: Identifiable, Codable, Equatable {
     let id: UUID
     let sender: String
@@ -44,6 +71,8 @@ struct MeshMessage: Identifiable, Codable, Equatable {
     let kind: MeshMessageKind
     let location: SharedLocation?
     let accountabilityStatus: AccountabilityMeshStatus?
+    let routeData: SharedRouteData?
+    let hazardReport: SharedHazardReport?
 
     init(
         id: UUID = UUID(),
@@ -53,7 +82,9 @@ struct MeshMessage: Identifiable, Codable, Equatable {
         timestamp: Date = .now,
         kind: MeshMessageKind,
         location: SharedLocation? = nil,
-        accountabilityStatus: AccountabilityMeshStatus? = nil
+        accountabilityStatus: AccountabilityMeshStatus? = nil,
+        routeData: SharedRouteData? = nil,
+        hazardReport: SharedHazardReport? = nil
     ) {
         self.id = id
         self.sender = sender
@@ -63,5 +94,7 @@ struct MeshMessage: Identifiable, Codable, Equatable {
         self.kind = kind
         self.location = location
         self.accountabilityStatus = accountabilityStatus
+        self.routeData = routeData
+        self.hazardReport = hazardReport
     }
 }

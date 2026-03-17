@@ -209,6 +209,120 @@ final class MeshManager: ObservableObject {
         sendMessage(message, to: connectedPeers)
     }
 
+    /// Share an evacuation route with all connected mesh peers.
+    /// Simplifies the route to max 20 waypoints for compact transmission.
+    func shareEvacuationRoute(
+        destination: String,
+        route: OfflineRoutingService.Route,
+        corridorAnalysis: RouteCorridor.CorridorAnalysis?,
+        hazardExposure: Double = 0
+    ) {
+        // Simplify route to max 20 waypoints for mesh transmission
+        let coords = route.coordinates
+        let stride = max(1, coords.count / 20)
+        var waypoints: [SharedLocation] = []
+        for i in Swift.stride(from: 0, to: coords.count, by: stride) {
+            waypoints.append(SharedLocation(
+                latitude: coords[i].latitude,
+                longitude: coords[i].longitude,
+                label: i == 0 ? "Origin" : (i >= coords.count - stride ? "Destination" : "")
+            ))
+        }
+        // Always include final point
+        if let last = coords.last, waypoints.last?.latitude != last.latitude {
+            waypoints.append(SharedLocation(
+                latitude: last.latitude,
+                longitude: last.longitude,
+                label: "Destination"
+            ))
+        }
+
+        let routeData = SharedRouteData(
+            destination: destination,
+            distanceMetres: route.distanceMetres,
+            durationSeconds: route.durationSeconds,
+            profile: route.profile.rawValue,
+            waterSourceCount: corridorAnalysis?.waterSources.count ?? 0,
+            shelterCount: corridorAnalysis?.shelters.count ?? 0,
+            hazardExposure: hazardExposure,
+            waypoints: waypoints,
+            computedAt: .now
+        )
+
+        let distKM = String(format: "%.0f", route.distanceMetres / 1000)
+        let message = MeshMessage(
+            sender: localPeer.displayName,
+            body: "Evacuation route to \(destination) — \(distKM) km via \(route.profile.title)",
+            kind: .routeShare,
+            routeData: routeData
+        )
+        sendMessage(message, to: connectedPeers)
+    }
+
+    /// Report a hazard to all connected mesh peers.
+    func reportHazard(
+        kind: OfflineRoutingService.HazardZone.HazardKind,
+        coordinate: CLLocationCoordinate2D,
+        radiusMetres: Double,
+        severity: String,
+        description: String
+    ) {
+        let report = SharedHazardReport(
+            kind: kind.rawValue,
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude,
+            radiusMetres: radiusMetres,
+            severity: severity,
+            description: description,
+            reportedAt: .now
+        )
+
+        let message = MeshMessage(
+            sender: localPeer.displayName,
+            body: "Hazard: \(description)",
+            kind: .hazardReport,
+            hazardReport: report
+        )
+        sendMessage(message, to: connectedPeers)
+    }
+
+    /// Extract received route shares from session messages.
+    var receivedRouteShares: [MeshMessage] {
+        sessionMessages.filter { $0.kind == .routeShare && $0.routeData != nil }
+    }
+
+    /// Extract received hazard reports from session messages.
+    var receivedHazardReports: [MeshMessage] {
+        sessionMessages.filter { $0.kind == .hazardReport && $0.hazardReport != nil }
+    }
+
+    /// Convert received hazard reports into HazardZones for the routing engine.
+    var hazardZonesFromMesh: [OfflineRoutingService.HazardZone] {
+        receivedHazardReports.compactMap { msg -> OfflineRoutingService.HazardZone? in
+            guard let report = msg.hazardReport else { return nil }
+            let kind: OfflineRoutingService.HazardZone.HazardKind
+            switch report.kind {
+            case "flood": kind = .flood
+            case "fire": kind = .fire
+            case "storm_surge": kind = .stormSurge
+            case "road_closure": kind = .roadClosure
+            default: kind = .roadClosure
+            }
+            let penalty: Double = switch report.severity {
+            case "critical": 10.0
+            case "high": 6.0
+            case "moderate": 3.0
+            default: 2.0
+            }
+            return OfflineRoutingService.HazardZone(
+                center: CLLocationCoordinate2D(latitude: report.latitude, longitude: report.longitude),
+                radiusMetres: report.radiusMetres,
+                penalty: penalty,
+                kind: kind
+            )
+        }
+    }
+
     func sendBeacon(_ beacon: CommunityBeacon) {
         sendBeacon(beacon, to: connectedPeers)
     }
@@ -226,8 +340,43 @@ final class MeshManager: ObservableObject {
         }
     }
 
+    // MARK: - Abuse Protection
+
+    /// Rate limit: max messages per sender within a rolling window.
+    private var messageTimestamps: [String: [Date]] = [:]  // senderName → timestamps
+    private let rateLimitWindow: TimeInterval = 60          // 1 minute
+    private let rateLimitMax: Int = 20                      // max 20 messages per minute per sender
+    private var recentHazardHashes: Set<Int> = []           // duplicate suppression for hazard reports
+
+    /// Check if a sender has exceeded their rate limit.
+    private func isRateLimited(sender: String) -> Bool {
+        let now = Date.now
+        let cutoff = now.addingTimeInterval(-rateLimitWindow)
+        messageTimestamps[sender] = (messageTimestamps[sender] ?? []).filter { $0 > cutoff }
+        return (messageTimestamps[sender]?.count ?? 0) >= rateLimitMax
+    }
+
+    /// Record a message from a sender for rate limiting.
+    private func recordMessage(from sender: String) {
+        messageTimestamps[sender, default: []].append(.now)
+    }
+
+    /// Hash a hazard report for duplicate suppression.
+    private func hazardHash(_ report: SharedHazardReport) -> Int {
+        var hasher = Hasher()
+        hasher.combine(report.kind)
+        hasher.combine(Int(report.latitude * 1000))  // ~111m grid
+        hasher.combine(Int(report.longitude * 1000))
+        return hasher.finalize()
+    }
+
+    /// Minimum confidence threshold for mesh hazards to affect routing.
+    /// Reports below this threshold are stored but not forwarded to the routing engine.
+    static let minRoutingConfidence: HazardIntelligenceService.HazardConfidence = .medium
+
     func clearSessionMessages() {
         sessionMessages = []
+        recentHazardHashes = []
     }
 
     private func sendMessage(_ message: MeshMessage, to peers: [MeshPeer]) {
@@ -246,6 +395,21 @@ final class MeshManager: ObservableObject {
     private func handle(_ event: MeshTransportEvent) {
         switch event {
         case let .message(message):
+            // Rate limit: drop messages from spammy senders
+            if isRateLimited(sender: message.sender) { return }
+            recordMessage(from: message.sender)
+
+            // Duplicate suppression for hazard reports
+            if message.kind == .hazardReport, let report = message.hazardReport {
+                let hash = hazardHash(report)
+                if recentHazardHashes.contains(hash) { return }
+                recentHazardHashes.insert(hash)
+                // Cap hash set size
+                if recentHazardHashes.count > 500 {
+                    recentHazardHashes = Set(recentHazardHashes.prefix(250))
+                }
+            }
+
             sessionMessages.insert(message, at: 0)
         case let .receivedBeacon(received):
             receivedBeacons.send(received)
