@@ -19,6 +19,10 @@ final class MapSystem: ObservableObject, AppSystem {
     let shelterService: ShelterService
     let tileCacheService: TileCacheService
     let offlineRoutingService: OfflineRoutingService
+    let hazardIntelligenceService: HazardIntelligenceService
+    let hazardFeedService: HazardFeedService
+    let nearestResourceService: NearestResourceService
+    let safeZoneService: SafeZoneService
 
     private let locationService: LocationService
     private var cancellables = Set<AnyCancellable>()
@@ -33,6 +37,10 @@ final class MapSystem: ObservableObject, AppSystem {
         shelterService: ShelterService,
         tileCacheService: TileCacheService,
         offlineRoutingService: OfflineRoutingService,
+        hazardIntelligenceService: HazardIntelligenceService,
+        hazardFeedService: HazardFeedService,
+        nearestResourceService: NearestResourceService,
+        safeZoneService: SafeZoneService,
         locationService: LocationService
     ) {
         self.offlineBasemapService = offlineBasemapService
@@ -44,6 +52,10 @@ final class MapSystem: ObservableObject, AppSystem {
         self.shelterService = shelterService
         self.tileCacheService = tileCacheService
         self.offlineRoutingService = offlineRoutingService
+        self.hazardIntelligenceService = hazardIntelligenceService
+        self.hazardFeedService = hazardFeedService
+        self.nearestResourceService = nearestResourceService
+        self.safeZoneService = safeZoneService
         self.locationService = locationService
 
         officialAlertService.$library
@@ -69,9 +81,14 @@ final class MapSystem: ObservableObject, AppSystem {
 
     func start() {
         refreshEmergencyUnlockState()
+        hazardIntelligenceService.startMonitoring()
+        hazardFeedService.startPeriodicFetch(into: hazardIntelligenceService)
     }
 
-    func stop() {}
+    func stop() {
+        hazardIntelligenceService.stopMonitoring()
+        hazardFeedService.stopPeriodicFetch()
+    }
 
     func updateSettings(_ settings: AppSettings) {
         mapDataService.saveEnabledLayers(settings.maps.defaultLayers)

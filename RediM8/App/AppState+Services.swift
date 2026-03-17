@@ -33,4 +33,8 @@ extension AppState {
     var motionService: MotionService { signal.motionService }
     var tileCacheService: TileCacheService { map.tileCacheService }
     var offlineRoutingService: OfflineRoutingService { map.offlineRoutingService }
+    var hazardIntelligenceService: HazardIntelligenceService { map.hazardIntelligenceService }
+    var hazardFeedService: HazardFeedService { map.hazardFeedService }
+    var nearestResourceService: NearestResourceService { map.nearestResourceService }
+    var safeZoneService: SafeZoneService { map.safeZoneService }
 }

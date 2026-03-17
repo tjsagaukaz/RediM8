@@ -60,6 +60,9 @@
 		3989F85634EB0B2F30661B72 /* PrepServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 466673E8468097FA4DCBAB28 /* PrepServiceTests.swift */; };
 		3A07BB6B2891E5D24889A840 /* RediM8App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518BCBC3B7E1640382AE6FFA /* RediM8App.swift */; };
 		3B818F3DA86371804516BC71 /* GoBagServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBDC18413AF54CEBE8498AB /* GoBagServiceTests.swift */; };
+		E9F8A7B6C5D4E3F2A1B0C9D8 /* HazardIntelligenceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2E3D4C5B6A7980FEDCBA12 /* HazardIntelligenceServiceTests.swift */; };
+		2A3B4C5D6E7F8091A2B3C4D5 /* HazardFeedServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B4C5D6E7F8091A2B3C4D5E6 /* HazardFeedServiceTests.swift */; };
+		5B6C7D8E9F0112A3B4C5D6E7 /* SafeZoneServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5B6C7D8E9F0112A3B4C5D6 /* SafeZoneServiceTests.swift */; };
 		3D8FF9F224312072B003080A /* PrepScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C778AEA37BA9F9ED6481109 /* PrepScore.swift */; };
 		3DC51F68ACF67932F4104C86 /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 2F719DE1CBFA38701FFA67B1 /* MapLibre */; };
 		3E7EB0D7E74776FEC266E129 /* DecisionSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB4F555824E23AAF0BA90491 /* DecisionSupport.swift */; };
@@ -83,6 +86,8 @@
 		85F957B9A4B245BCAF6936A8 /* OfflineRoutingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3B7A52DC90F4B36ADD3CDF5 /* OfflineRoutingService.swift */; };
 		3E7A9C1F2D8B4056BC91D4E7 /* ElevationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6B8A3E1C7F4520EA83C5F6 /* ElevationService.swift */; };
 		4F8B0D2E3A9C5167CD02E5F8 /* HazardIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5C7B4F2D8A3916FB40D6E9 /* HazardIntelligenceService.swift */; };
+		5A1C8E3F7B2D4690FA83D1C6 /* HazardFeedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7D4F2A13E6C8509DA52C7B0 /* HazardFeedService.swift */; };
+		8D9E0F1A2B3C4D5E6F708192 /* SafeZoneService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C8D9E0F1A2B3C4D5E6F7081 /* SafeZoneService.swift */; };
 		DC9906DB56BD4D31AE19004D /* RoutePlanningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07BA5410AE1C4AEE96951DA6 /* RoutePlanningView.swift */; };
 		7C4E8F2A1B3D5069AE72C841 /* RouteCorridor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2D3C4B5A6978869504132 /* RouteCorridor.swift */; };
 		B2C3D4E5F6A7B8C9D0E1F3A4 /* EvacuationPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D3C4B5A697887A60413243 /* EvacuationPlanView.swift */; };
@@ -284,6 +289,9 @@
 		35D11F4F600A9114B7810F61 /* AppStateBatteryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateBatteryTests.swift; sourceTree = "<group>"; };
 		39C5DE2237BE4EC342DC8B78 /* Shelters.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Shelters.json; sourceTree = "<group>"; };
 		3B2D2F48C11F3758856C7991 /* DocumentVaultServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentVaultServiceTests.swift; sourceTree = "<group>"; };
+		1F2E3D4C5B6A7980FEDCBA12 /* HazardIntelligenceServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardIntelligenceServiceTests.swift; sourceTree = "<group>"; };
+		3B4C5D6E7F8091A2B3C4D5E6 /* HazardFeedServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardFeedServiceTests.swift; sourceTree = "<group>"; };
+		4A5B6C7D8E9F0112A3B4C5D6 /* SafeZoneServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeZoneServiceTests.swift; sourceTree = "<group>"; };
 		3CAA5677B34762100DC387ED /* MeshService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshService.swift; sourceTree = "<group>"; };
 		3D6BB391D0E1FA584D861669 /* VehicleReadiness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleReadiness.swift; sourceTree = "<group>"; };
 		4023EDA521F560796F651B2C /* SettingsViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModelTests.swift; sourceTree = "<group>"; };
@@ -369,6 +377,8 @@
 		D3B7A52DC90F4B36ADD3CDF5 /* OfflineRoutingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineRoutingService.swift; sourceTree = "<group>"; };
 		9D6B8A3E1C7F4520EA83C5F6 /* ElevationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ElevationService.swift; sourceTree = "<group>"; };
 		AE5C7B4F2D8A3916FB40D6E9 /* HazardIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardIntelligenceService.swift; sourceTree = "<group>"; };
+		B7D4F2A13E6C8509DA52C7B0 /* HazardFeedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardFeedService.swift; sourceTree = "<group>"; };
+		7C8D9E0F1A2B3C4D5E6F7081 /* SafeZoneService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeZoneService.swift; sourceTree = "<group>"; };
 		07BA5410AE1C4AEE96951DA6 /* RoutePlanningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePlanningView.swift; sourceTree = "<group>"; };
 		F1E2D3C4B5A6978869504132 /* RouteCorridor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteCorridor.swift; sourceTree = "<group>"; };
 		E2D3C4B5A697887A60413243 /* EvacuationPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvacuationPlanView.swift; sourceTree = "<group>"; };
@@ -527,6 +537,8 @@
 				D3B7A52DC90F4B36ADD3CDF5 /* OfflineRoutingService.swift */,
 				9D6B8A3E1C7F4520EA83C5F6 /* ElevationService.swift */,
 				AE5C7B4F2D8A3916FB40D6E9 /* HazardIntelligenceService.swift */,
+				B7D4F2A13E6C8509DA52C7B0 /* HazardFeedService.swift */,
+				7C8D9E0F1A2B3C4D5E6F7081 /* SafeZoneService.swift */,
 				F1E2D3C4B5A6978869504132 /* RouteCorridor.swift */,
 				0DFE6EC643DCC827EC95F8F7 /* OfficialAlertService.swift */,
 				5BE782B0F2E3BB2D2EC6143F /* OfflineAssistantModel.swift */,
@@ -773,6 +785,8 @@
 				50FA8D1CF9E7C5E4781F5575 /* FireTrailServiceTests.swift */,
 				0FBDC18413AF54CEBE8498AB /* GoBagServiceTests.swift */,
 				4E659D04F58693F6AA6D890E /* GuideServiceTests.swift */,
+				3B4C5D6E7F8091A2B3C4D5E6 /* HazardFeedServiceTests.swift */,
+				1F2E3D4C5B6A7980FEDCBA12 /* HazardIntelligenceServiceTests.swift */,
 				BAB24B83D820271A8F95BA06 /* MapDataServiceTests.swift */,
 				E603FCA37ABA4BB9847700A2 /* MonetizationTests.swift */,
 				F66E79616236ED7E9F4BD37F /* NavigationRouterTests.swift */,
@@ -782,6 +796,7 @@
 				AD3E2F676C3C7F582A09B440 /* PermissionsManagerTests.swift */,
 				A33F3951B11ADF4D8123CCB1 /* PreparednessInsightsServiceTests.swift */,
 				466673E8468097FA4DCBAB28 /* PrepServiceTests.swift */,
+				4A5B6C7D8E9F0112A3B4C5D6 /* SafeZoneServiceTests.swift */,
 				13D02FCE648689BD2D45FCF5 /* ScenarioEngineTests.swift */,
 				4023EDA521F560796F651B2C /* SettingsViewModelTests.swift */,
 				1C21BC8DAEBFE18F27959635 /* ShelterServiceTests.swift */,
@@ -1068,6 +1083,8 @@
 				85F957B9A4B245BCAF6936A8 /* OfflineRoutingService.swift in Sources */,
 				3E7A9C1F2D8B4056BC91D4E7 /* ElevationService.swift in Sources */,
 				4F8B0D2E3A9C5167CD02E5F8 /* HazardIntelligenceService.swift in Sources */,
+				5A1C8E3F7B2D4690FA83D1C6 /* HazardFeedService.swift in Sources */,
+				8D9E0F1A2B3C4D5E6F708192 /* SafeZoneService.swift in Sources */,
 				E1F2A3B4C5D6E7F8A9B0C1D2 /* NearestResourceView.swift in Sources */,
 				DC9906DB56BD4D31AE19004D /* RoutePlanningView.swift in Sources */,
 				7C4E8F2A1B3D5069AE72C841 /* RouteCorridor.swift in Sources */,
@@ -1160,6 +1177,8 @@
 				7F4F3F175F74C113315A32BB /* FireTrailServiceTests.swift in Sources */,
 				3B818F3DA86371804516BC71 /* GoBagServiceTests.swift in Sources */,
 				9308213EBFDC01103D5A0819 /* GuideServiceTests.swift in Sources */,
+				2A3B4C5D6E7F8091A2B3C4D5 /* HazardFeedServiceTests.swift in Sources */,
+				E9F8A7B6C5D4E3F2A1B0C9D8 /* HazardIntelligenceServiceTests.swift in Sources */,
 				9DC993E9677C39D76ED6EF63 /* MapDataServiceTests.swift in Sources */,
 				05A401720DF0CA6F9020F514 /* MonetizationTests.swift in Sources */,
 				37585FD12479A694714F6BD2 /* NavigationRouterTests.swift in Sources */,
@@ -1169,6 +1188,7 @@
 				D1C440C18B9FB5D87E069D77 /* PermissionsManagerTests.swift in Sources */,
 				3989F85634EB0B2F30661B72 /* PrepServiceTests.swift in Sources */,
 				6A27F5D21D8CB80B49BCEE6F /* PreparednessInsightsServiceTests.swift in Sources */,
+				5B6C7D8E9F0112A3B4C5D6E7 /* SafeZoneServiceTests.swift in Sources */,
 				2D0CBF0D08D32A8AC173EEC6 /* ScenarioEngineTests.swift in Sources */,
 				2C8CF0417E9DEC6718FD8F19 /* SettingsViewModelTests.swift in Sources */,
 				5C8715855F6140E8CC70B932 /* ShelterServiceTests.swift in Sources */,

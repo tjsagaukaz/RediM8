@@ -100,6 +100,7 @@ final class WaterPointService {
                 guard isFeatureAvailable(point.packIDs, within: installedPackIDs) else { return false }
                 return kinds.isEmpty || kinds.contains(point.kind)
             }
+            .sorted { $0.distanceMetres < $1.distanceMetres }
             .prefix(limit)
             .map { NearbyWaterPoint(point: $0.item, distanceMetres: $0.distanceMetres) }
 

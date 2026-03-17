@@ -1101,8 +1101,7 @@ struct EvacuationPlanView: View {
     // MARK: - Evacuation Advisory
 
     private func computeAdvisory() -> HazardIntelligenceService.EvacuationAdvisory? {
-        let hazardService = HazardIntelligenceService()
-        return hazardService.evaluateRoutes(rankedRoutes, currentLocation: currentLocation?.coordinate)
+        return appState.hazardIntelligenceService.evaluateRoutes(rankedRoutes, currentLocation: currentLocation?.coordinate)
     }
 
     private func advisoryPanel(_ advisory: HazardIntelligenceService.EvacuationAdvisory) -> some View {
@@ -1220,8 +1219,7 @@ struct EvacuationPlanView: View {
 
     private func computeCollapseAssessment() -> HazardIntelligenceService.CollapseAssessment? {
         let destCoord: CLLocationCoordinate2D? = selectedDestination?.coordinate
-        let hazardService = HazardIntelligenceService()
-        return hazardService.assessCollapse(
+        return appState.hazardIntelligenceService.assessCollapse(
             rankedRoutes: rankedRoutes,
             destination: destCoord
         )

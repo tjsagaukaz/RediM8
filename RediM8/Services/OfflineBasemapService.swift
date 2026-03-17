@@ -371,12 +371,20 @@ final class OfflineBasemapService: ObservableObject {
     }
 
     private func fallbackConfiguration(reason: String) -> Configuration {
+        // When an explicit fallback URL was provided (e.g. in tests), honour it
+        // directly — don't rewrite through the australia path.
+        if let explicit = explicitFallbackStyleURL {
+            return Configuration(
+                styleURL: explicit,
+                mode: .fallback(reason: reason)
+            )
+        }
+
         if let australiaConfig = australiaFallbackConfiguration(reason: reason) {
             return australiaConfig
         }
 
-        let resolvedFallbackURL = explicitFallbackStyleURL
-            ?? bundledFallbackStyleURL()
+        let resolvedFallbackURL = bundledFallbackStyleURL()
             ?? writeEmergencyFallbackStyle()
 
         return Configuration(

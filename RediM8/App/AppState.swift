@@ -95,6 +95,10 @@ final class AppState: ObservableObject {
             shelterService: services.shelterService,
             tileCacheService: services.tileCacheService,
             offlineRoutingService: services.offlineRoutingService,
+            hazardIntelligenceService: services.hazardIntelligenceService,
+            hazardFeedService: services.hazardFeedService,
+            nearestResourceService: services.nearestResourceService,
+            safeZoneService: services.safeZoneService,
             locationService: services.locationService
         )
 

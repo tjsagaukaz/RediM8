@@ -34,6 +34,10 @@ struct AppServices {
     let motionService: MotionService
     let tileCacheService: TileCacheService
     let offlineRoutingService: OfflineRoutingService
+    let hazardIntelligenceService: HazardIntelligenceService
+    let hazardFeedService: HazardFeedService
+    let nearestResourceService: NearestResourceService
+    let safeZoneService: SafeZoneService
 }
 
 @MainActor
@@ -161,6 +165,23 @@ struct AppEnvironment {
         )
         let tileCacheService = TileCacheService()
         let offlineRoutingService = OfflineRoutingService()
+        let hazardIntelligenceService = HazardIntelligenceService(store: store)
+        let hazardFeedService = HazardFeedService()
+        let nearestResourceService = NearestResourceService(
+            waterPointService: waterPointService,
+            shelterService: shelterService,
+            mapService: mapService,
+            mapDataService: mapDataService
+        )
+        let safeZoneService = SafeZoneService(
+            nearestResourceService: nearestResourceService,
+            offlineRoutingService: offlineRoutingService,
+            hazardIntelligenceService: hazardIntelligenceService,
+            shelterService: shelterService,
+            installedPackIDs: { [weak mapDataService] in
+                mapDataService?.loadInstalledPackIDs() ?? []
+            }
+        )
         let torchService = TorchService()
         let motionService = MotionService(
             permissionsManager: permissionsManager,
@@ -199,7 +220,11 @@ struct AppEnvironment {
             torchService: torchService,
             motionService: motionService,
             tileCacheService: tileCacheService,
-            offlineRoutingService: offlineRoutingService
+            offlineRoutingService: offlineRoutingService,
+            hazardIntelligenceService: hazardIntelligenceService,
+            hazardFeedService: hazardFeedService,
+            nearestResourceService: nearestResourceService,
+            safeZoneService: safeZoneService
         )
     }
 }

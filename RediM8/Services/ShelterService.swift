@@ -102,6 +102,7 @@ final class ShelterService {
                 guard isFeatureAvailable(shelter.packIDs, within: installedPackIDs) else { return false }
                 return types.isEmpty || types.contains(shelter.type)
             }
+            .sorted { $0.distanceMetres < $1.distanceMetres }
             .prefix(limit)
             .map { NearbyShelter(shelter: $0.item, distanceMetres: $0.distanceMetres) }
 
