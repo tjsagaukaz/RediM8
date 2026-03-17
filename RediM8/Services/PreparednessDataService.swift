@@ -6,7 +6,8 @@ final class PreparednessDataService {
         static let scenarios = "preparedness.scenarios.v1"
         static let tasks = "preparedness.tasks.v1"
         static let gear = "preparedness.gear.v1"
-        static let guides = "preparedness.guides.v3"
+        static let guides = "preparedness.guides.v4"
+        static let noInfrastructureGuides = "preparedness.noInfrastructureGuides.v1"
         static let bushMedicineGuides = "preparedness.bushMedicineGuides.v1"
         static let foodGrowingGuides = "preparedness.foodGrowingGuides.v1"
         static let survivalSkillsGuides = "preparedness.survivalSkillsGuides.v1"
@@ -27,6 +28,7 @@ final class PreparednessDataService {
     private var bushMedicineGuideLibraryCache: AssistantKnowledgeGuideLibrary?
     private var foodGrowingGuideLibraryCache: AssistantKnowledgeGuideLibrary?
     private var survivalSkillsGuideLibraryCache: AssistantKnowledgeGuideLibrary?
+    private var noInfrastructureGuideLibraryCache: GuideLibrary?
     private var emergencyPlanCache: Emergency72HourPlanBlueprint?
     private var goBagCache: GoBagLibrary?
     private var resourceCategoryLibraryCache: ResourceCategoryLibrary?
@@ -111,6 +113,10 @@ final class PreparednessDataService {
 
     func survivalSkillsGuides() -> [Guide] {
         survivalSkillsGuideLibrary().guides.map { $0.asGuide() }
+    }
+
+    func noInfrastructureGuides() -> [Guide] {
+        noInfrastructureGuideLibrary().guides
     }
 
     func emergency72HourPlanBlueprint() -> Emergency72HourPlanBlueprint {
@@ -253,11 +259,22 @@ final class PreparednessDataService {
         )
     }
 
+    private func noInfrastructureGuideLibrary() -> GuideLibrary {
+        load(
+            cache: &noInfrastructureGuideLibraryCache,
+            filename: "NoInfrastructureGuides.json",
+            storageKey: StorageKey.noInfrastructureGuides,
+            type: GuideLibrary.self,
+            fallback: GuideLibrary(guides: [])
+        )
+    }
+
     private func mergedGuideLibrary() -> GuideLibrary {
         let mergedGuides = bundledGuideLibrary().guides
             + bushMedicineGuides()
             + foodGrowingKnowledgeGuides()
             + survivalSkillsGuides()
+            + noInfrastructureGuides()
 
         var seen = Set<String>()
         let orderedUniqueGuides = mergedGuides.filter { guide in

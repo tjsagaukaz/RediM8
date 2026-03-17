@@ -16,6 +16,15 @@ enum AssistantIntentTopic: String, CaseIterable, Codable, Equatable {
     case bushMedicine = "bush_medicine"
     case foodGrowing = "food_growing"
     case survivalSkills = "survival_skills"
+    case waterSourcingSurvival = "water_sourcing_survival"
+    case firecraft
+    case shelterBuildingSurvival = "shelter_building_survival"
+    case trappingForaging = "trapping_foraging"
+    case fieldSanitation = "field_sanitation"
+    case survivalPsychology = "survival_psychology"
+    case navigationNoTools = "navigation_no_tools"
+    case fieldComms = "field_comms"
+    case vehicleSurvival = "vehicle_survival"
     case unknown
 }
 

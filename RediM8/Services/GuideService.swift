@@ -6,6 +6,11 @@ enum GuideCollection: String, CaseIterable, Identifiable {
     case bushcraft
     case food
     case growing
+    case survivalWater
+    case survivalFire
+    case survivalShelter
+    case survivalFood
+    case survivalField
 
     var id: String { rawValue }
 
@@ -21,6 +26,16 @@ enum GuideCollection: String, CaseIterable, Identifiable {
             "Field Cooking"
         case .growing:
             "Grow Food"
+        case .survivalWater:
+            "Find Water"
+        case .survivalFire:
+            "Make Fire"
+        case .survivalShelter:
+            "Build Shelter"
+        case .survivalFood:
+            "Find Food"
+        case .survivalField:
+            "Field Survival"
         }
     }
 
@@ -36,6 +51,26 @@ enum GuideCollection: String, CaseIterable, Identifiable {
             "Simple pantry, camp, and blackout cooking."
         case .growing:
             "Fast-growing staples and practical garden setup."
+        case .survivalWater:
+            "Finding and sourcing water with nothing."
+        case .survivalFire:
+            "Starting and maintaining fire without tools."
+        case .survivalShelter:
+            "Extended shelter from natural materials."
+        case .survivalFood:
+            "Trapping, foraging, and insect protein."
+        case .survivalField:
+            "Comms, navigation, sanitation, and psychology."
+        }
+    }
+
+    /// True for collections in the no-infrastructure survival library.
+    var isSurvivalCollection: Bool {
+        switch self {
+        case .survivalWater, .survivalFire, .survivalShelter, .survivalFood, .survivalField:
+            true
+        default:
+            false
         }
     }
 }
@@ -123,9 +158,26 @@ final class GuideService {
             guides = allGuides().filter { [.foodCooking, .waterSafety].contains($0.category) }
         case .growing:
             guides = allGuides().filter { $0.category == .foodGrowing }
+        case .survivalWater:
+            guides = allGuides().filter { $0.category == .waterSourcing }
+        case .survivalFire:
+            guides = allGuides().filter { $0.category == .firecraft }
+        case .survivalShelter:
+            guides = allGuides().filter { $0.category == .shelterBuilding }
+        case .survivalFood:
+            guides = allGuides().filter { $0.category == .trapping }
+        case .survivalField:
+            guides = allGuides().filter {
+                [.fieldComms, .navigationAdvanced, .sanitation, .psychology, .vehicleSurvival].contains($0.category)
+            }
         }
 
         return Array(guides.prefix(limit))
+    }
+
+    /// All guides from survival primitive categories.
+    func survivalGuides() -> [Guide] {
+        allGuides().filter { $0.category.isSurvivalPrimitive }
     }
 
     func searchGuides(query: String, category: GuideCategory? = nil) -> [Guide] {

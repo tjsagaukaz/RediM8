@@ -23,6 +23,36 @@ final class SafeZoneService: ObservableObject {
 
     // MARK: - Types
 
+    /// Confidence level for a safe zone recommendation.
+    enum SafeZoneConfidence: String, Comparable {
+        case low        // routing data only, no hazard intel, stale feeds
+        case moderate   // some hazard data, partial route coverage
+        case high       // recent hazard data, full route, verified destination
+        case verified   // official shelter with fresh hazard sweep, clear route
+
+        var rank: Int {
+            switch self {
+            case .low: 0
+            case .moderate: 1
+            case .high: 2
+            case .verified: 3
+            }
+        }
+
+        static func < (lhs: SafeZoneConfidence, rhs: SafeZoneConfidence) -> Bool {
+            lhs.rank < rhs.rank
+        }
+
+        var label: String {
+            switch self {
+            case .low: "LOW CONFIDENCE"
+            case .moderate: "MODERATE"
+            case .high: "HIGH CONFIDENCE"
+            case .verified: "VERIFIED"
+            }
+        }
+    }
+
     struct SafeZoneRecommendation: Identifiable {
         let id: String
         let name: String
@@ -34,6 +64,7 @@ final class SafeZoneService: ObservableObject {
         let waterSourceCount: Int
         let shelterCount: Int
         let score: Double
+        let confidence: SafeZoneConfidence
         let reasons: [String]
         let routeCoordinates: [CLLocationCoordinate2D]
 
@@ -103,6 +134,7 @@ final class SafeZoneService: ObservableObject {
     private let offlineRoutingService: OfflineRoutingService
     private let hazardIntelligenceService: HazardIntelligenceService
     private let shelterService: ShelterService
+    private let hazardFeedService: HazardFeedService?
     private let elevationService: ElevationService?
     private let installedPackIDs: () -> Set<String>
 
@@ -121,6 +153,7 @@ final class SafeZoneService: ObservableObject {
         offlineRoutingService: OfflineRoutingService,
         hazardIntelligenceService: HazardIntelligenceService,
         shelterService: ShelterService,
+        hazardFeedService: HazardFeedService? = nil,
         elevationService: ElevationService? = nil,
         installedPackIDs: @escaping () -> Set<String> = { [] }
     ) {
@@ -128,6 +161,7 @@ final class SafeZoneService: ObservableObject {
         self.offlineRoutingService = offlineRoutingService
         self.hazardIntelligenceService = hazardIntelligenceService
         self.shelterService = shelterService
+        self.hazardFeedService = hazardFeedService
         self.elevationService = elevationService
         self.installedPackIDs = installedPackIDs
     }
@@ -354,6 +388,12 @@ final class SafeZoneService: ObservableObject {
         let hours = route.durationSeconds / 3600
         score += hours * 2.0
 
+        let confidence = computeConfidence(
+            candidate: candidate,
+            hazardExposure: exposure,
+            hasElevation: elevation != nil
+        )
+
         return SafeZoneRecommendation(
             id: candidate.id,
             name: candidate.name,
@@ -365,9 +405,46 @@ final class SafeZoneService: ObservableObject {
             waterSourceCount: waterCount,
             shelterCount: shelterCount,
             score: score,
+            confidence: confidence,
             reasons: reasons,
             routeCoordinates: route.coordinates
         )
+    }
+
+    // MARK: - Confidence Scoring
+
+    /// Compute confidence based on data freshness, route quality, and destination type.
+    private func computeConfidence(
+        candidate: Candidate,
+        hazardExposure: Double,
+        hasElevation: Bool
+    ) -> SafeZoneConfidence {
+        var score = 0
+
+        // Fresh hazard data = +2, stale = +0
+        if let feedService = hazardFeedService {
+            if !feedService.isFeedStale { score += 2 }
+        }
+
+        // Hazard intel available and clear route = +2
+        let activeHazards = hazardIntelligenceService.reports.filter { !$0.isExpired }
+        if !activeHazards.isEmpty {
+            score += 1 // We have hazard data at all
+            if hazardExposure < 0.5 { score += 1 } // Route is clear
+        }
+
+        // Official shelter = +1
+        if candidate.category == .shelter { score += 1 }
+
+        // Elevation data available = +1
+        if hasElevation { score += 1 }
+
+        switch score {
+        case 6...: return .verified
+        case 4...5: return .high
+        case 2...3: return .moderate
+        default: return .low
+        }
     }
 
     // MARK: - Hazard Exposure

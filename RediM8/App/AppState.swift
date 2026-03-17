@@ -99,6 +99,8 @@ final class AppState: ObservableObject {
             hazardFeedService: services.hazardFeedService,
             nearestResourceService: services.nearestResourceService,
             safeZoneService: services.safeZoneService,
+            predictiveCollapseService: services.predictiveCollapseService,
+            autoGuidanceService: services.autoGuidanceService,
             locationService: services.locationService
         )
 

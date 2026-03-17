@@ -979,6 +979,16 @@ struct GuideLibraryView: View {
             selectedCategory = .foodCooking
         case .growing:
             selectedCategory = .foodGrowing
+        case .survivalWater:
+            selectedCategory = .waterSourcing
+        case .survivalFire:
+            selectedCategory = .firecraft
+        case .survivalShelter:
+            selectedCategory = .shelterBuilding
+        case .survivalFood:
+            selectedCategory = .trapping
+        case .survivalField:
+            selectedCategory = .fieldComms
         }
     }
 
@@ -1069,6 +1079,30 @@ struct GuideLibraryView: View {
             "Pantry bread, damper, scones, blackout cooking, and field meal basics."
         case .foodGrowing:
             "Fast crops, raised beds, bag growing, seed starts, and water-smart gardens."
+        case .wildlife:
+            "Dangerous wildlife identification, avoidance, and encounter response."
+        case .trapping:
+            "Snares, fish traps, insect protein, and emergency foraging rules."
+        case .toolcraft:
+            "Improvised tools, cordage, cutting edges, and field repairs."
+        case .fieldComms:
+            "Signal fires, ground signals, UHF/CB radio, and improvised antennas."
+        case .sanitation:
+            "Waste disposal, water contamination prevention, and hygiene without supplies."
+        case .psychology:
+            "Routine building, panic control, decision fatigue, and isolation coping."
+        case .security:
+            "Camp concealment, perimeter awareness, and personal safety protocols."
+        case .vehicleSurvival:
+            "Vehicle shelter, battery survival, signalling, and stay-vs-leave decisions."
+        case .waterSourcing:
+            "Finding water from terrain, solar stills, condensation, and rationing."
+        case .shelterBuilding:
+            "Debris huts, lean-tos, ground insulation, and heat retention."
+        case .firecraft:
+            "Bow drill, hand drill, wet-weather fire, and long-term fire maintenance."
+        case .navigationAdvanced:
+            "Sun and star navigation, terrain reading, and don't-get-lost protocols."
         }
     }
 
@@ -1123,6 +1157,10 @@ struct GuideLibraryView: View {
             ColorTheme.textTertiary
         case .heatSafety:
             ColorTheme.textTertiary
+        case .wildlife, .trapping, .toolcraft, .fieldComms, .sanitation,
+             .psychology, .security, .vehicleSurvival, .waterSourcing,
+             .shelterBuilding, .firecraft, .navigationAdvanced:
+            ColorTheme.textTertiary
         }
     }
 
@@ -1137,6 +1175,8 @@ struct GuideLibraryView: View {
         case .food:
             ColorTheme.textTertiary
         case .growing:
+            ColorTheme.textTertiary
+        case .survivalWater, .survivalFire, .survivalShelter, .survivalFood, .survivalField:
             ColorTheme.textTertiary
         }
     }
@@ -1155,6 +1195,7 @@ struct GuideDetailView: View {
     @State private var isShowingReferenceSections = true
     @State private var isShowingIllustrations: Bool
     @State private var isShowingSources = false
+    @State private var isShowingProcedural = true
     @State private var isSaved: Bool
 
     init(guide: Guide, isSaved: Bool = false, onToggleSaved: (() -> Bool)? = nil) {
@@ -1233,6 +1274,10 @@ struct GuideDetailView: View {
             ColorTheme.accent
         case .navigation, .waterSafety:
             ColorTheme.accent
+        case .wildlife, .trapping, .toolcraft, .fieldComms, .sanitation,
+             .psychology, .security, .vehicleSurvival, .waterSourcing,
+             .shelterBuilding, .firecraft, .navigationAdvanced:
+            ColorTheme.accent
         }
     }
 
@@ -1297,6 +1342,10 @@ struct GuideDetailView: View {
         guide.contentSections.reduce(0) { $0 + $1.steps.count }
     }
 
+    private var proceduralStepCount: Int {
+        ProceduralDiagramRegistry.steps(for: guide.id)?.count ?? 0
+    }
+
     private var fieldModeContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             if guide.contentSections.count > 1 {
@@ -1315,7 +1364,11 @@ struct GuideDetailView: View {
                 }
             }
 
-            if guide.isIllustrated {
+            if ProceduralDiagramRegistry.hasDiagrams(for: guide.id) {
+                PanelCard(title: "Visual Steps", subtitle: "Step-by-step procedural diagrams. Each panel = one action.") {
+                    ProceduralDiagramStrip(guideID: guide.id, accent: accent)
+                }
+            } else if guide.isIllustrated {
                 PanelCard(title: "Scan First", subtitle: "Illustrations stay up front in field mode for quick visual checks.") {
                     diagramStrip
                 }
@@ -1329,6 +1382,7 @@ struct GuideDetailView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         ForEach(Array(selectedSection.steps.enumerated()), id: \.offset) { index, step in
                             fieldStepCard(number: index + 1, step: step)
+                            InlineStepDiagram(guideID: guide.id, stepIndex: index, accent: accent)
                         }
                     }
                 }
@@ -1348,8 +1402,8 @@ struct GuideDetailView: View {
                     )
                     detailMetricTile(
                         title: "Diagrams",
-                        value: guide.isIllustrated ? "\(guide.diagrams.count)" : "0",
-                        detail: guide.isIllustrated ? "Visual aids" : "Text-only guide",
+                        value: proceduralStepCount > 0 ? "\(proceduralStepCount)" : (guide.isIllustrated ? "\(guide.diagrams.count)" : "0"),
+                        detail: proceduralStepCount > 0 ? "Procedural steps" : (guide.isIllustrated ? "Visual aids" : "Text-only guide"),
                         iconName: "photo.on.rectangle.angled"
                     )
                     detailMetricTile(
@@ -1364,6 +1418,17 @@ struct GuideDetailView: View {
                         detail: guide.lastReviewed,
                         iconName: "clock.fill"
                     )
+                }
+            }
+
+            if ProceduralDiagramRegistry.hasDiagrams(for: guide.id) {
+                CollapsiblePanelCard(
+                    title: "Procedural Diagrams",
+                    subtitle: "Step-by-step visual instructions. Each panel shows one physical action.",
+                    accent: accent,
+                    isExpanded: $isShowingProcedural
+                ) {
+                    ProceduralDiagramStrip(guideID: guide.id, accent: accent)
                 }
             }
 
@@ -1697,6 +1762,11 @@ private struct GuideDiagramArtwork: View {
                     potatoBagArt(in: proxy.size)
                 case .waterFilter:
                     waterFilterArt(in: proxy.size)
+                case .bowDrill, .handDrill, .solarStill, .debrisHut, .leanTo,
+                     .basicSnare, .fishTrap, .groundSignal, .signalFire,
+                     .sunNavigation, .southernCross, .latrinePlacement,
+                     .vehicleShelter, .condensationTrap:
+                    placeholderDiagramArt(kind: diagram.kind, in: proxy.size)
                 }
             }
             .padding(18)
@@ -2023,6 +2093,19 @@ private struct GuideDiagramArtwork: View {
                     .frame(width: 52, height: 10)
             }
         }
+    }
+
+    private func placeholderDiagramArt(kind: GuideDiagramKind, in size: CGSize) -> some View {
+        VStack(spacing: 8) {
+            Image(systemName: "square.dashed")
+                .font(.system(size: 32, weight: .thin))
+                .foregroundStyle(accent.opacity(0.4))
+            Text(kind.rawValue.replacingOccurrences(of: "_", with: " ").uppercased())
+                .font(.system(size: 10, weight: .semibold))
+                .tracking(1.0)
+                .foregroundStyle(ColorTheme.textTertiary)
+        }
+        .frame(width: size.width, height: size.height)
     }
 
     private func ingredientRatioArt(

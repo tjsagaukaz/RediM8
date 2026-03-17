@@ -25,21 +25,21 @@ final class AssistantAnswerComposer {
         guard let primaryGuide = relatedGuides.first else {
             return AssistantResponse(
                 query: query,
-                title: "Closest Offline References",
+                title: "No Strong Match",
                 topic: classification.topic,
                 confidence: classification.confidence,
                 riskBand: classification.riskBand,
                 trustLabel: classification.trustLabel,
                 answerMode: .guideFallback,
                 sourceMode: .fallback,
-                summary: "RediM8 could not safely classify that question into a trusted survival workflow. Try a more specific search, or open a nearby guide directly.",
+                summary: "No strong match found. Try a more specific question — for example, \"how do I start a fire\" or \"find water from terrain\". You can also browse guides directly from the Guides tab.",
                 steps: [],
                 escalationNote: classification.escalationNote,
                 relatedGuides: [],
                 sourceSummary: "Bundled offline references",
                 lastReviewedSummary: "Bundled offline references",
                 regionSummary: classification.regionScope?.title ?? GuideRegionScope.general.title,
-                fallbackExplanation: "No guide match was strong enough to compose advice.",
+                fallbackExplanation: "No strong match — showing closest guides.",
                 interpretationNote: interpretationNote,
                 contextSections: contextSections
             )
@@ -103,9 +103,9 @@ final class AssistantAnswerComposer {
         case .retrievalOnlyCard, .guideFallback:
             let fallbackExplanation: String
             if classification.topic == .unknown {
-                fallbackExplanation = "RediM8 did not find a strong trusted intent match, so it is showing the closest offline guides instead of guessing."
+                fallbackExplanation = "No strong match — showing closest guides."
             } else {
-                fallbackExplanation = "Safe summaries are not being used for this answer, so RediM8 is showing direct guide retrieval."
+                fallbackExplanation = "Showing guide steps directly without AI summarisation."
             }
 
             return AssistantResponse(

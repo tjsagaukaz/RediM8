@@ -137,6 +137,10 @@ extension Guide {
             .generalFirstAid
         case .disasterResponse, .bushcraft, .navigation, .waterSafety, .fireSafety, .heatSafety, .stormSafety, .floodSafety, .foodCooking, .foodGrowing:
             .generalSafety
+        case .wildlife, .trapping, .toolcraft, .fieldComms, .sanitation,
+             .psychology, .security, .vehicleSurvival, .waterSourcing,
+             .shelterBuilding, .firecraft, .navigationAdvanced:
+            .generalSafety
         }
     }
 

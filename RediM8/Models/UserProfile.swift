@@ -519,6 +519,7 @@ struct UserProfile: Codable, Equatable {
     var bushfireReadiness: BushfireReadiness
     var lastAcknowledgedSafetyNoticeAt: Date?
     var lastCompletedOnboardingAt: Date?
+    var survivalProfile: SurvivalProfile
 
     init(
         selectedScenarios: [ScenarioKind],
@@ -537,7 +538,8 @@ struct UserProfile: Codable, Equatable {
         accountabilityCircle: AccountabilityCircle = .empty,
         bushfireReadiness: BushfireReadiness = .default,
         lastAcknowledgedSafetyNoticeAt: Date? = nil,
-        lastCompletedOnboardingAt: Date?
+        lastCompletedOnboardingAt: Date?,
+        survivalProfile: SurvivalProfile = .default
     ) {
         self.selectedScenarios = selectedScenarios
         self.household = household
@@ -556,6 +558,7 @@ struct UserProfile: Codable, Equatable {
         self.bushfireReadiness = bushfireReadiness
         self.lastAcknowledgedSafetyNoticeAt = lastAcknowledgedSafetyNoticeAt
         self.lastCompletedOnboardingAt = lastCompletedOnboardingAt
+        self.survivalProfile = survivalProfile
     }
 
     static let empty = UserProfile(
@@ -634,6 +637,7 @@ struct UserProfile: Codable, Equatable {
         case bushfireReadiness
         case lastAcknowledgedSafetyNoticeAt
         case lastCompletedOnboardingAt
+        case survivalProfile
     }
 
     init(from decoder: Decoder) throws {
@@ -662,6 +666,7 @@ struct UserProfile: Codable, Equatable {
         bushfireReadiness = try container.decodeIfPresent(BushfireReadiness.self, forKey: .bushfireReadiness) ?? .default
         lastAcknowledgedSafetyNoticeAt = try container.decodeIfPresent(Date.self, forKey: .lastAcknowledgedSafetyNoticeAt)
         lastCompletedOnboardingAt = try container.decodeIfPresent(Date.self, forKey: .lastCompletedOnboardingAt)
+        survivalProfile = try container.decodeIfPresent(SurvivalProfile.self, forKey: .survivalProfile) ?? .default
     }
 
     func customPlanningWorkspace(_ workspaceID: PlanWorkspaceID) -> PlanWorkspaceCustomData {

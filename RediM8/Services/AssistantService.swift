@@ -7,6 +7,7 @@ final class AssistantService {
     private let assistantModel: (any OfflineAssistantModeling)?
     private let safetyFilter: AssistantSafetyFilter
     private let contextProvider: (any AssistantContextProviding)?
+    let sessionState = AssistantSessionState()
 
     init(
         classifier: AssistantIntentClassifier,
@@ -27,14 +28,24 @@ final class AssistantService {
     @MainActor
     func ask(_ query: String, allowsSafeSummaries: Bool = true) -> AssistantResponse {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        let resolvedRouting = resolvedClassification(for: trimmedQuery, allowsSafeSummaries: allowsSafeSummaries)
+        let normalizedQuery = AssistantIntentClassifier.normalize(trimmedQuery)
+
+        // Check for follow-up queries that should inherit previous context
+        let resolvedRouting: (classification: AssistantIntentClassification, routingQuery: String, interpretationNote: String?)
+        if sessionState.isFollowUp(normalizedQuery),
+           let followUp = sessionState.followUpClassification() {
+            resolvedRouting = (followUp, trimmedQuery, "Continuing from your previous question.")
+        } else {
+            resolvedRouting = resolvedClassification(for: trimmedQuery, allowsSafeSummaries: allowsSafeSummaries)
+        }
+
         let matchedGuides = resolvedGuides(for: resolvedRouting.classification, query: resolvedRouting.routingQuery)
         let contextSections = contextProvider?.contextSections(
             for: trimmedQuery,
             classification: resolvedRouting.classification
         ) ?? []
 
-        return composer.compose(
+        let response = composer.compose(
             query: trimmedQuery,
             classification: resolvedRouting.classification,
             guides: matchedGuides,
@@ -44,6 +55,15 @@ final class AssistantService {
             interpretationNote: resolvedRouting.interpretationNote,
             contextSections: contextSections
         )
+
+        // Record this turn for future follow-up detection
+        sessionState.record(
+            query: trimmedQuery,
+            classification: resolvedRouting.classification,
+            guideIDs: matchedGuides.map(\.id)
+        )
+
+        return response
     }
 
     private func resolvedClassification(
@@ -78,7 +98,11 @@ final class AssistantService {
     ) -> [Guide] {
         let policyGuides = classifier.matchedGuides(for: classification)
         if !policyGuides.isEmpty {
-            return policyGuides
+            let primaryIDs = Set(policyGuides.map(\.id))
+            let supportingGuides = supportingGuideIDs(for: classification.topic)
+                .filter { !primaryIDs.contains($0) }
+            let supporting = guideService.guides(ids: supportingGuides)
+            return policyGuides + supporting
         }
 
         let fallbackGuides = guideService.searchGuides(query: query)
@@ -87,5 +111,31 @@ final class AssistantService {
         }
 
         return Array(fallbackGuides.prefix(3))
+    }
+
+    /// Returns guide IDs from related policies that complement the primary match.
+    private func supportingGuideIDs(for topic: AssistantIntentTopic) -> [String] {
+        switch topic {
+        case .waterSourcingSurvival:
+            ["boil_filter_disinfect_water", "ration_water_without_dehydration"]
+        case .firecraft:
+            ["fire_starting_methods"]
+        case .shelterBuildingSurvival:
+            ["shelter_building_basics"]
+        case .trappingForaging:
+            ["native_edible_plants_basics"]
+        case .fieldSanitation:
+            ["prevent_dehydration_in_extreme_heat"]
+        case .vehicleSurvival:
+            ["route_planning_without_gps"]
+        case .navigationNoTools:
+            ["route_planning_without_gps", "set_simple_rally_points"]
+        case .waterPurification:
+            ["find_water_from_terrain", "water_rationing_survival"]
+        case .waterPlanning:
+            ["find_water_from_terrain"]
+        default:
+            []
+        }
     }
 }

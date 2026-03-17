@@ -63,6 +63,8 @@
 		E9F8A7B6C5D4E3F2A1B0C9D8 /* HazardIntelligenceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F2E3D4C5B6A7980FEDCBA12 /* HazardIntelligenceServiceTests.swift */; };
 		2A3B4C5D6E7F8091A2B3C4D5 /* HazardFeedServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B4C5D6E7F8091A2B3C4D5E6 /* HazardFeedServiceTests.swift */; };
 		5B6C7D8E9F0112A3B4C5D6E7 /* SafeZoneServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5B6C7D8E9F0112A3B4C5D6 /* SafeZoneServiceTests.swift */; };
+		F607182930415021BC3D4E5F /* PredictiveCollapseServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F607182930415021BC3D4E /* PredictiveCollapseServiceTests.swift */; };
+		182930415021BC3D4E5F6071 /* AutoGuidanceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07182930415021BC3D4E5F60 /* AutoGuidanceServiceTests.swift */; };
 		3D8FF9F224312072B003080A /* PrepScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C778AEA37BA9F9ED6481109 /* PrepScore.swift */; };
 		3DC51F68ACF67932F4104C86 /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 2F719DE1CBFA38701FFA67B1 /* MapLibre */; };
 		3E7EB0D7E74776FEC266E129 /* DecisionSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB4F555824E23AAF0BA90491 /* DecisionSupport.swift */; };
@@ -88,6 +90,8 @@
 		4F8B0D2E3A9C5167CD02E5F8 /* HazardIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE5C7B4F2D8A3916FB40D6E9 /* HazardIntelligenceService.swift */; };
 		5A1C8E3F7B2D4690FA83D1C6 /* HazardFeedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7D4F2A13E6C8509DA52C7B0 /* HazardFeedService.swift */; };
 		8D9E0F1A2B3C4D5E6F708192 /* SafeZoneService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C8D9E0F1A2B3C4D5E6F7081 /* SafeZoneService.swift */; };
+		B2C3D4E5F6071829304150A1 /* PredictiveCollapseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829304150 /* PredictiveCollapseService.swift */; };
+		D4E5F60718293041502A1BC3 /* AutoGuidanceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F60718293041502A1B /* AutoGuidanceService.swift */; };
 		DC9906DB56BD4D31AE19004D /* RoutePlanningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07BA5410AE1C4AEE96951DA6 /* RoutePlanningView.swift */; };
 		7C4E8F2A1B3D5069AE72C841 /* RouteCorridor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2D3C4B5A6978869504132 /* RouteCorridor.swift */; };
 		B2C3D4E5F6A7B8C9D0E1F3A4 /* EvacuationPlanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D3C4B5A697887A60413243 /* EvacuationPlanView.swift */; };
@@ -111,6 +115,14 @@
 		6FB2511746FF21927C497836 /* ResourceLocations.json in Resources */ = {isa = PBXBuildFile; fileRef = AD59F029CF42FCB8D3E650BF /* ResourceLocations.json */; };
 		70360DDF3B9E3E2F4D39D9DD /* VehicleKitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC5367C1A1DC55FCD4C0B5C2 /* VehicleKitView.swift */; };
 		704754D9EF5EE2A1510BA052 /* GuideLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EB278CBD2328876D49EFDBC /* GuideLibraryView.swift */; };
+		70AA11BB01CC33DD44EE55F1 /* BowDrillDiagrams.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD77EE88FF99001122334401 /* BowDrillDiagrams.swift */; };
+		70AA11BB02CC33DD44EE55F2 /* DebrisHutDiagrams.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD77EE88FF99001122334402 /* DebrisHutDiagrams.swift */; };
+		70AA11BB03CC33DD44EE55F3 /* DiagramPrimitives.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD77EE88FF99001122334403 /* DiagramPrimitives.swift */; };
+		70AA11BB04CC33DD44EE55F4 /* ProceduralDiagram.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD77EE88FF99001122334404 /* ProceduralDiagram.swift */; };
+		70AA11BB05CC33DD44EE55F5 /* ProceduralDiagramView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD77EE88FF99001122334405 /* ProceduralDiagramView.swift */; };
+		70AA11BB06CC33DD44EE55F6 /* SnareDiagrams.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD77EE88FF99001122334406 /* SnareDiagrams.swift */; };
+		70AA11BB07CC33DD44EE55F7 /* SolarStillDiagrams.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD77EE88FF99001122334407 /* SolarStillDiagrams.swift */; };
+		70AA11BB08CC33DD44EE55F8 /* WasteDisposalDiagrams.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD77EE88FF99001122334408 /* WasteDisposalDiagrams.swift */; };
 		707E35464647F32ED298380B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 57B6A92B8F5B976FDF84DD1F /* Assets.xcassets */; };
 		7185F5130C8408DE87D024BE /* DocumentVaultServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B2D2F48C11F3758856C7991 /* DocumentVaultServiceTests.swift */; };
 		73A4C3218EB4422DE6656A2D /* TorchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0BC4AFC7F069A7DF12DD066 /* TorchService.swift */; };
@@ -142,6 +154,9 @@
 		899427B876A3EC57877983A4 /* ReadinessReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46FF7EB5E7FA433B594D2892 /* ReadinessReportView.swift */; };
 		8B909097623C57C7C28EBBA1 /* VaultSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4536D570F505FA140F36414F /* VaultSystem.swift */; };
 		8C4E4AB52DB3A30711376471 /* WaterRuntimeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50646F91D3F349C6C1B0D987 /* WaterRuntimeService.swift */; };
+		5C7A9B3E1D8F4021EA63C5F7 /* SurvivalContextService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D8B0C4F2E9A5132FB74D6E8 /* SurvivalContextService.swift */; };
+		7E9C1D5F3A0B6243FC85D7E9 /* SurvivalProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F0D2E6A4B1C7354AD96E8F0 /* SurvivalProfile.swift */; };
+		9A1E3F7B5C2D8465BE07F901 /* AssistantSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2F4A8C6D3E9576CF18A012 /* AssistantSessionState.swift */; };
 		8D254D736B5F7A307C5C45DF /* FoodGrowingGuides.json in Resources */ = {isa = PBXBuildFile; fileRef = BD715C5C3413BB0913EDE2DC /* FoodGrowingGuides.json */; };
 		91F41503D11EC1C6305F6F08 /* CommunityBeacon.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEF4C785F56C2BFF92A8AEA6 /* CommunityBeacon.swift */; };
 		92734555BD79BF9F2D7C4863 /* SurvivalModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 327F9F22FF83CD9C94649399 /* SurvivalModeView.swift */; };
@@ -151,6 +166,7 @@
 		95B7C957025DC0CA0FDD1858 /* Scenarios.json in Resources */ = {isa = PBXBuildFile; fileRef = CBCDAADAA8FC06B66481807F /* Scenarios.json */; };
 		98B015B9F276010F6C836BFA /* GuideService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1122419460AAD6AC86F08CE0 /* GuideService.swift */; };
 		993A4B1B3B80EE945A76E2C7 /* SurvivalSkillsGuides.json in Resources */ = {isa = PBXBuildFile; fileRef = C7759360F9B8CB4CF7686AE1 /* SurvivalSkillsGuides.json */; };
+		99AB1C2D3E4F5061728394A5 /* NoInfrastructureGuides.json in Resources */ = {isa = PBXBuildFile; fileRef = A5B6C7D8E9F0A1B2C3D4E5F6 /* NoInfrastructureGuides.json */; };
 		9B6D7234C22129B84AA2849B /* PreparednessSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59EB1A827BC405D716D4FC9 /* PreparednessSystem.swift */; };
 		9C81FBBD858F69B588E89EBA /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7BD3CA7438409285AB86EAB /* Extensions.swift */; };
 		9D1542B6F48B9DBE40DB8951 /* PlanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6373A5CBCE3ED15D049C2D2F /* PlanViewModel.swift */; };
@@ -292,6 +308,8 @@
 		1F2E3D4C5B6A7980FEDCBA12 /* HazardIntelligenceServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardIntelligenceServiceTests.swift; sourceTree = "<group>"; };
 		3B4C5D6E7F8091A2B3C4D5E6 /* HazardFeedServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardFeedServiceTests.swift; sourceTree = "<group>"; };
 		4A5B6C7D8E9F0112A3B4C5D6 /* SafeZoneServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeZoneServiceTests.swift; sourceTree = "<group>"; };
+		E5F607182930415021BC3D4E /* PredictiveCollapseServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictiveCollapseServiceTests.swift; sourceTree = "<group>"; };
+		07182930415021BC3D4E5F60 /* AutoGuidanceServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoGuidanceServiceTests.swift; sourceTree = "<group>"; };
 		3CAA5677B34762100DC387ED /* MeshService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshService.swift; sourceTree = "<group>"; };
 		3D6BB391D0E1FA584D861669 /* VehicleReadiness.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleReadiness.swift; sourceTree = "<group>"; };
 		4023EDA521F560796F651B2C /* SettingsViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModelTests.swift; sourceTree = "<group>"; };
@@ -313,6 +331,9 @@
 		4E659D04F58693F6AA6D890E /* GuideServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideServiceTests.swift; sourceTree = "<group>"; };
 		4F23378F93FC04B138C4E8F3 /* Guide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Guide.swift; sourceTree = "<group>"; };
 		50646F91D3F349C6C1B0D987 /* WaterRuntimeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterRuntimeService.swift; sourceTree = "<group>"; };
+		6D8B0C4F2E9A5132FB74D6E8 /* SurvivalContextService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurvivalContextService.swift; sourceTree = "<group>"; };
+		8F0D2E6A4B1C7354AD96E8F0 /* SurvivalProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurvivalProfile.swift; sourceTree = "<group>"; };
+		0B2F4A8C6D3E9576CF18A012 /* AssistantSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantSessionState.swift; sourceTree = "<group>"; };
 		507010A8B96BD97DDE5DD660 /* RediM8Tests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RediM8Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		50FA8D1CF9E7C5E4781F5575 /* FireTrailServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireTrailServiceTests.swift; sourceTree = "<group>"; };
 		515787F4420BED52EC5F33E7 /* Emergency72HourPlan.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Emergency72HourPlan.json; sourceTree = "<group>"; };
@@ -367,8 +388,17 @@
 		9D0DDB7D31DAACC4331FAB6F /* ResourceMarker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMarker.swift; sourceTree = "<group>"; };
 		9E3422BA028D17130682664F /* SignalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalViewModel.swift; sourceTree = "<group>"; };
 		A0AE9687EC66EFE2EE65AA1F /* GoBagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoBagView.swift; sourceTree = "<group>"; };
+		A5B6C7D8E9F0A1B2C3D4E5F6 /* NoInfrastructureGuides.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = NoInfrastructureGuides.json; sourceTree = "<group>"; };
 		A28278FBD21FCFF427D6F891 /* MapAssetIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapAssetIcon.swift; sourceTree = "<group>"; };
 		A33F3951B11ADF4D8123CCB1 /* PreparednessInsightsServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreparednessInsightsServiceTests.swift; sourceTree = "<group>"; };
+		DD77EE88FF99001122334401 /* BowDrillDiagrams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BowDrillDiagrams.swift; sourceTree = "<group>"; };
+		DD77EE88FF99001122334402 /* DebrisHutDiagrams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebrisHutDiagrams.swift; sourceTree = "<group>"; };
+		DD77EE88FF99001122334403 /* DiagramPrimitives.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagramPrimitives.swift; sourceTree = "<group>"; };
+		DD77EE88FF99001122334404 /* ProceduralDiagram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProceduralDiagram.swift; sourceTree = "<group>"; };
+		DD77EE88FF99001122334405 /* ProceduralDiagramView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProceduralDiagramView.swift; sourceTree = "<group>"; };
+		DD77EE88FF99001122334406 /* SnareDiagrams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnareDiagrams.swift; sourceTree = "<group>"; };
+		DD77EE88FF99001122334407 /* SolarStillDiagrams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolarStillDiagrams.swift; sourceTree = "<group>"; };
+		DD77EE88FF99001122334408 /* WasteDisposalDiagrams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WasteDisposalDiagrams.swift; sourceTree = "<group>"; };
 		AA02713D8353B63F6551C972 /* AppSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSystem.swift; sourceTree = "<group>"; };
 		AC5367C1A1DC55FCD4C0B5C2 /* VehicleKitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleKitView.swift; sourceTree = "<group>"; };
 		AD3E2F676C3C7F582A09B440 /* PermissionsManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsManagerTests.swift; sourceTree = "<group>"; };
@@ -379,6 +409,8 @@
 		AE5C7B4F2D8A3916FB40D6E9 /* HazardIntelligenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardIntelligenceService.swift; sourceTree = "<group>"; };
 		B7D4F2A13E6C8509DA52C7B0 /* HazardFeedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HazardFeedService.swift; sourceTree = "<group>"; };
 		7C8D9E0F1A2B3C4D5E6F7081 /* SafeZoneService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafeZoneService.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829304150 /* PredictiveCollapseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictiveCollapseService.swift; sourceTree = "<group>"; };
+		C3D4E5F60718293041502A1B /* AutoGuidanceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoGuidanceService.swift; sourceTree = "<group>"; };
 		07BA5410AE1C4AEE96951DA6 /* RoutePlanningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutePlanningView.swift; sourceTree = "<group>"; };
 		F1E2D3C4B5A6978869504132 /* RouteCorridor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteCorridor.swift; sourceTree = "<group>"; };
 		E2D3C4B5A697887A60413243 /* EvacuationPlanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvacuationPlanView.swift; sourceTree = "<group>"; };
@@ -474,7 +506,15 @@
 		12EF2997B60E32B127813B83 /* Guides */ = {
 			isa = PBXGroup;
 			children = (
+				DD77EE88FF99001122334401 /* BowDrillDiagrams.swift */,
+				DD77EE88FF99001122334402 /* DebrisHutDiagrams.swift */,
+				DD77EE88FF99001122334403 /* DiagramPrimitives.swift */,
 				1EB278CBD2328876D49EFDBC /* GuideLibraryView.swift */,
+				DD77EE88FF99001122334404 /* ProceduralDiagram.swift */,
+				DD77EE88FF99001122334405 /* ProceduralDiagramView.swift */,
+				DD77EE88FF99001122334406 /* SnareDiagrams.swift */,
+				DD77EE88FF99001122334407 /* SolarStillDiagrams.swift */,
+				DD77EE88FF99001122334408 /* WasteDisposalDiagrams.swift */,
 			);
 			path = Guides;
 			sourceTree = "<group>";
@@ -506,6 +546,7 @@
 				FC8CAA78FE9B3A2B4FEEFF36 /* VaultModels.swift */,
 				3D6BB391D0E1FA584D861669 /* VehicleReadiness.swift */,
 				2FD5879C13F853644930F081 /* WaterRuntime.swift */,
+				8F0D2E6A4B1C7354AD96E8F0 /* SurvivalProfile.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -539,6 +580,8 @@
 				AE5C7B4F2D8A3916FB40D6E9 /* HazardIntelligenceService.swift */,
 				B7D4F2A13E6C8509DA52C7B0 /* HazardFeedService.swift */,
 				7C8D9E0F1A2B3C4D5E6F7081 /* SafeZoneService.swift */,
+				A1B2C3D4E5F6071829304150 /* PredictiveCollapseService.swift */,
+				C3D4E5F60718293041502A1B /* AutoGuidanceService.swift */,
 				F1E2D3C4B5A6978869504132 /* RouteCorridor.swift */,
 				0DFE6EC643DCC827EC95F8F7 /* OfficialAlertService.swift */,
 				5BE782B0F2E3BB2D2EC6143F /* OfflineAssistantModel.swift */,
@@ -556,6 +599,8 @@
 				DF5E6290CE5C572A06801714 /* VehicleReadinessService.swift */,
 				49055EBB0F70AAAFE63B4035 /* WaterPointService.swift */,
 				50646F91D3F349C6C1B0D987 /* WaterRuntimeService.swift */,
+				6D8B0C4F2E9A5132FB74D6E8 /* SurvivalContextService.swift */,
+				0B2F4A8C6D3E9576CF18A012 /* AssistantSessionState.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -706,6 +751,7 @@
 				2403051C32CE57971E35E46B /* Gear.json */,
 				452D84C2111C25A5D48FD020 /* GoBagItems.json */,
 				550A7E88E47EABECD3DADA9C /* Guides.json */,
+				A5B6C7D8E9F0A1B2C3D4E5F6 /* NoInfrastructureGuides.json */,
 				2AA7EF573830E88E4685ACDB /* MapPacks.json */,
 				B38184A36F4047A9B4E1F4D6 /* ResourceCategories.json */,
 				AD59F029CF42FCB8D3E650BF /* ResourceLocations.json */,
@@ -797,6 +843,8 @@
 				A33F3951B11ADF4D8123CCB1 /* PreparednessInsightsServiceTests.swift */,
 				466673E8468097FA4DCBAB28 /* PrepServiceTests.swift */,
 				4A5B6C7D8E9F0112A3B4C5D6 /* SafeZoneServiceTests.swift */,
+				E5F607182930415021BC3D4E /* PredictiveCollapseServiceTests.swift */,
+				07182930415021BC3D4E5F60 /* AutoGuidanceServiceTests.swift */,
 				13D02FCE648689BD2D45FCF5 /* ScenarioEngineTests.swift */,
 				4023EDA521F560796F651B2C /* SettingsViewModelTests.swift */,
 				1C21BC8DAEBFE18F27959635 /* ShelterServiceTests.swift */,
@@ -983,6 +1031,7 @@
 				A93412A18E54BF1942CBC873 /* Gear.json in Resources */,
 				4D18AA876E495180284DA160 /* GoBagItems.json in Resources */,
 				76F0E97B5336F02764E71642 /* Guides.json in Resources */,
+				99AB1C2D3E4F5061728394A5 /* NoInfrastructureGuides.json in Resources */,
 				593B408E66762C59E041E526 /* MapPacks.json in Resources */,
 				2A519D0A87956E417D39A6B0 /* RediM8MapStyle.json in Resources */,
 				F5CE06BCBE230A3A5FAF31A3 /* ResourceCategories.json in Resources */,
@@ -1056,7 +1105,15 @@
 				76AF509BC78DCF7B51C180A0 /* GoBagView.swift in Sources */,
 				E04219CB577D3399D17F91C9 /* GoBagViewModel.swift in Sources */,
 				A1BEF1C937530915D3753D2F /* Guide.swift in Sources */,
+				70AA11BB01CC33DD44EE55F1 /* BowDrillDiagrams.swift in Sources */,
+				70AA11BB02CC33DD44EE55F2 /* DebrisHutDiagrams.swift in Sources */,
+				70AA11BB03CC33DD44EE55F3 /* DiagramPrimitives.swift in Sources */,
 				704754D9EF5EE2A1510BA052 /* GuideLibraryView.swift in Sources */,
+				70AA11BB04CC33DD44EE55F4 /* ProceduralDiagram.swift in Sources */,
+				70AA11BB05CC33DD44EE55F5 /* ProceduralDiagramView.swift in Sources */,
+				70AA11BB06CC33DD44EE55F6 /* SnareDiagrams.swift in Sources */,
+				70AA11BB07CC33DD44EE55F7 /* SolarStillDiagrams.swift in Sources */,
+				70AA11BB08CC33DD44EE55F8 /* WasteDisposalDiagrams.swift in Sources */,
 				98B015B9F276010F6C836BFA /* GuideService.swift in Sources */,
 				BCF2BFB03F15F379498CA891 /* GuideSummarizer.swift in Sources */,
 				677F7A85A4E281A93F6C0F4F /* HiddenModeIndicatorView.swift in Sources */,
@@ -1085,6 +1142,8 @@
 				4F8B0D2E3A9C5167CD02E5F8 /* HazardIntelligenceService.swift in Sources */,
 				5A1C8E3F7B2D4690FA83D1C6 /* HazardFeedService.swift in Sources */,
 				8D9E0F1A2B3C4D5E6F708192 /* SafeZoneService.swift in Sources */,
+				B2C3D4E5F6071829304150A1 /* PredictiveCollapseService.swift in Sources */,
+				D4E5F60718293041502A1BC3 /* AutoGuidanceService.swift in Sources */,
 				E1F2A3B4C5D6E7F8A9B0C1D2 /* NearestResourceView.swift in Sources */,
 				DC9906DB56BD4D31AE19004D /* RoutePlanningView.swift in Sources */,
 				7C4E8F2A1B3D5069AE72C841 /* RouteCorridor.swift in Sources */,
@@ -1155,6 +1214,9 @@
 				1DA513A7CE6F25F96AC86F0D /* WaterPointService.swift in Sources */,
 				6B782DA9C162CB1B330FCDDA /* WaterRuntime.swift in Sources */,
 				8C4E4AB52DB3A30711376471 /* WaterRuntimeService.swift in Sources */,
+				5C7A9B3E1D8F4021EA63C5F7 /* SurvivalContextService.swift in Sources */,
+				7E9C1D5F3A0B6243FC85D7E9 /* SurvivalProfile.swift in Sources */,
+				9A1E3F7B5C2D8465BE07F901 /* AssistantSessionState.swift in Sources */,
 				CB6832D5DAD230214826FC49 /* WelcomeView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1189,6 +1251,8 @@
 				3989F85634EB0B2F30661B72 /* PrepServiceTests.swift in Sources */,
 				6A27F5D21D8CB80B49BCEE6F /* PreparednessInsightsServiceTests.swift in Sources */,
 				5B6C7D8E9F0112A3B4C5D6E7 /* SafeZoneServiceTests.swift in Sources */,
+				F607182930415021BC3D4E5F /* PredictiveCollapseServiceTests.swift in Sources */,
+				182930415021BC3D4E5F6071 /* AutoGuidanceServiceTests.swift in Sources */,
 				2D0CBF0D08D32A8AC173EEC6 /* ScenarioEngineTests.swift in Sources */,
 				2C8CF0417E9DEC6718FD8F19 /* SettingsViewModelTests.swift in Sources */,
 				5C8715855F6140E8CC70B932 /* ShelterServiceTests.swift in Sources */,

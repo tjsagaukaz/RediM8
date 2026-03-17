@@ -465,6 +465,380 @@
       ],
       "base_confidence" : 0.58,
       "minimum_confidence" : 0.56
+    },
+    {
+      "id" : "water_sourcing_survival",
+      "intent" : "water_sourcing_survival",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "find_water_from_terrain",
+        "solar_still_construction",
+        "tree_tapping_australian",
+        "morning_condensation_collection",
+        "emergency_water_roots_vines",
+        "water_rationing_survival"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-03-17T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : "These are survival techniques for when no infrastructure exists. Always prioritise known safe water sources first.",
+      "match_phrases" : [
+        "find water",
+        "water from terrain",
+        "solar still",
+        "tree tapping",
+        "morning dew",
+        "condensation collection",
+        "water from roots",
+        "water from vines",
+        "water rationing",
+        "no water source",
+        "find drinking water"
+      ],
+      "token_groups" : [
+        ["find", "water"],
+        ["solar", "still"],
+        ["tree", "tapping"],
+        ["morning", "condensation"],
+        ["water", "roots"],
+        ["water", "vines"],
+        ["water", "rationing"]
+      ],
+      "base_confidence" : 0.62,
+      "minimum_confidence" : 0.58
+    },
+    {
+      "id" : "firecraft",
+      "intent" : "firecraft",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "bow_drill_fire",
+        "hand_drill_fire",
+        "improvised_flint_steel",
+        "fire_wet_conditions",
+        "fire_long_term_maintenance"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-03-17T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "bow drill",
+        "hand drill fire",
+        "friction fire",
+        "start fire without matches",
+        "start fire with nothing",
+        "start a fire without",
+        "flint and steel",
+        "fire in rain",
+        "fire wet conditions",
+        "keep fire going",
+        "fire maintenance",
+        "primitive fire"
+      ],
+      "token_groups" : [
+        ["bow", "drill"],
+        ["hand", "drill"],
+        ["friction", "fire"],
+        ["flint", "steel"],
+        ["fire", "wet"],
+        ["fire", "rain"],
+        ["fire", "nothing"],
+        ["fire", "maintenance"],
+        ["primitive", "fire"]
+      ],
+      "base_confidence" : 0.63,
+      "minimum_confidence" : 0.58
+    },
+    {
+      "id" : "shelter_building_survival",
+      "intent" : "shelter_building_survival",
+      "risk_band" : "critical",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "debris_hut_shelter",
+        "lean_to_shelter",
+        "ground_insulation_critical",
+        "heat_retention_strategies",
+        "rainwater_runoff_control"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-03-17T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "debris hut",
+        "lean to shelter",
+        "build a shelter",
+        "make a shelter",
+        "ground insulation",
+        "heat retention",
+        "stay warm without",
+        "survival shelter",
+        "emergency shelter",
+        "sleep outdoors"
+      ],
+      "token_groups" : [
+        ["debris", "hut"],
+        ["lean", "shelter"],
+        ["build", "shelter"],
+        ["ground", "insulation"],
+        ["heat", "retention"],
+        ["survival", "shelter"],
+        ["emergency", "shelter"]
+      ],
+      "base_confidence" : 0.62,
+      "minimum_confidence" : 0.58
+    },
+    {
+      "id" : "trapping_foraging",
+      "intent" : "trapping_foraging",
+      "risk_band" : "advisory",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "basic_snares_small_game",
+        "fish_traps_improvised",
+        "insect_protein_australia",
+        "emergency_foraging_rules"
+      ],
+      "trust_label" : "approximate",
+      "last_reviewed" : "2026-03-17T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : "Foraging carries poisoning risk. Only eat plants and insects you can positively identify. When in doubt, do not eat.",
+      "match_phrases" : [
+        "set a snare",
+        "build a snare",
+        "trap small game",
+        "fish trap",
+        "improvised fish trap",
+        "edible insects",
+        "eat insects",
+        "emergency foraging",
+        "forage for food",
+        "catch food",
+        "survival food",
+        "insect protein"
+      ],
+      "token_groups" : [
+        ["snare", "game"],
+        ["fish", "trap"],
+        ["edible", "insects"],
+        ["insect", "protein"],
+        ["emergency", "foraging"],
+        ["forage", "food"],
+        ["survival", "food"]
+      ],
+      "base_confidence" : 0.61,
+      "minimum_confidence" : 0.57
+    },
+    {
+      "id" : "field_sanitation",
+      "intent" : "field_sanitation",
+      "risk_band" : "advisory",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "waste_disposal_distance_rules",
+        "prevent_water_contamination",
+        "hygiene_without_supplies",
+        "disease_prevention_basics"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-03-17T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "waste disposal",
+        "cat hole",
+        "latrine",
+        "toilet survival",
+        "bathroom outdoors",
+        "water contamination",
+        "hygiene without supplies",
+        "hygiene without soap",
+        "disease prevention",
+        "sanitation survival",
+        "field sanitation",
+        "hand hygiene survival"
+      ],
+      "token_groups" : [
+        ["waste", "disposal"],
+        ["cat", "hole"],
+        ["water", "contamination"],
+        ["hygiene", "supplies"],
+        ["disease", "prevention"],
+        ["field", "sanitation"]
+      ],
+      "base_confidence" : 0.60,
+      "minimum_confidence" : 0.57
+    },
+    {
+      "id" : "survival_psychology",
+      "intent" : "survival_psychology",
+      "risk_band" : "advisory",
+      "answer_mode" : "summarized_retrieval",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "routine_building_survival",
+        "decision_fatigue_avoidance",
+        "panic_control",
+        "isolation_coping"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-03-17T00:00:00Z",
+      "region_scope" : "general",
+      "escalation_note" : "If someone is experiencing a mental health crisis, contact emergency services or a crisis helpline.",
+      "match_phrases" : [
+        "panic control",
+        "stop panicking",
+        "calm down emergency",
+        "decision fatigue",
+        "survival routine",
+        "isolation coping",
+        "staying calm",
+        "mental health survival",
+        "losing hope",
+        "keep morale up",
+        "scared and alone"
+      ],
+      "token_groups" : [
+        ["panic", "control"],
+        ["decision", "fatigue"],
+        ["survival", "routine"],
+        ["isolation", "coping"],
+        ["staying", "calm"],
+        ["morale"]
+      ],
+      "base_confidence" : 0.59,
+      "minimum_confidence" : 0.56
+    },
+    {
+      "id" : "navigation_no_tools",
+      "intent" : "navigation_no_tools",
+      "risk_band" : "advisory",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "sun_navigation_southern",
+        "star_navigation_southern_cross",
+        "terrain_based_navigation",
+        "dont_get_lost_protocols"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-03-17T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "navigate by sun",
+        "navigate by stars",
+        "southern cross navigation",
+        "find south without compass",
+        "lost without gps",
+        "no compass",
+        "terrain navigation",
+        "dont get lost",
+        "find direction",
+        "which way is south",
+        "navigate without phone"
+      ],
+      "token_groups" : [
+        ["navigate", "sun"],
+        ["navigate", "stars"],
+        ["southern", "cross"],
+        ["lost", "gps"],
+        ["terrain", "navigation"],
+        ["find", "direction"],
+        ["navigate", "compass"]
+      ],
+      "base_confidence" : 0.61,
+      "minimum_confidence" : 0.57
+    },
+    {
+      "id" : "field_comms",
+      "intent" : "field_comms",
+      "risk_band" : "advisory",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "signal_fires",
+        "ground_signals_air_rescue",
+        "improvised_antenna_radio",
+        "radio_basics_uhf_cb"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-03-17T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "signal fire",
+        "signal for rescue",
+        "ground signals",
+        "air rescue signal",
+        "improvised antenna",
+        "uhf radio",
+        "cb radio",
+        "radio help",
+        "call for help without phone",
+        "signal for help",
+        "sos signal"
+      ],
+      "token_groups" : [
+        ["signal", "fire"],
+        ["signal", "rescue"],
+        ["ground", "signals"],
+        ["air", "rescue"],
+        ["uhf", "radio"],
+        ["cb", "radio"],
+        ["improvised", "antenna"],
+        ["sos"]
+      ],
+      "base_confidence" : 0.60,
+      "minimum_confidence" : 0.57
+    },
+    {
+      "id" : "vehicle_survival",
+      "intent" : "vehicle_survival",
+      "risk_band" : "advisory",
+      "answer_mode" : "deterministic_step_card",
+      "fallback_mode" : "retrieval_only_card",
+      "guide_ids" : [
+        "vehicle_stay_vs_leave",
+        "vehicle_as_shelter",
+        "vehicle_battery_survival",
+        "vehicle_visibility_signalling"
+      ],
+      "trust_label" : "general",
+      "last_reviewed" : "2026-03-17T00:00:00Z",
+      "region_scope" : "australia",
+      "escalation_note" : null,
+      "match_phrases" : [
+        "stay with vehicle",
+        "leave the vehicle",
+        "car broke down outback",
+        "vehicle as shelter",
+        "car battery survival",
+        "vehicle signalling",
+        "stranded vehicle",
+        "broken down car",
+        "stuck in car"
+      ],
+      "token_groups" : [
+        ["stay", "vehicle"],
+        ["leave", "vehicle"],
+        ["vehicle", "shelter"],
+        ["vehicle", "battery"],
+        ["vehicle", "signalling"],
+        ["stranded", "vehicle"],
+        ["car", "outback"]
+      ],
+      "base_confidence" : 0.61,
+      "minimum_confidence" : 0.57
     }
   ]
 }

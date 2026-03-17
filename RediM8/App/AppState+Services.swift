@@ -37,4 +37,6 @@ extension AppState {
     var hazardFeedService: HazardFeedService { map.hazardFeedService }
     var nearestResourceService: NearestResourceService { map.nearestResourceService }
     var safeZoneService: SafeZoneService { map.safeZoneService }
+    var predictiveCollapseService: PredictiveCollapseService { map.predictiveCollapseService }
+    var autoGuidanceService: AutoGuidanceService { map.autoGuidanceService }
 }

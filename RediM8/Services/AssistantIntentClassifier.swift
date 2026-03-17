@@ -110,6 +110,8 @@ final class AssistantIntentClassifier {
             )
         }
 
+        let urgency = Self.detectUrgency(normalizedQuery: normalizedQuery, tokens: tokens)
+
         let matches = rules.compactMap { $0.evaluate(normalizedQuery: normalizedQuery, tokens: tokens) }
             .sorted { lhs, rhs in
                 if lhs.classification.confidence != rhs.classification.confidence {
@@ -120,7 +122,15 @@ final class AssistantIntentClassifier {
 
         if let bestMatch = matches.first,
            bestMatch.classification.confidence >= bestMatch.minimumConfidence {
+            if urgency {
+                return Self.urgencyElevated(bestMatch.classification)
+            }
             return bestMatch.classification
+        }
+
+        // Urgency detected but below confidence threshold — lower the bar
+        if urgency, let bestMatch = matches.first {
+            return Self.urgencyElevated(bestMatch.classification)
         }
 
         let fallbackGuides = closestGuideIDs(for: normalizedQuery, tokens: tokens, limit: 3)
@@ -211,6 +221,73 @@ final class AssistantIntentClassifier {
             1
         }
     }
+
+    // MARK: - Emergency Tone Detection
+
+    /// Detects urgency signals — phrases indicating the user is in immediate distress.
+    /// When urgency is detected, the classifier forces deterministic mode and boosts confidence
+    /// so the system never rewrites survival-critical steps.
+    static func detectUrgency(normalizedQuery: String, tokens: Set<String>) -> Bool {
+        for phrase in urgencyPhrases where normalizedQuery.contains(phrase) {
+            return true
+        }
+        for group in urgencyTokenGroups where group.isSubset(of: tokens) {
+            return true
+        }
+        return false
+    }
+
+    /// Elevates a classification to critical/deterministic when urgency is detected.
+    private static func urgencyElevated(_ classification: AssistantIntentClassification) -> AssistantIntentClassification {
+        AssistantIntentClassification(
+            policyID: classification.policyID,
+            topic: classification.topic,
+            riskBand: .critical,
+            preferredMode: .deterministicStepCard,
+            modeWhenGenerationDisabled: .deterministicStepCard,
+            matchedGuideIDs: classification.matchedGuideIDs,
+            matchedTerms: classification.matchedTerms,
+            trustLabel: classification.trustLabel,
+            lastReviewed: classification.lastReviewed,
+            regionScope: classification.regionScope,
+            confidence: max(classification.confidence, 0.80),
+            escalationNote: classification.escalationNote
+        )
+    }
+
+    private static let urgencyPhrases: [String] = [
+        "need water now",
+        "need fire now",
+        "need shelter now",
+        "im lost",
+        "i am lost",
+        "freezing",
+        "hypothermia",
+        "dying of thirst",
+        "no water left",
+        "help me",
+        "emergency",
+        "stranded",
+        "trapped",
+        "cant find water",
+        "can t find water",
+        "going to die",
+        "need help now",
+        "really cold",
+        "no food left",
+        "cant breathe",
+        "bleeding out",
+        "scared and alone",
+        "panicking"
+    ]
+
+    private static let urgencyTokenGroups: [Set<String>] = [
+        ["need", "now"],
+        ["need", "help"],
+        ["lost", "nowhere"],
+        ["lost", "help"],
+        ["going", "die"],
+    ]
 
     private static let stopWords: Set<String> = [
         "a", "an", "and", "are", "at", "can", "do", "for", "from", "how", "i", "if", "in",

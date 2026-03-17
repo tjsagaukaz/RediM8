@@ -171,11 +171,13 @@ struct AskRediView: View {
 
                 LazyVGrid(columns: topicColumns, spacing: RediSpacing.compact) {
                     topicTile(title: "First Aid", icon: "cross.case", query: "first aid emergency help")
-                    topicTile(title: "Water", icon: "drop", query: "water purification and storage")
-                    topicTile(title: "Shelter", icon: "house", query: "emergency shelter options")
-                    topicTile(title: "Bushfire", icon: "flame", query: "bushfire safety and evacuation")
-                    topicTile(title: "Flood", icon: "water.waves", query: "flood safety procedures")
-                    topicTile(title: "Food", icon: "leaf", query: "emergency food and growing")
+                    topicTile(title: "Water", icon: "drop", query: "how do I find water from terrain")
+                    topicTile(title: "Fire", icon: "flame", query: "how do I start a fire with nothing")
+                    topicTile(title: "Shelter", icon: "house", query: "how do I build a survival shelter")
+                    topicTile(title: "Food", icon: "leaf", query: "how do I trap food or forage safely")
+                    topicTile(title: "Navigate", icon: "safari", query: "how do I navigate without GPS")
+                    topicTile(title: "Signal", icon: "antenna.radiowaves.left.and.right", query: "how do I signal for rescue")
+                    topicTile(title: "Vehicle", icon: "car", query: "should I stay with my vehicle or leave")
                 }
             }
 

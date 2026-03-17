@@ -141,11 +141,13 @@ struct AssistantView: View {
 
                 LazyVGrid(columns: gridColumns, spacing: RediSpacing.compact) {
                     topicTile(title: "First Aid", icon: "cross.case", category: .firstAid)
-                    topicTile(title: "Water", icon: "drop", category: .waterSafety)
-                    topicTile(title: "Shelter", icon: "house", category: .bushcraft)
-                    topicTile(title: "Bushfire", icon: "flame", category: .fireSafety)
-                    topicTile(title: "Flood", icon: "water.waves", category: .floodSafety)
-                    topicTile(title: "Food", icon: "leaf", category: .foodGrowing)
+                    topicTile(title: "Water", icon: "drop", category: .waterSourcing)
+                    topicTile(title: "Fire", icon: "flame", category: .firecraft)
+                    topicTile(title: "Shelter", icon: "house", category: .shelterBuilding)
+                    topicTile(title: "Food", icon: "leaf", category: .trapping)
+                    topicTile(title: "Navigate", icon: "safari", category: .navigationAdvanced)
+                    topicTile(title: "Signal", icon: "antenna.radiowaves.left.and.right", category: .fieldComms)
+                    topicTile(title: "Vehicle", icon: "car", category: .vehicleSurvival)
                 }
             }
 
@@ -340,6 +342,10 @@ struct AssistantView: View {
         case .bushcraft, .foodCooking, .foodGrowing:
             ColorTheme.accent
         case .navigation, .waterSafety:
+            ColorTheme.accent
+        case .wildlife, .trapping, .toolcraft, .fieldComms, .sanitation,
+             .psychology, .security, .vehicleSurvival, .waterSourcing,
+             .shelterBuilding, .firecraft, .navigationAdvanced:
             ColorTheme.accent
         }
     }

@@ -38,6 +38,8 @@ struct AppServices {
     let hazardFeedService: HazardFeedService
     let nearestResourceService: NearestResourceService
     let safeZoneService: SafeZoneService
+    let predictiveCollapseService: PredictiveCollapseService
+    let autoGuidanceService: AutoGuidanceService
 }
 
 @MainActor
@@ -129,6 +131,18 @@ struct AppEnvironment {
             shelterService: shelterService
         )
         let beaconService = BeaconService(meshService: meshService, locationService: locationService, store: store)
+        let survivalContextService = SurvivalContextService(
+            waterPointService: waterPointService,
+            shelterService: shelterService,
+            waterRuntimeService: waterRuntimeService,
+            meshService: meshService,
+            batteryService: batteryService,
+            mapDataService: mapDataService,
+            guideService: guideService,
+            profileProvider: { familyService.loadProfile() },
+            scenarioProvider: { scenarioEngine.scenarios },
+            locationProvider: { locationService.currentLocation }
+        )
         let assistantContextEnricher = AssistantContextEnricher(
             waterPointService: waterPointService,
             shelterService: shelterService,
@@ -136,7 +150,8 @@ struct AppEnvironment {
             officialAlertService: officialAlertService,
             beaconService: beaconService,
             mapDataService: mapDataService,
-            locationProvider: { locationService.currentLocation }
+            locationProvider: { locationService.currentLocation },
+            survivalContextService: survivalContextService
         )
         let assistantService = AssistantService(
             classifier: assistantIntentClassifier,
@@ -178,9 +193,20 @@ struct AppEnvironment {
             offlineRoutingService: offlineRoutingService,
             hazardIntelligenceService: hazardIntelligenceService,
             shelterService: shelterService,
+            hazardFeedService: hazardFeedService,
             installedPackIDs: { [weak mapDataService] in
                 mapDataService?.loadInstalledPackIDs() ?? []
             }
+        )
+        let predictiveCollapseService = PredictiveCollapseService(
+            hazardIntelligenceService: hazardIntelligenceService,
+            hazardFeedService: hazardFeedService
+        )
+        let autoGuidanceService = AutoGuidanceService(
+            predictiveCollapseService: predictiveCollapseService,
+            safeZoneService: safeZoneService,
+            hazardIntelligenceService: hazardIntelligenceService,
+            offlineRoutingService: offlineRoutingService
         )
         let torchService = TorchService()
         let motionService = MotionService(
@@ -224,7 +250,9 @@ struct AppEnvironment {
             hazardIntelligenceService: hazardIntelligenceService,
             hazardFeedService: hazardFeedService,
             nearestResourceService: nearestResourceService,
-            safeZoneService: safeZoneService
+            safeZoneService: safeZoneService,
+            predictiveCollapseService: predictiveCollapseService,
+            autoGuidanceService: autoGuidanceService
         )
     }
 }

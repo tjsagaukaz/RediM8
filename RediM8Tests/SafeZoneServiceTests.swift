@@ -181,6 +181,7 @@ final class SafeZoneServiceTests: XCTestCase {
             waterSourceCount: 3,
             shelterCount: 1,
             score: score,
+            confidence: .moderate,
             reasons: ["Test reason"],
             routeCoordinates: []
         )

@@ -18,6 +18,7 @@ final class AssistantContextEnricher: AssistantContextProviding {
     private let beaconService: BeaconService
     private let mapDataService: MapDataService
     private let locationProvider: () -> CLLocation?
+    private let survivalContextService: SurvivalContextService?
 
     private var cachedResult: CachedContext?
 
@@ -39,7 +40,8 @@ final class AssistantContextEnricher: AssistantContextProviding {
         officialAlertService: OfficialAlertService,
         beaconService: BeaconService,
         mapDataService: MapDataService,
-        locationProvider: @escaping () -> CLLocation?
+        locationProvider: @escaping () -> CLLocation?,
+        survivalContextService: SurvivalContextService? = nil
     ) {
         self.waterPointService = waterPointService
         self.shelterService = shelterService
@@ -48,6 +50,7 @@ final class AssistantContextEnricher: AssistantContextProviding {
         self.beaconService = beaconService
         self.mapDataService = mapDataService
         self.locationProvider = locationProvider
+        self.survivalContextService = survivalContextService
     }
 
     func contextSections(
@@ -154,6 +157,22 @@ final class AssistantContextEnricher: AssistantContextProviding {
             let resourceBeacons = nearbyResourceBeacons(limit: 5)
             if !resourceBeacons.isEmpty {
                 sections.append(beaconSection(from: resourceBeacons))
+            }
+        }
+
+        // --- Proactive survival context (state-aware) ---
+        if let survivalContextService {
+            let survivalState = survivalContextService.computeState()
+            let survivalSections = survivalContextService.contextSections(for: survivalState)
+
+            // Only inject survival sections that don't duplicate already-shown categories.
+            let existingIDs = Set(sections.map(\.id))
+            for section in survivalSections where !existingIDs.contains(section.id) {
+                // Don't inject water survival warning if we already showed nearby water sources.
+                if section.id == "survival-water" && existingIDs.contains("nearby-water") { continue }
+                // Don't inject shelter survival warning if we already showed nearby shelters.
+                if section.id == "survival-shelter" && existingIDs.contains("nearby-shelters") { continue }
+                sections.append(section)
             }
         }
 
@@ -366,6 +385,7 @@ final class AssistantContextEnricher: AssistantContextProviding {
         ]
         return classification.topic == .waterPurification
             || classification.topic == .waterPlanning
+            || classification.topic == .waterSourcingSurvival
             || !tokens.isDisjoint(with: waterTokens)
     }
 
@@ -377,6 +397,7 @@ final class AssistantContextEnricher: AssistantContextProviding {
         return classification.topic == .bushfireEvacuation
             || classification.topic == .floodSafety
             || classification.topic == .routePlanning
+            || classification.topic == .shelterBuildingSurvival
             || !tokens.isDisjoint(with: shelterTokens)
     }
 

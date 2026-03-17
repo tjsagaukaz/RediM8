@@ -47,8 +47,14 @@ final class AssistantViewModel: ObservableObject {
             "How much water do I need for 3 days?",
             "How do I purify water safely?",
             "What should I do during bushfire evacuation?",
-            "How do I start a drought-ready food garden?",
-            "What are good fire starting methods?"
+            "How do I start a fire with nothing?",
+            "How do I build a debris hut shelter?",
+            "How do I find water from terrain?",
+            "How do I set a snare for small game?",
+            "How do I navigate by the Southern Cross?",
+            "Should I stay with my vehicle or leave?",
+            "How do I signal for rescue?",
+            "How do I stay calm in a survival situation?"
         ]
     }
 

@@ -1,0 +1,1449 @@
+{
+  "guides": [
+    {
+      "id": "find_water_from_terrain",
+      "title": "Find Water from Terrain",
+      "category": "waterSourcing",
+      "summary": "How to locate water using landscape features when you have no map, no GPS, and no supplies. Valleys, rock formations, vegetation, and animal signs.",
+      "steps": [
+        "Move downhill. Water flows to the lowest point. Follow valleys, gullies, and drainage lines.",
+        "Look for green vegetation in otherwise dry country. Dense trees, reeds, or ferns indicate subsurface water.",
+        "Check rock formations. Water collects in depressions, cracks, and at the base of cliff faces — especially on the shaded (south) side in Australia.",
+        "Look for animal tracks converging on a single point. Birds flying low and straight at dawn/dusk are heading to water.",
+        "Listen. Running water can be heard from 100+ metres in quiet bush.",
+        "Dig in sandy creek beds — even dry ones. Dig 30–60cm in the outside bend of a dry creek. Water seeps in within minutes if the water table is near.",
+        "Check tree forks and hollows after rain — standing water collects here.",
+        "NEVER drink water that smells foul, has a film on top, or no insects nearby. No bugs = likely toxic."
+      ],
+      "notes": "WARNING: Always filter and purify found water before drinking. Giardia and bacteria are invisible. If you cannot purify, the risk of dehydration death exceeds the risk of waterborne illness after 48 hours without water.",
+      "tags": ["water", "terrain", "survival", "dehydration", "creek", "valley"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_terrain_water_1",
+          "title": "Bush Survival Skills",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/terrain-water",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["solar_still_construction", "morning_condensation_collection", "boil_filter_disinfect_water"],
+      "heroIconName": "water"
+    },
+    {
+      "id": "solar_still_construction",
+      "title": "Solar Still Construction",
+      "category": "waterSourcing",
+      "summary": "Build a solar still to extract drinkable water from the ground using only a sheet of plastic and a container. Works in any climate with sun.",
+      "steps": [
+        "Dig a hole 60cm deep and 90cm wide in a spot that gets full sun. Choose moist ground, a dry creek bed, or near green vegetation.",
+        "Place a clean container (cup, bottle cut in half, any vessel) in the centre of the hole.",
+        "If you have green leaves, non-toxic vegetation, or even urine-soaked cloth, place it around the container — NOT in it. This adds moisture for evaporation.",
+        "Stretch a sheet of clear plastic (tarp, cling wrap, garbage bag) over the hole. Seal edges with dirt and rocks — must be airtight.",
+        "Place a small stone in the centre of the plastic directly above the container. This creates a cone shape pointing down.",
+        "The sun heats the ground. Moisture evaporates, condenses on the plastic, runs down to the low point, and drips into your container.",
+        "Leave undisturbed for 4–6 hours minimum. A single still produces 200–500ml per day depending on conditions.",
+        "Build multiple stills if possible. One still is not enough to sustain you."
+      ],
+      "notes": "A solar still is slow but produces CLEAN water — the evaporation process removes bacteria, salt, and most contaminants. Build 3–4 stills for meaningful water production. Works even in desert conditions if ground has any moisture at all.",
+      "tags": ["water", "solar still", "distillation", "survival", "desert", "purification"],
+      "estimatedReadMinutes": 5,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_solar_still_1",
+          "title": "Solar Still Water Collection",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/solar-still",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["find_water_from_terrain", "morning_condensation_collection"],
+      "heroIconName": "water"
+    },
+    {
+      "id": "tree_tapping_australian",
+      "title": "Tree Tapping — Australian Species",
+      "category": "waterSourcing",
+      "summary": "Certain Australian trees store drinkable water in roots and trunks. How to identify and access them without tools.",
+      "steps": [
+        "WATER TREES (Melaleuca species / Paperbark): Cut or break a small branch — clear sap that flows freely is drinkable. Larger branches yield more.",
+        "SHE-OAK / CASUARINA: Roots near water sources store moisture. Dig around base roots 20cm below surface. Cut and drain into container.",
+        "KURRAJONG (Brachychiton): Tap roots store large amounts of water. Dig to expose thick tap root, cut sections, stand upright and let water drain out.",
+        "BLOODWOOD (Corymbia): The knotty growths (galls) on branches sometimes contain clear liquid. Break open and drain.",
+        "GRASS TREES (Xanthorrhoea): The soft centre of the leaf base holds moisture. Pull out central leaves and squeeze the white base.",
+        "PANDANUS / SCREW PALM (in tropical areas): Prop roots can be cut and drained — limited volume but reliable.",
+        "WARNING: Never drink milky, coloured, or sticky sap. If sap stings your skin, do not drink it.",
+        "If unsure of species, apply a small amount of sap to inner wrist. Wait 15 minutes. If no redness or burning, cautiously taste a small drop and wait 30 minutes before drinking more."
+      ],
+      "notes": "Tree water is generally safe but low-volume. This supplements — not replaces — other water finding methods. Most useful in arid inland areas where surface water is scarce. Learning to identify Melaleuca (paperbark) is the single highest-value tree for water in Australia.",
+      "tags": ["water", "trees", "paperbark", "kurrajong", "australia", "roots", "tapping"],
+      "estimatedReadMinutes": 5,
+      "difficulty": "advanced",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_tree_tap_1",
+          "title": "Australian Water Trees",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/tree-tapping-au",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["find_water_from_terrain", "solar_still_construction"],
+      "heroIconName": "water"
+    },
+    {
+      "id": "morning_condensation_collection",
+      "title": "Morning Condensation Collection",
+      "category": "waterSourcing",
+      "summary": "Collect dew and condensation at dawn using cloth, plastic, and vegetation. Reliable in humid and coastal areas.",
+      "steps": [
+        "Before sunrise, tie an absorbent cloth (shirt, sock, towel, rag) around your lower legs and walk through tall grass or low scrub.",
+        "The cloth absorbs dew from the vegetation. When saturated, wring it into a container.",
+        "Repeat until the sun dries the dew — you have about 60–90 minutes after first light.",
+        "Alternative: spread plastic sheeting, a tarp, or garbage bags flat on the ground in the evening. Dew forms on the surface overnight. Tilt to pour off at dawn.",
+        "Alternative: tie a plastic bag tightly around a leafy branch in the evening. Transpiration from the leaves produces condensation inside the bag by morning.",
+        "Yields: cloth method can produce 500ml–1L per hour in good dew conditions. Plastic bag method yields 100–300ml per branch.",
+        "This water is essentially distilled — it is clean and safe to drink without treatment."
+      ],
+      "notes": "Condensation collection works best in humid climates, near coasts, and in areas with heavy dew. In arid inland Australia, yields will be lower. Start before dawn — once the sun is up, dew evaporates within 30 minutes.",
+      "tags": ["water", "dew", "condensation", "morning", "survival", "collection"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_condensation_1",
+          "title": "Dew Collection Methods",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/condensation-collection",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["find_water_from_terrain", "solar_still_construction"],
+      "heroIconName": "water"
+    },
+    {
+      "id": "emergency_water_roots_vines",
+      "title": "Emergency Water from Roots and Vines",
+      "category": "waterSourcing",
+      "summary": "Last-resort water extraction from plant roots and vines when no other water source exists.",
+      "steps": [
+        "Look for thick green vines — cut a long section (1 metre+) high up FIRST, then cut the bottom. If you cut the bottom first, the water retracts up the vine.",
+        "Hold the cut vine above your mouth or a container. Clear, odourless liquid that drips freely is generally safe.",
+        "NEVER drink from a vine that produces milky, coloured, or sticky sap. This is likely toxic.",
+        "Certain palm species have drinkable sap — cut into the flower stalk or bend it down and let sap drip into a container.",
+        "Root water: Dig up thick lateral roots of known safe trees. Cut into 30cm segments. Stand upright over a container. Mash or pound to release water.",
+        "FERN ROOTS (tree ferns): The fibrous root ball holds water. Cut off a section and squeeze — low volume but sometimes the only option.",
+        "Test rule: apply a drop to your lip. Wait 5 minutes. If no burning or numbness, taste a small amount. Wait 30 minutes. If no nausea, drink cautiously.",
+        "Even safe vine/root water should only sustain you while you find a better source."
+      ],
+      "notes": "WARNING: This is a survival-only technique. Many Australian plants are toxic. When in doubt, DO NOT drink. Dehydration kills in 3 days — but poisoning can kill in hours. Use only when you recognise the plant species OR have no alternative.",
+      "tags": ["water", "roots", "vines", "emergency", "survival", "last resort"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "advanced",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_roots_water_1",
+          "title": "Emergency Plant Water",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/roots-vines-water",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["find_water_from_terrain", "tree_tapping_australian"],
+      "heroIconName": "water"
+    },
+    {
+      "id": "water_rationing_survival",
+      "title": "Water Rationing Under Survival Conditions",
+      "category": "waterSourcing",
+      "summary": "How to stretch limited water for maximum survival time. What to do, what to stop doing, and when to move.",
+      "steps": [
+        "RULE 1: Ration sweat, not water. If you have water, drink it. Sipping tiny amounts does not hydrate you — your body needs real intake.",
+        "Reduce physical activity to absolute minimum. Stay in shade. Move only at dawn, dusk, or night.",
+        "Stop eating if water is critically low. Digestion requires water. Food without water accelerates dehydration.",
+        "Breathe through your nose, not your mouth. Keep your mouth closed. Place a pebble on your tongue to stimulate saliva (reduces sensation of thirst).",
+        "Stay clothed — loose, light clothing reduces sweat loss by protecting skin from direct sun and wind.",
+        "Minimum survival intake: 500ml per day in shade with no exertion. You will deteriorate but survive 2–3 days.",
+        "Signs of critical dehydration: dark urine, no urine, headache, confusion, dizziness, rapid heartbeat. At this point finding water is your ONLY priority.",
+        "Decision point: if you have less than 500ml and no source is likely within 12 hours, do NOT leave your position unless you know exactly where water is. Movement in heat without water kills faster than staying put."
+      ],
+      "notes": "The human body can survive 3 days without water in cool conditions, less than 24 hours in extreme Australian heat with exertion. Rationing behaviour — shade, stillness, night movement — can double your survival time.",
+      "tags": ["water", "rationing", "dehydration", "survival", "heat", "conservation"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_water_ration_1",
+          "title": "Water Rationing Survival",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/water-rationing",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["find_water_from_terrain", "morning_condensation_collection"],
+      "heroIconName": "water"
+    },
+    {
+      "id": "bow_drill_fire",
+      "title": "Bow Drill Fire Starting",
+      "category": "firecraft",
+      "summary": "Start fire with friction using a bow drill. The most reliable no-tool fire method. Requires practice but works in all climates.",
+      "steps": [
+        "COMPONENTS: You need 4 things — a fireboard (flat, dry softwood), a spindle (straight, dry softwood, 30cm), a bow (curved branch with cordage), and a bearing block (hardwood or stone with a socket).",
+        "FIREBOARD: Find dead, dry softwood — willow, poplar, cedar, or banksia in Australia. Split or carve a flat surface. Cut a V-notch on the edge reaching to the centre.",
+        "SPINDLE: Straight, thumb-thick, same wood type as fireboard. Carve both ends: one pointed (for bearing block), one rounded (for fireboard).",
+        "BOW: A curved, sturdy branch about arm-length. Tie cordage (shoelace, stripped bark, paracord) at both ends with slight slack.",
+        "Wrap the bowstring once around the spindle. Place spindle on the fireboard notch. Press down firmly with bearing block on top.",
+        "Saw the bow back and forth at steady, medium speed. Use FULL strokes. The spindle spins against the fireboard creating friction.",
+        "Smoke will appear within 30–60 seconds. Increase speed and downward pressure. Black dust collects in the V-notch — this is your ember.",
+        "When the dust pile glows red (you may need to blow gently), carefully tip it onto a tinder bundle. Wrap loosely and blow steadily until flame appears.",
+        "Tinder bundle: dry grass, bark fibre, crushed dry leaves, or cotton-like seed pods. Must be bone-dry and loosely packed."
+      ],
+      "notes": "The bow drill is the most reliable friction fire method. Key failure points: wet wood (must be DEAD and DRY), wrong wood type (too hard), not enough downward pressure, short strokes. Practice when you are NOT desperate — this skill takes 20+ attempts to learn.",
+      "tags": ["fire", "bow drill", "friction", "survival", "firecraft", "no tools"],
+      "estimatedReadMinutes": 6,
+      "difficulty": "advanced",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_bowdrill_1",
+          "title": "Bow Drill Fire Starting",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/bow-drill",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["hand_drill_fire", "fire_wet_conditions", "fire_long_term_maintenance"],
+      "heroIconName": "fire_trail"
+    },
+    {
+      "id": "hand_drill_fire",
+      "title": "Hand Drill Fire Starting",
+      "category": "firecraft",
+      "summary": "Start fire with only your hands and two pieces of wood. Simpler than bow drill but requires more hand endurance. Works when you have no cordage.",
+      "steps": [
+        "Find a straight, dry spindle 45–60cm long, pencil-thick. Best woods: mullein stalks, cattail, dry grass tree flower stalks (Australia), or any pithy softwood.",
+        "Prepare a fireboard: flat dry softwood with a shallow socket and V-notch (same as bow drill).",
+        "Place tinder bundle beneath the V-notch to catch the ember.",
+        "Place spindle in the socket. Press palms flat against spindle near the top.",
+        "Roll spindle rapidly between your palms while pressing down. Your hands will naturally travel down the spindle — this is normal.",
+        "When hands reach the bottom, quickly move back to the top and continue. Speed and pressure must be maintained.",
+        "Smoke appears, then hot black dust fills the notch. Keep going until you see a glowing ember.",
+        "Transfer ember to tinder bundle. Blow gently and steadily until flame."
+      ],
+      "notes": "The hand drill is harder than the bow drill because you lose downward pressure as hands slide down. Tip: if you have a flat rock with a socket, you can press the top of the spindle into it with your chin to add pressure (called 'floating hand drill'). Expect blistered palms the first time.",
+      "tags": ["fire", "hand drill", "friction", "survival", "firecraft", "primitive"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "advanced",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_handdrill_1",
+          "title": "Hand Drill Fire",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/hand-drill",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["bow_drill_fire", "fire_wet_conditions"],
+      "heroIconName": "fire_trail"
+    },
+    {
+      "id": "improvised_flint_steel",
+      "title": "Improvised Flint and Steel",
+      "category": "firecraft",
+      "summary": "Create sparks from rocks and metal found in the environment. Works when wood is too wet for friction methods.",
+      "steps": [
+        "FIND FLINT-LIKE ROCK: Quartz, chert, jasper, agate, or any very hard, glassy rock that fractures with sharp edges. Test by striking — it should feel glass-like.",
+        "FIND STEEL: Any carbon steel works — knife spine, file, car spring, axe head, steel wool. Stainless steel does NOT spark well.",
+        "If no steel: strike two hard rocks together. Quartz on quartz produces sparks. Less effective but works with very fine tinder.",
+        "PREPARE CHAR CLOTH (if possible): Burn a piece of cotton cloth in a sealed tin until it turns black but intact. This catches sparks instantly.",
+        "No char cloth: use extremely fine, dry tinder — powdered dry bark, cattail fluff, dryer lint, or fine scraped wood shavings (feather stick).",
+        "Hold flint in one hand with tinder on top, edge facing up. Strike downward along the flint edge with the steel at a 30° angle.",
+        "Sparks land on tinder. When a spark catches (you'll see a red glow), transfer to tinder bundle and blow to flame.",
+        "VEHICLE METHOD: Touch both battery terminals with fine steel wool. It ignites instantly. Use this to light tinder."
+      ],
+      "notes": "Flint and steel is the most reliable fire method in wet conditions because sparks don't care about humidity — only your tinder needs to be dry. Always carry char cloth or fine tinder in a waterproof container if you have one.",
+      "tags": ["fire", "flint", "steel", "sparks", "quartz", "survival", "wet conditions"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_flint_1",
+          "title": "Improvised Flint and Steel",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/flint-steel",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["bow_drill_fire", "fire_wet_conditions"],
+      "heroIconName": "fire_trail"
+    },
+    {
+      "id": "fire_wet_conditions",
+      "title": "Fire in Wet Conditions",
+      "category": "firecraft",
+      "summary": "How to start and maintain fire when everything is soaked. The techniques that work when nothing seems dry.",
+      "steps": [
+        "FIND DRY WOOD: Dead standing wood is always drier than anything on the ground. Break branches off dead standing trees — the inside is dry even in rain.",
+        "Split wet wood. The interior of a thick log is dry even after days of rain. Split it with a rock or by batoning with a stick.",
+        "FINE TINDER: Scrape inner bark from dead standing trees. Birch bark (peels even when wet — oils make it flammable). In Australia: paperbark (melaleuca) peels into dry, flammable layers.",
+        "FEATHER STICK: Shave thin curls along a split dry stick without detaching them. This creates surface area that catches flame.",
+        "PLATFORM: Build fire on a platform of sticks or bark above the wet ground. Wet ground kills fire from below.",
+        "SHELTER YOUR FIRE: Build a simple bark or leaf lean-to over your fire lay. Block wind and rain from above.",
+        "START SMALL: Light your finest, driest tinder first. Add pencil-thick sticks. Then finger-thick. Then wrist-thick. Never skip sizes.",
+        "CRITICAL: Once burning, keep feeding dry wood. A wet-weather fire that goes out is twice as hard to restart. Prepare extra fuel before lighting.",
+        "Resin trick: pine resin, grass tree (Xanthorrhoea) resin, and eucalyptus bark with oil content all burn hot and wet-resistant."
+      ],
+      "notes": "Fire in wet conditions is 80% preparation, 20% lighting. Spend 30 minutes collecting and preparing dry materials before you strike a single spark. The number one mistake is trying to light fire with insufficient dry tinder and fuel.",
+      "tags": ["fire", "wet", "rain", "survival", "firecraft", "conditions"],
+      "estimatedReadMinutes": 5,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_wetfire_1",
+          "title": "Fire in Wet Conditions",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/wet-fire",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["bow_drill_fire", "fire_long_term_maintenance"],
+      "heroIconName": "fire_trail"
+    },
+    {
+      "id": "fire_long_term_maintenance",
+      "title": "Long-Term Fire Maintenance",
+      "category": "firecraft",
+      "summary": "Once you have fire, never let it die. How to bank coals overnight, transport fire, and maintain a permanent camp fire.",
+      "steps": [
+        "BANKING: Before sleep, push all burning wood together into a tight pile. Cover with ash. Add 2–3 thick green (live) logs on top — they burn slowly overnight.",
+        "In the morning, scrape away ash to expose coals. Add fine tinder and blow gently. Fire restarts in minutes.",
+        "FIRE TRANSPORT: Wrap a glowing coal in green leaves, then in bark (paperbark is ideal). Carry it. Check every 30 minutes — add dry tinder to keep it alive.",
+        "Alternative transport: punch holes in a tin can, place coals inside with tinder. Carry by a wire handle. This is a fire carrier.",
+        "PERMANENT CAMP FIRE: Build a keyhole fire — a round fire pit connected to a narrow trench. Cook in the trench (controlled heat), keep the main fire burning in the circle.",
+        "Collect fuel EVERY DAY. Rule of thumb: gather 3× more wood than you think you need. It's always less than enough.",
+        "Keep a dry wood reserve under shelter at all times. If rain comes and your reserve is wet, you may lose your fire.",
+        "FIRE REFLECTOR: Stack green logs or flat rocks behind your fire on the opposite side from your shelter. Radiant heat reflects back toward you — doubles warming efficiency."
+      ],
+      "notes": "Fire is your most critical survival asset after water. It provides warmth, water purification, cooking, signalling, light, and psychological comfort. Losing your fire in an extended survival situation is a crisis. Treat fire maintenance as a daily priority task.",
+      "tags": ["fire", "maintenance", "coals", "banking", "camp", "overnight", "survival"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_fire_maintain_1",
+          "title": "Long-Term Fire Maintenance",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/fire-maintenance",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["bow_drill_fire", "fire_wet_conditions"],
+      "heroIconName": "fire_trail"
+    },
+    {
+      "id": "debris_hut_shelter",
+      "title": "Debris Hut — Full Insulation Shelter",
+      "category": "shelterBuilding",
+      "summary": "Build a warm, weatherproof shelter from forest debris with no tools. This shelter can keep you alive in freezing conditions.",
+      "steps": [
+        "Find a strong ridgepole — a straight branch or small tree 2.5–3m long. It must support weight without breaking.",
+        "Prop one end on a stump, rock, or tree fork about waist height. The other end touches the ground. This creates a long triangle shape.",
+        "Lay rib sticks at 30° angles along both sides of the ridgepole, about 30cm apart. These create the skeleton.",
+        "Cover the ribs with a thick layer of smaller sticks and brush. This is the lattice — it holds the insulation.",
+        "Pile dead leaves, ferns, grass, bark, pine needles — anything dry and bulky — over the entire shelter. Minimum 60cm thick. Thicker = warmer.",
+        "CRITICAL: Insulate the ground INSIDE the shelter. Pile 30cm+ of dry leaves, grass, or fern fronds. The ground steals more heat than the air.",
+        "Stuff the inside with loose leaf litter you can burrow into. Your body heat warms the small air space.",
+        "Close the entrance with a pile of leaves you can pull in behind you, or lean branches across and heap debris on them.",
+        "The shelter should be just large enough for your body — NOT bigger. Small = warm. Large = cold."
+      ],
+      "notes": "A well-built debris hut can maintain 15–20°C inside when it's near freezing outside. The key is THICKNESS of insulation and SMALLNESS of internal space. Most people build too big and too thin. If you can see daylight through the walls, you need more debris.",
+      "tags": ["shelter", "debris hut", "insulation", "survival", "warmth", "no tools"],
+      "estimatedReadMinutes": 5,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_debris_hut_1",
+          "title": "Debris Hut Construction",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/debris-hut",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["lean_to_shelter", "ground_insulation_critical", "heat_retention_strategies"],
+      "heroIconName": "tent"
+    },
+    {
+      "id": "lean_to_shelter",
+      "title": "Lean-To Shelter — Wind Direction Logic",
+      "category": "shelterBuilding",
+      "summary": "Fast shelter construction using a lean-to design. Critical wind and rain direction logic for placement.",
+      "steps": [
+        "Find two trees 2–3m apart, or drive two forked sticks into the ground. Lay a horizontal ridgepole between them at chest height.",
+        "Lean long branches against the ridgepole at 45–60° angle, all on the SAME side. Space them 15–20cm apart.",
+        "WIND RULE: The solid wall (leaning branches) faces INTO the prevailing wind. You shelter on the downwind side.",
+        "In Australia, cold fronts come from the SW. Place your wall facing south-west in most conditions.",
+        "Layer coverage: start at the bottom with bark slabs, large leaves, or fronds. Overlap upward like roof tiles — water runs down and off.",
+        "Add a second layer. Then a third. Three layers minimum for rain protection.",
+        "Build a fire on the open side, 1.5m from the shelter. Place a fire reflector (log wall or rocks) behind the fire. Heat radiates into shelter.",
+        "Close the sides if wind swirls. Lean branches at both ends and pile debris.",
+        "A lean-to is faster to build than a debris hut (30 min vs 2 hours) but provides less insulation. Best for 1–3 night stays with fire."
+      ],
+      "notes": "The lean-to is the fastest survival shelter to build. Its weakness is it relies on fire for warmth — without fire on the open side, it offers minimal insulation compared to a debris hut. Always build with wind direction in mind. A lean-to facing the wrong way is worse than no shelter.",
+      "tags": ["shelter", "lean-to", "wind", "survival", "fast", "fire reflector"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_lean_to_1",
+          "title": "Lean-To Shelter Construction",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/lean-to",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["debris_hut_shelter", "ground_insulation_critical"],
+      "heroIconName": "tent"
+    },
+    {
+      "id": "ground_insulation_critical",
+      "title": "Ground Insulation — The Skill Most People Miss",
+      "category": "shelterBuilding",
+      "summary": "The ground steals more body heat than cold air. How to insulate yourself from below — the single most important shelter skill.",
+      "steps": [
+        "THE RULE: You lose body heat to the ground 25× faster than to the air. Insulation below you matters more than insulation above.",
+        "Minimum 10cm of compressed material between you and bare ground. 30cm of loose material compresses to about 10cm under body weight.",
+        "BEST MATERIALS (in order): Dry leaves and leaf litter, dry grass, fern fronds, pine/she-oak needles, bark strips, green boughs.",
+        "Pile material at least body-width and body-length. More is always better.",
+        "If you have a space blanket or tarp: place it UNDER your insulation layer (reflecting ground cold), not on top.",
+        "RAISED BED: If materials are limited, build a platform of parallel sticks (wrist-thick), then pile whatever insulation you have on top. Even 5cm of air gap helps.",
+        "WET GROUND: Lay a base of bark slabs or thick branches first to create a moisture barrier, then insulation on top.",
+        "TEST: Lie on your bed for 5 minutes. If you feel cold through your back, you need more material. Add more until you feel neutral."
+      ],
+      "notes": "Hypothermia kills more people in survival situations than dehydration. Ground insulation is the single highest-impact action you can take for warmth. People who build elaborate overhead shelters but sleep on bare ground are making a fatal mistake.",
+      "tags": ["shelter", "insulation", "ground", "hypothermia", "warmth", "survival", "critical"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_ground_insulation_1",
+          "title": "Ground Insulation Critical",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/ground-insulation",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["debris_hut_shelter", "heat_retention_strategies"],
+      "heroIconName": "tent"
+    },
+    {
+      "id": "heat_retention_strategies",
+      "title": "Heat Retention Strategies",
+      "category": "shelterBuilding",
+      "summary": "Maximise body heat with no sleeping bag, no blanket, and no insulated clothing. The physics of staying warm.",
+      "steps": [
+        "LAYER: Stuff dry leaves, grass, or crumpled newspaper between layers of clothing. Insulation works by trapping air — bulk equals warmth.",
+        "COVER YOUR HEAD: You lose 10–15% of body heat through an uncovered head. Wrap a shirt, rag, or leaf bundle around your head.",
+        "FETAL POSITION: Curl up to reduce surface area. Tuck hands into armpits. Tuck knees to chest.",
+        "HOT ROCKS: Heat rocks in your fire for 30 minutes. Wrap in cloth or dry grass. Place next to your body in your shelter. Rocks retain heat for hours.",
+        "WARNING: Do not heat rocks that have been in or near water — they can explode. Use dry rocks from high ground.",
+        "HOT WATER BOTTLE: If you have a container, fill with hot (not boiling) water. Place against your core (stomach/chest, not extremities).",
+        "BUDDY SYSTEM: Two people in one shelter, sharing body heat, survive significantly longer than two individuals in separate shelters.",
+        "EAT BEFORE SLEEP: Digestion generates body heat. Eating even a small amount before sleeping raises your core temperature.",
+        "EXERCISE: If you wake shivering violently, do not just lie there. Do pushups, squats, or run in place for 2 minutes. Shivering is your body's last defence — violent shivering means you are approaching hypothermia."
+      ],
+      "notes": "Core body temperature below 35°C is hypothermia. Below 32°C you stop shivering and begin losing consciousness. The strategies above are not comfort measures — they are survival measures. Prioritise them in cold conditions.",
+      "tags": ["shelter", "warmth", "heat", "hypothermia", "survival", "body heat", "insulation"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_heat_retention_1",
+          "title": "Heat Retention Strategies",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/heat-retention",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["ground_insulation_critical", "debris_hut_shelter"],
+      "heroIconName": "tent"
+    },
+    {
+      "id": "rainwater_runoff_control",
+      "title": "Rainwater Runoff Control for Shelters",
+      "category": "shelterBuilding",
+      "summary": "Prevent flooding and water intrusion in your shelter. Drainage, site selection, and runoff management.",
+      "steps": [
+        "SITE SELECTION: Never build in a low point, dry creek bed, or at the base of a slope. Water flows there during rain.",
+        "Build on slightly elevated ground — even 30cm above the surrounding area makes a significant difference.",
+        "DIG A DRIP LINE: Scrape a shallow trench (10cm deep) around the uphill side of your shelter in a U-shape, open at the downhill end. This diverts flowing water around you.",
+        "DRIP EDGE: Ensure your shelter roof extends beyond the walls. Water dripping off the roof directly onto your sleeping area is the most common mistake.",
+        "SLOPE THE FLOOR: If possible, build your sleeping platform slightly elevated above the entrance level. Water that enters flows away from you.",
+        "LEAF LITTER DAM: Pile debris on the uphill side of your shelter to break and redirect water flow.",
+        "TARP TIP: If using a tarp, ensure it's tight — sagging tarp collects water weight and collapses. Create an angle for runoff.",
+        "Collect the runoff — divert your drip line trench into a container. The shelter generates a free water collection system during rain."
+      ],
+      "notes": "Flash flooding kills. In Australia, dry creek beds can flood with zero warning from storms kilometres away. Never sleep in a creek bed or gully — even a dry one. Always build above the waterline and have an escape route uphill.",
+      "tags": ["shelter", "rain", "drainage", "runoff", "flooding", "survival", "site selection"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_runoff_1",
+          "title": "Shelter Drainage",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/rainwater-runoff",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["debris_hut_shelter", "lean_to_shelter"],
+      "heroIconName": "tent"
+    },
+    {
+      "id": "basic_snares_small_game",
+      "title": "Basic Snares — Small Game",
+      "category": "trapping",
+      "summary": "Build simple snares for rabbits and small animals using wire, cordage, or natural fibres. Set multiple — trapping is a numbers game.",
+      "steps": [
+        "MATERIAL: Wire is best (fence wire, electrical wire from vehicles, picture hanging wire). If no wire: twisted plant fibres, inner bark cordage, or shoelaces.",
+        "SIMPLE LOOP SNARE: Make a small running loop (fist-sized for rabbits). The loop tightens when the animal pushes through it.",
+        "PLACEMENT: Set on animal trails. Look for: tracks, droppings, compressed grass tunnels, gaps in fences/brush that animals squeeze through.",
+        "HEIGHT: Bottom of the loop should be 4 fingers above the ground for rabbits. The animal's head enters the loop as it moves along the trail.",
+        "ANCHOR the snare firmly to a stake, tree, or heavy log. An unanchored snare means the animal drags it away.",
+        "Set 10–15 snares minimum. A single snare has about a 5–10% catch rate. Quantity is everything.",
+        "CHECK snares every 12 hours. Longer intervals mean other predators take your catch, or the animal suffers unnecessarily.",
+        "FUNNEL: Place sticks or brush on either side of the snare to create a narrowing channel. This forces the animal to go through the loop instead of around it.",
+        "DRAG SNARE (for larger game): Use a heavy log as a drag weight instead of a fixed anchor. The animal tires itself dragging the log and is easier to find."
+      ],
+      "notes": "Trapping is a survival food method — not sport. Check local regulations in non-survival situations. In genuine survival, trapping is far more calorie-efficient than hunting: you set snares and walk away while they work for you 24 hours.",
+      "tags": ["trapping", "snare", "rabbit", "food", "survival", "hunting", "wire"],
+      "estimatedReadMinutes": 5,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_snares_1",
+          "title": "Basic Snaring",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/basic-snares",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["fish_traps_improvised", "insect_protein_australia", "emergency_foraging_rules"],
+      "heroIconName": "food"
+    },
+    {
+      "id": "fish_traps_improvised",
+      "title": "Improvised Fish Traps",
+      "category": "trapping",
+      "summary": "Build fish traps from sticks, rocks, and natural materials. Works in creeks, rivers, and tidal zones.",
+      "steps": [
+        "ROCK WEIR: In a shallow creek, build a V-shaped wall of rocks pointing downstream. Narrow the V to a gap just wider than your hand. Fish swim into the V and concentrate at the gap where you can grab, spear, or net them.",
+        "BOTTLE TRAP: Cut a plastic bottle in half. Invert the top half into the bottom half (creating a funnel entrance). Bait with anything — insects, bread, meat. Submerge in slow-moving water. Fish swim in through the funnel and can't find the exit.",
+        "BASKET TRAP: Weave a cone-shaped basket from flexible sticks or reeds. Create an inverted funnel entrance. Place in a creek with the opening facing upstream.",
+        "TIDAL TRAP (coastal): Build a semicircular rock wall in a tidal zone at low tide. When the tide goes out, fish are trapped behind the wall.",
+        "HAND FISHING: In murky water or under banks, slowly reach into underwater crevices and overhangs. Fish shelter in these spots. Move hands slowly — grab behind the gills with a firm squeeze.",
+        "SPEARING: Sharpen a straight stick to a point. Split the tip into 4 prongs and wedge them open with a small stick. This creates a fish spear. Strike into water where fish are visible — aim below where you see them (refraction makes fish appear higher than they are).",
+        "Night is better: many fish are less active at night and easier to approach. Use a torch (fire or phone) near the water surface to attract them."
+      ],
+      "notes": "Fish are the easiest wild protein to catch consistently. A well-placed rock weir or basket trap can produce food daily with minimal effort. In Australia, inland creeks often hold perch, cod, and crayfish — all edible. Coastal rock pools contain crabs, shellfish, and small fish at low tide.",
+      "tags": ["trapping", "fish", "trap", "food", "survival", "creek", "river", "fishing"],
+      "estimatedReadMinutes": 5,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_fish_trap_1",
+          "title": "Improvised Fish Traps",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/fish-traps",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["basic_snares_small_game", "insect_protein_australia"],
+      "heroIconName": "food"
+    },
+    {
+      "id": "insect_protein_australia",
+      "title": "Insect Protein — Safe Options (Australia)",
+      "category": "trapping",
+      "summary": "Insects are the most accessible emergency protein. Which Australian insects are safe, how to find them, and how to prepare them.",
+      "steps": [
+        "WITCHETTY GRUBS: Found in roots of witchetty bush (Acacia kempeana) and other acacias. Look for sawdust at the base of dead wood. Dig or split the wood to extract. Eat raw or lightly roasted — tastes like nutty scrambled egg when cooked.",
+        "BOGONG MOTHS (seasonal): Found in alpine regions Nov–Feb. High in fat. Roast to remove wings and legs, eat the abdomen.",
+        "HONEY ANTS: Found in arid central Australia. Dig around Mulga trees to find underground chambers. The swollen amber abdomen is pure nectar — bite it off.",
+        "GREEN ANTS (tropical): Squeeze the abdomen for a citrus-flavoured burst. High in vitamin C. Found in leaf nests in tropical trees.",
+        "GENERAL RULE: Grubs found in wood are almost always safe — beetle larvae, moth larvae, etc. Look in dead logs, under bark, in rotting stumps.",
+        "AVOID: Brightly coloured insects, hairy caterpillars, anything that smells strongly, ants with large mandibles that spray acid, and all spiders.",
+        "PREPARATION: Always cook insects when possible — roast on a flat rock near fire or skewer on a stick. Cooking kills parasites.",
+        "CALORIES: 100g of insects typically contains 400–500 calories and 30–60g of protein. More calorie-dense than most meat.",
+        "Collection tip: turn over logs and rocks at dawn when insects are sluggish. Shake dead branches over a cloth to catch beetles and larvae."
+      ],
+      "notes": "Insect consumption is normal across most of the world and has been a staple of Aboriginal Australian diet for 60,000 years. The psychological barrier is your biggest obstacle. One handful of grubs can provide more protein than a day of failed hunting.",
+      "tags": ["food", "insects", "protein", "grubs", "witchetty", "survival", "australia", "foraging"],
+      "estimatedReadMinutes": 5,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_insect_protein_1",
+          "title": "Insect Protein Australia",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/insect-protein-au",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["basic_snares_small_game", "emergency_foraging_rules"],
+      "heroIconName": "food"
+    },
+    {
+      "id": "emergency_foraging_rules",
+      "title": "Emergency Foraging Rules",
+      "category": "trapping",
+      "summary": "What you can and cannot eat in the wild. Conservative rules that keep you alive without plant identification expertise.",
+      "steps": [
+        "RULE 1: If you don't know what it is, DO NOT EAT IT. The risk of poisoning outweighs starvation for at least 2 weeks — your body can survive 3 weeks without food.",
+        "RULE 2: Avoid anything with milky sap, bitter taste, almond scent, thorns on leaves, or shiny leaves in groups of 3.",
+        "RULE 3: Seeds and nuts from known trees are generally safe — she-oak seeds, bunya nuts, macadamia. If you recognise it, eat it.",
+        "UNIVERSAL EDIBILITY TEST (last resort): Touch plant juice to inner wrist — wait 15 min. If no reaction, touch to corner of lip — wait 15 min. Place on tongue — wait 15 min. Chew and spit — wait 4 hours. If no reaction at any stage, eat a small amount and wait 24 hours.",
+        "SAFE BETS IN AUSTRALIA: Warrigal greens (native spinach — cook first to remove oxalates), native lemongrass, samphire (coastal succulent), pigface fruit (coastal).",
+        "ALWAYS SAFE: Freshwater crayfish (cook first), most shellfish (cook — avoid red tide warnings), seaweed (most species edible).",
+        "NEVER EAT: Mushrooms or fungi unless you are an expert. Australia has several deadly species that look identical to edible ones.",
+        "COOKING: If in doubt, cooking reduces toxicity of many plants. Boil in water, discard the water, and boil again. This leaches out many (not all) toxins."
+      ],
+      "notes": "WARNING: The #1 foraging death in Australia is mushroom poisoning (death cap — Amanita phalloides). It looks like edible mushrooms and kills within days. The safe rule is: NEVER eat wild mushrooms. Focus on insects, animals, and known plants instead.",
+      "tags": ["food", "foraging", "safety", "plants", "survival", "poisoning", "edibility"],
+      "estimatedReadMinutes": 5,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_foraging_rules_1",
+          "title": "Emergency Foraging Rules",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/foraging-rules",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["insect_protein_australia", "basic_snares_small_game"],
+      "heroIconName": "food"
+    },
+    {
+      "id": "waste_disposal_distance_rules",
+      "title": "Waste Disposal — Distance Rules",
+      "category": "sanitation",
+      "summary": "How to manage human waste safely in a survival camp. Prevents disease, contamination, and attracts fewer animals.",
+      "steps": [
+        "LATRINE PLACEMENT: Minimum 60 metres from any water source, camp, and food preparation area. Downhill from camp. Downwind if possible.",
+        "CAT HOLE METHOD (short-term): Dig a hole 15–20cm deep. Use, then cover with the excavated soil. Mark the site so others avoid it.",
+        "SLIT TRENCH (multi-day camp): Dig a trench 30cm wide, 60cm deep, and 1+ metre long. After each use, cover with a thin layer of soil. Fill completely when 10cm from the top.",
+        "DESIGNATE separate urination and defecation areas. Urine is nearly sterile — it can go closer to camp. Faeces carries disease.",
+        "HAND HYGIENE: After every toilet visit, clean hands with ash and water, sand scrubbing, or soil. Ash is mildly antiseptic.",
+        "WOMEN: Improvised sanitary supplies — soft moss, clean cloth strips (wash and reuse), or absorbent bark fibre.",
+        "TOILET PAPER ALTERNATIVES: Smooth stones, large non-toxic leaves, moss, or corn cobs. Avoid anything irritating or unknown.",
+        "DISPOSAL OF RUBBISH: Burn what you can. Bury organic waste 30cm deep. Pack out anything non-biodegradable if moving."
+      ],
+      "notes": "Diarrhoeal disease from poor sanitation kills more people in survival situations than almost any other cause after dehydration. This is not optional. Even a solo survivor must maintain sanitation discipline from day 1.",
+      "tags": ["sanitation", "waste", "latrine", "hygiene", "survival", "disease", "contamination"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_waste_1",
+          "title": "Waste Disposal",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/waste-disposal",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["prevent_water_contamination", "hygiene_without_supplies", "disease_prevention_basics"],
+      "heroIconName": "water"
+    },
+    {
+      "id": "prevent_water_contamination",
+      "title": "Preventing Water Source Contamination",
+      "category": "sanitation",
+      "summary": "Protect your water source from your own camp activities. One mistake can make your only water supply deadly.",
+      "steps": [
+        "NEVER wash, urinate, defecate, or dispose of waste within 60m of your water source.",
+        "COLLECT water upstream of your camp. All camp activities should be downstream.",
+        "Designate a water collection point. Use only clean containers. Never dip dirty hands, cookware, or clothing into the source.",
+        "If washing clothes or dishes, carry water 30m+ from the source. Dump grey water into soil — not back into the creek.",
+        "Dead animals near water: if you find a dead animal in or near your water source, move to a different collection point upstream.",
+        "STANDING WATER: If your only source is a pond or dam, collect from the surface (avoid disturbing sediment), and always purify.",
+        "If multiple people share a water source, establish a rule: no one enters the water. Everyone collects from the bank with containers.",
+        "Rainwater is cleaner than surface water. Set up collection tarps and containers whenever rain is expected."
+      ],
+      "notes": "Waterborne disease (giardia, cryptosporidium, E. coli) incapacitates you within 24–48 hours and causes severe dehydration through vomiting and diarrhoea — which accelerates dehydration and can be fatal without medical care. Protecting your water source is a life-or-death discipline.",
+      "tags": ["sanitation", "water", "contamination", "hygiene", "survival", "disease"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_water_contam_1",
+          "title": "Water Contamination Prevention",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/water-contamination",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["waste_disposal_distance_rules", "boil_filter_disinfect_water"],
+      "heroIconName": "water"
+    },
+    {
+      "id": "hygiene_without_supplies",
+      "title": "Hygiene Without Supplies",
+      "category": "sanitation",
+      "summary": "Maintain essential hygiene with no soap, no towels, and no running water. What matters and what doesn't.",
+      "steps": [
+        "HANDS are the #1 priority. Clean hands prevent 80% of disease transmission. Wash with water alone, or scrub with fine sand, then rinse.",
+        "ASH SOAP: Mix wood ash with water to create a mild lye solution. This is a basic soap substitute — use for hands and cooking equipment.",
+        "TEETH: Chew on a twig end (tea tree or eucalyptus are mildly antiseptic) to fray it into a brush. Rub teeth and gums. Alternatively, rub salt or ash on teeth with a finger.",
+        "WOUNDS: Clean any wound immediately. Irrigate with the cleanest water available. Infection in the bush without antibiotics can be fatal.",
+        "FEET: Keep feet dry. Change socks/wraps daily if possible. Wet feet develop trench foot within 48 hours — causes tissue death.",
+        "CLOTHING: Air-dry and beat clothing daily. Turn inside-out to sun-expose. Sun kills bacteria. Wash in a creek if available — even water-only washing helps.",
+        "HAIR AND BODY: Not critical. Full body washing is a comfort measure. Focus hygiene effort on hands, feet, teeth, and wounds.",
+        "SANITARY MATERIALS: Reusable cloth strips, boiled and dried between uses. Moss and soft bark as disposable alternatives."
+      ],
+      "notes": "In a survival situation, hygiene priority is: 1) Hands 2) Wounds 3) Feet 4) Teeth 5) Everything else. Most other hygiene is psychological comfort — important for morale but not immediately life-threatening.",
+      "tags": ["sanitation", "hygiene", "survival", "no supplies", "hands", "wounds", "feet"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_hygiene_1",
+          "title": "Hygiene Without Supplies",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/hygiene-no-supplies",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["waste_disposal_distance_rules", "disease_prevention_basics"],
+      "heroIconName": "water"
+    },
+    {
+      "id": "disease_prevention_basics",
+      "title": "Disease Prevention in Extended Survival",
+      "category": "sanitation",
+      "summary": "The diseases that kill in survival situations and how to prevent them without medicine.",
+      "steps": [
+        "DIARRHOEAL DISEASE: #1 killer. Prevent by: purifying ALL water, washing hands after toilet and before eating, cooking all meat thoroughly, separating raw and cooked food.",
+        "WOUND INFECTION: Clean every wound immediately with water. Cover with clean cloth. Change dressing daily. Red streaks spreading from a wound = blood poisoning = life-threatening without antibiotics.",
+        "VECTOR-BORNE DISEASE: Mosquitoes carry Ross River, Murray Valley encephalitis, and dengue in northern Australia. Sleep under cover. Smoke from fire repels mosquitoes. Cover exposed skin at dusk/dawn.",
+        "TICK REMOVAL: Do not squeeze, burn, or apply chemicals. Use fine-tipped tweezers or a flat blade to lever the tick out from beneath the head. Paralysis ticks (east coast AU) can be fatal to children and pets.",
+        "FOOD POISONING: Cook all meat and fish thoroughly. Eat within 2 hours of cooking in hot weather. Never eat meat that smells off.",
+        "TETANUS: Deep puncture wounds, rusty metal, and animal bites carry tetanus risk. Clean aggressively, keep open (don't bandage tightly), monitor for jaw stiffness.",
+        "HYPOTHERMIA: Already covered in shelter guides, but remember — mild hypothermia causes impaired judgement, which leads to further mistakes.",
+        "DEHYDRATION: Monitor urine colour. Light yellow = adequate. Dark yellow/brown = drink more immediately. No urine for 12+ hours = critical."
+      ],
+      "notes": "Without medical facilities, prevention is everything. Once disease takes hold, your ability to perform survival tasks collapses. Hygiene, water purification, and wound care are not luxuries — they are survival tasks equal to food and shelter.",
+      "tags": ["sanitation", "disease", "prevention", "survival", "infection", "hygiene", "water"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_disease_prev_1",
+          "title": "Disease Prevention",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/disease-prevention",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["hygiene_without_supplies", "waste_disposal_distance_rules"],
+      "heroIconName": "medical"
+    },
+    {
+      "id": "routine_building_survival",
+      "title": "Routine Building — Staying Functional",
+      "category": "psychology",
+      "summary": "Structure prevents psychological collapse. How to build a daily survival routine that keeps you productive and sane.",
+      "steps": [
+        "DAY 1: Establish a routine immediately. Even a rough schedule prevents the spiral of aimlessness that leads to giving up.",
+        "MORNING: Wake at dawn. Check fire. Collect condensation water. Eat something (even small). Assess weather. Plan the day's 3 priorities.",
+        "THE RULE OF 3 TASKS: Each day, complete exactly 3 meaningful tasks — water, shelter improvement, food. Not more, not less. This prevents overwhelm and provides accomplishment.",
+        "MIDDAY (hot conditions): Rest in shade. Conserve energy. This is maintenance time — repair gear, improve shelter, prepare materials.",
+        "AFTERNOON: Second work period. Check snares/traps. Collect firewood (always). Water resupply if needed.",
+        "EVENING: Prepare and eat main meal. Bank fire. Review the day — what worked, what to change. Set 3 tasks for tomorrow.",
+        "KEEP A CALENDAR: Mark each day with a scratch on a tree, stone, or dirt. Losing track of time accelerates psychological deterioration.",
+        "MAINTAIN STANDARDS: Keep your camp tidy. Maintain your tools. Wash when you can. These small acts of order prevent the mental slide toward hopelessness."
+      ],
+      "notes": "The biggest psychological threat in survival is not fear — it's apathy. People who stop maintaining routine stop caring, stop doing, and stop surviving. A routine gives your brain structure, purpose, and small daily victories.",
+      "tags": ["psychology", "routine", "mental health", "survival", "structure", "morale"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_routine_1",
+          "title": "Survival Routine Building",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/routine-building",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["decision_fatigue_avoidance", "panic_control", "isolation_coping"],
+      "heroIconName": "medical"
+    },
+    {
+      "id": "decision_fatigue_avoidance",
+      "title": "Decision Fatigue Avoidance",
+      "category": "psychology",
+      "summary": "Your ability to make good decisions degrades with each decision. How to conserve mental energy when every choice matters.",
+      "steps": [
+        "RECOGNISE IT: Decision fatigue feels like apathy, irritability, or 'I don't care anymore.' It's not weakness — it's a neurological reality.",
+        "REDUCE DECISIONS: Establish defaults and rules that eliminate choices. Example: 'I always boil water' — no more thinking about whether to purify.",
+        "PRIORITY LOCK: Set your 3 daily priorities at dawn when your mind is sharpest. For the rest of the day, don't reconsider them unless new critical information appears.",
+        "NEVER make major decisions (leave vs stay, change camp, alter route) when tired, hungry, or emotional. Sleep on it. Decide at dawn.",
+        "IF/THEN RULES: Create automatic responses. 'If I see smoke, I move to the ridge.' 'If water drops below 1L, I stop all other tasks and find water.' These bypass decision-making in emergencies.",
+        "ACCEPT 'GOOD ENOUGH': Perfect decisions don't exist in survival. A good shelter built now beats a perfect one planned for tomorrow.",
+        "DELEGATE: In a group, assign roles. One person decides water. One decides fire. Shared decision-making spreads the cognitive load.",
+        "JOURNAL: If you have writing materials, spend 5 minutes at night writing down problems and possible solutions. This externalises the processing and reduces rumination."
+      ],
+      "notes": "Military and emergency services train automatic responses specifically to bypass decision fatigue in crisis. The if/then rules above are the civilian version. Pre-decide as much as possible so your conscious brain is freed for novel problems.",
+      "tags": ["psychology", "decision fatigue", "mental health", "survival", "cognitive", "rules"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_decision_fatigue_1",
+          "title": "Decision Fatigue",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/decision-fatigue",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["routine_building_survival", "panic_control"],
+      "heroIconName": "medical"
+    },
+    {
+      "id": "panic_control",
+      "title": "Panic Control",
+      "category": "psychology",
+      "summary": "How to stop a panic response and regain functional thinking. Works for yourself and others.",
+      "steps": [
+        "STOP. Literally stop moving. Sit or stand still. Do not run, do not make decisions, do not act.",
+        "BREATHE: 4 seconds in through the nose. Hold 4 seconds. Out through the mouth 4 seconds. Repeat 6 times. This directly counteracts the adrenaline response.",
+        "LOOK AROUND: Name 5 things you can see. 4 things you can touch. 3 things you can hear. This grounds your brain in the present moment instead of catastrophic futures.",
+        "TALK OUT LOUD: Narrate what is happening. 'I am in the bush. I am not injured. I have water. The sun is going down.' Speaking forces your brain into logical sequencing.",
+        "ASSESS: What is the ACTUAL threat right now? Not in 3 days, not what might happen — right now. Usually the answer is: nothing immediate. You are breathing. You are alive.",
+        "ONE THING: Identify the single most important action you can take right now. Not three things. One thing. Do that one thing.",
+        "FOR OTHERS: Speak calmly and firmly. Give simple, direct instructions. 'Sit down. Drink water. Breathe slowly.' People in panic respond to authority and simplicity.",
+        "ACCEPT FEAR: Fear is normal and useful. Panic is fear without direction. Give fear a task and it becomes energy."
+      ],
+      "notes": "Panic has killed more people in survival situations than any physical threat. People have drowned in waist-deep water, died of exposure 500 metres from shelter, and walked in circles until they collapsed. The ability to control panic is the single most important survival skill.",
+      "tags": ["psychology", "panic", "fear", "survival", "breathing", "control", "calm"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_panic_1",
+          "title": "Panic Control",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/panic-control",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["routine_building_survival", "isolation_coping"],
+      "heroIconName": "medical"
+    },
+    {
+      "id": "isolation_coping",
+      "title": "Isolation Coping Strategies",
+      "category": "psychology",
+      "summary": "Extended solo survival breaks most people psychologically before it breaks them physically. How to endure.",
+      "steps": [
+        "TALK: Talk out loud. To yourself, to animals, to your fire, to whatever you're doing. Verbalising maintains language processing and prevents cognitive shutdown.",
+        "PROJECT FORWARD: Set a future point. 'I will be found within 7 days.' Even if arbitrary, a mental deadline prevents the feeling of infinite suffering.",
+        "MAINTAIN IDENTITY: Remember who you are, who is waiting for you, why you matter. Repeat names of family and friends. This sounds basic — people forget to do it and drift into dissociation.",
+        "STAY BUSY: Idle time is the enemy. If all survival tasks are done, improve your camp. Carve. Explore cautiously. Count birds. Anything.",
+        "ALLOW GRIEF: If you've lost people, been displaced, or are in a disaster — crying is not weakness. Suppressing emotion takes massive cognitive energy. Release it, then refocus.",
+        "MARK TIME: Sunrise/sunset, moon phases, tally marks. Losing track of time creates dissociation and hopelessness.",
+        "SLEEP DISCIPLINE: Force yourself to maintain a sleep schedule. Sleep deprivation causes hallucinations, paranoia, and catastrophic decision-making within 72 hours.",
+        "FAITH / PURPOSE: Whatever gives your life meaning — religion, family, duty, stubbornness — lean on it hard. People survive impossible situations because they refuse to quit."
+      ],
+      "notes": "Psychological survival studies consistently show that the will to live is the strongest predictor of survival — stronger than physical fitness, skill, or equipment. The strategies above are not soft psychology — they are survival tools.",
+      "tags": ["psychology", "isolation", "loneliness", "mental health", "survival", "solo", "coping"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_isolation_1",
+          "title": "Isolation Coping",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/isolation-coping",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["routine_building_survival", "panic_control"],
+      "heroIconName": "medical"
+    },
+    {
+      "id": "sun_navigation_southern",
+      "title": "Sun Navigation — Southern Hemisphere",
+      "category": "navigationAdvanced",
+      "summary": "Find north using the sun when you have no compass, no GPS, and no phone. Southern Hemisphere specific.",
+      "steps": [
+        "KEY FACT: In the Southern Hemisphere, the sun tracks across the NORTHERN sky. It rises in the east, arcs north, and sets in the west.",
+        "SHADOW STICK METHOD: Place a straight stick vertically in the ground. Mark the tip of the shadow with a stone. Wait 15–20 minutes. Mark the new shadow tip.",
+        "Draw a line between the two marks. This line runs roughly east–west. The first mark is west, the second is east.",
+        "A line perpendicular to this (at 90°) points roughly north–south. In the Southern Hemisphere, the sun side is NORTH.",
+        "WATCH METHOD: Point the 12 on an analogue watch at the sun. The midpoint between 12 and the hour hand points roughly NORTH.",
+        "MORNING/AFTERNOON RULE: Before noon, the sun is in the eastern sky. After noon, it's in the western sky. At noon, it's due north (in southern Australia).",
+        "SHADOW DIRECTION: At solar noon (approximately 12:00–1:00 depending on daylight saving), your shadow points DUE SOUTH.",
+        "PRACTICE: Confirm your direction with multiple methods. A single reading can be off by 15–20°. Two methods confirming each other gives you confidence."
+      ],
+      "notes": "In tropical Australia (north of Tropic of Capricorn), the sun can be south of overhead in summer. The shadow stick method works everywhere regardless. For most of populated Australia (south of Cairns), the sun is always in the northern sky.",
+      "tags": ["navigation", "sun", "southern hemisphere", "compass", "direction", "shadow", "survival"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_sun_nav_1",
+          "title": "Sun Navigation Southern Hemisphere",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/sun-navigation",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["star_navigation_southern_cross", "terrain_based_navigation", "dont_get_lost_protocols"],
+      "heroIconName": "compass"
+    },
+    {
+      "id": "star_navigation_southern_cross",
+      "title": "Star Navigation — Southern Cross",
+      "category": "navigationAdvanced",
+      "summary": "Find south at night using the Southern Cross constellation. The Southern Hemisphere's North Star equivalent.",
+      "steps": [
+        "FIND THE SOUTHERN CROSS: Four bright stars forming a cross (kite shape), with a fifth dimmer star. It's the most recognisable constellation in the southern sky.",
+        "Identify the two POINTER STARS — Alpha and Beta Centauri. They're two bright stars close together that 'point' toward the Southern Cross.",
+        "THE SOUTH POINT METHOD: Extend the long axis of the Southern Cross (from the top star through the bottom star) by 4.5× its length.",
+        "ALTERNATIVELY: Draw a line between the two Pointer Stars. Find the midpoint. Draw a perpendicular line from that midpoint.",
+        "Where the extended Cross line and the perpendicular Pointer line intersect is approximately the SOUTH CELESTIAL POLE.",
+        "Drop a vertical line straight down from that point to the horizon. That point on the horizon is DUE SOUTH.",
+        "PRACTICE ON A CLEAR NIGHT: Learn to find it quickly. In survival, you may have only brief clear sky windows between cloud cover.",
+        "CONFIRMING: The Milky Way is a useful landmark — in Australia it arcs prominently across the sky and the Southern Cross sits within it."
+      ],
+      "notes": "The Southern Cross is visible year-round from Australia. It's circumpolar — it never sets below the horizon. The Pointer Stars prevent confusion with the 'False Cross' (a similar-looking but dimmer pattern nearby). Practice distinguishing them.",
+      "tags": ["navigation", "stars", "southern cross", "night", "direction", "south", "survival"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_star_nav_1",
+          "title": "Southern Cross Navigation",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/southern-cross-nav",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["sun_navigation_southern", "terrain_based_navigation"],
+      "heroIconName": "compass"
+    },
+    {
+      "id": "terrain_based_navigation",
+      "title": "Terrain-Based Navigation",
+      "category": "navigationAdvanced",
+      "summary": "Navigate using landscape features when you have no compass, no stars, and limited visibility.",
+      "steps": [
+        "FOLLOW WATER DOWNSTREAM: Creeks lead to rivers. Rivers lead to towns, farms, and roads. Following water downstream is the single most reliable navigation strategy in Australia.",
+        "RIDGELINES: Walk along ridges when possible. You maintain visibility, avoid thick scrub, and can see landmarks. Valleys have limited visibility and denser vegetation.",
+        "HANDRAILING: If you know a road, river, or fence line runs roughly east-west, walk in a perpendicular direction until you hit it. You can't miss a linear feature.",
+        "AIMING OFF: If walking to a specific point on a road, aim deliberately to one side (e.g., 10° left). When you hit the road, you know to turn right. This prevents the mistake of hitting the road and not knowing which way to turn.",
+        "BACK-BEARING: Periodically turn around and memorise what the landscape looks like BEHIND you. If you need to return, you'll recognise the view.",
+        "VEGETATION CLUES: In Australia, more vegetation = more water = lower ground. Sparser vegetation = drier = higher ground. Moss tends to grow on the south (shaded) side of trees.",
+        "POWERLINES AND FENCES: Follow them. They lead to human habitation. Powerlines especially — they connect towns.",
+        "SOUND: Listen for traffic, trains, machinery, dogs, or aircraft. Sound carries further at dawn and dusk. Walk toward human sounds."
+      ],
+      "notes": "In Australian bush, the biggest navigation danger is walking in circles. People naturally curve (dominant leg takes slightly longer strides). Use distant landmarks to walk in straight lines. If visibility is poor, line up 3 trees ahead of you and walk to each one in sequence.",
+      "tags": ["navigation", "terrain", "landscape", "direction", "survival", "bush", "lost"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_terrain_nav_1",
+          "title": "Terrain Navigation",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/terrain-navigation",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["sun_navigation_southern", "dont_get_lost_protocols"],
+      "heroIconName": "compass"
+    },
+    {
+      "id": "dont_get_lost_protocols",
+      "title": "'Don't Get Lost' Protocols",
+      "category": "navigationAdvanced",
+      "summary": "Prevention is better than rescue. How to avoid getting lost in the first place, and what to do the moment you realise you are.",
+      "steps": [
+        "BEFORE MOVING: Always know your last known position. Mark it — scratch a tree, pile rocks, leave a sign. This is your anchor point.",
+        "TELL SOMEONE: If moving camp or exploring, leave a note or sign at your camp showing direction and estimated return time.",
+        "THE 10-MINUTE RULE: Every 10 minutes of walking, stop and turn around. Memorise what the landscape looks like from the return direction.",
+        "LANDMARK CHAIN: Always be walking toward a visible landmark AND be able to see the previous one behind you. If you can't see either, stop.",
+        "BLAZE YOUR TRAIL: Break branches, scratch trees, stack rocks, or drag a stick in the dirt. Mark your path so you can retrace it.",
+        "THE MOMENT YOU'RE LOST — STOP: Do not keep walking. Sit down. Breathe. Think. Most people who die lost were moving when found — they walked themselves deeper into trouble.",
+        "STAY PUT: If you are lost and people know your approximate area, stay where you are. Rescuers search from your last known position outward. Moving makes you harder to find.",
+        "SIGNAL: Make yourself visible and audible. Build a fire (smoke is visible for kilometres). Lay out bright objects in an open area. Three of anything (3 fires, 3 whistle blasts, 3 flashes) is the international distress signal."
+      ],
+      "notes": "80% of bushwalking deaths in Australia are from people who got lost and then made bad decisions — usually continuing to walk. The Australian rule is: STAY PUT AND SIGNAL. If you left a trip plan, rescuers will come. If you didn't, make yourself as visible and loud as possible.",
+      "tags": ["navigation", "lost", "prevention", "survival", "stay put", "signal", "protocols"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_dont_get_lost_1",
+          "title": "Don't Get Lost",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/dont-get-lost",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["terrain_based_navigation", "signal_fires", "ground_signals_air_rescue"],
+      "heroIconName": "compass"
+    },
+    {
+      "id": "signal_fires",
+      "title": "Signal Fires",
+      "category": "fieldComms",
+      "summary": "Build fires that are visible from aircraft and long distances. The difference between a campfire and a signal fire.",
+      "steps": [
+        "LOCATION: Build signal fires on the highest, most open ground available. Hilltops, clearings, open ridges. Never in dense canopy where smoke disperses.",
+        "THREE FIRES: Build 3 fires in a triangle, 30 metres apart. Three fires in a triangle is the international distress signal recognised by all search aircraft.",
+        "SMOKE BY DAY: Green leaves, wet grass, moss, or green branches on a hot fire produce thick white smoke visible for 20+ kilometres.",
+        "FLAME BY NIGHT: Dry wood, bark, and fat-producing materials (eucalyptus bark burns bright) create visible flames.",
+        "PREPARATION: Build your signal fires in advance but don't light them until you hear or see aircraft/people. Have dry tinder ready to light quickly.",
+        "QUICK-LIGHT: Keep a smouldering coal or fire bundle ready to ignite the signal fire within 60 seconds of hearing an aircraft.",
+        "CONTRAST: White smoke against dark forest. Dark smoke (rubber, oil if available) against light sky. Maximise contrast with background.",
+        "NEVER leave signal fires unattended while lit. Bushfire risk in Australia is extreme — an escaped signal fire that starts a bushfire will bring rescuers, but also kill people."
+      ],
+      "notes": "A well-placed signal fire is the single most effective way to attract rescue in the Australian bush. Aircraft patrols specifically look for fire and smoke in search operations. Three fires in a triangle cannot be mistaken for a natural fire.",
+      "tags": ["comms", "signal", "fire", "rescue", "aircraft", "smoke", "survival"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_signal_fire_1",
+          "title": "Signal Fires",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/signal-fires",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["ground_signals_air_rescue", "improvised_antenna_radio"],
+      "heroIconName": "fire_trail"
+    },
+    {
+      "id": "ground_signals_air_rescue",
+      "title": "Ground Signals for Air Rescue",
+      "category": "fieldComms",
+      "summary": "Create ground-to-air signals that search aircraft can see. Standard symbols that pilots are trained to recognise.",
+      "steps": [
+        "SIZE: Ground signals must be at least 3 metres long and 1 metre wide to be visible from aircraft. Bigger is always better — 10m is ideal.",
+        "CONTRAST: Use materials that contrast with the ground. Light rocks on dark soil. Dark logs on sand. Clothing laid out flat.",
+        "STANDARD SYMBOLS (ICAO): V = Need assistance. X = Need medical help. → (arrow) = Travelling this direction. I = Need medical supplies. F = Need food and water.",
+        "LOCATION: Open ground — clearings, ridgetops, beaches, rock outcrops. Not under tree canopy.",
+        "REFLECTIVE SIGNALLING: A mirror, phone screen, glass, or any reflective surface aimed at aircraft produces a flash visible for 50+ km. Sweep across the aircraft's position.",
+        "AT NIGHT: A torch or phone flashlight aimed at aircraft. Flash SOS: 3 short, 3 long, 3 short. Repeat.",
+        "PANEL MARKERS: Lay out any bright fabric — space blankets, tarps, clothing — in a flat open area. Orange and silver are most visible from the air.",
+        "MOVEMENT: Wave both arms overhead in a Y shape = 'Yes, I need help.' One arm raised = 'No, I'm OK.' These are recognised by search crews."
+      ],
+      "notes": "Search aircraft systematically sweep grid patterns from your last known position. Making yourself visible is everything. In Australian outback conditions, natural ground colour is uniform brown/green — anything that breaks that pattern (geometric shapes, unnatural colours, reflective flashes) gets noticed.",
+      "tags": ["comms", "signal", "ground", "aircraft", "rescue", "symbols", "survival"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_ground_signal_1",
+          "title": "Ground-to-Air Signals",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/ground-signals",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["signal_fires", "dont_get_lost_protocols"],
+      "heroIconName": "compass"
+    },
+    {
+      "id": "improvised_antenna_radio",
+      "title": "Improvised Antennas and Vehicle Radio",
+      "category": "fieldComms",
+      "summary": "Extend radio range using improvised antennas. Get more range from a UHF radio, CB, or vehicle two-way.",
+      "steps": [
+        "UHF BASICS: Most UHF handhelds have 1–5km range in flat terrain, less in hills. A vehicle UHF with external antenna has 10–30km range.",
+        "HEIGHT = RANGE: Get your antenna as high as possible. Climb a hill. Attach to a tall branch. UHF is line-of-sight — more height = more range.",
+        "IMPROVISED GROUND PLANE: Attach 4 pieces of wire (each ~17cm long for UHF Channel 5) radiating horizontally from the base of your antenna. This creates a ground plane that dramatically improves range.",
+        "VEHICLE ANTENNA: If your vehicle has a UHF or CB, and the antenna is damaged, strip a piece of wire to the correct length (17cm for UHF, ~2.7m for CB Channel 9) and connect to the antenna mount.",
+        "CHANNEL 5 / CHANNEL 35: In Australia, UHF Channel 5 and Channel 35 are the designated emergency/calling channels. Transmit your position, situation, and name on these channels.",
+        "REPEATER CHANNELS: UHF Channels 1–8 have corresponding repeater channels (31–38). Repeaters extend range to 50+ km. Try repeater channels if direct channels get no response.",
+        "CB CHANNEL 9: The designated emergency channel for CB radio. Truckers and emergency services monitor this.",
+        "SCHEDULED CALLS: Transmit at the top of every hour for 5 minutes. Say your name, location, situation, and number of people. Repeat. Then listen for 10 minutes."
+      ],
+      "notes": "Many Australian vehicles in regional areas carry UHF radios. If you find an abandoned vehicle or reach a farm, check for a radio. Even with flat batteries, a vehicle radio connected to any 12V source (another battery, solar panel) can transmit. UHF Channel 5 should be your first attempt.",
+      "tags": ["comms", "radio", "UHF", "CB", "antenna", "vehicle", "survival", "australia"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_antenna_1",
+          "title": "Improvised Antennas",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/improvised-antenna",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["radio_basics_uhf_cb", "signal_fires"],
+      "heroIconName": "compass"
+    },
+    {
+      "id": "radio_basics_uhf_cb",
+      "title": "Radio Basics — UHF and CB (Australia)",
+      "category": "fieldComms",
+      "summary": "How to use a UHF or CB radio if you've never touched one. Channel selection, protocol, and emergency procedures.",
+      "steps": [
+        "POWER ON: Turn the radio on. Set volume to mid-level. Set squelch so you hear silence (not static) — turn squelch up until static stops.",
+        "CHANNEL SELECTION: Set to UHF Channel 5 (emergency/calling) or CB Channel 9 (emergency). These are monitored by emergency services and other users.",
+        "TO TRANSMIT: Press and hold the PTT (Push To Talk) button. Wait 1 second. Speak clearly and slowly. Release button to listen.",
+        "EMERGENCY CALL: 'MAYDAY MAYDAY MAYDAY. This is [your name]. My position is [describe location — road, landmark, GPS if known]. I have [number] people. We need [water/medical/rescue]. Over.'",
+        "REPEAT every 15 minutes if no response. Try different channels — 5, 35, 11 (call channel), and repeater channels 31–38.",
+        "LISTEN MORE THAN YOU TALK: After transmitting, listen for at least 2 minutes. Someone may be trying to respond.",
+        "BATTERY CONSERVATION: If battery is limited, transmit only at scheduled times (top of each hour). Turn off between transmissions.",
+        "PHONETIC ALPHABET (key letters): Alpha, Bravo, Charlie, Delta, Echo, Foxtrot, Golf, Hotel, India, Juliet. Use for spelling names and locations."
+      ],
+      "notes": "UHF radios are everywhere in rural Australia — farms, trucks, 4WDs, even some homes. If you find one, it could save your life. Channel 5 is the standard calling/emergency frequency. Many repeaters in regional areas extend range dramatically on channels 31–38.",
+      "tags": ["comms", "radio", "UHF", "CB", "emergency", "channel", "australia", "survival"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_radio_basics_1",
+          "title": "Radio Basics AU",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/radio-basics-au",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["improvised_antenna_radio", "signal_fires"],
+      "heroIconName": "compass"
+    },
+    {
+      "id": "vehicle_stay_vs_leave",
+      "title": "Stay With Vehicle vs Leave — Decision Tree",
+      "category": "vehicleSurvival",
+      "summary": "The most critical decision in vehicle survival. A clear framework for when to stay and when to walk.",
+      "steps": [
+        "DEFAULT RULE: STAY WITH YOUR VEHICLE. Your vehicle is shelter, shade, signalling platform, water container, and search target. It's visible from aircraft. You are not.",
+        "STAY IF: Someone knows your route and expected arrival time. You have water for 48+ hours. The vehicle provides shade/shelter. You are not in immediate danger (fire, flood).",
+        "STAY IF: You don't know exactly where the nearest help is. 'I think there's a town that way' is not good enough to walk.",
+        "LEAVE IF: No one knows where you are AND you know the exact direction and distance to help (road, town, farm) AND you have enough water for the walk AND you can travel in cool conditions (night/dawn).",
+        "LEAVE IF: You are in immediate danger that the vehicle cannot protect you from (approaching fire, rising floodwater).",
+        "BEFORE LEAVING: Leave a note on/in the vehicle with your name, number of people, date, time, direction of travel, and destination.",
+        "TAKE WITH YOU: All water, first aid, any signalling equipment, phone (even dead — GPS may still work), hat, and sun protection.",
+        "IF IN DOUBT: Stay. In almost every Australian outback death from vehicle breakdown, the person who died was the one who walked. The person who stayed was rescued."
+      ],
+      "notes": "Australian police and SES universally advise: STAY WITH YOUR VEHICLE. The vehicle is found. You are not found. Vehicles are spotted from aircraft. People walking in scrub are not. Every year, people die walking away from their vehicles in conditions where staying would have saved them.",
+      "tags": ["vehicle", "survival", "decision", "stay", "leave", "outback", "australia", "rescue"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_stay_vs_leave_1",
+          "title": "Stay vs Leave Decision",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/stay-vs-leave",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["vehicle_as_shelter", "vehicle_battery_survival", "vehicle_visibility_signalling"],
+      "heroIconName": "camp"
+    },
+    {
+      "id": "vehicle_as_shelter",
+      "title": "Using Your Vehicle as Shelter",
+      "category": "vehicleSurvival",
+      "summary": "Transform your broken-down vehicle into an effective survival shelter. Shade, wind protection, insulation, and water collection.",
+      "steps": [
+        "SHADE: Open all doors on one side to create a shade wall. Or drape a tarp/blanket from the roof to the ground. The shadow side of the vehicle is cooler.",
+        "GROUND SLEEPING: Do not sleep inside the vehicle in extreme heat — metal cars become ovens. Sleep under the vehicle or beside it in the shade.",
+        "COLD NIGHTS: Sleep inside with windows cracked slightly. Your body heat warms the cabin. Use floor mats, seat covers, and spare clothing as insulation.",
+        "WIND BREAK: Park or orient the vehicle with the solid side facing the prevailing wind. Open the downwind doors to create a sheltered area.",
+        "RAIN COLLECTION: Angle a tarp, mat, or even a car bonnet to funnel rainwater into containers. A vehicle roof collects significant rain — wipe it clean first.",
+        "SIGNALLING: Mount a mirror, reflective object, or bright cloth on the roof. Open the bonnet (light interior surface is visible from above). At night, use headlights pointed skyward if battery allows.",
+        "FIRE RISK: Keep any fire at least 3 metres from the vehicle. Fuel tanks and fuel lines are a fire/explosion hazard.",
+        "TYRE FIRE (last resort signalling): A burning tyre produces massive black smoke visible for 30+ km. Only use in genuine emergency — toxic smoke and difficult to control."
+      ],
+      "notes": "A vehicle provides more survival resources than most people realise: mirrors for signalling, wiring for snares, seat foam for insulation, oil for fire, battery for radio, tyres for signalling smoke. Think of it as a survival kit, not just transport.",
+      "tags": ["vehicle", "shelter", "survival", "shade", "rain", "signalling", "australia"],
+      "estimatedReadMinutes": 4,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_vehicle_shelter_1",
+          "title": "Vehicle as Shelter",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/vehicle-shelter",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["vehicle_stay_vs_leave", "vehicle_battery_survival"],
+      "heroIconName": "camp"
+    },
+    {
+      "id": "vehicle_battery_survival",
+      "title": "Vehicle Battery Survival Strategy",
+      "category": "vehicleSurvival",
+      "summary": "Maximise the useful life of your vehicle battery for radio, lights, phone charging, and fire starting.",
+      "steps": [
+        "ASSESS: A standard car battery holds ~60Ah. A fully charged battery can run a UHF radio for days if managed properly.",
+        "PRIORITY ORDER: 1) Radio communication. 2) Phone charging. 3) Signal lights. 4) Comfort (fan, music). Cut everything below your highest active need.",
+        "RADIO: A UHF radio draws ~0.5A when receiving, ~5A when transmitting. Transmit in short bursts. Turn off between scheduled calls.",
+        "PHONE CHARGING: Use the cigarette lighter or USB port. A phone draws ~1–2A. Charge to 80%, then disconnect. Keep phone in airplane mode to conserve its battery.",
+        "LIGHTS: Headlights draw ~10A each. Use parking lights (2A) or interior light (0.5A) for signalling instead.",
+        "DO NOT run the engine to charge the battery unless you have fuel to spare. An idling engine charges slowly and wastes fuel.",
+        "FIRE STARTING: Touch both battery terminals briefly with fine steel wool — it ignites instantly. Or cross jumper cables briefly to create a spark (wear eye protection).",
+        "DISCONNECTION: If not using electrical systems, disconnect the negative terminal to prevent parasitic drain from the vehicle's electronics."
+      ],
+      "notes": "The vehicle battery is a finite resource. Plan its use over the number of days you expect to wait for rescue. A 60Ah battery running a UHF radio for 5 minutes every hour (receiving only between transmissions) can last 5–7 days easily.",
+      "tags": ["vehicle", "battery", "survival", "radio", "power", "charging", "strategy"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "standard",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "general",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_battery_1",
+          "title": "Vehicle Battery Strategy",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/vehicle-battery",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["vehicle_as_shelter", "improvised_antenna_radio"],
+      "heroIconName": "camp"
+    },
+    {
+      "id": "vehicle_visibility_signalling",
+      "title": "Vehicle Visibility and Signalling",
+      "category": "vehicleSurvival",
+      "summary": "Make your vehicle and position as visible as possible to searchers on the ground and in the air.",
+      "steps": [
+        "OPEN THE BONNET: The light-coloured interior is visible from aircraft. It also signals 'breakdown' to passing vehicles.",
+        "ROOF SIGNALS: Lay bright clothing, a space blanket, or any high-contrast material flat on the roof. Spell SOS or make an X.",
+        "MIRROR: Use the side mirror, rear-view mirror, or any reflective surface to flash at aircraft. Aim the reflection by holding two fingers in a V toward the aircraft and bouncing the light through the gap.",
+        "AT NIGHT: Flash headlights or parking lights in groups of 3 toward any aircraft or vehicle sounds. 3 flashes = distress.",
+        "TYRE TRACKS: If on sand or dirt, drive or drag marks in a large X pattern near the vehicle. Visible from the air.",
+        "HORN: Use the horn in groups of 3 blasts when you hear people, vehicles, or aircraft. Sound carries 1–2km in still conditions.",
+        "SMOKE: During the day, have a smoky fire ready to light near (not on) the vehicle. Green vegetation on hot coals.",
+        "FLAG: Tie a bright cloth to the antenna, a raised stick, or a branch near the vehicle. Movement catches the eye."
+      ],
+      "notes": "Search aircraft follow roads and tracks. A vehicle on a road is almost always found. A vehicle that has left the track is harder. Maximise your visual signature. The combination of open bonnet + roof marker + mirror ready is the standard vehicle distress setup.",
+      "tags": ["vehicle", "signalling", "visibility", "rescue", "mirror", "aircraft", "survival"],
+      "estimatedReadMinutes": 3,
+      "difficulty": "quickStart",
+      "lastReviewed": "2026-03-17",
+      "regionScope": "australia",
+      "sections": [],
+      "diagrams": [],
+      "sources": [
+        {
+          "id": "src_vehicle_signal_1",
+          "title": "Vehicle Signalling",
+          "publisher": "RediM8",
+          "url": "https://www.redim8.app/offline-guides/vehicle-signalling",
+          "kind": "redim8",
+          "license": null
+        }
+      ],
+      "relatedGuideIDs": ["vehicle_stay_vs_leave", "signal_fires", "ground_signals_air_rescue"],
+      "heroIconName": "camp"
+    }
+  ]
+}

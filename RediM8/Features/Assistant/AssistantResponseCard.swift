@@ -381,6 +381,10 @@ struct AssistantResponseCard: View {
             ColorTheme.accent
         case .navigation, .waterSafety:
             ColorTheme.accent
+        case .wildlife, .trapping, .toolcraft, .fieldComms, .sanitation,
+             .psychology, .security, .vehicleSurvival, .waterSourcing,
+             .shelterBuilding, .firecraft, .navigationAdvanced:
+            ColorTheme.accent
         }
     }
 
@@ -406,7 +410,7 @@ struct AssistantResponseCard: View {
         case .navigateToCoordinate:
             "Navigate"
         case .openGuide:
-            "Guide"
+            "Open Steps"
         case .openTab:
             "Open"
         case .openPlanFocus:

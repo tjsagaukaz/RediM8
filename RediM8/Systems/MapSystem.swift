@@ -23,6 +23,8 @@ final class MapSystem: ObservableObject, AppSystem {
     let hazardFeedService: HazardFeedService
     let nearestResourceService: NearestResourceService
     let safeZoneService: SafeZoneService
+    let predictiveCollapseService: PredictiveCollapseService
+    let autoGuidanceService: AutoGuidanceService
 
     private let locationService: LocationService
     private var cancellables = Set<AnyCancellable>()
@@ -41,6 +43,8 @@ final class MapSystem: ObservableObject, AppSystem {
         hazardFeedService: HazardFeedService,
         nearestResourceService: NearestResourceService,
         safeZoneService: SafeZoneService,
+        predictiveCollapseService: PredictiveCollapseService,
+        autoGuidanceService: AutoGuidanceService,
         locationService: LocationService
     ) {
         self.offlineBasemapService = offlineBasemapService
@@ -56,6 +60,8 @@ final class MapSystem: ObservableObject, AppSystem {
         self.hazardFeedService = hazardFeedService
         self.nearestResourceService = nearestResourceService
         self.safeZoneService = safeZoneService
+        self.predictiveCollapseService = predictiveCollapseService
+        self.autoGuidanceService = autoGuidanceService
         self.locationService = locationService
 
         officialAlertService.$library

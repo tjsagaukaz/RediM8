@@ -13,6 +13,19 @@ enum GuideCategory: String, CaseIterable, Codable, Identifiable {
     case floodSafety
     case foodCooking
     case foodGrowing
+    // No-infrastructure survival primitives
+    case wildlife
+    case trapping
+    case toolcraft
+    case fieldComms
+    case sanitation
+    case psychology
+    case security
+    case vehicleSurvival
+    case waterSourcing
+    case shelterBuilding
+    case firecraft
+    case navigationAdvanced
 
     var id: String { rawValue }
 
@@ -42,6 +55,30 @@ enum GuideCategory: String, CaseIterable, Codable, Identifiable {
             "Food & Cooking"
         case .foodGrowing:
             "Growing Food"
+        case .wildlife:
+            "Wildlife"
+        case .trapping:
+            "Trapping & Food"
+        case .toolcraft:
+            "Toolcraft"
+        case .fieldComms:
+            "Field Comms"
+        case .sanitation:
+            "Sanitation"
+        case .psychology:
+            "Psychology"
+        case .security:
+            "Security"
+        case .vehicleSurvival:
+            "Vehicle Survival"
+        case .waterSourcing:
+            "Water Sourcing"
+        case .shelterBuilding:
+            "Shelter Building"
+        case .firecraft:
+            "Firecraft"
+        case .navigationAdvanced:
+            "Navigation (No Tools)"
         }
     }
 
@@ -71,6 +108,42 @@ enum GuideCategory: String, CaseIterable, Codable, Identifiable {
             "food"
         case .foodGrowing:
             "camp"
+        case .wildlife:
+            "warning"
+        case .trapping:
+            "food"
+        case .toolcraft:
+            "camp"
+        case .fieldComms:
+            "compass"
+        case .sanitation:
+            "water"
+        case .psychology:
+            "medical"
+        case .security:
+            "warning"
+        case .vehicleSurvival:
+            "camp"
+        case .waterSourcing:
+            "water"
+        case .shelterBuilding:
+            "tent"
+        case .firecraft:
+            "fire_trail"
+        case .navigationAdvanced:
+            "compass"
+        }
+    }
+
+    /// True for categories that assume zero infrastructure and no resupply.
+    var isSurvivalPrimitive: Bool {
+        switch self {
+        case .wildlife, .trapping, .toolcraft, .fieldComms, .sanitation,
+             .psychology, .security, .vehicleSurvival, .waterSourcing,
+             .shelterBuilding, .firecraft, .navigationAdvanced:
+            true
+        default:
+            false
         }
     }
 }
@@ -155,6 +228,21 @@ enum GuideDiagramKind: String, Codable, Equatable {
     case seedTray
     case potatoBag
     case waterFilter
+    // Phase 2 survival diagrams (rendering TBD)
+    case bowDrill
+    case handDrill
+    case solarStill
+    case debrisHut
+    case leanTo
+    case basicSnare
+    case fishTrap
+    case groundSignal
+    case signalFire
+    case sunNavigation
+    case southernCross
+    case latrinePlacement
+    case vehicleShelter
+    case condensationTrap
 }
 
 struct GuideSection: Identifiable, Codable, Equatable {
