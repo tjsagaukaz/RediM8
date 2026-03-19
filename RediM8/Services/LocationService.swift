@@ -39,23 +39,19 @@ final class LocationService: NSObject, ObservableObject {
     }
 
     @MainActor
-    func start() {
+    func start(requestAccess shouldRequestAccess: Bool = true) {
         activeClients += 1
-        guard activeClients == 1 else { return }
-        requestAccess()
-        manager.startUpdatingLocation()
-        if CLLocationManager.headingAvailable() {
-            manager.startUpdatingHeading()
+        if shouldRequestAccess {
+            requestAccess()
         }
+        syncLocationUpdates()
     }
 
     @MainActor
     func stop() {
         guard activeClients > 0 else { return }
         activeClients -= 1
-        guard activeClients == 0 else { return }
-        manager.stopUpdatingLocation()
-        manager.stopUpdatingHeading()
+        syncLocationUpdates()
     }
 
     @MainActor
@@ -76,6 +72,13 @@ final class LocationService: NSObject, ObservableObject {
         )
     }
 
+    #if DEBUG
+    @MainActor
+    func simulate(location: CLLocation) {
+        currentLocation = location
+    }
+    #endif
+
     private func applyRuntimeMode() {
         switch runtimeMode {
         case .standard:
@@ -90,12 +93,27 @@ final class LocationService: NSObject, ObservableObject {
             manager.pausesLocationUpdatesAutomatically = true
         }
     }
+
+    @MainActor
+    private func syncLocationUpdates() {
+        guard activeClients > 0, permissionsManager.canUseLocationUpdates(status: authorizationStatus) else {
+            manager.stopUpdatingLocation()
+            manager.stopUpdatingHeading()
+            return
+        }
+
+        manager.startUpdatingLocation()
+        if CLLocationManager.headingAvailable() {
+            manager.startUpdatingHeading()
+        }
+    }
 }
 
 extension LocationService: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         Task { @MainActor in
             self.authorizationStatus = manager.authorizationStatus
+            self.syncLocationUpdates()
         }
     }
 

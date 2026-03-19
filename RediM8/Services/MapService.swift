@@ -15,10 +15,12 @@ final class MapService {
     init(store: SQLiteStore?, preparednessDataService: PreparednessDataService, bundle: Bundle = .main) {
         self.store = store
         self.preparednessDataService = preparednessDataService
-        if let dataset = try? bundle.decode("ResourceLocations.json", as: ResourceDataset.self) {
-            self.dataset = dataset
+        do {
+            let decoded = try bundle.decode("ResourceLocations.json", as: ResourceDataset.self)
+            self.dataset = decoded
             didLoadBundledDataset = true
-        } else {
+        } catch {
+            RediLogger.spatial.error("Failed to decode ResourceLocations.json: \(error.localizedDescription)")
             self.dataset = ResourceDataset(lastUpdated: .distantPast, resources: [])
             didLoadBundledDataset = false
         }

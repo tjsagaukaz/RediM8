@@ -19,8 +19,13 @@ final class GoBagService: ObservableObject {
         self.emergencyPlanService = emergencyPlanService
         self.store = store
         let storedIDs: [String]
-        if let store, let loadedIDs = try? store.load([String].self, for: StorageKey.completedItems) {
-            storedIDs = loadedIDs
+        if let store {
+            do {
+                storedIDs = try store.load([String].self, for: StorageKey.completedItems) ?? []
+            } catch {
+                RediLogger.persistence.error("Failed to load go bag completion state: \(error.localizedDescription, privacy: .public)")
+                storedIDs = []
+            }
         } else {
             storedIDs = []
         }
@@ -103,7 +108,15 @@ final class GoBagService: ObservableObject {
     }
 
     private func saveCompletedItems() {
-        try? store?.save(completedItemIDs.sorted(), for: StorageKey.completedItems)
+        guard let store else {
+            return
+        }
+
+        do {
+            try store.save(completedItemIDs.sorted(), for: StorageKey.completedItems)
+        } catch {
+            RediLogger.persistence.error("Failed to save go bag completion state: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     private func shouldInclude(_ item: GoBagItemBlueprint, for selectedScenarios: Set<ScenarioKind>) -> Bool {

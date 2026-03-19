@@ -368,3 +368,72 @@ final class BeaconServiceTests: XCTestCase {
         )
     }
 }
+
+@MainActor
+final class MeshServiceRoutingSafetyTests: XCTestCase {
+    func testMeshHazardReportsRemainInformationalUntilTrustExists() {
+        let transport = TestMeshTransport()
+        let service = MeshService(transports: [transport])
+        let report = SharedHazardReport(
+            kind: "flood",
+            latitude: -27.468,
+            longitude: 153.028,
+            radiusMetres: 250,
+            severity: "high",
+            description: "Flooded causeway reported by nearby peer.",
+            reportedAt: .now
+        )
+
+        transport.emit(
+            .message(
+                MeshMessage(
+                    sender: "Scout A",
+                    body: "Flooded causeway ahead",
+                    kind: .hazardReport,
+                    hazardReport: report
+                )
+            )
+        )
+
+        XCTAssertEqual(service.receivedHazardReports.count, 1)
+        XCTAssertTrue(service.hazardZonesFromMesh.isEmpty)
+    }
+}
+
+@MainActor
+private final class TestMeshTransport: MeshTransport {
+    let id = "test"
+    private(set) var isActive = false
+    private(set) var localPeer = MeshPeer(id: "test:local", transportID: "test", displayName: "Local")
+    private(set) var nearbyPeers: [MeshPeer] = []
+    private(set) var connectedPeers: [MeshPeer] = []
+
+    var onEvent: ((MeshTransportEvent) -> Void)?
+    var onLocalPeerChange: ((MeshPeer) -> Void)?
+    var onNearbyPeersChange: (([MeshPeer]) -> Void)?
+    var onConnectedPeersChange: (([MeshPeer]) -> Void)?
+
+    func start() {
+        isActive = true
+    }
+
+    func stop() {
+        isActive = false
+    }
+
+    func updateConfiguration(_ configuration: MeshTransportConfiguration) {}
+
+    func invite(_ peer: MeshPeer) {}
+
+    func sendMessage(_ message: MeshMessage, to peers: [MeshPeer]) -> Bool {
+        false
+    }
+
+    func sendBeacon(_ beacon: CommunityBeacon, to peers: [MeshPeer]) -> Bool {
+        false
+    }
+
+    func emit(_ event: MeshTransportEvent) {
+        onEvent?(event)
+    }
+}

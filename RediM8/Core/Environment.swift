@@ -65,9 +65,7 @@ struct AppEnvironment {
             do {
                 resolvedStore = try SQLiteStore(filename: AppConstants.Storage.databaseFilename)
             } catch {
-                #if DEBUG
-                print("[AppEnvironment] Failed to initialise SQLite store: \(error)")
-                #endif
+                RediLogger.app.error("Failed to initialise SQLite store: \(error.localizedDescription, privacy: .public)")
                 resolvedStore = nil
             }
         } else {

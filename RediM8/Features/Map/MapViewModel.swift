@@ -36,9 +36,13 @@ final class MapViewModel: ObservableObject {
     @Published private(set) var nearbyOfficialAlerts: [OfficialAlert] = []
     @Published private(set) var basemapStyleURL: URL
     @Published private(set) var isPremiumBasemapActive: Bool
+    @Published private(set) var hazardFeedLastSuccessfulFetch: Date?
+    @Published private(set) var hazardFeedLastRefreshError: String?
+    @Published private(set) var hazardFeedIsFetching: Bool
 
     private let appState: AppState
     private let officialAlertService: OfficialAlertService
+    private let hazardFeedService: HazardFeedService
     private let mapService: MapService
     private let mapDataService: MapDataService
     private let waterPointService: WaterPointService
@@ -53,6 +57,7 @@ final class MapViewModel: ObservableObject {
     init(appState: AppState) {
         self.appState = appState
         officialAlertService = appState.officialAlertService
+        hazardFeedService = appState.hazardFeedService
         mapService = appState.mapService
         mapDataService = appState.mapDataService
         waterPointService = appState.waterPointService
@@ -66,6 +71,9 @@ final class MapViewModel: ObservableObject {
         basemapStyleURL = basemapConfiguration.styleURL
         offlineBasemapStatusMessage = basemapConfiguration.statusMessage
         isPremiumBasemapActive = basemapConfiguration.isPremiumActive
+        hazardFeedLastSuccessfulFetch = appState.hazardFeedService.lastSuccessfulFetch
+        hazardFeedLastRefreshError = appState.hazardFeedService.lastRefreshError
+        hazardFeedIsFetching = appState.hazardFeedService.isFetching
         bundledResources = appState.mapService.bundledResources
         userMarkers = appState.mapService.loadUserMarkers()
         viewportRegion = appState.mapService.fallbackRegion()
@@ -152,6 +160,15 @@ final class MapViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
+        hazardFeedService.$lastSuccessfulFetch
+            .assign(to: &$hazardFeedLastSuccessfulFetch)
+
+        hazardFeedService.$lastRefreshError
+            .assign(to: &$hazardFeedLastRefreshError)
+
+        hazardFeedService.$isFetching
+            .assign(to: &$hazardFeedIsFetching)
+
         appState.offlineBasemapService.$configuration
             .sink { [weak self] configuration in
                 guard let self else { return }
@@ -163,6 +180,7 @@ final class MapViewModel: ObservableObject {
     }
 
     private var cancellables = Set<AnyCancellable>()
+    private var isVisible = false
 
     var allMarkers: [ResourceMarker] {
         bundledResources + userMarkers
@@ -314,6 +332,18 @@ final class MapViewModel: ObservableObject {
         return "Waiting for live GPS • \(coverageDetail)"
     }
 
+    var mapConfidenceOverlayDetail: String {
+        if let locationAccuracySummary {
+            return locationAccuracySummary
+        }
+
+        if currentLocation == nil {
+            return "Waiting for GPS"
+        }
+
+        return mapModeOverlayDetail
+    }
+
     var mapConfidenceTone: OperationalStatusTone {
         guard let currentLocation else {
             return installedPacks.isEmpty && !isPremiumBasemapActive ? .danger : .caution
@@ -363,6 +393,24 @@ final class MapViewModel: ObservableObject {
             items.append(TrustPillItem(title: "Live nearby data", tone: .caution))
         }
 
+        if hazardFeedLastSuccessfulFetch != nil {
+            items.append(
+                TrustPillItem(
+                    title: "Hazard feeds \(hazardFeedService.feedFreshnessText)",
+                    tone: hazardFeedTone == .ready ? .verified : .caution
+                )
+            )
+        } else if hazardFeedIsFetching {
+            items.append(TrustPillItem(title: "Hazard feeds syncing", tone: .info))
+        } else {
+            items.append(
+                TrustPillItem(
+                    title: hazardFeedLastRefreshError == nil ? "Hazard feeds pending" : "Hazard feeds unavailable",
+                    tone: hazardFeedLastRefreshError == nil ? .neutral : .caution
+                )
+            )
+        }
+
         if let topOfficialAlert {
             items.append(
                 TrustPillItem(
@@ -379,55 +427,79 @@ final class MapViewModel: ObservableObject {
         return items
     }
 
+    var mapModeOverlayTitle: String {
+        switch surfaceMode {
+        case .liveTiles:
+            return installedPacks.isEmpty ? "LIVE MAP (NETWORK)" : "LIVE + OFFLINE FALLBACK"
+        case .hybrid:
+            return installedPacks.isEmpty ? "HYBRID MAP (NETWORK)" : "HYBRID + OFFLINE FALLBACK"
+        case .tactical:
+            return isPremiumBasemapActive ? "OFFLINE MAP ACTIVE" : "OFFLINE FALLBACK"
+        }
+    }
+
+    var mapModeOverlayDetail: String {
+        if !installedPacks.isEmpty {
+            return "\(installedPacks.count) offline pack\(installedPacks.count == 1 ? "" : "s") installed"
+        }
+
+        if isPremiumBasemapActive {
+            return "Local offline basemap ready"
+        }
+
+        if surfaceMode.usesAppleTiles {
+            return "Using live tiles + bundled references"
+        }
+
+        return "Using overlays + saved references"
+    }
+
     var mapStatusHeadline: String {
         switch surfaceMode {
         case .liveTiles:
-            return "Live tiled map active"
+            return "Live map active"
         case .hybrid:
-            return "Hybrid tiled map active"
+            return "Hybrid map active"
         case .tactical:
             break
         }
 
         if isPremiumBasemapActive, !installedPacks.isEmpty {
-            return "Full offline map pack loaded"
+            return "Offline map active"
         }
 
         if isPremiumBasemapActive {
             return "Offline basemap active"
         }
 
-        return "Offline tactical fallback active"
+        return "Offline fallback active"
     }
 
     var mapStatusDetail: String {
         switch surfaceMode {
         case .liveTiles:
             if installedPacks.isEmpty {
-                return "Apple road tiles are active for map context. Offline shelters, water, and trails still depend on installed packs or the tactical fallback."
+                return "Offline fallback available"
             }
-            let packNoun = installedPacks.count == 1 ? "pack" : "packs"
-            return "Apple road tiles are active, and \(installedPacks.count) offline \(packNoun) still power shelters, water, and trail overlays."
+            return "\(installedPacks.count) offline pack\(installedPacks.count == 1 ? "" : "s") installed"
         case .hybrid:
             if installedPacks.isEmpty {
-                return "Hybrid satellite tiles are active for terrain context. Offline shelters, water, and trails still depend on installed packs or the tactical fallback."
+                return "Offline fallback available"
             }
-            let packNoun = installedPacks.count == 1 ? "pack" : "packs"
-            return "Hybrid satellite tiles are active, and \(installedPacks.count) offline \(packNoun) still power shelters, water, and trail overlays."
+            return "\(installedPacks.count) offline pack\(installedPacks.count == 1 ? "" : "s") installed"
         case .tactical:
             break
         }
 
         if isPremiumBasemapActive, !installedPacks.isEmpty {
-            let packNoun = installedPacks.count == 1 ? "pack" : "packs"
-            return "\(installedPacks.count) regional \(packNoun) ready. Shelters, water, and saved-route references are available offline."
+            return "\(installedPacks.count) offline pack\(installedPacks.count == 1 ? "" : "s") installed"
         }
 
         if isPremiumBasemapActive {
-            return "Local cartography is available, but local resource coverage still depends on installed packs."
+            return "Offline fallback available"
         }
 
-        return "Local road maps unavailable. RediM8 is showing shelters, water, pack boundaries, and saved references only."
+        return "Using pack overlays and saved references only"
     }
 
     var mapStatusTone: OperationalStatusTone {
@@ -446,6 +518,71 @@ final class MapViewModel: ObservableObject {
         return .caution
     }
 
+    var hazardFeedStatusValue: String {
+        if hazardFeedIsFetching && hazardFeedLastSuccessfulFetch == nil {
+            return "Syncing"
+        }
+
+        if hazardFeedLastSuccessfulFetch == nil {
+            return hazardFeedLastRefreshError == nil ? "Pending" : "Unavailable"
+        }
+
+        if hazardFeedLastRefreshError != nil || hazardFeedService.isFeedStale {
+            return "Stale"
+        }
+
+        return hazardFeedService.feedFreshnessText
+    }
+
+    var hazardFeedHeadline: String {
+        if hazardFeedLastRefreshError != nil {
+            return hazardFeedLastSuccessfulFetch == nil
+                ? "No official hazard feed cache yet"
+                : "Official hazard feeds need attention"
+        }
+
+        if hazardFeedLastSuccessfulFetch != nil {
+            return hazardFeedService.isFeedStale
+                ? "Route hazard overlays may be older than usual"
+                : "Official hazard feeds refreshed for routing"
+        }
+
+        return hazardFeedIsFetching
+            ? "Syncing live hazard feeds"
+            : "Connect once to mirror route hazard feeds"
+    }
+
+    var hazardFeedDetail: String {
+        if let hazardFeedLastRefreshError {
+            return hazardFeedLastRefreshError
+        }
+
+        if let hazardFeedLastSuccessfulFetch {
+            if hazardFeedService.isFeedStale {
+                return "Route hazard overlays may be older than usual. Last successful refresh \(DateFormatter.rediM8Short.string(from: hazardFeedLastSuccessfulFetch))."
+            }
+
+            return "BOM and state fire feeds were refreshed \(DateFormatter.rediM8Short.string(from: hazardFeedLastSuccessfulFetch)) for route hazard awareness."
+        }
+
+        return "Connect once so RediM8 can mirror official hazard feeds for route and safety overlays."
+    }
+
+    var hazardFeedTone: OperationalStatusTone {
+        if hazardFeedLastSuccessfulFetch == nil {
+            if hazardFeedLastRefreshError != nil {
+                return .danger
+            }
+            return hazardFeedIsFetching ? .info : .caution
+        }
+
+        return hazardFeedLastRefreshError != nil || hazardFeedService.isFeedStale ? .caution : .ready
+    }
+
+    var hazardFeedUnavailableMessage: String? {
+        hazardFeedLastRefreshError
+    }
+
     var workingBasemapSummary: String {
         switch surfaceMode {
         case .liveTiles:
@@ -462,11 +599,11 @@ final class MapViewModel: ObservableObject {
     var basemapOperationalValue: String {
         switch surfaceMode {
         case .liveTiles:
-            return "Tiles"
+            return installedPacks.isEmpty ? "Live map (network)" : "Live + offline fallback"
         case .hybrid:
-            return "Hybrid"
+            return installedPacks.isEmpty ? "Hybrid map (network)" : "Hybrid + offline fallback"
         case .tactical:
-            return isPremiumBasemapActive ? "Local" : "Fallback"
+            return isPremiumBasemapActive ? "Offline map active" : "Offline fallback"
         }
     }
 
@@ -578,12 +715,12 @@ final class MapViewModel: ObservableObject {
 
     var officialAlertStatusValue: String {
         if let topOfficialAlert {
-            return topOfficialAlert.isAreaScoped ? topOfficialAlert.severity.title : "Jurisdiction feed"
+            return topOfficialAlert.isAreaScoped ? "\(topOfficialAlert.severity.title) nearby" : "Feed active"
         }
         if currentLocation == nil, installedPacks.isEmpty, officialAlertService.hasCachedData {
             return "Scope needed"
         }
-        return officialAlertService.hasCachedData ? "Clear" : "Unavailable"
+        return officialAlertService.hasCachedData ? "No active warnings" : "Warnings unavailable"
     }
 
     var officialAlertUnavailableMessage: String? {
@@ -634,7 +771,7 @@ final class MapViewModel: ObservableObject {
 
     var locationFailureSummary: String {
         currentLocation == nil
-            ? "Location unavailable. Use saved routes, shelter names, and visible landmarks until GPS returns."
+            ? "Use saved routes, known landmarks,\nand offline references until GPS returns."
             : "Live location is available."
     }
 
@@ -659,6 +796,30 @@ final class MapViewModel: ObservableObject {
             return "Installed coverage: \(label). Outside those pack boundaries, RediM8 keeps the basemap and saved markers visible. Live nearby search can add extra shelter and water candidates around your current position, but only installed packs remain dependable offline."
         }
         return "Installed coverage: \(label). Outside those pack boundaries, RediM8 keeps the basemap and saved markers visible, but water points, shelters, and track layers can disappear."
+    }
+
+    var coverageLimitHeadline: String {
+        installedPacks.first?.name ?? "No offline pack installed"
+    }
+
+    var coverageLimitBullets: [String] {
+        if installedPacks.isEmpty {
+            var bullets = [
+                "Only the basemap and saved markers stay consistently visible.",
+                "Water, shelter, and track overlays may disappear without installed coverage."
+            ]
+
+            if hasNearbyNetworkResourceData {
+                bullets[1] = "Live nearby search can add temporary water and shelter candidates, but installed packs remain the dependable offline source."
+            }
+
+            return bullets
+        }
+
+        return [
+            "Outside this pack area, only the basemap and saved markers stay visible.",
+            "Water, shelter, and track overlays may disappear beyond installed boundaries."
+        ]
     }
 
     var featuredDirtRoads: [TrackSegment] {
@@ -728,20 +889,27 @@ final class MapViewModel: ObservableObject {
     }
 
     func onAppear() {
-        beaconService.startMonitoring()
-        locationService.start()
-        recenter()
+        isVisible = true
+        syncCommunityMonitoring()
+        locationService.start(requestAccess: false)
+        recenter(requestAccessIfNeeded: false)
         Task {
             await officialAlertService.refreshIfNeeded()
         }
     }
 
     func onDisappear() {
+        isVisible = false
         beaconService.stopMonitoring()
         locationService.stop()
     }
 
-    func recenter() {
+    func recenter(requestAccessIfNeeded: Bool = true) {
+        if requestAccessIfNeeded,
+           locationService.currentLocation == nil,
+           !locationService.authorizationStatus.isAuthorizedForRediM8 {
+            locationService.requestAccess()
+        }
         viewportRegion = preferredRegion()
         viewportRevision += 1
     }
@@ -778,6 +946,9 @@ final class MapViewModel: ObservableObject {
         if !isEnabled, layer == .evacuationPoints {
             selectedShelterID = nil
         }
+        if layer == .communityBeacons {
+            syncCommunityMonitoring()
+        }
     }
 
     func setSurfaceMode(_ mode: MapSurfaceMode) {
@@ -803,7 +974,7 @@ final class MapViewModel: ObservableObject {
         installedPackIDs = mapDataService.removePack(packID, from: installedPackIDs)
         reloadOfflineMapFeatures()
         reloadOfficialAlerts()
-        recenter()
+        recenter(requestAccessIfNeeded: false)
     }
 
     func focus(onPackID packID: String) {
@@ -1297,5 +1468,29 @@ final class MapViewModel: ObservableObject {
         let directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "N"]
         let index = Int((value / 45.0).rounded()) % 8
         return "\(Int(value.rounded()))° \(directions[index])"
+    }
+
+    private func syncCommunityMonitoring() {
+        guard isVisible else {
+            beaconService.stopMonitoring()
+            return
+        }
+
+        if enabledLayers.contains(.communityBeacons) {
+            beaconService.startMonitoring()
+        } else {
+            beaconService.stopMonitoring()
+        }
+    }
+}
+
+private extension CLAuthorizationStatus {
+    var isAuthorizedForRediM8: Bool {
+        switch self {
+        case .authorizedAlways, .authorizedWhenInUse:
+            true
+        default:
+            false
+        }
     }
 }

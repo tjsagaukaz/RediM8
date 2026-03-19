@@ -1,6 +1,11 @@
 import Foundation
 
 final class PreparednessDataService {
+    private enum BundledResourcePolicy {
+        case required
+        case optional
+    }
+
     private enum StorageKey {
         static let assistantPolicies = "preparedness.assistantPolicies.v1"
         static let scenarios = "preparedness.scenarios.v1"
@@ -92,13 +97,25 @@ final class PreparednessDataService {
             return guideLibraryCache.guides
         }
 
-        if let store, let stored = try? store.load(GuideLibrary.self, for: StorageKey.guides) {
-            guideLibraryCache = stored
-            return stored.guides
+        if let store {
+            do {
+                if let stored = try store.load(GuideLibrary.self, for: StorageKey.guides) {
+                    guideLibraryCache = stored
+                    return stored.guides
+                }
+            } catch {
+                RediLogger.preparedness.error("Failed to load cached guides: \(error.localizedDescription, privacy: .public)")
+            }
         }
 
         let resolved = mergedGuideLibrary()
-        try? store?.save(resolved, for: StorageKey.guides)
+        if let store {
+            do {
+                try store.save(resolved, for: StorageKey.guides)
+            } catch {
+                RediLogger.preparedness.error("Failed to cache merged guides: \(error.localizedDescription, privacy: .public)")
+            }
+        }
         guideLibraryCache = resolved
         return resolved.guides
     }
@@ -202,19 +219,51 @@ final class PreparednessDataService {
         filename: String,
         storageKey: String,
         type: T.Type,
+        resourcePolicy: BundledResourcePolicy = .required,
         fallback: @autoclosure () -> T
     ) -> T {
         if let cache {
             return cache
         }
 
-        if let store, let stored = try? store.load(type, for: storageKey) {
-            cache = stored
-            return stored
+        if let store {
+            do {
+                if let stored = try store.load(type, for: storageKey) {
+                    cache = stored
+                    return stored
+                }
+            } catch {
+                RediLogger.preparedness.error("Failed to load cached \(filename, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
         }
 
-        let resolved = (try? bundle.decode(filename, as: type)) ?? fallback()
-        try? store?.save(resolved, for: storageKey)
+        let resolved: T
+        if case .optional = resourcePolicy,
+           bundle.resolvedResourceURL(for: filename) == nil {
+            resolved = fallback()
+        } else {
+        do {
+            resolved = try bundle.decode(filename, as: type)
+        } catch let error as CocoaError where error.code == .fileNoSuchFile {
+            if case .optional = resourcePolicy {
+                resolved = fallback()
+            } else {
+                RediLogger.preparedness.error("Failed to decode bundled \(filename, privacy: .public): \(error.localizedDescription, privacy: .public)")
+                resolved = fallback()
+            }
+        } catch {
+            RediLogger.preparedness.error("Failed to decode bundled \(filename, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            resolved = fallback()
+        }
+        }
+
+        if let store {
+            do {
+                try store.save(resolved, for: storageKey)
+            } catch {
+                RediLogger.preparedness.error("Failed to cache \(filename, privacy: .public): \(error.localizedDescription, privacy: .public)")
+            }
+        }
         cache = resolved
         return resolved
     }
@@ -265,6 +314,7 @@ final class PreparednessDataService {
             filename: "NoInfrastructureGuides.json",
             storageKey: StorageKey.noInfrastructureGuides,
             type: GuideLibrary.self,
+            resourcePolicy: .optional,
             fallback: GuideLibrary(guides: [])
         )
     }

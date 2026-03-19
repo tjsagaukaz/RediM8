@@ -140,8 +140,12 @@ final class OfflineBasemapService: ObservableObject {
         self.session = session
         managedPackageRoot = resolvedManagedRoot
         activePackageFileURL = resolvedManagedRoot.appendingPathComponent(Constants.activePackageFilename)
-        catalog = (try? bundle.decode("BasemapCatalog.json", as: OfflineBasemapCatalog.self))
-            ?? OfflineBasemapCatalog(lastUpdated: .distantPast, packages: [])
+        do {
+            catalog = try bundle.decode("BasemapCatalog.json", as: OfflineBasemapCatalog.self)
+        } catch {
+            RediLogger.basemap.error("Failed to decode BasemapCatalog.json: \(error.localizedDescription)")
+            catalog = OfflineBasemapCatalog(lastUpdated: .distantPast, packages: [])
+        }
 
         configuration = Configuration(
             styleURL: fallbackStyleURL ?? self.generatedStyleDirectory,
@@ -175,6 +179,7 @@ final class OfflineBasemapService: ObservableObject {
         }
 
         do {
+            try validateTrustedRemoteURL(manifestURL, label: "manifest")
             try ensureManagedPackageRoot()
 
             let manifestData = try await fetchData(from: manifestURL)
@@ -188,6 +193,7 @@ final class OfflineBasemapService: ObservableObject {
             for (index, file) in manifest.files.enumerated() {
                 installStatusText = "Downloading \(index + 1) of \(manifest.files.count): \(file.path)"
                 let sourceURL = resolvedRemoteURL(for: file.url, relativeTo: manifestURL)
+                try validateTrustedRemoteURL(sourceURL, label: "package file")
                 try await downloadFile(from: sourceURL, toRelativePath: file.path, inside: temporaryDirectory)
             }
 
@@ -211,6 +217,7 @@ final class OfflineBasemapService: ObservableObject {
                 try fileManager.removeItem(at: destinationDirectory)
             }
             try fileManager.moveItem(at: temporaryDirectory, to: destinationDirectory)
+            try excludeFromBackup(destinationDirectory)
 
             saveActivePackageID(manifest.package.id)
             refreshInstalledPackages()
@@ -643,10 +650,6 @@ final class OfflineBasemapService: ObservableObject {
     }
 
     private func fetchData(from url: URL) async throws -> Data {
-        if url.isFileURL {
-            return try Data(contentsOf: url)
-        }
-
         let (data, response) = try await session.data(from: url)
         try validateResponse(response)
         return data
@@ -659,14 +662,18 @@ final class OfflineBasemapService: ObservableObject {
             try fileManager.removeItem(at: destinationURL)
         }
 
-        if url.isFileURL {
-            try fileManager.copyItem(at: url, to: destinationURL)
-            return
-        }
-
         let (temporaryURL, response) = try await session.download(from: url)
         try validateResponse(response)
         try fileManager.moveItem(at: temporaryURL, to: destinationURL)
+    }
+
+    private func validateTrustedRemoteURL(_ url: URL, label: String) throws {
+        guard let scheme = url.scheme?.lowercased(), scheme == "https" else {
+            throw CocoaError(
+                .fileReadUnsupportedScheme,
+                userInfo: [NSLocalizedDescriptionKey: "The basemap \(label) must use HTTPS."]
+            )
+        }
     }
 
     private func resolvedRemoteURL(for fileURL: URL, relativeTo manifestURL: URL) -> URL {
@@ -741,10 +748,13 @@ final class OfflineBasemapService: ObservableObject {
 
     private func loadMetadata(from packageDirectory: URL) -> InstalledPackageMetadata? {
         let metadataURL = packageDirectory.appendingPathComponent(Constants.metadataFilename)
-        guard let data = try? Data(contentsOf: metadataURL) else {
+        do {
+            let data = try Data(contentsOf: metadataURL)
+            return try JSONDecoder().decode(InstalledPackageMetadata.self, from: data)
+        } catch {
+            RediLogger.basemap.error("Failed to load basemap metadata at \(metadataURL.lastPathComponent): \(error.localizedDescription)")
             return nil
         }
-        return try? JSONDecoder().decode(InstalledPackageMetadata.self, from: data)
     }
 
     private func writeMetadata(_ metadata: InstalledPackageMetadata, inside packageDirectory: URL) throws {
@@ -762,16 +772,26 @@ final class OfflineBasemapService: ObservableObject {
     }
 
     private func saveActivePackageID(_ packageID: String?) {
-        try? ensureManagedPackageRoot()
+        do { try ensureManagedPackageRoot() } catch {
+            RediLogger.basemap.error("Failed to create managed package root: \(error.localizedDescription)")
+        }
         guard let packageID else {
-            try? fileManager.removeItem(at: activePackageFileURL)
+            do { try fileManager.removeItem(at: activePackageFileURL) } catch {
+                RediLogger.basemap.error("Failed to remove active package file: \(error.localizedDescription)")
+            }
             return
         }
-        try? packageID.write(to: activePackageFileURL, atomically: true, encoding: .utf8)
+        do {
+            try packageID.write(to: activePackageFileURL, atomically: true, encoding: .utf8)
+            try excludeFromBackup(activePackageFileURL)
+        } catch {
+            RediLogger.basemap.error("Failed to save active package ID: \(error.localizedDescription)")
+        }
     }
 
     private func ensureManagedPackageRoot() throws {
         try fileManager.createDirectory(at: managedPackageRoot, withIntermediateDirectories: true, attributes: nil)
+        try excludeFromBackup(managedPackageRoot)
     }
 
     private func directoryInstalledDate(for directoryURL: URL) -> Date {
@@ -805,6 +825,13 @@ final class OfflineBasemapService: ObservableObject {
             return description
         }
         return error.localizedDescription
+    }
+
+    private func excludeFromBackup(_ url: URL) throws {
+        var values = URLResourceValues()
+        values.isExcludedFromBackup = true
+        var mutableURL = url
+        try mutableURL.setResourceValues(values)
     }
 
     private func isManagedPackageRoot(_ url: URL) -> Bool {

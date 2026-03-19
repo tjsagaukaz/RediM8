@@ -5,9 +5,9 @@ final class NavigationRouterTests: XCTestCase {
     @MainActor
     func testOpenSignalNearbySelectsSignalTabAndClearsTransientState() {
         let router = NavigationRouter()
-        router.isShowingEmergencyGuides = true
+        router.activeOverlay = .emergencyGuides
         router.highlightedGuideCategory = .firstAid
-        router.isShowingBlackout = true
+        router.activeOverlay = .blackout
 
         router.openSignalNearby()
 
@@ -119,5 +119,57 @@ final class NavigationRouterTests: XCTestCase {
         XCTAssertFalse(router.isShowingLeaveNowMode)
         XCTAssertEqual(router.selectedTab, .signal)
         XCTAssertTrue(appState.isEmergencyAccessActive)
+    }
+
+    // MARK: - State Machine Exclusivity
+
+    @MainActor
+    func testOverlayModeIsMutuallyExclusive() {
+        let router = NavigationRouter()
+        let appState = AppState(store: nil)
+
+        router.presentEmergencyMode(appState: appState)
+        XCTAssertEqual(router.activeOverlay, .emergencyMode)
+
+        router.presentBlackout(appState: appState)
+        XCTAssertEqual(router.activeOverlay, .blackout)
+        XCTAssertFalse(router.isShowingEmergencyMode, "Emergency mode should be cleared when blackout is presented")
+    }
+
+    @MainActor
+    func testPresentLeaveNowClearsEmergencyMode() {
+        let router = NavigationRouter()
+        let appState = AppState(store: nil)
+
+        router.presentEmergencyMode(appState: appState)
+        router.presentLeaveNowMode(appState: appState)
+
+        XCTAssertTrue(router.isShowingLeaveNowMode)
+        XCTAssertFalse(router.isShowingEmergencyMode)
+        XCTAssertFalse(router.isShowingBlackout)
+    }
+
+    @MainActor
+    func testDismissEmergencyModeEndsSessionWhenNoOverlayActive() {
+        let router = NavigationRouter()
+        let appState = AppState(store: nil)
+
+        router.presentEmergencyMode(appState: appState)
+        router.dismissEmergencyMode(appState: appState)
+
+        XCTAssertNil(router.activeOverlay)
+        XCTAssertFalse(appState.isEmergencyAccessActive)
+    }
+
+    @MainActor
+    func testDismissBlackoutEndsSessionWhenNoOverlayActive() {
+        let router = NavigationRouter()
+        let appState = AppState(store: nil)
+
+        router.presentBlackout(appState: appState)
+        router.dismissBlackout(appState: appState)
+
+        XCTAssertNil(router.activeOverlay)
+        XCTAssertFalse(appState.isEmergencyAccessActive)
     }
 }

@@ -136,7 +136,7 @@ final class SpatialIndex<Item> {
         var heap = BoundedMaxHeap<(item: Item, distanceMetres: CLLocationDistance)>(capacity: limit) { $0.distanceMetres }
         Self.knnSearch(node: root, center: center, centerLocation: centerLocation, heap: &heap)
 
-        return heap.sorted().reversed()
+        return heap.sorted()
     }
 
     /// Find the single nearest item to a coordinate.

@@ -105,6 +105,65 @@ final class DocumentVaultServiceTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: previewURL.path))
     }
 
+    func testMetadataPersistsAcrossLockCycleWithoutRevealingContents() async throws {
+        let service = makeService(testName: #function)
+        try await service.unlock()
+
+        try service.saveEmergencyInfo(
+            EmergencyInfoCard(
+                bloodType: "A+",
+                allergies: "None",
+                medications: "Ventolin",
+                emergencyContacts: "Sam 0400 000 000",
+                medicalNotes: "Asthma"
+            )
+        )
+
+        try service.addDocument(
+            VaultImportPayload(
+                data: Data("driver-licence".utf8),
+                displayName: "Driver Licence",
+                filename: "licence.pdf",
+                contentType: .pdf,
+                source: .pdfImport,
+                pageCount: 1
+            ),
+            to: .identity
+        )
+
+        service.lock()
+
+        XCTAssertFalse(service.isUnlocked)
+        XCTAssertEqual(service.state, .empty)
+        XCTAssertTrue(service.metadata.isIndexed)
+        XCTAssertEqual(service.metadata.documentCount, 1)
+        XCTAssertEqual(service.metadata.quickAccessCount, 1)
+        XCTAssertTrue(service.metadata.hasEmergencyInfo)
+        XCTAssertNotNil(service.metadata.lastUpdatedAt)
+    }
+
+    func testResponderEmergencyInfoAccessDoesNotUnlockFullVault() async throws {
+        let service = makeService(testName: #function)
+        try await service.unlock()
+        try service.saveEmergencyInfo(
+            EmergencyInfoCard(
+                bloodType: "O-",
+                allergies: "Penicillin",
+                medications: "EpiPen",
+                emergencyContacts: "Alex 0400 123 456",
+                medicalNotes: "Anaphylaxis"
+            )
+        )
+        service.lock()
+
+        let responderInfo = try await service.accessResponderEmergencyInfo()
+
+        XCTAssertEqual(responderInfo.bloodType, "O-")
+        XCTAssertEqual(responderInfo.medicalNotes, "Anaphylaxis")
+        XCTAssertFalse(service.isUnlocked)
+        XCTAssertEqual(service.state, .empty)
+    }
+
     private func makeBaseURL(testName: String) -> URL {
         URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
             .appendingPathComponent("DocumentVaultServiceTests", isDirectory: true)

@@ -9,6 +9,7 @@ enum DocumentVaultError: LocalizedError {
     case authenticationFailed
     case invalidState
     case missingDocument
+    case missingEmergencyInfo
     case encryptionFailed
     case importFailed(String)
 
@@ -24,6 +25,8 @@ enum DocumentVaultError: LocalizedError {
             "Secure Vault data could not be read."
         case .missingDocument:
             "That document is no longer available on this device."
+        case .missingEmergencyInfo:
+            "No responder emergency info is configured in Secure Vault yet."
         case let .importFailed(message):
             message
         case .encryptionFailed:
@@ -64,6 +67,7 @@ private final class KeychainVaultKeyProvider: VaultKeyProviding {
     private enum Constants {
         static let service = "au.com.redim8.document-vault"
         static let account = "vault-key-v1"
+        static let localizedReason = "Unlock Secure Vault"
     }
 
     func fetchOrCreateKey(using context: LAContext) throws -> Data {
@@ -108,6 +112,7 @@ private final class KeychainVaultKeyProvider: VaultKeyProviding {
     }
 
     private func loadKey(using context: LAContext) throws -> Data? {
+        context.localizedReason = Constants.localizedReason
         var item: CFTypeRef?
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -115,8 +120,7 @@ private final class KeychainVaultKeyProvider: VaultKeyProviding {
             kSecAttrAccount as String: Constants.account,
             kSecUseDataProtectionKeychain as String: true,
             kSecReturnData as String: true,
-            kSecUseAuthenticationContext as String: context,
-            kSecUseOperationPrompt as String: "Unlock Secure Vault"
+            kSecUseAuthenticationContext as String: context
         ]
 
         let status = SecItemCopyMatching(query as CFDictionary, &item)
@@ -135,13 +139,16 @@ private final class KeychainVaultKeyProvider: VaultKeyProviding {
 final class DocumentVaultService: ObservableObject {
     @Published private(set) var isUnlocked = false
     @Published private(set) var state: VaultState = .empty
+    @Published private(set) var metadata: VaultMetadata = .empty
 
     private let authenticator: VaultAuthenticating
     private let keyProvider: VaultKeyProviding
     private let fileManager: FileManager
     private let baseURL: URL
     private let documentsDirectoryURL: URL
+    private let previewDirectoryURL: URL
     private let stateFileURL: URL
+    private let metadataFileURL: URL
     private var unlockedKey: SymmetricKey?
     private var previewURLs = Set<URL>()
 
@@ -172,19 +179,21 @@ final class DocumentVaultService: ObservableObject {
 
         self.baseURL = resolvedBaseURL
         documentsDirectoryURL = resolvedBaseURL.appendingPathComponent("Documents", isDirectory: true)
+        previewDirectoryURL = fileManager.temporaryDirectory.appendingPathComponent("RediM8VaultPreview", isDirectory: true)
         stateFileURL = resolvedBaseURL.appendingPathComponent("vault_state.bin", isDirectory: false)
+        metadataFileURL = resolvedBaseURL.appendingPathComponent("vault_metadata.json", isDirectory: false)
 
         do {
             try ensureStorageDirectories()
+            metadata = try loadMetadata()
         } catch {
-            #if DEBUG
-            print("[DocumentVaultService] Failed to create storage directories: \(error)")
-            #endif
+            RediLogger.vault.error("Failed to create vault storage directories: \(error.localizedDescription, privacy: .public)")
         }
     }
 
     deinit {
-        previewURLs.forEach { try? fileManager.removeItem(at: $0) }
+        let defaultFileManager = FileManager.default
+        previewURLs.forEach { try? defaultFileManager.removeItem(at: $0) }
     }
 
     var categories: [VaultCategory] {
@@ -211,6 +220,7 @@ final class DocumentVaultService: ObservableObject {
         try ensureStorageDirectories()
         unlockedKey = key
         state = try loadState(using: key)
+        try refreshMetadataFromCurrentState(lastUpdatedAt: metadata.lastUpdatedAt)
         isUnlocked = true
     }
 
@@ -220,6 +230,18 @@ final class DocumentVaultService: ObservableObject {
         unlockedKey = nil
         previewURLs.forEach { try? fileManager.removeItem(at: $0) }
         previewURLs.removeAll()
+    }
+
+    func accessResponderEmergencyInfo() async throws -> EmergencyInfoCard {
+        let context = try await authenticator.authenticate(reason: "Access responder emergency info in Secure Vault.")
+        let keyData = try keyProvider.fetchOrCreateKey(using: context)
+        let key = SymmetricKey(data: keyData)
+        try ensureStorageDirectories()
+        let emergencyInfo = try loadState(using: key).emergencyInfo
+        guard emergencyInfo.hasAnyContent else {
+            throw DocumentVaultError.missingEmergencyInfo
+        }
+        return emergencyInfo
     }
 
     func categoryCount(_ category: VaultCategory) -> Int {
@@ -251,11 +273,12 @@ final class DocumentVaultService: ObservableObject {
         )
 
         let encrypted = try encrypt(payload.data, using: key)
-        try encrypted.write(to: documentURL(for: document), options: .atomic)
+        try writeProtected(encrypted, to: documentURL(for: document))
 
         state.documents.removeAll { $0.id == document.id }
         state.documents.insert(document, at: 0)
         try persistState()
+        try refreshMetadataFromCurrentState(lastUpdatedAt: document.updatedAt)
     }
 
     func deleteDocument(_ documentID: UUID) throws {
@@ -270,12 +293,14 @@ final class DocumentVaultService: ObservableObject {
             try fileManager.removeItem(at: encryptedFileURL)
         }
         try persistState()
+        try refreshMetadataFromCurrentState(lastUpdatedAt: .now)
     }
 
     func saveEmergencyInfo(_ emergencyInfo: EmergencyInfoCard) throws {
         _ = try requireUnlockedKey()
         state.emergencyInfo = emergencyInfo
         try persistState()
+        try refreshMetadataFromCurrentState(lastUpdatedAt: emergencyInfo.hasAnyContent ? .now : metadata.lastUpdatedAt)
     }
 
     func temporaryPreviewURL(for document: VaultDocument) throws -> URL {
@@ -288,11 +313,14 @@ final class DocumentVaultService: ObservableObject {
         let encryptedData = try Data(contentsOf: encryptedURL)
         let decryptedData = try decrypt(encryptedData, using: key)
 
-        let previewURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-            .appendingPathComponent(document.displayName.replacingOccurrences(of: "/", with: "-"), isDirectory: false)
+        try ensureStorageDirectories()
+        let sanitizedDisplayName = document.displayName.replacingOccurrences(of: "/", with: "-")
+
+        let previewURL = previewDirectoryURL
+            .appendingPathComponent("\(document.id.uuidString)-\(sanitizedDisplayName)", isDirectory: false)
             .appendingPathExtension(document.fileExtension)
 
-        try decryptedData.write(to: previewURL, options: .atomic)
+        try writeProtected(decryptedData, to: previewURL)
         previewURLs.insert(previewURL)
         return previewURL
     }
@@ -307,7 +335,47 @@ final class DocumentVaultService: ObservableObject {
         let key = try requireUnlockedKey()
         let data = try JSONEncoder.rediM8.encode(state)
         let encrypted = try encrypt(data, using: key)
-        try encrypted.write(to: stateFileURL, options: .atomic)
+        try writeProtected(encrypted, to: stateFileURL)
+    }
+
+    private func refreshMetadataFromCurrentState(lastUpdatedAt: Date?) throws {
+        metadata = makeMetadata(from: state, lastUpdatedAt: lastUpdatedAt)
+        try persistMetadata()
+    }
+
+    private func makeMetadata(from state: VaultState, lastUpdatedAt: Date?) -> VaultMetadata {
+        let derivedLastUpdatedAt: Date?
+        if state.documents.isEmpty, !state.emergencyInfo.hasAnyContent {
+            derivedLastUpdatedAt = nil
+        } else {
+            derivedLastUpdatedAt = lastUpdatedAt ?? state.documents.map(\.updatedAt).max() ?? .now
+        }
+
+        return VaultMetadata(
+            isIndexed: true,
+            documentCount: state.documents.count,
+            quickAccessCount: state.documents.filter(\.quickAccessEligible).count,
+            hasEmergencyInfo: state.emergencyInfo.hasAnyContent,
+            lastUpdatedAt: derivedLastUpdatedAt
+        )
+    }
+
+    private func persistMetadata() throws {
+        let data = try JSONEncoder.rediM8.encode(metadata)
+        try writeProtected(data, to: metadataFileURL)
+    }
+
+    private func loadMetadata() throws -> VaultMetadata {
+        guard fileManager.fileExists(atPath: metadataFileURL.path) else {
+            return .empty
+        }
+
+        let data = try Data(contentsOf: metadataFileURL)
+        guard !data.isEmpty else {
+            return .empty
+        }
+
+        return try JSONDecoder.rediM8.decode(VaultMetadata.self, from: data)
     }
 
     private func loadState(using key: SymmetricKey) throws -> VaultState {
@@ -340,11 +408,28 @@ final class DocumentVaultService: ObservableObject {
     private func ensureStorageDirectories() throws {
         try fileManager.createDirectory(at: baseURL, withIntermediateDirectories: true, attributes: nil)
         try fileManager.createDirectory(at: documentsDirectoryURL, withIntermediateDirectories: true, attributes: nil)
+        try fileManager.createDirectory(at: previewDirectoryURL, withIntermediateDirectories: true, attributes: nil)
 
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         var mutableBaseURL = baseURL
         try mutableBaseURL.setResourceValues(values)
+
+        try applyCompleteFileProtection(to: baseURL)
+        try applyCompleteFileProtection(to: documentsDirectoryURL)
+        try applyCompleteFileProtection(to: previewDirectoryURL)
+    }
+
+    private func writeProtected(_ data: Data, to url: URL) throws {
+        try data.write(to: url, options: .atomic)
+        try applyCompleteFileProtection(to: url)
+    }
+
+    private func applyCompleteFileProtection(to url: URL) throws {
+        try fileManager.setAttributes(
+            [.protectionKey: FileProtectionType.complete],
+            ofItemAtPath: url.path
+        )
     }
 
     private func encrypt(_ data: Data, using key: SymmetricKey) throws -> Data {

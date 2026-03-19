@@ -4,8 +4,12 @@ final class FireTrailService {
     private let trailDataset: TrackDataset
 
     init(bundle: Bundle = .main) {
-        trailDataset = (try? bundle.decode("FireTrails.json", as: TrackDataset.self))
-            ?? TrackDataset(lastUpdated: .distantPast, tracks: [])
+        do {
+            trailDataset = try bundle.decode("FireTrails.json", as: TrackDataset.self)
+        } catch {
+            RediLogger.basemap.error("Failed to decode FireTrails.json: \(error.localizedDescription, privacy: .public)")
+            trailDataset = TrackDataset(lastUpdated: .distantPast, tracks: [])
+        }
     }
 
     var lastUpdated: Date {

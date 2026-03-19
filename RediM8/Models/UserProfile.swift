@@ -599,6 +599,67 @@ struct UserProfile: Codable, Equatable {
         return updated
     }
 
+    var profileCompletionSteps: [ProfileCompletionStep] {
+        [
+            ProfileCompletionStep(
+                id: "household",
+                title: "Household",
+                detail: "Add people count, pets, and a meeting point.",
+                icon: "person.2.fill",
+                isComplete: household.peopleCount > 1 || household.petCount > 0 || meetingPoints.primary.nilIfBlank != nil
+            ),
+            ProfileCompletionStep(
+                id: "contact",
+                title: "Emergency Contact",
+                detail: "Save one reachable person for emergencies.",
+                icon: "phone.fill",
+                isComplete: emergencyContacts.first?.phone.nilIfBlank != nil
+            ),
+            ProfileCompletionStep(
+                id: "route",
+                title: "Evacuation Route",
+                detail: "Add a primary leave-now route.",
+                icon: "arrow.triangle.turn.up.right.diamond.fill",
+                isComplete: evacuationRoutes.first?.nilIfBlank != nil
+            ),
+            ProfileCompletionStep(
+                id: "supplies",
+                title: "Supplies",
+                detail: "Log water, food, fuel, and battery levels.",
+                icon: "shippingbox.fill",
+                isComplete: supplies.waterLitres > 0 || supplies.foodDays > 0 || supplies.fuelLitres > 0
+            ),
+            ProfileCompletionStep(
+                id: "medical",
+                title: "Health Info",
+                detail: "Optional. Add details that change urgent care.",
+                icon: "cross.case.fill",
+                isComplete: emergencyMedicalInfo.hasAnyContent
+            ),
+            ProfileCompletionStep(
+                id: "gear",
+                title: "Grab-and-Go Gear",
+                detail: "Mark the gear you already have on hand.",
+                icon: "bag.fill",
+                isComplete: checklistItems.contains(where: \.isChecked)
+            )
+        ]
+    }
+
+    var profileCompletionFraction: Double {
+        let steps = profileCompletionSteps
+        guard !steps.isEmpty else { return 1 }
+        return Double(steps.filter(\.isComplete).count) / Double(steps.count)
+    }
+
+    var isProfileFullyComplete: Bool {
+        profileCompletionSteps.allSatisfy(\.isComplete)
+    }
+
+    var nextIncompleteProfileStep: ProfileCompletionStep? {
+        profileCompletionSteps.first(where: { !$0.isComplete })
+    }
+
     func checklistState(for kind: ChecklistItemKind) -> Bool {
         checklistItems.first(where: { $0.kind == kind })?.isChecked ?? false
     }

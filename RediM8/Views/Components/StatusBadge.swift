@@ -173,6 +173,9 @@ private struct SystemStatusChip: View {
             RoundedRectangle(cornerRadius: RediRadius.button, style: .continuous)
                 .stroke(ColorTheme.divider, lineWidth: 0.5)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(item.label)
+        .accessibilityValue(item.value)
     }
 
     private func color(for tone: OperationalStatusTone) -> Color {

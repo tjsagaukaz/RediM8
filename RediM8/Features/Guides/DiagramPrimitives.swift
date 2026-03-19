@@ -334,19 +334,27 @@ struct StepDiagramContainer: View {
     let stepNumber: Int
     let title: String
     let focusLabel: String
+    let highlightedParts: [String]
     let accent: Color
     let content: AnyView
+
+    @ScaledMetric(relativeTo: .caption) private var headerFontSize: CGFloat = 10
+    @ScaledMetric(relativeTo: .caption) private var focusFontSize: CGFloat = 11
+    @ScaledMetric(relativeTo: .caption2) private var headerDividerHeight: CGFloat = 12
+    @ScaledMetric(relativeTo: .body) private var diagramHeight: CGFloat = 200
 
     init(
         stepNumber: Int,
         title: String,
         focusLabel: String,
+        highlightedParts: [String] = [],
         accent: Color,
         @ViewBuilder content: () -> some View
     ) {
         self.stepNumber = stepNumber
         self.title = title
         self.focusLabel = focusLabel
+        self.highlightedParts = highlightedParts
         self.accent = accent
         self.content = AnyView(content())
     }
@@ -356,16 +364,16 @@ struct StepDiagramContainer: View {
             // Header strip
             HStack(spacing: 8) {
                 Text("STEP \(stepNumber)")
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .font(.system(size: headerFontSize, weight: .bold, design: .monospaced))
                     .tracking(1.2)
                     .foregroundStyle(accent)
 
                 Rectangle()
                     .fill(accent.opacity(0.3))
-                    .frame(width: 1, height: 12)
+                    .frame(width: 1, height: headerDividerHeight)
 
-                Text(title.uppercased())
-                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                Text(title)
+                    .font(.system(size: headerFontSize, weight: .bold, design: .monospaced))
                     .tracking(0.8)
                     .foregroundStyle(ColorTheme.text)
 
@@ -377,7 +385,7 @@ struct StepDiagramContainer: View {
 
             // Focus label
             Text(focusLabel)
-                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                .font(.system(size: focusFontSize, weight: .semibold, design: .monospaced))
                 .tracking(0.5)
                 .foregroundStyle(accent)
                 .padding(.horizontal, 12)
@@ -386,9 +394,10 @@ struct StepDiagramContainer: View {
 
             // Diagram canvas
             content
-                .frame(height: 200)
+                .frame(height: diagramHeight)
                 .padding(.horizontal, 8)
                 .padding(.bottom, 8)
+                .accessibilityHidden(true)
         }
         .background(ColorTheme.panel)
         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -396,5 +405,19 @@ struct StepDiagramContainer: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .stroke(Color.white.opacity(0.06), lineWidth: 0.5)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Step \(stepNumber): \(title). Focus: \(focusLabel).")
+        .accessibilityValue(highlightedPartsDescription)
+    }
+
+    private var highlightedPartsDescription: String {
+        guard !highlightedParts.isEmpty else {
+            return "Visual reference."
+        }
+
+        let parts = highlightedParts
+            .map { $0.replacingOccurrences(of: "_", with: " ") }
+            .joined(separator: ", ")
+        return "Highlights: \(parts)."
     }
 }

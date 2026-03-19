@@ -300,9 +300,7 @@ final class HazardIntelligenceService: ObservableObject {
                 previousMaxSeverity = reports.map(\.severity).max() ?? .low
             }
         } catch {
-            #if DEBUG
-            print("[HazardIntelligence] Failed to load persisted reports: \(error)")
-            #endif
+            RediLogger.persistence.error("Failed to load persisted hazard reports: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -313,9 +311,7 @@ final class HazardIntelligenceService: ObservableObject {
         do {
             try store.save(reports, for: Self.storageKey)
         } catch {
-            #if DEBUG
-            print("[HazardIntelligence] Failed to persist reports: \(error)")
-            #endif
+            RediLogger.persistence.error("Failed to persist hazard reports: \(error.localizedDescription, privacy: .public)")
         }
     }
 

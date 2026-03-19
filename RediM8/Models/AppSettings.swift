@@ -11,22 +11,31 @@ enum LocationShareMode: String, CaseIterable, Codable, Identifiable {
     var title: String {
         switch self {
         case .off:
-            "Off"
+            L10n.tr("settings.privacy.location_mode.off", "Off")
         case .approximate:
-            "Approximate"
+            L10n.tr("settings.privacy.location_mode.approximate", "Approximate")
         case .precise:
-            "Precise"
+            L10n.tr("settings.privacy.location_mode.precise", "Precise")
         }
     }
 
     var subtitle: String {
         switch self {
         case .off:
-            "Do not share coordinates in Signal or Community Report modes"
+            L10n.tr(
+                "settings.privacy.location_mode.off_subtitle",
+                "Do not share coordinates in Signal or Community Report modes"
+            )
         case .approximate:
-            "Share a rounded area instead of an exact point"
+            L10n.tr(
+                "settings.privacy.location_mode.approximate_subtitle",
+                "Share a rounded area instead of an exact point"
+            )
         case .precise:
-            "Share the current coordinate"
+            L10n.tr(
+                "settings.privacy.location_mode.precise_subtitle",
+                "Share the current coordinate"
+            )
         }
     }
 
@@ -55,22 +64,31 @@ enum SignalRangeMode: String, CaseIterable, Codable, Identifiable {
     var title: String {
         switch self {
         case .lowPower:
-            "Low Power"
+            L10n.tr("settings.signal.range.low_power", "Low Power")
         case .balanced:
-            "Balanced"
+            L10n.tr("settings.signal.range.balanced", "Balanced")
         case .maximumRange:
-            "Maximum Range"
+            L10n.tr("settings.signal.range.maximum_range", "Maximum Range")
         }
     }
 
     var subtitle: String {
         switch self {
         case .lowPower:
-            "Reduce mesh activity to preserve battery"
+            L10n.tr(
+                "settings.signal.range.low_power_subtitle",
+                "Reduced connectivity. Preserve battery by lowering mesh activity."
+            )
         case .balanced:
-            "Balanced scanning and battery use"
+            L10n.tr(
+                "settings.signal.range.balanced_subtitle",
+                "Recommended. Balanced scanning and battery use."
+            )
         case .maximumRange:
-            "Scan and refresh more aggressively"
+            L10n.tr(
+                "settings.signal.range.maximum_range_subtitle",
+                "Higher battery use. Scan and refresh more aggressively."
+            )
         }
     }
 
@@ -144,33 +162,42 @@ enum MapSurfaceMode: String, CaseIterable, Codable, Identifiable {
     var title: String {
         switch self {
         case .liveTiles:
-            "Live Tiles"
+            L10n.tr("settings.maps.surface.live_tiles", "Live Tiles")
         case .hybrid:
-            "Hybrid Tiles"
+            L10n.tr("settings.maps.surface.hybrid", "Hybrid Tiles")
         case .tactical:
-            "Offline Tactical"
+            L10n.tr("settings.maps.surface.tactical", "Offline Tactical")
         }
     }
 
     var shortTitle: String {
         switch self {
         case .liveTiles:
-            "Tiles"
+            L10n.tr("settings.maps.surface.live_tiles_short", "Tiles")
         case .hybrid:
-            "Hybrid"
+            L10n.tr("settings.maps.surface.hybrid_short", "Hybrid")
         case .tactical:
-            "Offline"
+            L10n.tr("settings.maps.surface.tactical_short", "Offline")
         }
     }
 
     var subtitle: String {
         switch self {
         case .liveTiles:
-            "Best all-round road and place context when Apple map data is available."
+            L10n.tr(
+                "settings.maps.surface.live_tiles_subtitle",
+                "Best all-round road and place context when Apple map data is available."
+            )
         case .hybrid:
-            "Satellite-backed context for terrain, fire edges, flood spread, and remote landmarks."
+            L10n.tr(
+                "settings.maps.surface.hybrid_subtitle",
+                "Satellite-backed context for terrain, fire edges, flood spread, and remote landmarks."
+            )
         case .tactical:
-            "Guaranteed local tactical surface with RediM8 overlays even when live tiles are missing."
+            L10n.tr(
+                "settings.maps.surface.tactical_subtitle",
+                "Guaranteed local tactical surface with RediM8 overlays even when live tiles are missing."
+            )
         }
     }
 
@@ -323,6 +350,29 @@ struct AppSettings: Codable, Equatable {
         privacy: .default,
         signalDiscovery: .default,
         maps: .default,
+        preparedness: .default,
+        assistant: .default,
+        battery: .default
+    )
+
+    static let emergencySafe = AppSettings(
+        privacy: PrivacySettings(
+            isAnonymousModeEnabled: false,
+            locationShareMode: .approximate,
+            showsDeviceName: false
+        ),
+        signalDiscovery: SignalDiscoverySettings(
+            discoversNearbyUsers: true,
+            allowsBeaconBroadcasts: false,
+            autoAcceptsMessages: true,
+            rangeMode: .balanced
+        ),
+        maps: MapSettings(
+            defaultLayers: [.waterPoints, .evacuationPoints, .officialAlerts],
+            showsAirstrips: false,
+            surfaceMode: .liveTiles,
+            showsDistanceRings: true
+        ),
         preparedness: .default,
         assistant: .default,
         battery: .default

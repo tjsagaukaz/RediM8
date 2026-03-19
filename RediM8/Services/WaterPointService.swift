@@ -43,8 +43,13 @@ final class WaterPointService {
     private(set) var lastNearbyNetworkError: String?
 
     init(bundle: Bundle = .main, session: URLSession = .shared) {
-        let dataset = (try? bundle.decode("WaterPoints.json", as: WaterPointDataset.self))
-            ?? WaterPointDataset(lastUpdated: .distantPast, waterPoints: [])
+        let dataset: WaterPointDataset
+        do {
+            dataset = try bundle.decode("WaterPoints.json", as: WaterPointDataset.self)
+        } catch {
+            RediLogger.spatial.error("Failed to decode WaterPoints.json: \(error.localizedDescription)")
+            dataset = WaterPointDataset(lastUpdated: .distantPast, waterPoints: [])
+        }
         self.waterPointDataset = dataset
         self.spatialIndex = SpatialIndex(items: dataset.waterPoints) { $0.coordinate.coordinate }
         self.session = session

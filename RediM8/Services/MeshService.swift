@@ -1,7 +1,9 @@
 import Combine
 import CoreLocation
+import CryptoKit
 import Foundation
 @preconcurrency import MultipeerConnectivity
+import Security
 import UIKit
 
 struct MeshPeer: Identifiable, Codable, Equatable, Hashable {
@@ -24,6 +26,103 @@ struct MeshTransportConfiguration: Equatable {
     var rangeMode: SignalRangeMode
     var allowsOutgoingInvitations: Bool
     var usesLowFrequencyBrowsing: Bool
+}
+
+enum MeshPeerTrustDecision: Equatable {
+    case trustedFirstUse
+    case trustedKnownPeer
+    case rejectedMissingCertificate
+    case rejectedChangedIdentity
+
+    var allowsConnection: Bool {
+        switch self {
+        case .trustedFirstUse, .trustedKnownPeer:
+            true
+        case .rejectedMissingCertificate, .rejectedChangedIdentity:
+            false
+        }
+    }
+
+    func rejectionMessage(for peerDisplayName: String) -> String {
+        switch self {
+        case .rejectedMissingCertificate:
+            return "Blocked \(peerDisplayName) because RediM8 could not verify that device's mesh identity."
+        case .rejectedChangedIdentity:
+            return "Blocked \(peerDisplayName) because that device's mesh identity changed since the last trusted connection."
+        case .trustedFirstUse, .trustedKnownPeer:
+            return ""
+        }
+    }
+}
+
+final class MeshPeerTrustStore {
+    private enum StorageKey {
+        static let trustedPeerFingerprints = "mesh.trusted-peer-fingerprints.v1"
+    }
+
+    private let defaults: UserDefaults
+    private let lock = NSLock()
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
+
+    func evaluate(certificateChain: [Any]?, peerDisplayName: String) -> MeshPeerTrustDecision {
+        evaluate(
+            fingerprint: Self.fingerprint(for: certificateChain),
+            peerDisplayName: peerDisplayName
+        )
+    }
+
+    func evaluate(fingerprint: String?, peerDisplayName: String) -> MeshPeerTrustDecision {
+        guard let fingerprint else {
+            return .rejectedMissingCertificate
+        }
+
+        let normalizedPeerName = Self.normalizedPeerName(peerDisplayName)
+        lock.lock()
+        defer { lock.unlock() }
+
+        var trustedFingerprints = storedFingerprints()
+        if let storedFingerprint = trustedFingerprints[normalizedPeerName] {
+            return storedFingerprint == fingerprint ? .trustedKnownPeer : .rejectedChangedIdentity
+        }
+
+        trustedFingerprints[normalizedPeerName] = fingerprint
+        defaults.set(trustedFingerprints, forKey: StorageKey.trustedPeerFingerprints)
+        return .trustedFirstUse
+    }
+
+    private func storedFingerprints() -> [String: String] {
+        defaults.dictionary(forKey: StorageKey.trustedPeerFingerprints) as? [String: String] ?? [:]
+    }
+
+    private static func normalizedPeerName(_ peerDisplayName: String) -> String {
+        peerDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    private static func fingerprint(for certificateChain: [Any]?) -> String? {
+        guard let certificateData = certificateChain?.lazy.compactMap(Self.certificateData(from:)).first else {
+            return nil
+        }
+
+        let digest = SHA256.hash(data: certificateData)
+        return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func certificateData(from value: Any) -> Data? {
+        if let data = value as? Data {
+            return data
+        }
+
+        let object = value as AnyObject
+        guard CFGetTypeID(object) == SecCertificateGetTypeID() else {
+            return nil
+        }
+
+        let certificate = unsafeBitCast(object, to: SecCertificate.self)
+        return SecCertificateCopyData(certificate) as Data
+    }
 }
 
 enum MeshTransportEvent: Equatable {
@@ -296,31 +395,9 @@ final class MeshManager: ObservableObject {
         sessionMessages.filter { $0.kind == .hazardReport && $0.hazardReport != nil }
     }
 
-    /// Convert received hazard reports into HazardZones for the routing engine.
+    /// Keep mesh hazard reports informational until peer trust is implemented.
     var hazardZonesFromMesh: [OfflineRoutingService.HazardZone] {
-        receivedHazardReports.compactMap { msg -> OfflineRoutingService.HazardZone? in
-            guard let report = msg.hazardReport else { return nil }
-            let kind: OfflineRoutingService.HazardZone.HazardKind
-            switch report.kind {
-            case "flood": kind = .flood
-            case "fire": kind = .fire
-            case "storm_surge": kind = .stormSurge
-            case "road_closure": kind = .roadClosure
-            default: kind = .roadClosure
-            }
-            let penalty: Double = switch report.severity {
-            case "critical": 10.0
-            case "high": 6.0
-            case "moderate": 3.0
-            default: 2.0
-            }
-            return OfflineRoutingService.HazardZone(
-                center: CLLocationCoordinate2D(latitude: report.latitude, longitude: report.longitude),
-                radiusMetres: report.radiusMetres,
-                penalty: penalty,
-                kind: kind
-            )
-        }
+        []
     }
 
     func sendBeacon(_ beacon: CommunityBeacon) {
@@ -369,10 +446,6 @@ final class MeshManager: ObservableObject {
         hasher.combine(Int(report.longitude * 1000))
         return hasher.finalize()
     }
-
-    /// Minimum confidence threshold for mesh hazards to affect routing.
-    /// Reports below this threshold are stored but not forwarded to the routing engine.
-    static let minRoutingConfidence: HazardIntelligenceService.HazardConfidence = .medium
 
     func clearSessionMessages() {
         sessionMessages = []
@@ -489,6 +562,7 @@ final class NearbyTransport: NSObject, MeshTransport {
     private var invitationTimeout: TimeInterval = SignalRangeMode.balanced.invitationTimeout
     private var browsePulseTicker: AnyCancellable?
     private var browsePulseStopWorkItem: DispatchWorkItem?
+    nonisolated(unsafe) private let trustStore = MeshPeerTrustStore()
 
     override init() {
         let displayName = Self.defaultDisplayName()
@@ -792,7 +866,16 @@ extension NearbyTransport: MCSessionDelegate {
     nonisolated func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {}
 
     nonisolated func session(_ session: MCSession, didReceiveCertificate certificate: [Any]?, fromPeer peerID: MCPeerID, certificateHandler: @escaping (Bool) -> Void) {
-        certificateHandler(true)
+        let decision = trustStore.evaluate(certificateChain: certificate, peerDisplayName: peerID.displayName)
+        certificateHandler(decision.allowsConnection)
+
+        guard !decision.allowsConnection else { return }
+
+        let message = decision.rejectionMessage(for: peerID.displayName)
+        RediLogger.mesh.error("\(message, privacy: .public)")
+        Task { @MainActor in
+            self.emitSystemMessage(message)
+        }
     }
 }
 

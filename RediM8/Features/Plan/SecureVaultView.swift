@@ -8,6 +8,8 @@ import VisionKit
 
 struct SecureVaultView: View {
     @ObservedObject var service: DocumentVaultService
+    let isProUser: Bool
+    let storeKitService: StoreKitService?
     let scrollToTopRequestID: Int
 
     @State private var selectedCategory: VaultCategory = .identity
@@ -17,11 +19,23 @@ struct SecureVaultView: View {
     @State private var isShowingEmergencyInfoEditor = false
     @State private var notice: VaultNotice?
     @State private var previewItem: VaultPreviewItem?
+    @State private var responderAccessItem: VaultResponderAccessItem?
     @State private var isShowingPrivacyModel = false
+    @State private var isShowingProPaywall = false
 
-    init(service: DocumentVaultService, scrollToTopRequestID: Int = 0) {
+    init(service: DocumentVaultService, isProUser: Bool = false, storeKitService: StoreKitService? = nil, scrollToTopRequestID: Int = 0) {
         self.service = service
+        self.isProUser = isProUser
+        self.storeKitService = storeKitService
         self.scrollToTopRequestID = scrollToTopRequestID
+    }
+
+    private var totalDocumentCount: Int {
+        service.state.documents.count
+    }
+
+    private var canAddDocument: Bool {
+        ProFeatureGate.allowsAdditionalVaultDocuments(isProUser: isProUser, currentDocumentCount: totalDocumentCount)
     }
 
     var body: some View {
@@ -36,6 +50,7 @@ struct SecureVaultView: View {
 
                     heroCard
                     vaultStatusRail
+                    vaultStatusCard
 
                     if service.isUnlocked {
                         unlockedContent
@@ -102,8 +117,25 @@ struct SecureVaultView: View {
         }) { item in
             VaultQuickLookPreview(item: item)
         }
+        .sheet(item: $responderAccessItem) { item in
+            NavigationStack {
+                VaultResponderAccessView(item: item)
+            }
+            .rediSheetPresentation()
+        }
         .alert(item: $notice) { notice in
             Alert(title: Text(notice.title), message: Text(notice.message), dismissButton: .default(Text("OK")))
+        }
+        .sheet(isPresented: $isShowingProPaywall) {
+            if let storeKitService {
+                NavigationStack {
+                    RediM8ProView(
+                        storeKitService: storeKitService,
+                        emergencyUnlockState: .inactive
+                    )
+                }
+                .rediSheetPresentation()
+            }
         }
     }
 
@@ -129,9 +161,9 @@ struct SecureVaultView: View {
 
     private var heroCard: some View {
         ModeHeroCard(
-            eyebrow: "Offline Protection",
+            eyebrow: "Emergency Access",
             title: "Secure Vault",
-            subtitle: "Encrypted local copies of the documents you need when networks fail or home access is cut off.",
+            subtitle: "Your identity, medical info, and key records stay available without signal when you need them most.",
             iconName: "documents",
             accent: ColorTheme.textTertiary
         ) {
@@ -139,8 +171,8 @@ struct SecureVaultView: View {
                 TrustPillGroup(items: [
                     TrustPillItem(title: "Encrypted locally", tone: .neutral),
                     TrustPillItem(title: "Offline ready", tone: .neutral),
-                    TrustPillItem(title: "Biometric unlock", tone: .neutral),
-                    TrustPillItem(title: "Local only", tone: .neutral)
+                    TrustPillItem(title: "Responder card", tone: .neutral),
+                    TrustPillItem(title: "Owner authentication", tone: .neutral)
                 ])
 
                 vaultHeroMetrics
@@ -159,77 +191,34 @@ struct SecureVaultView: View {
 
     private var privacyCard: some View {
         CollapsiblePanelCard(
-            title: "Privacy Model",
-            subtitle: service.isUnlocked
-                ? "Local-only storage promises and limits once the vault is open."
-                : "What stays hidden while the vault is locked.",
+            title: "Security Model",
+            subtitle: "How Secure Vault stays local, protected, and usable when signal is gone.",
             accent: ColorTheme.textTertiary,
             isExpanded: $isShowingPrivacyModel
         ) {
             VStack(alignment: .leading, spacing: 12) {
-                vaultPromiseRow(
-                    title: "Encrypted locally on this device",
-                    message: "Vault documents stay encrypted at rest and only open after device-owner authentication succeeds.",
-                    systemImage: "lock.shield.fill",
-                    tint: ColorTheme.textTertiary
-                )
-                vaultPromiseRow(
-                    title: "RediM8 cannot read your contents",
-                    message: "The app manages the encrypted container and preview access, but it cannot inspect your document contents remotely.",
-                    systemImage: "eye.slash.fill",
-                    tint: ColorTheme.textTertiary
-                )
-                vaultPromiseRow(
-                    title: "Excluded from cloud backup by default",
-                    message: "Vault storage remains local-only unless you explicitly add a future backup option later.",
-                    systemImage: "icloud.slash.fill",
-                    tint: ColorTheme.textTertiary
-                )
+                securityBullet("Stored only on this device")
+                securityBullet("Encrypted at rest")
+                securityBullet("Not accessible by RediM8 servers")
+                securityBullet("Not backed up to cloud by default")
+                securityBullet("Responder access can reveal emergency info without opening the full document list")
             }
         }
     }
 
     private var lockedContent: some View {
         VStack(alignment: .leading, spacing: 16) {
-            PanelCard(title: "Locked State", subtitle: "Use Face ID, Touch ID, or passcode to open the vault.") {
+            PanelCard(title: "Secure Access", subtitle: "Document names stay hidden until device ownership is confirmed.") {
                 VStack(alignment: .leading, spacing: 12) {
                     TrustPillGroup(items: [
                         TrustPillItem(title: "Names hidden", tone: .neutral),
                         TrustPillItem(title: "Encrypted at rest", tone: .neutral),
-                        TrustPillItem(title: "Ready for offline access", tone: .neutral)
+                        TrustPillItem(title: "Emergency info only", tone: .neutral)
                     ])
 
-                    Text("When locked, RediM8 hides document names, keeps emergency records encrypted at rest, and leaves the vault ready for fast owner-confirmed access.")
+                    Text("Use secure access for the full vault. Use responder access to reveal the emergency card only when someone needs your medical and contact summary fast.")
                         .font(.subheadline)
                         .foregroundStyle(ColorTheme.textSecondary)
-
-                    HStack(spacing: 12) {
-                        lockedStateBadge(
-                            title: "Docs",
-                            value: service.state.documents.isEmpty ? "Empty" : "Hidden",
-                            tint: service.state.documents.isEmpty ? ColorTheme.warning : ColorTheme.textTertiary
-                        )
-                        lockedStateBadge(
-                            title: "Emergency Card",
-                            value: service.state.emergencyInfo.hasAnyContent ? "Saved" : "Empty",
-                            tint: service.state.emergencyInfo.hasAnyContent ? ColorTheme.ready : ColorTheme.warning
-                        )
-                    }
-
-                    Button {
-                        Task { await unlockVault() }
-                    } label: {
-                        RediCommandCard(
-                            title: "Unlock Vault",
-                            detail: "Use Face ID, Touch ID, or device passcode to open local documents.",
-                            systemImage: "lock.open.fill",
-                            tint: ColorTheme.textTertiary,
-                            badge: "Biometric",
-                            prominence: .accented,
-                            layout: .rail
-                        )
-                    }
-                    .buttonStyle(CardPressButtonStyle())
 
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 12) {
                         ForEach(service.categories) { category in
@@ -243,16 +232,14 @@ struct SecureVaultView: View {
 
     private var unlockedContent: some View {
         VStack(alignment: .leading, spacing: 18) {
-            vaultSetupCard
-
             emergencyInfoSummaryCard
 
             PanelCard(
-                title: "Quick Access",
-                subtitle: "Identity, medical, insurance, and contact records first during evacuation"
+                title: "Priority Access",
+                subtitle: "These documents appear first during evacuation or identity checks under pressure."
             ) {
                 if service.quickAccessDocuments.isEmpty {
-                    Text("No quick-access documents yet. Add identity, medical, insurance, or contact records to surface them here.")
+                    Text("Nothing is staged for priority access yet. Add identity, medical, insurance, or contact records to bring them to the front.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 } else {
@@ -264,7 +251,7 @@ struct SecureVaultView: View {
                 }
             }
 
-            PanelCard(title: "Vault Sections", subtitle: "Pick the document set you need right now, then import or open from there.") {
+            PanelCard(title: "Document Sets", subtitle: "Work one record set at a time so critical identity, medical, and insurance files stay easy to stage.") {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
                     ForEach(service.categories) { category in
                         Button {
@@ -280,7 +267,7 @@ struct SecureVaultView: View {
             PanelCard(title: selectedCategory.title, subtitle: selectedCategory.subtitle) {
                 VStack(spacing: 12) {
                     if service.documents(in: selectedCategory).isEmpty {
-                        Text("No \(selectedCategory.title.lowercased()) documents stored offline yet.")
+                        Text("No \(selectedCategory.title.lowercased()) documents are staged for offline access yet.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -292,64 +279,123 @@ struct SecureVaultView: View {
                 }
             }
 
-            PanelCard(title: "Add to \(selectedCategory.title)", subtitle: "Scan or import a local file into the currently selected vault section.") {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 12) {
-                    quickActionButton(title: "Scan", subtitle: "Camera to PDF", iconName: "camera", tint: ColorTheme.textTertiary) {
-                        isShowingScanner = true
-                    }
-                    quickActionButton(title: "Import PDF", subtitle: "Files app", iconName: "documents", tint: ColorTheme.textTertiary) {
-                        isShowingFileImporter = true
-                    }
-                    PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                        quickActionButtonLabel(title: "Import Photo", subtitle: "Photo library", iconName: "image", tint: ColorTheme.textTertiary)
-                    }
-                    .buttonStyle(.plain)
+            PanelCard(
+                title: "Add Documents",
+                subtitle: canAddDocument
+                    ? "Scan or import into the selected document set."
+                    : "Free tier includes \(ProFeatureGate.freeVaultDocumentLimit) documents. Unlock expanded vault for unlimited storage."
+            ) {
+                if canAddDocument {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 12)], spacing: 12) {
+                        quickActionButton(title: "Scan", subtitle: "Camera", iconName: "camera", tint: ColorTheme.textTertiary) {
+                            isShowingScanner = true
+                        }
+                        quickActionButton(title: "Import PDF", subtitle: "Files", iconName: "documents", tint: ColorTheme.textTertiary) {
+                            isShowingFileImporter = true
+                        }
+                        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                            quickActionButtonLabel(title: "Import Photo", subtitle: "Gallery", iconName: "image", tint: ColorTheme.textTertiary)
+                        }
+                        .buttonStyle(.plain)
 
-                    quickActionButton(title: "Import File", subtitle: "Any local file", iconName: "folder", tint: ColorTheme.textTertiary) {
-                        isShowingFileImporter = true
+                        quickActionButton(title: "Import File", subtitle: "Any local file", iconName: "folder", tint: ColorTheme.textTertiary) {
+                            isShowingFileImporter = true
+                        }
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("\(totalDocumentCount)/\(ProFeatureGate.freeVaultDocumentLimit) free documents used")
+                            .font(RediTypography.bodyStrong)
+                            .foregroundStyle(ColorTheme.text)
+                        Button {
+                            isShowingProPaywall = true
+                        } label: {
+                            Text(ProFeatureGate.paywallTitle(for: .vault))
+                                .font(RediTypography.button)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(PrimaryActionButtonStyle())
                     }
                 }
             }
         }
     }
 
-    private var vaultSetupCard: some View {
+    private var vaultStatusCard: some View {
         PanelCard(
-            title: "Vault Setup",
-            subtitle: "\(vaultSetupCompletedCount)/\(vaultHealthItems.count) essentials ready for evacuation"
+            title: "Vault Status",
+            subtitle: vaultStatusHeadline
         ) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("VAULT READINESS")
+                        Text("VAULT STATUS")
                             .font(RediTypography.caption)
                             .foregroundStyle(ColorTheme.textTertiary)
 
-                        Text("\(vaultReadinessPercentage)%")
-                            .font(RediTypography.dataLarge)
+                        Text(vaultStatusHeadline)
+                            .font(.title2.weight(.bold))
                             .foregroundStyle(ColorTheme.text)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     Spacer(minLength: 0)
 
-                    Text(vaultNextActionText)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(ColorTheme.textSecondary)
-                        .multilineTextAlignment(.trailing)
-                        .fixedSize(horizontal: false, vertical: true)
+                    vaultMiniStatus(
+                        title: "Last Updated",
+                        value: vaultLastUpdatedShortLabel,
+                        tint: vaultLastUpdatedTint
+                    )
                 }
+
+                Text(vaultPriorityLine)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(vaultStatusTint)
+
+                Text(vaultLastUpdatedLine)
+                    .font(.subheadline)
+                    .foregroundStyle(ColorTheme.textSecondary)
 
                 vaultProgressBar
 
-                VStack(spacing: 10) {
-                    ForEach(vaultHealthItems) { item in
-                        Button {
-                            handleVaultHealthSelection(item)
-                        } label: {
-                            vaultHealthRow(item)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 132), spacing: 12)], spacing: 12) {
+                    vaultMiniStatus(
+                        title: "Documents",
+                        value: documentsStatusValue,
+                        tint: documentsStatusTint
+                    )
+                    vaultMiniStatus(
+                        title: "Priority Access",
+                        value: priorityAccessStatusValue,
+                        tint: priorityAccessStatusTint
+                    )
+                    vaultMiniStatus(
+                        title: "Emergency Card",
+                        value: emergencyCardStatusValue,
+                        tint: emergencyCardStatusTint
+                    )
+                    vaultMiniStatus(
+                        title: "Secure Access",
+                        value: service.isUnlocked ? "OPEN" : "LOCKED",
+                        tint: service.isUnlocked ? ColorTheme.ready : ColorTheme.textTertiary
+                    )
+                }
+
+                if service.isUnlocked {
+                    VStack(spacing: 10) {
+                        ForEach(vaultHealthItems) { item in
+                            Button {
+                                handleVaultHealthSelection(item)
+                            } label: {
+                                vaultHealthRow(item)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
+                } else {
+                    Text("Use secure access for the full vault. Responder access shows the emergency card only, without revealing the rest of the document list.")
+                        .font(.subheadline)
+                        .foregroundStyle(ColorTheme.textSecondary)
                 }
             }
         }
@@ -357,20 +403,20 @@ struct SecureVaultView: View {
 
     private var emergencyInfoSummaryCard: some View {
         PanelCard(
-            title: "Emergency Info",
-            subtitle: "Medical and contact summary for you, family, or responders."
+            title: "Emergency Card",
+            subtitle: "Used by responders if you cannot communicate."
         ) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
                     vaultMiniStatus(
                         title: "Status",
-                        value: service.state.emergencyInfo.hasAnyContent ? "Saved" : "Add now",
+                        value: service.state.emergencyInfo.hasAnyContent ? "Configured" : "Required",
                         tint: service.state.emergencyInfo.hasAnyContent ? ColorTheme.ready : ColorTheme.warning
                     )
                     vaultMiniStatus(
-                        title: "Priority",
-                        value: "Responder first",
-                        tint: ColorTheme.textTertiary
+                        title: "Responder Access",
+                        value: service.state.emergencyInfo.hasAnyContent ? "Ready" : "Not Ready",
+                        tint: service.state.emergencyInfo.hasAnyContent ? ColorTheme.ready : ColorTheme.warning
                     )
                 }
 
@@ -381,7 +427,7 @@ struct SecureVaultView: View {
                     emergencyInfoLine(label: "Contacts", value: service.state.emergencyInfo.emergencyContacts)
                     emergencyInfoLine(label: "Medical Notes", value: service.state.emergencyInfo.medicalNotes)
                 } else {
-                    Text("No emergency summary saved yet. Add blood type, allergies, medications, and emergency contacts now.")
+                    Text("No responder summary is configured yet. Add blood type, allergies, medications, and emergency contacts now.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -390,11 +436,13 @@ struct SecureVaultView: View {
                     isShowingEmergencyInfoEditor = true
                 } label: {
                     RediCommandCard(
-                        title: "Edit Emergency Info",
-                        detail: "Update blood type, allergies, medications, and emergency contacts.",
+                        title: service.state.emergencyInfo.hasAnyContent ? "Update Emergency Card" : "Add Emergency Card",
+                        detail: service.state.emergencyInfo.hasAnyContent
+                            ? "Review the responder-facing medical and contact summary."
+                            : "Used by responders if you cannot communicate.",
                         systemImage: "heart.text.square.fill",
                         tint: ColorTheme.ready,
-                        badge: service.state.emergencyInfo.hasAnyContent ? "Saved" : "Add Now",
+                        badge: service.state.emergencyInfo.hasAnyContent ? "Configured" : "Required",
                         prominence: .accented,
                         layout: .rail
                     )
@@ -408,31 +456,31 @@ struct SecureVaultView: View {
         LazyVGrid(columns: vaultMetricColumns, spacing: 12) {
             vaultMetricTile(
                 title: "Documents",
-                value: totalDocumentLabel,
-                detail: service.isUnlocked ? "Stored locally" : "Names hidden",
+                value: documentsStatusValue,
+                detail: documentsMetricDetail,
                 iconName: "documents",
-                tint: ColorTheme.textTertiary
+                tint: documentsStatusTint
             )
             vaultMetricTile(
-                title: "Quick Access",
-                value: quickAccessLabel,
-                detail: service.isUnlocked ? "Evacuation-first set" : "Unlock to reveal",
+                title: "Priority Access",
+                value: priorityAccessStatusValue,
+                detail: priorityAccessMetricDetail,
                 iconName: "shield",
-                tint: ColorTheme.textTertiary
+                tint: priorityAccessStatusTint
             )
             vaultMetricTile(
                 title: "Emergency Card",
-                value: emergencyInfoLabel,
-                detail: service.isUnlocked ? "Responder summary" : "Protected while locked",
+                value: emergencyCardStatusValue,
+                detail: emergencyCardMetricDetail,
                 iconName: "medical",
-                tint: emergencyInfoTint
+                tint: emergencyCardStatusTint
             )
             vaultMetricTile(
-                title: "Backup",
-                value: "Local Only",
-                detail: "Cloud excluded by default",
-                iconName: "internaldrive.fill",
-                tint: ColorTheme.textTertiary
+                title: "Last Updated",
+                value: vaultLastUpdatedShortLabel,
+                detail: vaultLastUpdatedMetricDetail,
+                iconName: "clock",
+                tint: vaultLastUpdatedTint
             )
         }
     }
@@ -449,13 +497,13 @@ struct SecureVaultView: View {
                 }
             } label: {
                 RediCommandCard(
-                    title: service.isUnlocked ? "Lock Vault" : "Unlock Vault",
+                    title: service.isUnlocked ? "Lock Secure Access" : "Access Documents",
                     detail: service.isUnlocked
                         ? "Secure the local vault again and hide all document names."
-                        : "Use owner authentication to open encrypted local documents.",
+                        : "Open encrypted local records with Face ID, Touch ID, or passcode.",
                     systemImage: service.isUnlocked ? "lock.fill" : "lock.open.fill",
                     tint: ColorTheme.textTertiary,
-                    badge: service.isUnlocked ? "Secure" : "Open",
+                    badge: service.isUnlocked ? "Secure" : "Owner Check",
                     prominence: .accented,
                     layout: .rail
                 )
@@ -467,11 +515,26 @@ struct SecureVaultView: View {
                     isShowingEmergencyInfoEditor = true
                 } label: {
                     RediCommandCard(
-                        title: "Emergency Info",
-                        detail: "Open the responder-facing medical and contact summary.",
+                        title: "Emergency Card",
+                        detail: "Review the responder-facing medical and contact summary.",
                         systemImage: "heart.text.square.fill",
                         tint: ColorTheme.ready,
-                        badge: service.state.emergencyInfo.hasAnyContent ? "Saved" : "Add Now",
+                        badge: service.state.emergencyInfo.hasAnyContent ? "Configured" : "Required",
+                        prominence: .neutral,
+                        layout: .rail
+                    )
+                }
+                .buttonStyle(CardPressButtonStyle())
+            } else if responderAccessAvailable {
+                Button {
+                    Task { await openResponderAccess() }
+                } label: {
+                    RediCommandCard(
+                        title: "Responder Access",
+                        detail: "Show emergency info only without opening the full document list.",
+                        systemImage: "heart.text.square.fill",
+                        tint: ColorTheme.ready,
+                        badge: "Emergency Only",
                         prominence: .neutral,
                         layout: .rail
                     )
@@ -541,62 +604,38 @@ struct SecureVaultView: View {
         [
             OperationalStatusItem(
                 iconName: "lock.shield.fill",
-                label: "Vault",
-                value: service.isUnlocked ? "Unlocked" : "Locked",
-                tone: service.isUnlocked ? .ready : .neutral
+                label: "Vault Status",
+                value: vaultRailStatusValue,
+                tone: vaultRailStatusTone
             ),
             OperationalStatusItem(
                 iconName: "documents",
                 label: "Documents",
-                value: totalDocumentLabel,
-                tone: service.isUnlocked ? .info : .neutral
+                value: documentsRailValue,
+                tone: documentsRailTone
             ),
             OperationalStatusItem(
                 iconName: "medical",
                 label: "Emergency Card",
-                value: emergencyInfoLabel,
-                tone: service.isUnlocked ? (service.state.emergencyInfo.hasAnyContent ? .ready : .caution) : .neutral
+                value: emergencyCardRailValue,
+                tone: emergencyCardRailTone
             ),
             OperationalStatusItem(
-                iconName: "icloud.slash.fill",
-                label: "Backup",
-                value: "Local Only",
-                tone: .info
+                iconName: "shield",
+                label: "Priority Access",
+                value: priorityAccessRailValue,
+                tone: priorityAccessRailTone
             )
         ]
-    }
-
-    private var totalDocumentLabel: String {
-        service.isUnlocked ? "\(service.state.documents.count)" : "Hidden"
-    }
-
-    private var quickAccessLabel: String {
-        service.isUnlocked ? "\(service.quickAccessDocuments.count)" : "Locked"
-    }
-
-    private var emergencyInfoLabel: String {
-        if !service.isUnlocked {
-            return "Locked"
-        }
-
-        return service.state.emergencyInfo.hasAnyContent ? "Saved" : "Add Now"
-    }
-
-    private var emergencyInfoTint: Color {
-        if !service.isUnlocked {
-            return ColorTheme.textTertiary
-        }
-
-        return service.state.emergencyInfo.hasAnyContent ? ColorTheme.ready : ColorTheme.warning
     }
 
     private var vaultHealthItems: [VaultHealthItem] {
         [
             VaultHealthItem(
-                title: "Emergency Info",
+                title: "Emergency Card",
                 detail: service.state.emergencyInfo.hasAnyContent
-                    ? "Responder summary saved"
-                    : "Add blood type, medications, and contacts",
+                    ? "Responder summary is configured"
+                    : "REQUIRED. Used by responders if you cannot communicate",
                 systemImage: "heart.text.square.fill",
                 tint: ColorTheme.ready,
                 isComplete: service.state.emergencyInfo.hasAnyContent,
@@ -604,7 +643,7 @@ struct SecureVaultView: View {
             ),
             VaultHealthItem(
                 title: "Identity",
-                detail: vaultCategoryHealthDetail(.identity, missingMessage: "Add passport or driver licence"),
+                detail: vaultCategoryHealthDetail(.identity, missingMessage: "Add passport, licence, or identity proof"),
                 systemImage: "person.text.rectangle.fill",
                 tint: ColorTheme.textTertiary,
                 isComplete: service.categoryCount(.identity) > 0,
@@ -612,7 +651,7 @@ struct SecureVaultView: View {
             ),
             VaultHealthItem(
                 title: "Medical",
-                detail: vaultCategoryHealthDetail(.medical, missingMessage: "Add prescriptions and care records"),
+                detail: vaultCategoryHealthDetail(.medical, missingMessage: "Add prescriptions, allergies, and care records"),
                 systemImage: "cross.case.fill",
                 tint: ColorTheme.textTertiary,
                 isComplete: service.categoryCount(.medical) > 0,
@@ -628,7 +667,7 @@ struct SecureVaultView: View {
             ),
             VaultHealthItem(
                 title: "Emergency Contacts",
-                detail: vaultCategoryHealthDetail(.emergencyContacts, missingMessage: "Add a call tree or contact list"),
+                detail: vaultCategoryHealthDetail(.emergencyContacts, missingMessage: "Add a call tree or printed contact list"),
                 systemImage: "person.2.fill",
                 tint: ColorTheme.textSecondary,
                 isComplete: service.categoryCount(.emergencyContacts) > 0,
@@ -641,17 +680,45 @@ struct SecureVaultView: View {
         vaultHealthItems.filter(\.isComplete).count
     }
 
-    private var vaultReadinessPercentage: Int {
-        guard !vaultHealthItems.isEmpty else { return 0 }
-        return Int((Double(vaultSetupCompletedCount) / Double(vaultHealthItems.count) * 100).rounded())
-    }
-
-    private var vaultNextActionText: String {
-        if let firstIncomplete = vaultHealthItems.first(where: { !$0.isComplete }) {
-            return "Add \(firstIncomplete.title.lowercased()) next"
+    private var vaultReadinessProgress: Double {
+        if service.isUnlocked {
+            guard !vaultHealthItems.isEmpty else { return 0 }
+            return Double(vaultSetupCompletedCount) / Double(vaultHealthItems.count)
         }
 
-        return "All essentials stored offline"
+        if !service.metadata.isIndexed {
+            return 0.25
+        }
+
+        var completed = 0
+        if resolvedDocumentCount > 0 { completed += 1 }
+        if resolvedQuickAccessCount > 0 { completed += 1 }
+        if emergencyCardConfigured { completed += 1 }
+        return Double(completed) / 3.0
+    }
+
+    private var vaultStatusHeadline: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Secure access required to verify"
+        }
+
+        if emergencyCardConfigured && resolvedQuickAccessCount > 0 {
+            return "Ready for emergency access"
+        }
+
+        if resolvedDocumentCount == 0 && !emergencyCardConfigured {
+            return "Not ready for emergency use"
+        }
+
+        if !emergencyCardConfigured {
+            return "Emergency card required"
+        }
+
+        if resolvedQuickAccessCount == 0 {
+            return "Priority access not staged"
+        }
+
+        return "Needs emergency setup"
     }
 
     private var vaultProgressBar: some View {
@@ -661,8 +728,8 @@ struct SecureVaultView: View {
                     .fill(ColorTheme.panelElevated)
 
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(ColorTheme.ready)
-                    .frame(width: proxy.size.width * CGFloat(vaultReadinessPercentage) / 100)
+                    .fill(vaultStatusTint)
+                    .frame(width: proxy.size.width * vaultReadinessProgress)
             }
         }
         .frame(height: 14)
@@ -698,7 +765,7 @@ struct SecureVaultView: View {
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(item.isComplete ? ColorTheme.ready : ColorTheme.warning)
 
-                Text(item.isComplete ? "Ready" : "Add")
+                Text(item.isComplete ? "READY" : "ADD NOW")
                     .font(RediTypography.caption)
                     .foregroundStyle(item.isComplete ? ColorTheme.ready : ColorTheme.warning)
             }
@@ -711,7 +778,7 @@ struct SecureVaultView: View {
     private func vaultCategoryHealthDetail(_ category: VaultCategory, missingMessage: String) -> String {
         let count = service.categoryCount(category)
         guard count > 0 else { return missingMessage }
-        return count == 1 ? "1 document stored" : "\(count) documents stored"
+        return count == 1 ? "1 document ready" : "\(count) documents ready"
     }
 
     private func handleVaultHealthSelection(_ item: VaultHealthItem) {
@@ -896,7 +963,7 @@ struct SecureVaultView: View {
                                 systemImage: "calendar"
                             )
                             vaultDocumentMetaLabel(
-                                document.updatedAt.rediM8FreshnessLabel(),
+                                "Last reviewed \(vaultRelativeDateText(from: document.updatedAt))",
                                 systemImage: "clock"
                             )
                         }
@@ -907,7 +974,7 @@ struct SecureVaultView: View {
                                 systemImage: "calendar"
                             )
                             vaultDocumentMetaLabel(
-                                document.updatedAt.rediM8FreshnessLabel(),
+                                "Last reviewed \(vaultRelativeDateText(from: document.updatedAt))",
                                 systemImage: "clock"
                             )
                         }
@@ -964,6 +1031,20 @@ struct SecureVaultView: View {
     private func unlockVault() async {
         do {
             try await service.unlock()
+            RediHaptics.success()
+        } catch {
+            RediHaptics.warning()
+            notice = VaultNotice(message: error.localizedDescription)
+        }
+    }
+
+    private func openResponderAccess() async {
+        do {
+            let emergencyInfo = try await service.accessResponderEmergencyInfo()
+            responderAccessItem = VaultResponderAccessItem(
+                emergencyInfo: emergencyInfo,
+                lastUpdatedText: vaultLastUpdatedLine
+            )
             RediHaptics.success()
         } catch {
             RediHaptics.warning()
@@ -1051,6 +1132,224 @@ struct SecureVaultView: View {
         }
         previewItem = nil
     }
+
+    private var resolvedDocumentCount: Int {
+        service.isUnlocked ? service.state.documents.count : service.metadata.documentCount
+    }
+
+    private var resolvedQuickAccessCount: Int {
+        service.isUnlocked ? service.quickAccessDocuments.count : service.metadata.quickAccessCount
+    }
+
+    private var emergencyCardConfigured: Bool {
+        service.isUnlocked ? service.state.emergencyInfo.hasAnyContent : service.metadata.hasEmergencyInfo
+    }
+
+    private var responderAccessAvailable: Bool {
+        emergencyCardConfigured
+    }
+
+    private var vaultStatusTint: Color {
+        switch vaultStatusHeadline {
+        case "Ready for emergency access":
+            return ColorTheme.ready
+        case "Secure access required to verify":
+            return ColorTheme.textTertiary
+        default:
+            return ColorTheme.warning
+        }
+    }
+
+    private var vaultPriorityLine: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Current priority: Open secure access once so RediM8 can verify emergency records stored on this device."
+        }
+
+        if !emergencyCardConfigured {
+            return "Current priority: Add emergency card details for responder use."
+        }
+
+        if resolvedQuickAccessCount == 0 {
+            return "Current priority: Stage identity, medical, insurance, or contact records for priority access."
+        }
+
+        if resolvedDocumentCount == 0 {
+            return "Current priority: Store at least one critical document offline."
+        }
+
+        return "Current priority: Review expiry, identity, and insurance records before the next incident."
+    }
+
+    private var vaultLastUpdatedLine: String {
+        if let date = service.metadata.lastUpdatedAt {
+            return "Last updated: \(vaultRelativeDateText(from: date))."
+        }
+
+        if service.metadata.isIndexed || service.isUnlocked {
+            return "Last updated: Never."
+        }
+
+        return "Last updated: Verify after secure access."
+    }
+
+    private var vaultLastUpdatedShortLabel: String {
+        guard let date = service.metadata.lastUpdatedAt else {
+            return service.metadata.isIndexed || service.isUnlocked ? "Never" : "Verify"
+        }
+
+        let days = Calendar.current.dateComponents([.day], from: date, to: .now).day ?? 0
+        if days <= 0 {
+            return "Today"
+        }
+        if days == 1 {
+            return "1d ago"
+        }
+        return "\(days)d ago"
+    }
+
+    private var vaultLastUpdatedMetricDetail: String {
+        service.metadata.lastUpdatedAt == nil && !(service.metadata.isIndexed || service.isUnlocked)
+            ? "Check after secure access"
+            : "Freshness of the last vault change"
+    }
+
+    private var vaultLastUpdatedTint: Color {
+        service.metadata.lastUpdatedAt == nil ? ColorTheme.textTertiary : ColorTheme.ready
+    }
+
+    private var documentsStatusValue: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Verify"
+        }
+        return resolvedDocumentCount == 0 ? "None stored" : "\(resolvedDocumentCount) stored"
+    }
+
+    private var documentsMetricDetail: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Open secure access to confirm"
+        }
+        return resolvedDocumentCount == 0 ? "No critical documents staged" : "Critical records stored locally"
+    }
+
+    private var documentsStatusTint: Color {
+        resolvedDocumentCount == 0 ? ColorTheme.warning : ColorTheme.textTertiary
+    }
+
+    private var priorityAccessStatusValue: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Verify"
+        }
+        return resolvedQuickAccessCount == 0 ? "None ready" : "\(resolvedQuickAccessCount) ready"
+    }
+
+    private var priorityAccessMetricDetail: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Check after secure access"
+        }
+        return resolvedQuickAccessCount == 0
+            ? "Nothing staged for first access"
+            : "Appears first during evacuation"
+    }
+
+    private var priorityAccessStatusTint: Color {
+        resolvedQuickAccessCount == 0 ? ColorTheme.warning : ColorTheme.ready
+    }
+
+    private var emergencyCardStatusValue: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Verify"
+        }
+        return emergencyCardConfigured ? "Configured" : "Required"
+    }
+
+    private var emergencyCardMetricDetail: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Check after secure access"
+        }
+        return emergencyCardConfigured
+            ? "Responder info available"
+            : "Medical and contact summary missing"
+    }
+
+    private var emergencyCardStatusTint: Color {
+        emergencyCardConfigured ? ColorTheme.ready : ColorTheme.warning
+    }
+
+    private var vaultRailStatusValue: String {
+        switch vaultStatusHeadline {
+        case "Ready for emergency access":
+            return "Ready"
+        case "Secure access required to verify":
+            return "Verify"
+        default:
+            return "Needs Setup"
+        }
+    }
+
+    private var vaultRailStatusTone: OperationalStatusTone {
+        switch vaultStatusHeadline {
+        case "Ready for emergency access":
+            return .ready
+        case "Secure access required to verify":
+            return .neutral
+        default:
+            return .caution
+        }
+    }
+
+    private var documentsRailValue: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Verify"
+        }
+        return resolvedDocumentCount == 0 ? "None" : "\(resolvedDocumentCount) Stored"
+    }
+
+    private var documentsRailTone: OperationalStatusTone {
+        resolvedDocumentCount == 0 ? .caution : .info
+    }
+
+    private var emergencyCardRailValue: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Verify"
+        }
+        return emergencyCardConfigured ? "Configured" : "Required"
+    }
+
+    private var emergencyCardRailTone: OperationalStatusTone {
+        emergencyCardConfigured ? .ready : .caution
+    }
+
+    private var priorityAccessRailValue: String {
+        if !service.metadata.isIndexed && !service.isUnlocked {
+            return "Verify"
+        }
+        return resolvedQuickAccessCount == 0 ? "None Ready" : "\(resolvedQuickAccessCount) Ready"
+    }
+
+    private var priorityAccessRailTone: OperationalStatusTone {
+        resolvedQuickAccessCount == 0 ? .caution : .ready
+    }
+
+    private func securityBullet(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .fill(ColorTheme.textTertiary)
+                .frame(width: 6, height: 6)
+                .padding(.top, 7)
+
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(ColorTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func vaultRelativeDateText(from date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        let text = formatter.localizedString(for: date, relativeTo: .now)
+        return text == "now" ? "just now" : text
+    }
 }
 
 struct EmergencyDocumentsQuickView: View {
@@ -1058,6 +1357,7 @@ struct EmergencyDocumentsQuickView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var notice: VaultNotice?
     @State private var previewItem: VaultPreviewItem?
+    @State private var responderAccessItem: VaultResponderAccessItem?
 
     var body: some View {
         NavigationStack {
@@ -1078,7 +1378,7 @@ struct EmergencyDocumentsQuickView: View {
                     }
 
                     if service.isUnlocked {
-                        PanelCard(title: "Emergency Info", subtitle: "Responder-friendly summary") {
+                        PanelCard(title: "Emergency Card", subtitle: "Responder-friendly summary") {
                             VStack(alignment: .leading, spacing: 10) {
                                 emergencyLine("Blood Type", value: service.state.emergencyInfo.bloodType)
                                 emergencyLine("Allergies", value: service.state.emergencyInfo.allergies)
@@ -1088,9 +1388,9 @@ struct EmergencyDocumentsQuickView: View {
                             }
                         }
 
-                        PanelCard(title: "Quick Documents", subtitle: "Identity, insurance, medical, and contacts first") {
+                        PanelCard(title: "Priority Documents", subtitle: "Identity, insurance, medical, and contacts first") {
                             if service.quickAccessDocuments.isEmpty {
-                                Text("No quick-access vault documents saved yet.")
+                                Text("No priority-access vault documents are staged yet.")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             } else {
@@ -1125,16 +1425,23 @@ struct EmergencyDocumentsQuickView: View {
                             }
                         }
                     } else {
-                        PanelCard(title: "Locked", subtitle: "Use Face ID, Touch ID, or passcode") {
+                        PanelCard(title: "Secure Access", subtitle: "Use responder access for emergency info only, or unlock the full vault.") {
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("RediM8 keeps these documents encrypted locally until device ownership is confirmed.")
+                                Text("RediM8 keeps these records encrypted locally until device ownership is confirmed.")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
 
-                                Button("Unlock Emergency Documents") {
+                                if service.metadata.hasEmergencyInfo {
+                                    Button("Access Responder Card") {
+                                        Task { await openResponderAccess() }
+                                    }
+                                    .buttonStyle(PrimaryActionButtonStyle())
+                                }
+
+                                Button("Access Documents") {
                                     Task { await unlockEmergencyDocuments() }
                                 }
-                                .buttonStyle(PrimaryActionButtonStyle())
+                                .buttonStyle(SecondaryActionButtonStyle())
                             }
                         }
                     }
@@ -1154,6 +1461,12 @@ struct EmergencyDocumentsQuickView: View {
             }) { item in
                 VaultQuickLookPreview(item: item)
             }
+            .sheet(item: $responderAccessItem) { item in
+                NavigationStack {
+                    VaultResponderAccessView(item: item)
+                }
+                .rediSheetPresentation()
+            }
             .alert(item: $notice) { notice in
                 Alert(title: Text(notice.title), message: Text(notice.message), dismissButton: .default(Text("OK")))
             }
@@ -1163,6 +1476,25 @@ struct EmergencyDocumentsQuickView: View {
     private func unlockEmergencyDocuments() async {
         do {
             try await service.unlock()
+            RediHaptics.success()
+        } catch {
+            RediHaptics.warning()
+            notice = VaultNotice(message: error.localizedDescription)
+        }
+    }
+
+    private func openResponderAccess() async {
+        do {
+            let emergencyInfo = try await service.accessResponderEmergencyInfo()
+            responderAccessItem = VaultResponderAccessItem(
+                emergencyInfo: emergencyInfo,
+                lastUpdatedText: {
+                    if let date = service.metadata.lastUpdatedAt {
+                        return "Last updated \(vaultRelativeDateText(from: date))."
+                    }
+                    return "Last updated: Never."
+                }()
+            )
             RediHaptics.success()
         } catch {
             RediHaptics.warning()
@@ -1195,6 +1527,13 @@ struct EmergencyDocumentsQuickView: View {
             service.releaseTemporaryPreviewURL(previewItem.url)
         }
         previewItem = nil
+    }
+
+    private func vaultRelativeDateText(from date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        let text = formatter.localizedString(for: date, relativeTo: .now)
+        return text == "now" ? "just now" : text
     }
 }
 
@@ -1251,6 +1590,89 @@ private struct VaultPreviewItem: Identifiable {
     let id = UUID()
     let url: URL
     let title: String
+}
+
+private struct VaultResponderAccessItem: Identifiable {
+    let id = UUID()
+    let emergencyInfo: EmergencyInfoCard
+    let lastUpdatedText: String
+}
+
+private struct VaultResponderAccessView: View {
+    let item: VaultResponderAccessItem
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                ModeHeroCard(
+                    eyebrow: "Responder Access",
+                    title: "Emergency Card",
+                    subtitle: "Emergency info only. The full document list remains locked.",
+                    iconName: "medical",
+                    accent: ColorTheme.ready
+                ) {
+                    TrustPillGroup(items: [
+                        TrustPillItem(title: "Emergency info only", tone: .neutral),
+                        TrustPillItem(title: "Offline ready", tone: .neutral),
+                        TrustPillItem(title: "Full vault remains locked", tone: .neutral)
+                    ])
+                }
+
+                PanelCard(title: "Responder Summary", subtitle: item.lastUpdatedText) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        responderLine("Blood Type", value: item.emergencyInfo.bloodType)
+                        responderLine("Allergies", value: item.emergencyInfo.allergies)
+                        responderLine("Medications", value: item.emergencyInfo.medications)
+                        responderLine("Contacts", value: item.emergencyInfo.emergencyContacts)
+                        responderLine("Medical Notes", value: item.emergencyInfo.medicalNotes)
+                    }
+                }
+
+                PanelCard(title: "Use This For", subtitle: "Share only what is needed in the moment.") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        securityBulletLine("Medical handoff when you cannot communicate clearly")
+                        securityBulletLine("Identity and responder support while the full vault stays locked")
+                        securityBulletLine("Fast access when signal, paper copies, or home access are unavailable")
+                    }
+                }
+            }
+            .padding(20)
+        }
+        .navigationTitle("Responder Access")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done") {
+                    dismiss()
+                }
+            }
+        }
+    }
+
+    private func responderLine(_ label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label.uppercased())
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textTertiary)
+            Text(value.nilIfBlank ?? "Not set")
+                .font(.subheadline)
+                .foregroundStyle(ColorTheme.text)
+        }
+    }
+
+    private func securityBulletLine(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .fill(ColorTheme.ready)
+                .frame(width: 6, height: 6)
+                .padding(.top, 7)
+
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(ColorTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
 }
 
 private struct VaultQuickLookPreview: UIViewControllerRepresentable {

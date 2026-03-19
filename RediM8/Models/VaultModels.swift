@@ -168,6 +168,22 @@ struct VaultState: Codable, Equatable {
     static let empty = VaultState(documents: [], emergencyInfo: .empty)
 }
 
+struct VaultMetadata: Codable, Equatable {
+    var isIndexed: Bool
+    var documentCount: Int
+    var quickAccessCount: Int
+    var hasEmergencyInfo: Bool
+    var lastUpdatedAt: Date?
+
+    static let empty = VaultMetadata(
+        isIndexed: false,
+        documentCount: 0,
+        quickAccessCount: 0,
+        hasEmergencyInfo: false,
+        lastUpdatedAt: nil
+    )
+}
+
 struct VaultImportPayload {
     let data: Data
     let displayName: String

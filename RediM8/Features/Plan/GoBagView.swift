@@ -11,8 +11,8 @@ struct GoBagView: View {
                 CinematicBanner("gobag_loadout", height: 160)
 
                 PanelCard(
-                    title: "Evacuation Bag Readiness",
-                    subtitle: "Pack the essentials before you need to leave",
+                    title: "Go Bag Status",
+                    subtitle: goBagReadyToLeaveLine,
                 ) {
                     VStack(alignment: .leading, spacing: 16) {
                         ViewThatFits(in: .horizontal) {
@@ -35,13 +35,17 @@ struct GoBagView: View {
                             height: 11
                         )
 
-                        Text("Evacuation prep score: \(viewModel.evacuationPrepScore)%")
+                        Text(goBagPriorityLine)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(goBagDepartureReady ? ColorTheme.ready : ColorTheme.warning)
+
+                        Text(goBagTimeToReadyLine)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
 
                         if !viewModel.plan.nextActions.isEmpty {
                             checklistPreviewCard(
-                                title: "Next 3 items",
+                                title: "Pack Next",
                                 items: viewModel.plan.nextActions,
                                 tint: ColorTheme.warning
                             )
@@ -61,7 +65,7 @@ struct GoBagView: View {
                             }
                         }
 
-                        Button("Start Evacuation Check") {
+                        Button("Enter Pack Mode") {
                             isShowingEvacuationCheck = true
                         }
                         .buttonStyle(PrimaryActionButtonStyle())
@@ -71,13 +75,13 @@ struct GoBagView: View {
                 SystemStatusRail(items: goBagStatusItems, accent: ColorTheme.textTertiary)
 
                 if immediateMissingItems.isEmpty {
-                    PanelCard(title: "Departure Ready", subtitle: "The bag is covered. Use the evacuation check when it is time to move.") {
+                    PanelCard(title: "Ready to Leave", subtitle: "The bag is covered. Use pack mode when it is time to move.") {
                         Text("All tracked go-bag items are marked complete. Run the evacuation check for a fast final confirmation.")
                             .font(.subheadline)
                             .foregroundStyle(ColorTheme.textSecondary)
                     }
                 } else {
-                    PanelCard(title: "Missing Now", subtitle: "Pack these blockers first before browsing the full bag by section.") {
+                    PanelCard(title: "Blockers", subtitle: "Pack these first before browsing the full bag by section.") {
                         VStack(alignment: .leading, spacing: 12) {
                             ForEach(immediateMissingItems) { item in
                                 goBagItemButton(item, emphasizeMissing: true)
@@ -86,7 +90,7 @@ struct GoBagView: View {
                     }
                 }
 
-                PanelCard(title: "Bag Sections", subtitle: "Open one section at a time so the bag reads like a staged loadout instead of a single long list.") {
+                PanelCard(title: "Bag Sections", subtitle: "Open one section at a time so the bag reads like a staged loadout instead of a single long checklist.") {
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                         ForEach(viewModel.plan.categories) { category in
                             categoryButton(category)
@@ -98,8 +102,8 @@ struct GoBagView: View {
                     PanelCard(
                         title: selectedCategory.title,
                         subtitle: categoryMissingCount(selectedCategory) == 0
-                            ? "This section is packed."
-                            : "\(categoryMissingCount(selectedCategory)) item\(categoryMissingCount(selectedCategory) == 1 ? "" : "s") still open in this section."
+                            ? "This section is ready."
+                            : "\(categoryMissingCount(selectedCategory)) blocker\(categoryMissingCount(selectedCategory) == 1 ? "" : "s") still open in this section."
                     ) {
                         VStack(alignment: .leading, spacing: 12) {
                             ForEach(selectedCategory.items) { item in
@@ -131,19 +135,19 @@ struct GoBagView: View {
         [
             OperationalStatusItem(
                 iconName: "go_bag",
-                label: "Ready",
-                value: viewModel.plan.readiness.percentage.percentageText,
-                tone: viewModel.plan.readiness.percentage >= 67 ? .ready : .caution
+                label: "Leave Status",
+                value: goBagDepartureReady ? "YES" : "NO",
+                tone: goBagDepartureReady ? .ready : .danger
             ),
             OperationalStatusItem(
                 iconName: "warning",
-                label: "Missing",
+                label: "Blockers",
                 value: "\(immediateMissingItems.count == missingItems.count ? missingItems.count : immediateMissingItems.count)+",
                 tone: missingItems.isEmpty ? .ready : .caution
             ),
             OperationalStatusItem(
                 iconName: "signal",
-                label: "Scenario Items",
+                label: "Scenario Gaps",
                 value: "\(scenarioSpecificMissingCount)",
                 tone: scenarioSpecificMissingCount == 0 ? .neutral : .info
             )
@@ -158,6 +162,44 @@ struct GoBagView: View {
 
     private var immediateMissingItems: [GoBagItem] {
         Array(missingItems.prefix(4))
+    }
+
+    private var goBagDepartureReady: Bool {
+        immediateMissingItems.isEmpty
+    }
+
+    private var goBagStatusLabel: String {
+        if goBagDepartureReady {
+            return "READY"
+        }
+        if viewModel.plan.readiness.percentage >= 67 {
+            return "PARTIAL"
+        }
+        return "NOT READY"
+    }
+
+    private var goBagReadyToLeaveLine: String {
+        "Ready to leave: \(goBagDepartureReady ? "YES" : "NO")"
+    }
+
+    private var goBagPriorityLine: String {
+        if goBagDepartureReady {
+            return "Current priority: Maintain leave-now essentials."
+        }
+
+        if let firstMissing = immediateMissingItems.first {
+            return "Current priority: \(firstMissing.title)"
+        }
+
+        return "Current priority: Resolve pack blockers."
+    }
+
+    private var goBagTimeToReadyLine: String {
+        guard !goBagDepartureReady else {
+            return "Estimated time to basic readiness: baseline covered."
+        }
+
+        return "Estimated time to basic readiness: \(formattedDuration(minutes: max(immediateMissingItems.count, 1) * 6))."
     }
 
     private var scenarioSpecificMissingCount: Int {
@@ -217,7 +259,7 @@ struct GoBagView: View {
                         .foregroundStyle(ColorTheme.text)
                         .multilineTextAlignment(.leading)
                     Spacer(minLength: 0)
-                    Text(missingCount == 0 ? "100% complete" : "\(completedCount)/\(category.items.count) complete")
+                    Text("\(completedCount)/\(category.items.count) - \(categoryOperationalLabel(missingCount: missingCount))")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(missingCount == 0 ? ColorTheme.ready : ColorTheme.warning)
                 }
@@ -228,7 +270,7 @@ struct GoBagView: View {
                     height: 8
                 )
 
-                Text("\(completionPercentage)% ready")
+                Text(missingCount == 0 ? "Section ready to move" : "\(completionPercentage)% staged")
                     .font(.caption)
                     .foregroundStyle(ColorTheme.textSecondary)
             }
@@ -344,23 +386,45 @@ struct GoBagView: View {
 
     private var gobagReadinessHeadline: some View {
         Group {
-            Text(viewModel.plan.readiness.percentage.percentageText)
+            Text(goBagStatusLabel)
                 .font(.system(size: 42, weight: .bold))
                 .foregroundStyle(ColorTheme.text)
                 .minimumScaleFactor(0.78)
                 .lineLimit(1)
 
-            Text("Ready")
+            Text(goBagReadyToLeaveLine)
                 .font(.headline.weight(.semibold))
-                .foregroundStyle(viewModel.plan.readiness.percentage >= 67 ? ColorTheme.ready : ColorTheme.warning)
+                .foregroundStyle(goBagDepartureReady ? ColorTheme.ready : ColorTheme.warning)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(
-                    (viewModel.plan.readiness.percentage >= 67 ? ColorTheme.ready : ColorTheme.warning)
+                    (goBagDepartureReady ? ColorTheme.ready : ColorTheme.warning)
                         .opacity(0.16),
                     in: Capsule()
                 )
         }
+    }
+
+    private func categoryOperationalLabel(missingCount: Int) -> String {
+        if missingCount == 0 {
+            return "READY"
+        }
+        return missingCount >= 3 ? "NOT READY" : "PARTIAL"
+    }
+
+    private func formattedDuration(minutes: Int) -> String {
+        guard minutes >= 60 else {
+            return "~\(minutes) min"
+        }
+
+        let hours = minutes / 60
+        let remainingMinutes = minutes % 60
+
+        if remainingMinutes == 0 {
+            return "~\(hours) hr"
+        }
+
+        return "~\(hours) hr \(remainingMinutes) min"
     }
 }
 

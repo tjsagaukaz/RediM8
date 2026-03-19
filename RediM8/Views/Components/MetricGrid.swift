@@ -28,15 +28,20 @@ struct MetricItem: Identifiable {
 struct MetricGrid: View {
     let items: [MetricItem]
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     private var columns: [GridItem] {
         let count: Int
-        switch sizeClass {
-        case .regular:
-            count = 4
-        default:
-            count = 2
+        if dynamicTypeSize.isAccessibilitySize {
+            count = 1
+        } else {
+            switch sizeClass {
+            case .regular:
+                count = 4
+            default:
+                count = 2
+            }
         }
         return Array(repeating: GridItem(.flexible(), spacing: RediSpacing.content), count: count)
     }
@@ -44,23 +49,41 @@ struct MetricGrid: View {
     var body: some View {
         LazyVGrid(columns: columns, spacing: RediSpacing.content) {
             ForEach(items) { item in
-                HStack(spacing: RediSpacing.tight) {
-                    Text(item.label.uppercased())
-                        .font(RediTypography.label)
-                        .tracking(1.2)
-                        .foregroundStyle(ColorTheme.textTertiary)
-                        .lineLimit(1)
+                Group {
+                    if dynamicTypeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: RediSpacing.micro) {
+                            Text(item.label)
+                                .font(RediTypography.label)
+                                .tracking(1.2)
+                                .foregroundStyle(ColorTheme.textTertiary)
+                                .fixedSize(horizontal: false, vertical: true)
 
-                    Spacer(minLength: RediSpacing.micro)
+                            Text(item.value)
+                                .font(RediTypography.data)
+                                .foregroundStyle(statusColor(item.status))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    } else {
+                        HStack(spacing: RediSpacing.tight) {
+                            Text(item.label.uppercased())
+                                .font(RediTypography.label)
+                                .tracking(1.2)
+                                .foregroundStyle(ColorTheme.textTertiary)
+                                .lineLimit(1)
 
-                    Text(item.value)
-                        .font(RediTypography.data)
-                        .foregroundStyle(statusColor(item.status))
-                        .lineLimit(1)
+                            Spacer(minLength: RediSpacing.micro)
+
+                            Text(item.value)
+                                .font(RediTypography.data)
+                                .foregroundStyle(statusColor(item.status))
+                                .lineLimit(1)
+                        }
+                    }
                 }
-                .frame(height: 32)
+                .frame(maxWidth: .infinity, minHeight: dynamicTypeSize.isAccessibilitySize ? nil : 32, alignment: .leading)
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("\(item.label): \(item.value)")
+                .accessibilityLabel(item.label)
+                .accessibilityValue(item.value)
             }
         }
     }

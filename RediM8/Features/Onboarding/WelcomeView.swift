@@ -4,44 +4,44 @@ struct WelcomeView: View {
     @ObservedObject var viewModel: OnboardingViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 12) {
             RediM8Wordmark(
                 iconSize: 48,
                 titleFont: .system(size: 26, weight: .black),
-                subtitle: "Offline-first emergency readiness",
+                subtitle: "Offline-first emergency operating system",
                 subtitleColor: ColorTheme.info
             )
 
             ModeHeroCard(
-                eyebrow: "Fast Setup",
-                title: "Be ready in a few quick steps.",
-                subtitle: "We only ask for the basics: your risks, your household, your current supplies, and safer defaults.",
+                eyebrow: "System Setup",
+                title: "Select the situations you need to be ready for.",
+                subtitle: "RediM8 will configure your baseline accordingly. Household profile, supplies, medical details, and routes can be refined later from Home.",
                 iconName: "emergency",
                 accent: ColorTheme.info,
                 backgroundAssetName: "onboarding_family",
                 backgroundImageOffset: CGSize(width: 18, height: 0)
             ) {
                 TrustPillGroup(items: [
-                    TrustPillItem(title: "2-minute setup", tone: .verified),
-                    TrustPillItem(title: "Edit later anytime", tone: .neutral),
-                    TrustPillItem(title: "Offline first", tone: .info)
+                    TrustPillItem(title: "Under a minute", tone: .verified),
+                    TrustPillItem(title: "Baseline only", tone: .neutral),
+                    TrustPillItem(title: "Refine later", tone: .info)
                 ])
             }
 
-            PanelCard(title: "We’ll Save", subtitle: "Just the essentials for a usable first launch.") {
+            PanelCard(title: "Minimum Required", subtitle: "Minimum required to activate your system.") {
                 VStack(alignment: .leading, spacing: 12) {
-                    setupLine("Risks RediM8 should prioritize.")
-                    setupLine("A simple household count, route, meeting point, and contact.")
-                    setupLine("A rough supply snapshot so the gaps are real.")
-                    setupLine("Privacy, battery, and grab-and-go defaults.")
+                    setupLine("Review the operating limits.")
+                    setupLine("Select the situations RediM8 should prioritize.")
+                    setupLine("Activate the baseline.")
                 }
             }
 
-            PanelCard(title: "Keep It Simple", subtitle: "You do not need perfect answers right now.") {
+            PanelCard(title: "After Activation", subtitle: "Home will guide the next build-out.") {
                 VStack(alignment: .leading, spacing: 10) {
-                    setupLine("Official alerts always come first.")
-                    setupLine("Signal and community reports are assistive only.")
-                    setupLine("You can refine everything later from Home, Plan, or Settings.")
+                    setupLine("Record household details, routes, and meeting points.")
+                    setupLine("Log supplies so RediM8 can identify the real gaps.")
+                    setupLine("Store emergency contacts and critical medical details.")
+                    setupLine("Set privacy, battery, and grab-and-go defaults.")
                 }
             }
         }

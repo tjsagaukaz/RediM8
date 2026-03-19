@@ -27,6 +27,13 @@ final class AppStateSettingsTests: XCTestCase {
 
         let appState = AppState(store: store)
 
+        // Simulate user being near the alert (Brisbane region)
+        appState.locationService.simulate(
+            location: CLLocation(latitude: -27.38, longitude: 152.87)
+        )
+        // Refresh the emergency unlock state now that location is available
+        appState.map.refreshAfterLocationChange()
+
         XCTAssertTrue(appState.emergencyUnlockState.isActive)
         XCTAssertEqual(appState.emergencyUnlockState.triggerAlert?.id, "qld-bushfire-test")
         XCTAssertEqual(
@@ -164,52 +171,48 @@ final class AppStateSettingsTests: XCTestCase {
     }
 
     @MainActor
-    func testOnboardingViewModelFinishPersistsPlanBasicsAndTrustDefaults() {
+    func testOnboardingViewModelFinishPersistsScenariosAndBushfireLayers() {
         let store = try? SQLiteStore(filename: "OnboardingFinish-\(UUID().uuidString).sqlite")
         let appState = AppState(store: store)
         let viewModel = OnboardingViewModel(appState: appState)
 
         viewModel.selectedScenarios = [.bushfires, .remoteTravel]
-        viewModel.peopleCount = 3
-        viewModel.petCount = 2
-        viewModel.primaryMeetingPoint = "South Oval"
-        viewModel.primaryEvacuationRoute = "Pacific Motorway northbound"
-        viewModel.emergencyContactName = "Alex"
-        viewModel.emergencyContactPhone = "0400 123 456"
-        viewModel.medicalNotes = "Ventolin inhaler in glove box"
-        viewModel.emergencyMedicalConditions = [.asthma, .bloodThinnerMedication]
-        viewModel.severeAllergies = "Peanuts"
-        viewModel.bloodType = "O+"
-        viewModel.emergencyMedication = "Inhaler in glove box"
-        viewModel.otherCriticalCondition = "Uses hearing aid"
-        viewModel.isAnonymousModeEnabled = true
-        viewModel.locationShareMode = .off
-        viewModel.enablesSurvivalModeAtFifteenPercent = false
-        viewModel.reducesMapAnimations = true
 
         viewModel.finish()
 
         XCTAssertEqual(appState.profile.selectedScenarios, [.bushfires, .remoteTravel])
-        XCTAssertEqual(appState.profile.household.peopleCount, 3)
-        XCTAssertEqual(appState.profile.household.petCount, 2)
-        XCTAssertEqual(appState.profile.meetingPoints.primary, "South Oval")
-        XCTAssertEqual(appState.profile.evacuationRoutes.first, "Pacific Motorway northbound")
-        XCTAssertEqual(appState.profile.emergencyContacts.first?.name, "Alex")
-        XCTAssertEqual(appState.profile.emergencyContacts.first?.phone, "0400 123 456")
-        XCTAssertEqual(appState.profile.medicalNotes, "Ventolin inhaler in glove box")
-        XCTAssertEqual(appState.profile.emergencyMedicalInfo.criticalConditions, [.asthma, .bloodThinnerMedication])
-        XCTAssertEqual(appState.profile.emergencyMedicalInfo.severeAllergies, "Peanuts")
-        XCTAssertEqual(appState.profile.emergencyMedicalInfo.bloodType, "O+")
-        XCTAssertEqual(appState.profile.emergencyMedicalInfo.emergencyMedication, "Inhaler in glove box")
-        XCTAssertEqual(appState.profile.emergencyMedicalInfo.otherCriticalCondition, "Uses hearing aid")
         XCTAssertTrue(appState.profile.isOnboardingComplete)
         XCTAssertNotNil(appState.profile.lastAcknowledgedSafetyNoticeAt)
-
-        XCTAssertTrue(appState.settings.privacy.isAnonymousModeEnabled)
-        XCTAssertEqual(appState.settings.privacy.locationShareMode, .off)
-        XCTAssertFalse(appState.settings.battery.enablesSurvivalModeAtFifteenPercent)
-        XCTAssertTrue(appState.settings.battery.reducesMapAnimations)
         XCTAssertTrue(appState.settings.maps.defaultLayers.contains(.evacuationPoints))
+        XCTAssertTrue(appState.settings.maps.defaultLayers.contains(.waterPoints))
+    }
+
+    @MainActor
+    func testProfileCompletionStepsTrackProgressiveDisclosure() {
+        var profile = UserProfile.empty
+        XCTAssertFalse(profile.isProfileFullyComplete)
+        XCTAssertEqual(profile.nextIncompleteProfileStep?.id, "household")
+
+        profile.household = HouseholdDetails(peopleCount: 2, petCount: 1)
+        profile.emergencyContacts = [EmergencyContact(name: "Alex", phone: "0400 123 456")]
+        profile.evacuationRoutes = ["Pacific Motorway northbound"]
+        profile.supplies = Supplies(waterLitres: 20, foodDays: 3, fuelLitres: 10, batteryCapacity: 50)
+        profile.emergencyMedicalInfo = EmergencyMedicalInfo(
+            criticalConditions: [.asthma],
+            severeAllergies: "Peanuts",
+            bloodType: "O+"
+        )
+        profile.checklistItems = [
+            ChecklistItem(kind: .firstAidKit, isChecked: true),
+            ChecklistItem(kind: .batteryRadio, isChecked: false),
+            ChecklistItem(kind: .torch, isChecked: false),
+            ChecklistItem(kind: .powerBank, isChecked: false),
+            ChecklistItem(kind: .fireBlanket, isChecked: false)
+        ]
+
+        XCTAssertTrue(profile.isProfileFullyComplete)
+        XCTAssertEqual(profile.profileCompletionFraction, 1.0)
+        XCTAssertNil(profile.nextIncompleteProfileStep)
     }
 
     func testAnalogRescueSnapshotPrefersPrimaryFamilyMemberAndProfileMedicalInfo() {

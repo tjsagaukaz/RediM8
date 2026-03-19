@@ -32,6 +32,10 @@ final class PermissionsManager {
         }
     }
 
+    func canUseLocationUpdates(status: CLAuthorizationStatus) -> Bool {
+        locationPermissionState(for: status) == .authorized
+    }
+
     func isMotionAccessAvailable() -> Bool {
         CMMotionManager().isDeviceMotionAvailable
     }

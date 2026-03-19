@@ -72,8 +72,11 @@ struct MoreView: View {
             handlePendingNavigation()
         }
         .onChange(of: router.selectedTab) { _, newTab in
-            if newTab == .more {
+            switch newTab {
+            case .more, .plan, .vault, .library:
                 handlePendingNavigation()
+            default:
+                break
             }
         }
     }
@@ -170,6 +173,8 @@ struct MoreView: View {
         case .vault:
             SecureVaultView(
                 service: appState.documentVaultService,
+                isProUser: appState.isProUser,
+                storeKitService: appState.storeKitService,
                 scrollToTopRequestID: router.scrollToTopRequestID(for: .vault)
             )
         case .library:

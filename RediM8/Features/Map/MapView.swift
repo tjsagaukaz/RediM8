@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MapView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.openURL) private var openURL
     @StateObject private var viewModel: MapViewModel
     private let appState: AppState
@@ -26,6 +27,9 @@ struct MapView: View {
     private let mapQuickActionColumns = [
         GridItem(.adaptive(minimum: 148, maximum: 240), spacing: 12)
     ]
+    private let briefMetricColumns = [
+        GridItem(.adaptive(minimum: 148, maximum: 220), spacing: 12)
+    ]
 
     init(appState: AppState, scrollToTopRequestID: Int = 0, openEvacuationRoutes: @escaping () -> Void = {}) {
         self.appState = appState
@@ -47,6 +51,8 @@ struct MapView: View {
                     }
 
                     CinematicBanner("map_remote_track", height: 160)
+
+                    nextActionPanel
 
                     mapStatusBanner
 
@@ -183,40 +189,142 @@ struct MapView: View {
         )
     }
 
+    private var essentialLayers: [MapLayer] {
+        viewModel.availableLayers.filter { [.waterPoints, .evacuationPoints, .officialAlerts].contains($0) }
+    }
+
+    private var supportLayers: [MapLayer] {
+        viewModel.availableLayers.filter { ![.waterPoints, .evacuationPoints, .officialAlerts].contains($0) }
+    }
+
+    private var nextActionRecommendation: MapNextAction {
+        if let topOfficialAlert = viewModel.topOfficialAlert,
+           topOfficialAlert.isAreaScoped,
+           topOfficialAlert.severity != .advice {
+            return MapNextAction(
+                title: viewModel.savedRoutes.isEmpty ? "Create evacuation path" : "Review evacuation mode",
+                detail: viewModel.savedRoutes.isEmpty
+                    ? "A severe official warning is active and no saved route is ready on this device."
+                    : viewModel.officialAlertSafetyNote(for: topOfficialAlert),
+                buttonTitle: "Open Evacuation Mode",
+                systemImage: "figure.run",
+                tint: officialAlertColor,
+                action: { isShowingEvacuationPlan = true }
+            )
+        }
+
+        if viewModel.currentLocation == nil {
+            return MapNextAction(
+                title: "Recover location reference",
+                detail: "Use saved routes, known landmarks, and offline references until GPS returns.",
+                buttonTitle: "Recenter",
+                systemImage: "location.slash",
+                tint: ColorTheme.warning,
+                action: { viewModel.recenter() }
+            )
+        }
+
+        if viewModel.savedRoutes.isEmpty {
+            return MapNextAction(
+                title: "Create evacuation path",
+                detail: "No saved route is ready on this device. Build one while conditions are stable.",
+                buttonTitle: "Plan Route",
+                systemImage: "route",
+                tint: ColorTheme.warning,
+                action: { isShowingRoutePlanner = true }
+            )
+        }
+
+        if viewModel.installedPacks.isEmpty {
+            return MapNextAction(
+                title: "Install offline coverage",
+                detail: "A regional pack keeps water, shelter, and track layers available when networks fail.",
+                buttonTitle: "Open Map Packs",
+                systemImage: "square.and.arrow.down",
+                tint: ColorTheme.info,
+                action: { isShowingMapPacks = true }
+            )
+        }
+
+        if let point = viewModel.featuredWaterPoints.first {
+            return MapNextAction(
+                title: "Check nearest water source",
+                detail: "\(point.name) is \(viewModel.waterDistanceText(for: point)). Confirm access before moving.",
+                buttonTitle: "Find Resources",
+                systemImage: "drop.fill",
+                tint: ColorTheme.info,
+                action: { isShowingNearestResource = true }
+            )
+        }
+
+        return MapNextAction(
+            title: "Review live map",
+            detail: "Map mode and offline fallback are ready. Scan resources and route options around your position.",
+            buttonTitle: "Open Full Screen Map",
+            systemImage: "map.fill",
+            tint: ColorTheme.textTertiary,
+            action: { isShowingFullScreenMap = true }
+        )
+    }
+
     private var embeddedMapPanel: some View {
         VStack(alignment: .leading, spacing: 14) {
             embeddedMapSurface
-
-            Button {
-                isShowingFullScreenMap = true
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "arrow.up.left.and.arrow.down.right")
-                        .font(.system(size: 14, weight: .bold))
-                    Text("Open Full Screen Map")
-                        .font(.subheadline.weight(.bold))
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(ColorTheme.textMuted)
-                }
-                .foregroundStyle(ColorTheme.text)
-                .padding(16)
-                .background(ColorTheme.textTertiary.opacity(0.12), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(ColorTheme.textTertiary.opacity(0.22), lineWidth: 1)
-                )
-            }
-            .buttonStyle(CardPressButtonStyle())
 
             mapQuickStatusStrip
             mapSurfaceSelector
             if let mapPriorityCallout {
                 mapPriorityCallout
             }
+            evacuationModeCard
             mapQuickActions
         }
+    }
+
+    private var nextActionPanel: some View {
+        let recommendation = nextActionRecommendation
+
+        return CommandPanel(eyebrow: "Next Action") {
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: recommendation.systemImage)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(recommendation.tint)
+                    .frame(width: 18, height: 18)
+                    .padding(.top, 2)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(recommendation.title)
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(ColorTheme.text)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(recommendation.detail)
+                        .font(.subheadline)
+                        .foregroundStyle(ColorTheme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        } actions: {
+            InlineActionButton(title: recommendation.buttonTitle, action: recommendation.action)
+        }
+    }
+
+    private var evacuationModeCard: some View {
+        Button {
+            isShowingEvacuationPlan = true
+        } label: {
+            RediCommandCard(
+                title: "Evacuation Mode",
+                detail: "Route, water, shelters, and terrain guidance in one operational view.",
+                systemImage: "figure.run",
+                tint: appState.offlineRoutingService.isGraphLoaded ? ColorTheme.danger : ColorTheme.accent,
+                badge: "Mode",
+                prominence: .critical,
+                layout: .rail,
+                minHeight: 86
+            )
+        }
+        .buttonStyle(CardPressButtonStyle())
     }
 
     private var embeddedMapSurface: some View {
@@ -296,28 +404,28 @@ struct MapView: View {
             HStack(spacing: 12) {
                 mapSummaryCard(
                     title: "Official",
-                    value: viewModel.topOfficialAlert?.severity.title ?? viewModel.officialAlertStatusValue,
-                    detail: viewModel.officialAlertHeadline,
+                    value: viewModel.officialAlertStatusValue.uppercased(),
+                    detail: viewModel.topOfficialAlert?.title ?? "Monitoring official feeds for your area.",
                     accent: officialAlertColor
                 )
 
                 mapSummaryCard(
+                    title: "Map",
+                    value: viewModel.mapModeOverlayTitle,
+                    detail: viewModel.mapModeOverlayDetail,
+                    accent: viewModel.surfaceTint
+                )
+
+                mapSummaryCard(
                     title: "Routes",
-                    value: viewModel.savedRoutes.isEmpty ? "Missing" : "Ready",
-                    detail: viewModel.savedRoutes.first ?? "Create one in Plan",
+                    value: viewModel.savedRoutes.isEmpty ? "NO SAVED ROUTES" : "ROUTE READY",
+                    detail: viewModel.savedRoutes.first ?? "Create one before conditions change.",
                     accent: viewModel.savedRoutes.isEmpty ? ColorTheme.warning : ColorTheme.ready
                 )
 
                 mapSummaryCard(
-                    title: "Coverage",
-                    value: viewModel.installedPacks.isEmpty ? "Fallback" : "\(viewModel.installedPacks.count) pack(s)",
-                    detail: viewModel.installedPacks.first?.name ?? "No regional pack installed",
-                    accent: viewModel.installedPacks.isEmpty ? ColorTheme.warning : ColorTheme.info
-                )
-
-                mapSummaryCard(
                     title: "Confidence",
-                    value: viewModel.mapConfidenceValue,
+                    value: viewModel.mapConfidenceValue.uppercased(),
                     detail: viewModel.mapConfidenceDetail,
                     accent: statusColor(for: viewModel.mapConfidenceTone)
                 )
@@ -327,131 +435,124 @@ struct MapView: View {
     }
 
     private var mapQuickActions: some View {
-        LazyVGrid(columns: mapQuickActionColumns, spacing: 12) {
-            Button {
-                isShowingFullScreenMap = true
-            } label: {
-                RediCommandCard(
-                    title: "Full Screen",
-                    detail: "Open the live map canvas with the maximum visible field area.",
-                    systemImage: "arrow.up.left.and.arrow.down.right",
-                    tint: ColorTheme.textTertiary,
-                    badge: "Canvas",
-                    prominence: .accented,
-                    minHeight: 102
-                )
-            }
-            .buttonStyle(CardPressButtonStyle())
+        VStack(alignment: .leading, spacing: 14) {
+            mapSectionLabel("Primary Actions")
 
-            Button {
-                viewModel.recenter()
-            } label: {
-                RediCommandCard(
-                    title: "Recenter",
-                    detail: "Snap back to your current location and heading reference.",
-                    systemImage: "location.fill",
-                    tint: ColorTheme.textTertiary,
-                    badge: viewModel.currentLocation == nil ? "Waiting" : "Live",
-                    prominence: .neutral,
-                    minHeight: 102
-                )
-            }
-            .buttonStyle(CardPressButtonStyle())
-
-            Button {
-                isShowingNearestResource = true
-            } label: {
-                RediCommandCard(
-                    title: "Find Nearest",
-                    detail: "Locate nearest water, shelter, road, or town from your position.",
-                    systemImage: "scope",
-                    tint: ColorTheme.accent,
-                    badge: "KNN",
-                    prominence: .accented,
-                    minHeight: 102
-                )
-            }
-            .buttonStyle(CardPressButtonStyle())
-
-            Button {
-                isShowingRoutePlanner = true
-            } label: {
-                RediCommandCard(
-                    title: "Route Planner",
-                    detail: "Compute offline evacuation routes using CH routing engine.",
-                    systemImage: "route",
-                    tint: appState.offlineRoutingService.isGraphLoaded ? ColorTheme.ready : ColorTheme.accent,
-                    badge: appState.offlineRoutingService.isGraphLoaded ? "Ready" : "Offline",
-                    prominence: .accented,
-                    minHeight: 102
-                )
-            }
-            .buttonStyle(CardPressButtonStyle())
-
-            Button {
-                isShowingEvacuationPlan = true
-            } label: {
-                RediCommandCard(
-                    title: "Evacuation Plan",
-                    detail: "Full survival corridor — route, water, shelters, and terrain.",
-                    systemImage: "figure.run",
-                    tint: appState.offlineRoutingService.isGraphLoaded ? ColorTheme.danger : ColorTheme.accent,
-                    badge: "Survival",
-                    prominence: .accented,
-                    minHeight: 102
-                )
-            }
-            .buttonStyle(CardPressButtonStyle())
-
-            Button {
-                viewModel.toggleDistanceRings()
-            } label: {
-                RediCommandCard(
-                    title: viewModel.showsDistanceRings ? "Hide Rings" : "Show Rings",
-                    detail: "Toggle the 1 km, 5 km, and 10 km tactical distance guides.",
-                    systemImage: viewModel.showsDistanceRings ? "circle.hexagongrid.circle.fill" : "circle.hexagongrid.circle",
-                    tint: ColorTheme.textTertiary,
-                    badge: viewModel.showsDistanceRings ? "On" : "Off",
-                    prominence: .neutral,
-                    minHeight: 102
-                )
-            }
-            .buttonStyle(CardPressButtonStyle())
-
-            Button {
-                withAnimation(RediMotion.reveal) {
-                    isShowingLayers = true
+            LazyVGrid(columns: mapQuickActionColumns, spacing: 12) {
+                Button {
+                    isShowingNearestResource = true
+                } label: {
+                    RediCommandCard(
+                        title: "Find Resources",
+                        detail: "Locate nearest water, shelter, road, or town from your position.",
+                        systemImage: "scope",
+                        tint: ColorTheme.accent,
+                        badge: "Primary",
+                        prominence: .accented,
+                        minHeight: 102
+                    )
                 }
-            } label: {
-                RediCommandCard(
-                    title: "Map Layers",
-                    detail: "Choose water, shelters, alerts, reports, and evacuation overlays.",
-                    systemImage: "square.3.layers.3d",
-                    tint: ColorTheme.textTertiary,
-                    badge: "Layers",
-                    prominence: .neutral,
-                    minHeight: 102
-                )
-            }
-            .buttonStyle(CardPressButtonStyle())
+                .buttonStyle(CardPressButtonStyle())
 
-            Button {
-                withAnimation(RediMotion.reveal) {
-                    isShowingMapBrief = true
-                    isShowingRouteInspector = true
+                Button {
+                    isShowingRoutePlanner = true
+                } label: {
+                    RediCommandCard(
+                        title: "Plan Route",
+                        detail: "Compute offline evacuation routes using the routing engine.",
+                        systemImage: "route",
+                        tint: appState.offlineRoutingService.isGraphLoaded ? ColorTheme.ready : ColorTheme.accent,
+                        badge: appState.offlineRoutingService.isGraphLoaded ? "Ready" : "Offline",
+                        prominence: .accented,
+                        minHeight: 102
+                    )
                 }
-            } label: {
-                RediCommandCard(
-                    title: "Open Brief",
-                    detail: "See confidence, saved routes, official warnings, and trust detail.",
-                    systemImage: "slider.horizontal.3",
-                    tint: ColorTheme.textTertiary,
-                    badge: "Brief",
-                    prominence: .accented,
-                    minHeight: 102
-                )
+                .buttonStyle(CardPressButtonStyle())
             }
-            .buttonStyle(CardPressButtonStyle())
+
+            mapSectionLabel("Support")
+
+            LazyVGrid(columns: mapQuickActionColumns, spacing: 12) {
+                Button {
+                    viewModel.recenter()
+                } label: {
+                    RediCommandCard(
+                        title: "Recenter",
+                        detail: "Snap back to your current location and heading reference.",
+                        systemImage: "location.fill",
+                        tint: ColorTheme.textTertiary,
+                        badge: viewModel.currentLocation == nil ? "Waiting" : "Live",
+                        prominence: .neutral,
+                        minHeight: 102
+                    )
+                }
+                .buttonStyle(CardPressButtonStyle())
+
+                Button {
+                    isShowingFullScreenMap = true
+                } label: {
+                    RediCommandCard(
+                        title: "Full Screen",
+                        detail: "Open the live map canvas with the maximum visible field area.",
+                        systemImage: "arrow.up.left.and.arrow.down.right",
+                        tint: ColorTheme.textTertiary,
+                        badge: "Canvas",
+                        prominence: .neutral,
+                        minHeight: 102
+                    )
+                }
+                .buttonStyle(CardPressButtonStyle())
+
+                Button {
+                    viewModel.toggleDistanceRings()
+                } label: {
+                    RediCommandCard(
+                        title: viewModel.showsDistanceRings ? "Hide Rings" : "Show Rings",
+                        detail: "Toggle the 1 km, 5 km, and 10 km tactical distance guides.",
+                        systemImage: viewModel.showsDistanceRings ? "circle.hexagongrid.circle.fill" : "circle.hexagongrid.circle",
+                        tint: ColorTheme.textTertiary,
+                        badge: viewModel.showsDistanceRings ? "On" : "Off",
+                        prominence: .neutral,
+                        minHeight: 102
+                    )
+                }
+                .buttonStyle(CardPressButtonStyle())
+
+                Button {
+                    withAnimation(RediMotion.reveal) {
+                        isShowingLayers = true
+                    }
+                } label: {
+                    RediCommandCard(
+                        title: "Map Layers",
+                        detail: "Choose water, shelters, alerts, reports, and support overlays.",
+                        systemImage: "square.3.layers.3d",
+                        tint: ColorTheme.textTertiary,
+                        badge: "Layers",
+                        prominence: .neutral,
+                        minHeight: 102
+                    )
+                }
+                .buttonStyle(CardPressButtonStyle())
+
+                Button {
+                    withAnimation(RediMotion.reveal) {
+                        isShowingMapBrief = true
+                        isShowingRouteInspector = true
+                    }
+                } label: {
+                    RediCommandCard(
+                        title: "Open Brief",
+                        detail: "See confidence, saved routes, official warnings, and trust detail.",
+                        systemImage: "slider.horizontal.3",
+                        tint: ColorTheme.textTertiary,
+                        badge: "Brief",
+                        prominence: .neutral,
+                        minHeight: 102
+                    )
+                }
+                .buttonStyle(CardPressButtonStyle())
+            }
         }
     }
 
@@ -481,7 +582,7 @@ struct MapView: View {
 
     private func mapSummaryCard(title: String, value: String, detail: String, accent: Color) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title.uppercased())
+            Text(title)
                 .font(RediTypography.caption)
                 .foregroundStyle(accent)
 
@@ -492,15 +593,24 @@ struct MapView: View {
             Text(detail)
                 .font(.caption)
                 .foregroundStyle(ColorTheme.textMuted)
-                .lineLimit(2)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .frame(width: 184, alignment: .leading)
+        .frame(
+            minWidth: dynamicTypeSize.isAccessibilitySize ? 220 : 184,
+            maxWidth: dynamicTypeSize.isAccessibilitySize ? 280 : 220,
+            alignment: .leading
+        )
         .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(accent.opacity(0.18), lineWidth: 1)
         )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title)
+        .accessibilityValue(value)
+        .accessibilityHint(detail)
     }
 
     private func mapInlineCallout(title: String, detail: String, accent: Color) -> some View {
@@ -577,14 +687,6 @@ struct MapView: View {
                 )
             }
         }
-    }
-
-    private var mapSummarySubtitle: String {
-        if viewModel.installedPacks.isEmpty {
-            return viewModel.surfaceMode.usesAppleTiles ? "Live tiles with fallback overlays" : "Fallback only"
-        }
-
-        return viewModel.installedPacks.first?.name ?? "Coverage installed"
     }
 
     private var fullScreenMapView: some View {
@@ -716,18 +818,31 @@ struct MapView: View {
     }
 
     private var mapModeBadge: some View {
-        Text(viewModel.surfaceBadgeTitle)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(viewModel.surfaceTint)
-            .lineLimit(1)
-            .minimumScaleFactor(0.82)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.black.opacity(0.82), in: Capsule())
-            .overlay(
-                Capsule()
-                    .stroke(viewModel.surfaceTint.opacity(0.28), lineWidth: 1)
-            )
+        VStack(alignment: .leading, spacing: 4) {
+            Text("MAP MODE")
+                .font(RediTypography.label)
+                .tracking(1.2)
+                .foregroundStyle(viewModel.surfaceTint)
+
+            Text(viewModel.mapModeOverlayTitle)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(ColorTheme.text)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(viewModel.mapModeOverlayDetail)
+                .font(.caption2)
+                .foregroundStyle(ColorTheme.textMuted)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(Color.black.opacity(0.82), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(viewModel.surfaceTint.opacity(0.28), lineWidth: 1)
+        )
     }
 
     private var headingBadge: some View {
@@ -752,15 +867,20 @@ struct MapView: View {
 
     private var compactMapSummary: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(viewModel.surfaceMode.title)
+            Text("MAP CONFIDENCE")
                 .font(.caption.weight(.semibold))
-                .foregroundStyle(ColorTheme.text)
+                .foregroundStyle(statusColor(for: viewModel.mapConfidenceTone))
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
-            Text(mapSummarySubtitle)
+            Text(viewModel.mapConfidenceValue.uppercased())
+                .font(.caption.weight(.bold))
+                .foregroundStyle(ColorTheme.text)
+                .lineLimit(1)
+            Text(viewModel.mapConfidenceOverlayDetail)
                 .font(.caption2)
                 .foregroundStyle(ColorTheme.textMuted)
                 .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -816,10 +936,10 @@ struct MapView: View {
                     .font(.caption.weight(.bold))
                     .foregroundStyle(mapStatusColor)
                 Text(viewModel.mapStatusHeadline)
-                    .font(.headline)
+                    .font(.title3.weight(.bold))
                     .foregroundStyle(ColorTheme.text)
                 Text(viewModel.mapStatusDetail)
-                    .font(.subheadline)
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(ColorTheme.textMuted)
             }
 
@@ -855,7 +975,7 @@ struct MapView: View {
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                Text("Nearest On Map")
+                Text("Nearest Resources")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(ColorTheme.textFaint)
 
@@ -875,7 +995,7 @@ struct MapView: View {
 
                 referenceChip(
                     title: "Route",
-                    detail: viewModel.savedRoutes.isEmpty ? "None saved" : "Saved",
+                    detail: viewModel.savedRoutes.isEmpty ? "No saved route" : "Route ready",
                     iconName: "route",
                     accent: viewModel.savedRoutes.isEmpty ? ColorTheme.warning : ColorTheme.info
                 )
@@ -960,17 +1080,94 @@ struct MapView: View {
         }
     }
 
-    private func operationalLine(label: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Text(label)
-                .font(RediTypography.caption)
-                .foregroundStyle(ColorTheme.textFaint)
-                .frame(width: 70, alignment: .leading)
+    private func mapSectionLabel(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(RediTypography.label)
+            .tracking(1.2)
+            .foregroundStyle(ColorTheme.textTertiary)
+    }
+
+    private func briefMetricCard(title: String, value: String, detail: String, accent: Color) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title.uppercased())
+                .font(RediTypography.label)
+                .tracking(1.2)
+                .foregroundStyle(accent)
+
+            Text(value)
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.text)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text(detail)
-                .font(.subheadline)
+                .font(.caption)
+                .foregroundStyle(ColorTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(accent.opacity(0.18), lineWidth: 1)
+        )
+    }
+
+    private func bulletLine(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .fill(ColorTheme.textTertiary)
+                .frame(width: 6, height: 6)
+                .padding(.top, 6)
+
+            Text(text)
+                .font(.caption)
                 .foregroundStyle(ColorTheme.text)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func layerToggleRow(_ layer: MapLayer) -> some View {
+        Toggle(isOn: layerBinding(for: layer)) {
+            HStack(alignment: .top, spacing: 12) {
+                MapLayerIcon(layer, size: 22)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(layerDisplayTitle(for: layer))
+                        .font(.headline)
+                        .foregroundStyle(ColorTheme.text)
+                    Text(layerDisplaySubtitle(for: layer))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .toggleStyle(.switch)
+        .tint(ColorTheme.accent)
+    }
+
+    private func layerDisplayTitle(for layer: MapLayer) -> String {
+        switch layer {
+        case .resources:
+            "Critical Resources"
+        case .dirtRoads:
+            "Unsealed Roads"
+        case .evacuationPoints:
+            "Evacuation"
+        default:
+            layer.title
+        }
+    }
+
+    private func layerDisplaySubtitle(for layer: MapLayer) -> String {
+        switch layer {
+        case .resources:
+            "Hospitals, fuel, pharmacies, and other critical support places"
+        case .dirtRoads:
+            "Unsealed roads, 4WD tracks, and station access"
+        case .evacuationPoints:
+            "Baseline evacuation centres, shelters, and assembly points"
+        default:
+            layer.subtitle
         }
     }
 
@@ -1032,27 +1229,21 @@ struct MapView: View {
             ),
             OperationalStatusItem(
                 iconName: "map_marker",
-                label: "Basemap",
+                label: "Map",
                 value: viewModel.basemapOperationalValue,
                 tone: viewModel.basemapOperationalTone
             ),
             OperationalStatusItem(
                 iconName: "route",
                 label: "Routes",
-                value: viewModel.savedRoutes.isEmpty ? "None saved" : "\(viewModel.savedRoutes.count) saved",
+                value: viewModel.savedRoutes.isEmpty ? "No saved routes" : "\(viewModel.savedRoutes.count) saved",
                 tone: viewModel.savedRoutes.isEmpty ? .caution : .ready
             ),
             OperationalStatusItem(
-                iconName: "compass",
-                label: "Position",
-                value: viewModel.currentLocation == nil ? "Unavailable" : "Live",
-                tone: viewModel.currentLocation == nil ? .caution : .ready
-            ),
-            OperationalStatusItem(
-                iconName: "documents",
-                label: "Coverage",
-                value: viewModel.installedPacks.isEmpty ? "Fallback only" : "\(viewModel.installedPacks.count) packs",
-                tone: viewModel.installedPacks.isEmpty ? .caution : .info
+                iconName: "scope",
+                label: "Confidence",
+                value: viewModel.mapConfidenceValue,
+                tone: viewModel.mapConfidenceTone
             )
         ]
     }
@@ -1076,6 +1267,10 @@ struct MapView: View {
             rows.append(("Official warnings unavailable", officialAlertUnavailableMessage))
         }
 
+        if let hazardFeedUnavailableMessage = viewModel.hazardFeedUnavailableMessage {
+            rows.append(("Live hazard feeds degraded", hazardFeedUnavailableMessage))
+        }
+
         if viewModel.savedRoutes.isEmpty {
             rows.append(("No saved evacuation route", "Create one in Plan when safe. Until then, use shelters, water points, and landmarks as manual fallbacks."))
         }
@@ -1086,35 +1281,72 @@ struct MapView: View {
     private var mapBriefContent: some View {
         VStack(spacing: 14) {
             inspectorGroup(
-                title: "Surface & Trust",
-                subtitle: "What the map is relying on right now.",
+                title: "Confidence",
+                subtitle: "Fast scan of what the map can rely on right now.",
                 accent: ColorTheme.textTertiary
             ) {
                 TrustPillGroup(items: viewModel.mapTrustItems)
-                operationalLine(label: "Confidence", detail: viewModel.mapConfidenceDetail)
-                operationalLine(label: "Basemap", detail: viewModel.workingBasemapSummary)
-                operationalLine(label: "Coverage", detail: viewModel.workingCoverageSummary)
-                operationalLine(label: "Position", detail: viewModel.workingPositionSummary)
-                operationalLine(label: "Distance Rings", detail: viewModel.showsDistanceRings ? "1 km, 5 km, and 10 km rings are visible around your live position." : "Distance rings are hidden to keep the map canvas cleaner.")
-                operationalLine(label: "Motion", detail: viewModel.workingMotionSummary)
+                LazyVGrid(columns: briefMetricColumns, spacing: 12) {
+                    briefMetricCard(
+                        title: "Confidence",
+                        value: viewModel.mapConfidenceValue,
+                        detail: viewModel.mapConfidenceOverlayDetail,
+                        accent: statusColor(for: viewModel.mapConfidenceTone)
+                    )
+                    briefMetricCard(
+                        title: "Basemap",
+                        value: viewModel.mapStatusHeadline,
+                        detail: viewModel.mapModeOverlayDetail,
+                        accent: viewModel.surfaceTint
+                    )
+                    briefMetricCard(
+                        title: "Coverage",
+                        value: viewModel.coverageLimitHeadline,
+                        detail: viewModel.installedPacks.isEmpty ? "Offline layers limited" : "Offline pack boundary active",
+                        accent: viewModel.installedPacks.isEmpty ? ColorTheme.warning : ColorTheme.info
+                    )
+                    briefMetricCard(
+                        title: "Position",
+                        value: viewModel.currentLocation == nil ? "No live position" : "Live position",
+                        detail: viewModel.currentLocation == nil ? "Waiting for GPS" : viewModel.headingText,
+                        accent: viewModel.currentLocation == nil ? ColorTheme.warning : ColorTheme.ready
+                    )
+                    briefMetricCard(
+                        title: "Hazards",
+                        value: viewModel.hazardFeedStatusValue,
+                        detail: viewModel.hazardFeedHeadline,
+                        accent: statusColor(for: viewModel.hazardFeedTone)
+                    )
+                    briefMetricCard(
+                        title: "Rings",
+                        value: viewModel.showsDistanceRings ? "1 km / 5 km / 10 km" : "Hidden",
+                        detail: viewModel.showsDistanceRings ? "Distance guides active" : "Distance guides disabled",
+                        accent: viewModel.showsDistanceRings ? ColorTheme.info : ColorTheme.textTertiary
+                    )
+                }
             }
 
             inspectorGroup(
                 title: "Coverage Limits",
-                subtitle: "Where the offline map gets stronger or weaker.",
+                subtitle: "What drops away outside your installed boundary.",
                 accent: viewModel.installedPacks.isEmpty ? ColorTheme.warning : ColorTheme.info
             ) {
-                Text("Offline layers last updated: \(viewModel.lastUpdatedText)")
-                    .font(.subheadline)
-                    .foregroundStyle(ColorTheme.text)
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("OFFLINE PACK")
+                        .font(RediTypography.label)
+                        .tracking(1.2)
+                        .foregroundStyle(ColorTheme.textFaint)
 
-                Text(viewModel.basemapStatusMessage)
-                    .font(.caption)
-                    .foregroundStyle(viewModel.surfaceTint)
+                    Text(viewModel.coverageLimitHeadline)
+                        .font(.headline)
+                        .foregroundStyle(ColorTheme.text)
+                }
 
-                Text(viewModel.coverageLimitSummary)
-                    .font(.caption)
-                    .foregroundStyle(ColorTheme.text)
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(viewModel.coverageLimitBullets, id: \.self) { bullet in
+                        bulletLine(bullet)
+                    }
+                }
 
                 if let surfaceAvailabilityNote = viewModel.surfaceAvailabilityNote {
                     Text(surfaceAvailabilityNote)
@@ -1123,6 +1355,10 @@ struct MapView: View {
                 }
 
                 installedCoveragePreview
+
+                Text("Offline layers last updated: \(viewModel.lastUpdatedText)")
+                    .font(.caption)
+                    .foregroundStyle(ColorTheme.text)
 
                 Text(TrustLayer.mapFreshnessNotice)
                     .font(.caption)
@@ -1297,8 +1533,8 @@ struct MapView: View {
 
     private var criticalNearbyPanel: some View {
         PanelCard(
-            title: "Nearest Survival References",
-            subtitle: "Water first, then shelter and evacuation fallback",
+            title: "Nearest Resources",
+            subtitle: "Water first, then shelter and evacuation options",
             backgroundAssetName: "community_shelter_hub",
             backgroundImageOffset: CGSize(width: 0, height: 0)
         ) {
@@ -1363,26 +1599,22 @@ struct MapView: View {
 
             CollapsiblePanelCard(
                 title: "Map Layers",
-                subtitle: "Advanced layer toggles for the offline map.",
+                subtitle: "Essential layers first, support layers second.",
                 accent: ColorTheme.textTertiary,
                 isExpanded: $isShowingLayers
             ) {
-                ForEach(viewModel.availableLayers) { layer in
-                    Toggle(isOn: layerBinding(for: layer)) {
-                        HStack(alignment: .top, spacing: 12) {
-                            MapLayerIcon(layer, size: 22)
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(layer.title)
-                                    .font(.headline)
-                                    .foregroundStyle(ColorTheme.text)
-                                Text(layer.subtitle)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
+                if !essentialLayers.isEmpty {
+                    mapSectionLabel("Essential")
+                    ForEach(essentialLayers) { layer in
+                        layerToggleRow(layer)
                     }
-                    .toggleStyle(.switch)
-                    .tint(ColorTheme.accent)
+                }
+
+                if !supportLayers.isEmpty {
+                    mapSectionLabel("Support")
+                    ForEach(supportLayers) { layer in
+                        layerToggleRow(layer)
+                    }
                 }
             }
 
@@ -1440,7 +1672,7 @@ struct MapView: View {
 
             if viewModel.isLayerEnabled(.dirtRoads) {
                 CollapsiblePanelCard(
-                    title: "Dirt Roads & Remote Tracks",
+                    title: "Unsealed Roads & Remote Tracks",
                     subtitle: "Unsealed roads, 4WD routes and station tracks.",
                     accent: ColorTheme.textTertiary,
                     isExpanded: $isShowingDirtRoads
@@ -2049,6 +2281,15 @@ struct MapView: View {
         .padding(14)
         .background(Color.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
+}
+
+private struct MapNextAction {
+    let title: String
+    let detail: String
+    let buttonTitle: String
+    let systemImage: String
+    let tint: Color
+    let action: () -> Void
 }
 
 private struct MapPackRow: View {

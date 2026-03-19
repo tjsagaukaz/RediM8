@@ -24,6 +24,9 @@ struct EvacuationPlanView: View {
     @State private var selectedTab: CorridorTab = .summary
     @State private var rankedRoutes: [OfflineRoutingService.RankedRoute] = []
     @State private var selectedRouteID: UUID?
+    @State private var isShowingProPaywall = false
+
+    private var isProUser: Bool { appState.isProUser }
 
     enum CorridorTab: String, CaseIterable, Identifiable {
         case summary
@@ -83,6 +86,15 @@ struct EvacuationPlanView: View {
         }
         .toolbarColorScheme(.dark, for: .navigationBar)
         .onAppear { loadDestinations() }
+        .sheet(isPresented: $isShowingProPaywall) {
+            NavigationStack {
+                RediM8ProView(
+                    storeKitService: appState.storeKitService,
+                    emergencyUnlockState: appState.emergencyUnlockState
+                )
+            }
+            .rediSheetPresentation()
+        }
     }
 
     // MARK: - Destination Selection
@@ -575,23 +587,27 @@ struct EvacuationPlanView: View {
 
                 Spacer()
 
-                // Mesh share button
+                // Mesh share button (Pro only — sending requires Pro)
                 if !appState.meshService.connectedPeers.isEmpty {
                     Button {
-                        shareRouteViaMesh(analysis)
+                        if ProFeatureGate.allowsMeshSend(isProUser: isProUser) {
+                            shareRouteViaMesh(analysis)
+                        } else {
+                            isShowingProPaywall = true
+                        }
                     } label: {
                         HStack(spacing: RediSpacing.micro) {
                             Image(systemName: "antenna.radiowaves.left.and.right")
                                 .font(.system(size: 11, weight: .medium))
-                            Text("SHARE")
+                            Text(isProUser ? "SHARE" : "SHARE (PRO)")
                                 .font(RediTypography.label)
                                 .tracking(1.2)
                         }
-                        .foregroundStyle(ColorTheme.accent)
+                        .foregroundStyle(isProUser ? ColorTheme.accent : ColorTheme.textTertiary)
                         .padding(.horizontal, RediSpacing.compact)
                         .padding(.vertical, RediSpacing.tight)
                         .background(
-                            ColorTheme.accent.opacity(0.1),
+                            (isProUser ? ColorTheme.accent : ColorTheme.textTertiary).opacity(0.1),
                             in: RoundedRectangle(cornerRadius: RediRadius.chip, style: .continuous)
                         )
                     }
@@ -888,25 +904,39 @@ struct EvacuationPlanView: View {
                 installedPacks: installedPacks
             )
 
-            // Build corridor analyzer for scoring routes
-            let corridor = RouteCorridor(
-                nearestService: nearestService,
-                installedPackIDs: installedPackIDs
-            )
+            if ProFeatureGate.allowsAdvancedRoutingIntelligence(isProUser: isProUser) {
+                // Pro: full multi-route comparison with corridor analysis
+                let corridor = RouteCorridor(
+                    nearestService: nearestService,
+                    installedPackIDs: installedPackIDs
+                )
 
-            // Compute ranked alternative routes with corridor analysis
-            rankedRoutes = try appState.offlineRoutingService.routeAlternatives(
-                from: location.coordinate,
-                to: destination.coordinate,
-                profile: selectedProfile,
-                corridor: corridor
-            )
+                rankedRoutes = try appState.offlineRoutingService.routeAlternatives(
+                    from: location.coordinate,
+                    to: destination.coordinate,
+                    profile: selectedProfile,
+                    corridor: corridor
+                )
 
-            // If only one route found, go straight to result
-            if rankedRoutes.count == 1, let only = rankedRoutes.first {
-                corridorAnalysis = only.corridorAnalysis
-                    ?? corridor.analyze(route: only.route, corridorWidthMetres: 200)
-                rankedRoutes = []
+                // If only one route found, go straight to result
+                if rankedRoutes.count == 1, let only = rankedRoutes.first {
+                    corridorAnalysis = only.corridorAnalysis
+                        ?? corridor.analyze(route: only.route, corridorWidthMetres: 200)
+                    rankedRoutes = []
+                }
+            } else {
+                // Free: basic single route, no corridor analysis or hazard ranking
+                let route = try appState.offlineRoutingService.route(
+                    from: location.coordinate,
+                    to: destination.coordinate,
+                    profile: selectedProfile
+                )
+                // Present a minimal corridor analysis with just the route basics
+                let corridor = RouteCorridor(
+                    nearestService: nearestService,
+                    installedPackIDs: installedPackIDs
+                )
+                corridorAnalysis = corridor.analyze(route: route, corridorWidthMetres: 200)
             }
 
         } catch {

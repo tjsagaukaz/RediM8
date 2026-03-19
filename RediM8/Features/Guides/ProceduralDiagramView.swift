@@ -16,6 +16,7 @@ struct ProceduralDiagramStrip: View {
                         stepNumber: step.stepIndex + 1,
                         title: step.title,
                         focusLabel: step.focusLabel,
+                        highlightedParts: step.highlightParts,
                         accent: accent
                     ) {
                         diagramContent(for: step)
@@ -53,24 +54,29 @@ struct InlineStepDiagram: View {
     let stepIndex: Int
     let accent: Color
 
+    @ScaledMetric(relativeTo: .caption2) private var headerIconSize: CGFloat = 9
+    @ScaledMetric(relativeTo: .caption2) private var headerFontSize: CGFloat = 9
+    @ScaledMetric(relativeTo: .caption2) private var focusFontSize: CGFloat = 8
+    @ScaledMetric(relativeTo: .body) private var diagramHeight: CGFloat = 180
+
     var body: some View {
         if let steps = ProceduralDiagramRegistry.steps(for: guideID),
            let step = steps.first(where: { $0.stepIndex == stepIndex }) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 6) {
                     Image(systemName: "eye.fill")
-                        .font(.system(size: 9))
+                        .font(.system(size: headerIconSize))
                         .foregroundStyle(accent.opacity(0.6))
 
-                    Text(step.title.uppercased())
-                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                    Text(step.title)
+                        .font(.system(size: headerFontSize, weight: .bold, design: .monospaced))
                         .tracking(0.8)
                         .foregroundStyle(accent.opacity(0.6))
 
                     Spacer(minLength: 0)
 
                     Text(step.focusLabel)
-                        .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                        .font(.system(size: focusFontSize, weight: .semibold, design: .monospaced))
                         .foregroundStyle(ColorTheme.textTertiary)
                 }
                 .padding(.horizontal, 10)
@@ -78,8 +84,9 @@ struct InlineStepDiagram: View {
                 .background(accent.opacity(0.06))
 
                 diagramContent(for: step)
-                    .frame(height: 180)
+                    .frame(height: diagramHeight)
                     .padding(6)
+                    .accessibilityHidden(true)
             }
             .background(ColorTheme.panel)
             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
@@ -87,6 +94,9 @@ struct InlineStepDiagram: View {
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
                     .stroke(accent.opacity(0.12), lineWidth: 0.5)
             )
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Diagram for step \(step.stepIndex + 1): \(step.title). Focus: \(step.focusLabel).")
+            .accessibilityValue(highlightedPartsDescription(for: step))
         }
     }
 
@@ -106,5 +116,16 @@ struct InlineStepDiagram: View {
         default:
             EmptyView()
         }
+    }
+
+    private func highlightedPartsDescription(for step: ProceduralDiagramStep) -> String {
+        guard !step.highlightParts.isEmpty else {
+            return "Visual reference."
+        }
+
+        let parts = step.highlightParts
+            .map { $0.replacingOccurrences(of: "_", with: " ") }
+            .joined(separator: ", ")
+        return "Highlights: \(parts)."
     }
 }

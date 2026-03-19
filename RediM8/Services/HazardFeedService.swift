@@ -10,8 +10,8 @@ import Foundation
 ///
 /// **Design decisions**:
 /// - Uses URLSession directly (no third-party dependencies) for offline-first alignment.
-/// - Network failures are silent — this is a background enrichment service, not a
-///   blocking dependency. The app functions without connectivity.
+/// - Feed failures do not block the app, but they are surfaced so the UI can warn
+///   when route hazard overlays may be stale or incomplete.
 /// - All official feed hazards are marked `.officialAlert` source and `.verified`
 ///   confidence — they override mesh/manual reports via deduplication merging.
 /// - Parsing is fault-tolerant: invalid entries are skipped, partial results are used.
@@ -29,6 +29,7 @@ final class HazardFeedService: ObservableObject {
         let hazards: [ParsedHazard]
         let fetchedAt: Date
         let errors: [String]
+        let didSucceed: Bool
     }
 
     struct ParsedHazard {
@@ -44,7 +45,7 @@ final class HazardFeedService: ObservableObject {
     private enum FeedURL {
         /// BOM severe weather warnings — national RSS feed with GeoRSS points.
         /// Contains: severe thunderstorm, flood, cyclone, fire weather warnings.
-        static let bomWarnings = "http://www.bom.gov.au/fwo/IDZ00054.warnings_land.xml"
+        static let bomWarnings = "https://www.bom.gov.au/fwo/IDZ00054.warnings_land.xml"
 
         /// NSW RFS current fires GeoJSON.
         /// Returns active fire incidents with severity and coordinates.
@@ -59,6 +60,7 @@ final class HazardFeedService: ObservableObject {
     @Published private(set) var lastFetchAt: Date?
     @Published private(set) var lastSuccessfulFetch: Date?
     @Published private(set) var lastFetchErrors: [String] = []
+    @Published private(set) var lastRefreshError: String?
     @Published private(set) var isFetching = false
 
     /// Human-readable staleness indicator for the UI.
@@ -111,35 +113,31 @@ final class HazardFeedService: ObservableObject {
     // MARK: - Fetch All
 
     /// Fetch all configured feeds and push results into the hazard intelligence service.
-    /// Network failures are silently absorbed — offline-first.
+    /// Failures are non-blocking, but they remain visible so the UI can warn when
+    /// hazard overlays may be stale or incomplete.
     func fetchAllFeeds(into hazardService: HazardIntelligenceService) async {
         guard !isFetching else { return }
         isFetching = true
         defer { isFetching = false }
 
-        var allErrors: [String] = []
+        let results = [
+            await fetchBOMWarnings(),
+            await fetchNSWRFS(),
+            await fetchVicCFA()
+        ]
 
-        // Fetch BOM warnings
-        let bomResult = await fetchBOMWarnings()
-        allErrors.append(contentsOf: bomResult.errors)
-        ingest(bomResult.hazards, into: hazardService)
+        let allErrors = results.flatMap(\.errors)
+        results.forEach { ingest($0.hazards, into: hazardService) }
 
-        // Fetch NSW RFS fires
-        let rfsResult = await fetchNSWRFS()
-        allErrors.append(contentsOf: rfsResult.errors)
-        ingest(rfsResult.hazards, into: hazardService)
-
-        // Fetch Vic CFA incidents
-        let cfaResult = await fetchVicCFA()
-        allErrors.append(contentsOf: cfaResult.errors)
-        ingest(cfaResult.hazards, into: hazardService)
-
-        let totalIngested = bomResult.hazards.count + rfsResult.hazards.count + cfaResult.hazards.count
         lastFetchAt = .now
-        if totalIngested > 0 {
-            lastSuccessfulFetch = .now
+        if let newestSuccessfulFetch = results
+            .filter(\.didSucceed)
+            .map(\.fetchedAt)
+            .max() {
+            lastSuccessfulFetch = newestSuccessfulFetch
         }
         lastFetchErrors = allErrors
+        lastRefreshError = refreshErrorMessage(for: results)
     }
 
     /// Push parsed hazards into the intelligence service.
@@ -163,16 +161,34 @@ final class HazardFeedService: ObservableObject {
     /// Expected structure: <item> elements with <title>, <description>, <georss:point>.
     private func fetchBOMWarnings() async -> FeedResult {
         guard let url = URL(string: FeedURL.bomWarnings) else {
-            return FeedResult(source: "BOM", hazards: [], fetchedAt: .now, errors: ["Invalid BOM URL"])
+            return FeedResult(
+                source: "BOM",
+                hazards: [],
+                fetchedAt: .now,
+                errors: ["BOM feed URL is invalid."],
+                didSucceed: false
+            )
         }
 
         do {
             let (data, _) = try await session.data(from: url)
             let parser = BOMRSSParser(data: data)
             let hazards = parser.parse()
-            return FeedResult(source: "BOM", hazards: hazards, fetchedAt: .now, errors: parser.errors)
+            return FeedResult(
+                source: "BOM",
+                hazards: hazards,
+                fetchedAt: .now,
+                errors: parser.errors,
+                didSucceed: parser.didParseSuccessfully
+            )
         } catch {
-            return FeedResult(source: "BOM", hazards: [], fetchedAt: .now, errors: [])
+            return FeedResult(
+                source: "BOM",
+                hazards: [],
+                fetchedAt: .now,
+                errors: [feedErrorMessage(source: "BOM", error: error)],
+                didSucceed: false
+            )
         }
     }
 
@@ -183,15 +199,27 @@ final class HazardFeedService: ObservableObject {
     /// "category" (1-3), "title", "description".
     private func fetchNSWRFS() async -> FeedResult {
         guard let url = URL(string: FeedURL.nswRFS) else {
-            return FeedResult(source: "NSW RFS", hazards: [], fetchedAt: .now, errors: ["Invalid RFS URL"])
+            return FeedResult(
+                source: "NSW RFS",
+                hazards: [],
+                fetchedAt: .now,
+                errors: ["NSW RFS feed URL is invalid."],
+                didSucceed: false
+            )
         }
 
         do {
             let (data, _) = try await session.data(from: url)
-            let hazards = parseGeoJSONFires(data: data, source: "NSW RFS")
-            return FeedResult(source: "NSW RFS", hazards: hazards, fetchedAt: .now, errors: [])
+            let hazards = try parseGeoJSONFires(data: data, source: "NSW RFS")
+            return FeedResult(source: "NSW RFS", hazards: hazards, fetchedAt: .now, errors: [], didSucceed: true)
         } catch {
-            return FeedResult(source: "NSW RFS", hazards: [], fetchedAt: .now, errors: [])
+            return FeedResult(
+                source: "NSW RFS",
+                hazards: [],
+                fetchedAt: .now,
+                errors: [feedErrorMessage(source: "NSW RFS", error: error)],
+                didSucceed: false
+            )
         }
     }
 
@@ -199,15 +227,27 @@ final class HazardFeedService: ObservableObject {
 
     private func fetchVicCFA() async -> FeedResult {
         guard let url = URL(string: FeedURL.vicCFA) else {
-            return FeedResult(source: "Vic CFA", hazards: [], fetchedAt: .now, errors: ["Invalid CFA URL"])
+            return FeedResult(
+                source: "Vic CFA",
+                hazards: [],
+                fetchedAt: .now,
+                errors: ["Vic CFA feed URL is invalid."],
+                didSucceed: false
+            )
         }
 
         do {
             let (data, _) = try await session.data(from: url)
-            let hazards = parseGeoJSONFires(data: data, source: "Vic CFA")
-            return FeedResult(source: "Vic CFA", hazards: hazards, fetchedAt: .now, errors: [])
+            let hazards = try parseGeoJSONFires(data: data, source: "Vic CFA")
+            return FeedResult(source: "Vic CFA", hazards: hazards, fetchedAt: .now, errors: [], didSucceed: true)
         } catch {
-            return FeedResult(source: "Vic CFA", hazards: [], fetchedAt: .now, errors: [])
+            return FeedResult(
+                source: "Vic CFA",
+                hazards: [],
+                fetchedAt: .now,
+                errors: [feedErrorMessage(source: "Vic CFA", error: error)],
+                didSucceed: false
+            )
         }
     }
 
@@ -215,10 +255,25 @@ final class HazardFeedService: ObservableObject {
 
     /// Generic GeoJSON fire parser. Works for NSW RFS, Vic CFA, and similar feeds.
     /// Expects FeatureCollection → Feature[] → geometry.coordinates + properties.
-    private func parseGeoJSONFires(data: Data, source: String) -> [ParsedHazard] {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let features = json["features"] as? [[String: Any]] else {
-            return []
+    private func parseGeoJSONFires(data: Data, source: String) throws -> [ParsedHazard] {
+        let json: [String: Any]
+        do {
+            guard let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                let message = "\(source) feed returned an invalid GeoJSON object."
+                throw CocoaError(.fileReadCorruptFile, userInfo: [NSLocalizedDescriptionKey: message])
+            }
+            json = parsed
+        } catch let error as CocoaError {
+            throw error
+        } catch {
+            throw CocoaError(
+                .fileReadCorruptFile,
+                userInfo: [NSLocalizedDescriptionKey: "\(source) feed could not be parsed."]
+            )
+        }
+        guard let features = json["features"] as? [[String: Any]] else {
+            let message = "\(source) feed was missing its features array."
+            throw CocoaError(.fileReadCorruptFile, userInfo: [NSLocalizedDescriptionKey: message])
         }
 
         var hazards: [ParsedHazard] = []
@@ -262,6 +317,40 @@ final class HazardFeedService: ObservableObject {
         }
 
         return hazards
+    }
+
+    private func refreshErrorMessage(for results: [FeedResult]) -> String? {
+        let failedSources = results.filter { !$0.didSucceed }.map(\.source)
+        guard !failedSources.isEmpty else {
+            return nil
+        }
+
+        if failedSources.count == results.count {
+            if let lastSuccessfulFetch {
+                return "Live hazard feeds could not be refreshed. Route hazard overlays may be stale. Last successful update \(DateFormatter.rediM8Short.string(from: lastSuccessfulFetch))."
+            }
+            return "Live hazard feeds are unavailable until RediM8 can connect at least once."
+        }
+
+        let sourceList = failedSources.joined(separator: ", ")
+        return "Some live hazard feeds could not be refreshed (\(sourceList)). Route hazard overlays may be incomplete until those feeds recover."
+    }
+
+    private func feedErrorMessage(source: String, error: Error) -> String {
+        "\(source) feed unavailable: \(readableError(from: error))"
+    }
+
+    private func readableError(from error: Error) -> String {
+        if let urlError = error as? URLError {
+            return urlError.localizedDescription
+        }
+
+        if let cocoaError = error as? CocoaError,
+           let description = cocoaError.userInfo[NSLocalizedDescriptionKey] as? String {
+            return description
+        }
+
+        return error.localizedDescription
     }
 
     /// Map feed properties to HazardSeverity.
@@ -317,6 +406,7 @@ final class HazardFeedService: ObservableObject {
 private final class BOMRSSParser: NSObject, XMLParserDelegate {
     private let data: Data
     private(set) var errors: [String] = []
+    private(set) var didParseSuccessfully = false
 
     private var hazards: [HazardFeedService.ParsedHazard] = []
     private var currentElement = ""
@@ -332,7 +422,10 @@ private final class BOMRSSParser: NSObject, XMLParserDelegate {
     func parse() -> [HazardFeedService.ParsedHazard] {
         let parser = XMLParser(data: data)
         parser.delegate = self
-        parser.parse()
+        didParseSuccessfully = parser.parse()
+        if !didParseSuccessfully {
+            errors.append(parser.parserError?.localizedDescription ?? "BOM warning feed could not be parsed.")
+        }
         return hazards
     }
 

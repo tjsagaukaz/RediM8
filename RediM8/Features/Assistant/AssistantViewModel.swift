@@ -43,18 +43,18 @@ final class AssistantViewModel: ObservableObject {
 
     var suggestions: [String] {
         [
-            "How do I treat a snake bite in Australia?",
-            "How much water do I need for 3 days?",
-            "How do I purify water safely?",
-            "What should I do during bushfire evacuation?",
-            "How do I start a fire with nothing?",
-            "How do I build a debris hut shelter?",
-            "How do I find water from terrain?",
-            "How do I set a snare for small game?",
-            "How do I navigate by the Southern Cross?",
-            "Should I stay with my vehicle or leave?",
+            "Snake bite — what do I do immediately?",
+            "Water needed for 3 days (per person)",
+            "How to purify water safely (no power)",
+            "Bushfire evacuation — what do I do now?",
+            "How do I stop bleeding quickly?",
+            "Floodwater nearby — move or shelter?",
+            "Vehicle breakdown — stay or leave?",
             "How do I signal for rescue?",
-            "How do I stay calm in a survival situation?"
+            "How do I navigate without GPS?",
+            "What can I do during a blackout right now?",
+            "What should go in a grab-and-go kit?",
+            "How do I stay calm and make a plan?"
         ]
     }
 

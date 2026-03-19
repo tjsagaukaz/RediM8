@@ -40,21 +40,23 @@ extension JSONDecoder {
 }
 
 extension Bundle {
-    func decode<T: Decodable>(_ filename: String, as type: T.Type) throws -> T {
+    func resolvedResourceURL(for filename: String) -> URL? {
         let directURL = url(forResource: filename, withExtension: nil)
         let dataFolderURL = url(forResource: filename, withExtension: nil, subdirectory: "Data")
         let bundleDataURL = bundleURL.appendingPathComponent("Data", isDirectory: true).appendingPathComponent(filename)
 
         let candidateURLs = [directURL, dataFolderURL, bundleDataURL]
-        let resolvedURL = candidateURLs.first { url in
+        return candidateURLs.first { url in
             guard let url else {
                 return false
             }
 
             return FileManager.default.fileExists(atPath: url.path)
         } ?? nil
+    }
 
-        guard let url = resolvedURL else {
+    func decode<T: Decodable>(_ filename: String, as type: T.Type) throws -> T {
+        guard let url = resolvedResourceURL(for: filename) else {
             throw CocoaError(.fileNoSuchFile)
         }
         let data = try Data(contentsOf: url)
@@ -73,7 +75,8 @@ extension DateFormatter {
 
     static let rediM8MonthYear: DateFormatter = {
         let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM yyyy"
+        formatter.locale = .autoupdatingCurrent
+        formatter.setLocalizedDateFormatFromTemplate("MMMM yyyy")
         return formatter
     }()
 }

@@ -63,6 +63,18 @@ struct OfflineDataManagementView: View {
     @State private var isShowingBasemapDownloader = false
     @State private var basemapManifestURL = ""
     @State private var basemapInputError: String?
+    @State private var isShowingProPaywall = false
+
+    private var isProUser: Bool { appState.isProUser }
+
+    /// Non-bundled packs that the user actively installed.
+    private var userInstalledPackCount: Int {
+        allPacks.filter { installedPackIDs.contains($0.id) && !$0.isBundledByDefault }.count
+    }
+
+    private var canInstallMorePacks: Bool {
+        ProFeatureGate.allowsAdditionalMapPacks(isProUser: isProUser, currentPackCount: userInstalledPackCount)
+    }
 
     init(appState: AppState) {
         self.appState = appState
@@ -156,7 +168,7 @@ struct OfflineDataManagementView: View {
                 if !catalogBasemapPackages.isEmpty {
                     CollapsiblePanelCard(
                         title: "Curated Basemap Catalog",
-                        subtitle: "Choose a RediM8 basemap package first. Use Advanced Install only for private feeds, staging packages, or direct manifest testing.",
+                        subtitle: "Choose a RediM8 basemap package from the trusted catalog first.",
                         accent: ColorTheme.textTertiary,
                         isExpanded: $isShowingCuratedBasemaps
                     ) {
@@ -183,14 +195,16 @@ struct OfflineDataManagementView: View {
                     }
                 }
 
+#if DEBUG
                 CollapsiblePanelCard(
                     title: "Advanced Install",
-                    subtitle: "Paste a basemap manifest URL for a private feed, custom package, or internal test build. The curated catalog above is the normal path.",
+                    subtitle: "Internal testing only. Paste a trusted RediM8 HTTPS basemap manifest URL when validating hosted packages before release.",
                     accent: ColorTheme.accent,
                     isExpanded: $isShowingBasemapDownloader
                 ) {
                     basemapDownloadCard
                 }
+#endif
 
                 comparisonOverviewCard
                 workspaceCard
@@ -236,6 +250,15 @@ struct OfflineDataManagementView: View {
         .background(ColorTheme.background.ignoresSafeArea())
         .navigationTitle("Offline Data")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isShowingProPaywall) {
+            NavigationStack {
+                RediM8ProView(
+                    storeKitService: appState.storeKitService,
+                    emergencyUnlockState: appState.emergencyUnlockState
+                )
+            }
+            .rediSheetPresentation()
+        }
     }
 
     private var heroCard: some View {
@@ -355,7 +378,7 @@ struct OfflineDataManagementView: View {
                     .font(.subheadline)
                     .foregroundStyle(ColorTheme.text)
 
-                Text("Start with the curated catalog below. RediM8 can also install direct manifest feeds when you need private packages, staging builds, or field test bundles.")
+                Text("Start with the curated catalog below. Install only trusted RediM8-hosted HTTPS basemap packages in production.")
                     .font(.caption)
                     .foregroundStyle(ColorTheme.textMuted)
             }
@@ -691,10 +714,17 @@ struct OfflineDataManagementView: View {
                         }
                         .buttonStyle(SecondaryActionButtonStyle())
                     } else if !isInstalled {
-                        Button("Install Pack") {
-                            togglePack(pack.id)
+                        if canInstallMorePacks {
+                            Button("Install Pack") {
+                                togglePack(pack.id)
+                            }
+                            .buttonStyle(PrimaryActionButtonStyle())
+                        } else {
+                            Button(ProFeatureGate.paywallTitle(for: .mapPacks)) {
+                                isShowingProPaywall = true
+                            }
+                            .buttonStyle(PrimaryActionButtonStyle())
                         }
-                        .buttonStyle(PrimaryActionButtonStyle())
                     } else {
                         Text("Bundled as part of your default offline baseline.")
                             .font(.caption)
@@ -840,8 +870,8 @@ struct OfflineDataManagementView: View {
 
         guard let manifestURL = URL(string: trimmedURL),
               let scheme = manifestURL.scheme?.lowercased(),
-              ["https", "http", "file"].contains(scheme) else {
-            basemapInputError = "Use a valid `https://`, `http://`, or `file://` manifest URL."
+              scheme == "https" else {
+            basemapInputError = "Use a valid `https://` manifest URL."
             return
         }
 

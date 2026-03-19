@@ -21,13 +21,14 @@ private enum MeshStatusState: Equatable {
     var label: String {
         switch self {
         case .noNearbyUsers:
-            "No nearby users"
-        case .nearbyUsers:
-            "1-3 users nearby"
+            return "No connection"
+        case let .nearbyUsers(count):
+            let noun = count == 1 ? "user" : "users"
+            return "\(count) \(noun) nearby"
         case .networkForming:
-            "Network forming"
+            return "Mesh active"
         case .emergencyBroadcast:
-            "Emergency broadcast"
+            return "Broadcast live"
         }
     }
 
@@ -221,6 +222,14 @@ final class SignalViewModel: ObservableObject {
 
     var canBroadcastOutboundSignals: Bool {
         !isStealthModeEnabled && !settings.privacy.isAnonymousModeEnabled
+    }
+
+    var isProUser: Bool {
+        appState.isProUser
+    }
+
+    var requiresProForMeshSend: Bool {
+        !ProFeatureGate.allowsMeshSend(isProUser: isProUser)
     }
 
     var canInitiateConnections: Bool {
@@ -434,7 +443,7 @@ final class SignalViewModel: ObservableObject {
     }
 
     var beaconActionTitle: String {
-        activeBeacon == nil ? "Broadcast Report" : "Update Active Report"
+        activeBeacon == nil ? "Broadcast Alert" : "Update Broadcast"
     }
 
     var canActivateBeacon: Bool {
@@ -493,19 +502,19 @@ final class SignalViewModel: ObservableObject {
             ),
             OperationalStatusItem(
                 iconName: "signal",
-                label: "Broadcasts",
-                value: canBroadcastOutboundSignals ? "Available" : "Receive-only",
-                tone: canBroadcastOutboundSignals ? meshStatusTone : .caution
+                label: "Broadcast",
+                value: canBroadcastOutboundSignals ? "Ready" : "Receive-only",
+                tone: canBroadcastOutboundSignals ? .danger : .caution
             ),
             OperationalStatusItem(
                 iconName: "family",
-                label: "Nearby",
+                label: "Nearby Users",
                 value: nearbyPeerSummary,
                 tone: nearbyPeers.isEmpty ? .neutral : (connectedPeers.isEmpty ? .caution : .info)
             ),
             OperationalStatusItem(
                 iconName: "clock",
-                label: "Last Signal",
+                label: "Last Activity",
                 value: lastSignalLabel,
                 tone: sessionMessages.isEmpty ? .neutral : meshStatusTone
             ),
@@ -553,20 +562,20 @@ final class SignalViewModel: ObservableObject {
     var meshStatusHeadline: String {
         switch meshStatusState {
         case .noNearbyUsers:
-            return "No nearby RediM8 users"
+            return "No mesh connection"
         case let .nearbyUsers(count):
             let noun = count == 1 ? "user" : "users"
             return "\(count) nearby \(noun) detected"
         case let .networkForming(count):
             if connectedPeers.isEmpty {
-                let noun = count == 1 ? "user" : "users"
-                return "Network forming around \(count) nearby \(noun)"
+                let noun = count == 1 ? "device" : "devices"
+                return "Mesh link pending with \(count) nearby \(noun)"
             }
 
             let noun = connectedPeers.count == 1 ? "link" : "links"
             return "\(connectedPeers.count) mesh \(noun) active"
         case let .emergencyBroadcast(type):
-            return "\(type.title) report is broadcasting"
+            return "\(type.title) broadcast live"
         }
     }
 
@@ -575,20 +584,20 @@ final class SignalViewModel: ObservableObject {
         case .noNearbyUsers:
             if beaconService.relayQueueCount > 0 {
                 let noun = beaconService.relayQueueCount == 1 ? "report" : "reports"
-                return "\(beaconService.relayQueueCount) stored \(noun) will carry forward when another user comes within likely short range."
+                return "No nearby devices detected. \(beaconService.relayQueueCount) stored \(noun) will carry forward once another device comes within likely short range."
             }
-            return "Move within likely short range of another user and keep Bluetooth + Wi-Fi on."
+            return "No nearby devices detected. Move closer to others or use broadcast."
         case .nearbyUsers:
             if beaconService.relayQueueCount > 0 {
-                return "Move closer and keep the app open. Stored reports will forward when a connection opens."
+                return "Nearby devices are visible, but no link is open yet. Move closer and keep Signal active so stored reports can forward."
             }
-            return "Nearby users are in range, but a link has not opened yet. Keep Signal visible and messages brief."
+            return "Nearby devices are in range, but no link is open yet. Keep Signal visible and transmissions brief."
         case .networkForming:
             if beaconService.relayQueueCount > 0 {
-                return "Short messages are available now. Stored reports can keep moving while they stay fresh."
+                return "Mesh links are active. Use short transmissions and allow fresh reports to relay while they remain current."
             }
 
-            return "The mesh is beginning to hold. Use short updates, keep the app open, and assume delivery can still fail."
+            return "A local mesh link is active. Use short transmissions, keep the app open, and assume delivery can still fail."
         case let .emergencyBroadcast(type):
             return "\(type.title) is live on this device. Nearby users should treat it as urgent and relay it while it stays fresh."
         }
@@ -611,16 +620,26 @@ final class SignalViewModel: ObservableObject {
     }
 
     var nearbyPeerSummary: String {
-        nearbyPeers.isEmpty ? "None detected" : "\(nearbyPeers.count) nearby"
+        if nearbyPeers.isEmpty {
+            return "No users nearby"
+        }
+
+        let noun = nearbyPeers.count == 1 ? "user" : "users"
+        return "\(nearbyPeers.count) \(noun) nearby"
     }
 
     var connectedPeerSummary: String {
-        connectedPeers.isEmpty ? "None connected" : "\(connectedPeers.count) connected"
+        if connectedPeers.isEmpty {
+            return "No links active"
+        }
+
+        let noun = connectedPeers.count == 1 ? "link" : "links"
+        return "\(connectedPeers.count) \(noun) active"
     }
 
     var lastSignalLabel: String {
         guard let timestamp = sessionMessages.first?.timestamp else {
-            return "No signal yet"
+            return "No activity"
         }
 
         let now = Date()
@@ -732,7 +751,7 @@ final class SignalViewModel: ObservableObject {
             return "Receiving \(relayedCount) relayed \(noun)"
         }
 
-        return "No relay queue"
+        return "No relay queued"
     }
 
     var sharingModeSummary: String {
@@ -860,6 +879,13 @@ final class SignalViewModel: ObservableObject {
     }
 
     func sendDirect(to peer: MeshPeer) {
+        guard !requiresProForMeshSend else {
+            beaconNotice = BeaconNotice(
+                title: ProFeatureGate.paywallTitle(for: .meshSend),
+                message: ProFeatureGate.paywallSubtitle(for: .meshSend)
+            )
+            return
+        }
         guard canBroadcastOutboundSignals else {
             beaconNotice = BeaconNotice(
                 title: isStealthModeEnabled ? "Stealth Mode Active" : "Hidden Mode Active",
@@ -874,6 +900,13 @@ final class SignalViewModel: ObservableObject {
     }
 
     func broadcastAlert() {
+        guard !requiresProForMeshSend else {
+            beaconNotice = BeaconNotice(
+                title: ProFeatureGate.paywallTitle(for: .meshSend),
+                message: ProFeatureGate.paywallSubtitle(for: .meshSend)
+            )
+            return
+        }
         guard canBroadcastOutboundSignals else {
             beaconNotice = BeaconNotice(
                 title: isStealthModeEnabled ? "Stealth Mode Active" : "Hidden Mode Active",
@@ -888,6 +921,13 @@ final class SignalViewModel: ObservableObject {
     }
 
     func shareLocation() {
+        guard !requiresProForMeshSend else {
+            beaconNotice = BeaconNotice(
+                title: ProFeatureGate.paywallTitle(for: .meshSend),
+                message: ProFeatureGate.paywallSubtitle(for: .meshSend)
+            )
+            return
+        }
         guard canShareLocation else {
             beaconNotice = BeaconNotice(
                 title: "Location Sharing Disabled",
@@ -948,6 +988,13 @@ final class SignalViewModel: ObservableObject {
     }
 
     func activateBeacon() {
+        guard !requiresProForMeshSend else {
+            beaconNotice = BeaconNotice(
+                title: ProFeatureGate.paywallTitle(for: .meshSend),
+                message: ProFeatureGate.paywallSubtitle(for: .meshSend)
+            )
+            return
+        }
         guard canUseBeaconMode else {
             beaconNotice = BeaconNotice(
                 title: "Report Unavailable",
@@ -1285,6 +1332,13 @@ final class SignalViewModel: ObservableObject {
     }
 
     private func broadcastAccountabilityStatus(for member: AccountabilityMember) {
+        guard !requiresProForMeshSend else {
+            beaconNotice = BeaconNotice(
+                title: "Saved Locally",
+                message: "\(member.name) marked \(member.status.title.lowercased()). Outbound mesh requires RediM8 Pro — the update has been saved on this device."
+            )
+            return
+        }
         guard canBroadcastOutboundSignals else {
             beaconNotice = BeaconNotice(
                 title: "Saved Locally",

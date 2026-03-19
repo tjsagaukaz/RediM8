@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 enum AppTab: Hashable {
     case home
@@ -16,18 +17,75 @@ enum PlanFocus: Hashable {
     case waterRuntime
     case evacuationRoutes
     case vehicleKit
+    case supplies
+    case medicalProfile
+    case gearChecklist
+}
+
+/// Mutually exclusive full-screen overlay states.
+/// Replaces 4 independent booleans that could get into invalid states.
+enum OverlayMode: Equatable {
+    case emergencyMode
+    case leaveNow
+    case blackout
+    case emergencyGuides
 }
 
 @MainActor
 final class NavigationRouter: ObservableObject {
     @Published var selectedTab: AppTab = .home
     @Published var requestedPlanFocus: PlanFocus?
-    @Published var isShowingBlackout = false
-    @Published var isShowingEmergencyMode = false
-    @Published var isShowingLeaveNowMode = false
-    @Published var isShowingEmergencyGuides = false
+    @Published var activeOverlay: OverlayMode?
     @Published var highlightedGuideCategory: GuideCategory?
     @Published private var tabScrollToTopRequests: [AppTab: Int] = [:]
+
+    // MARK: - Computed Bindings for SwiftUI Presentation
+
+    var isShowingEmergencyMode: Bool {
+        activeOverlay == .emergencyMode
+    }
+
+    var isShowingLeaveNowMode: Bool {
+        activeOverlay == .leaveNow
+    }
+
+    var isShowingBlackout: Bool {
+        activeOverlay == .blackout
+    }
+
+    var isShowingEmergencyGuides: Bool {
+        activeOverlay == .emergencyGuides
+    }
+
+    var emergencyModeBinding: Binding<Bool> {
+        Binding(
+            get: { self.activeOverlay == .emergencyMode },
+            set: { if !$0 { self.activeOverlay = nil } }
+        )
+    }
+
+    var leaveNowModeBinding: Binding<Bool> {
+        Binding(
+            get: { self.activeOverlay == .leaveNow },
+            set: { if !$0 { self.activeOverlay = nil } }
+        )
+    }
+
+    var blackoutBinding: Binding<Bool> {
+        Binding(
+            get: { self.activeOverlay == .blackout },
+            set: { if !$0 { self.activeOverlay = nil } }
+        )
+    }
+
+    var emergencyGuidesBinding: Binding<Bool> {
+        Binding(
+            get: { self.activeOverlay == .emergencyGuides },
+            set: { if !$0 { self.activeOverlay = nil } }
+        )
+    }
+
+    // MARK: - Quick Actions
 
     func handlePendingQuickAction(from appState: AppState) {
         guard let action = appState.consumePendingQuickAction() else {
@@ -42,6 +100,8 @@ final class NavigationRouter: ObservableObject {
     func handleBackgroundTransition(appState: AppState) {
         appState.endEmergencyAccessSession()
     }
+
+    // MARK: - Tab Navigation
 
     func openAsk() {
         requestedPlanFocus = nil
@@ -83,107 +143,97 @@ final class NavigationRouter: ObservableObject {
         selectedTab = .plan
     }
 
+    func openProfileStep(_ step: ProfileCompletionStep) {
+        switch step.id {
+        case "household", "contact", "route":
+            requestedPlanFocus = .householdOverview
+        case "supplies":
+            requestedPlanFocus = .supplies
+        case "medical":
+            requestedPlanFocus = .medicalProfile
+        case "gear":
+            requestedPlanFocus = .gearChecklist
+        default:
+            requestedPlanFocus = .householdOverview
+        }
+        selectedTab = .plan
+    }
+
     func openSignalNearby() {
-        isShowingEmergencyGuides = false
+        activeOverlay = nil
         highlightedGuideCategory = nil
-        isShowingBlackout = false
         selectedTab = .signal
     }
+
+    // MARK: - Overlay Presentation
 
     func presentEmergencyGuides(appState: AppState) {
         appState.beginEmergencyAccessSession()
         selectedTab = .home
         highlightedGuideCategory = .firstAid
-
-        if isShowingBlackout {
-            isShowingBlackout = false
-            DispatchQueue.main.async {
-                self.isShowingEmergencyGuides = true
-            }
-            return
-        }
-
-        isShowingEmergencyGuides = true
+        activeOverlay = .emergencyGuides
     }
 
     func presentBlackout(appState: AppState) {
         appState.beginEmergencyAccessSession()
         selectedTab = .home
         highlightedGuideCategory = nil
-
-        if isShowingEmergencyGuides {
-            isShowingEmergencyGuides = false
-            DispatchQueue.main.async {
-                self.isShowingBlackout = true
-            }
-            return
-        }
-
-        isShowingBlackout = true
+        activeOverlay = .blackout
     }
 
     func presentEmergencyMode(appState: AppState) {
         appState.beginEmergencyAccessSession()
-        isShowingEmergencyGuides = false
         highlightedGuideCategory = nil
-        isShowingBlackout = false
-        isShowingLeaveNowMode = false
-        isShowingEmergencyMode = true
-    }
-
-    func dismissEmergencyMode(appState: AppState) {
-        isShowingEmergencyMode = false
-        if !isShowingBlackout && !isShowingEmergencyGuides && !isShowingLeaveNowMode && !appState.isLowBatterySurvivalModeEnabled {
-            appState.endEmergencyAccessSession()
-        }
-    }
-
-    func dismissBlackout(appState: AppState) {
-        isShowingBlackout = false
-        if !isShowingEmergencyMode && !isShowingEmergencyGuides && !isShowingLeaveNowMode && !appState.isLowBatterySurvivalModeEnabled {
-            appState.endEmergencyAccessSession()
-        }
-    }
-
-    func didDismissEmergencyGuides(appState: AppState) {
-        highlightedGuideCategory = nil
-        if !isShowingBlackout && !isShowingEmergencyMode && !isShowingLeaveNowMode {
-            appState.endEmergencyAccessSession()
-        }
+        activeOverlay = .emergencyMode
     }
 
     func presentLeaveNowMode(appState: AppState) {
         appState.beginEmergencyAccessSession()
-        isShowingEmergencyGuides = false
         highlightedGuideCategory = nil
-        isShowingBlackout = false
-        isShowingEmergencyMode = false
-        isShowingLeaveNowMode = true
+        activeOverlay = .leaveNow
+    }
+
+    // MARK: - Overlay Dismissal
+
+    func dismissEmergencyMode(appState: AppState) {
+        activeOverlay = nil
+        endSessionIfNoOverlayActive(appState: appState)
+    }
+
+    func dismissBlackout(appState: AppState) {
+        activeOverlay = nil
+        endSessionIfNoOverlayActive(appState: appState)
+    }
+
+    func didDismissEmergencyGuides(appState: AppState) {
+        highlightedGuideCategory = nil
+        activeOverlay = nil
+        endSessionIfNoOverlayActive(appState: appState)
     }
 
     func dismissLeaveNowMode(appState: AppState) {
-        isShowingLeaveNowMode = false
-        if !isShowingBlackout && !isShowingEmergencyMode && !isShowingEmergencyGuides && !appState.isLowBatterySurvivalModeEnabled {
-            appState.endEmergencyAccessSession()
-        }
+        activeOverlay = nil
+        endSessionIfNoOverlayActive(appState: appState)
     }
 
+    // MARK: - Overlay Transitions
+
     func openBlackoutFromEmergency() {
-        isShowingEmergencyMode = false
+        activeOverlay = nil
         DispatchQueue.main.async {
-            self.isShowingBlackout = true
+            self.activeOverlay = .blackout
         }
     }
 
     func openLeaveNowFromEmergency() {
-        isShowingEmergencyMode = false
+        activeOverlay = nil
         DispatchQueue.main.async {
-            self.isShowingLeaveNowMode = true
+            self.activeOverlay = .leaveNow
         }
     }
 
     func openTabFromEmergency(_ tab: AppTab, appState _: AppState) {
-        isShowingEmergencyMode = false
+        activeOverlay = nil
         selectedTab = tab
         if tab != .plan {
             requestedPlanFocus = nil
@@ -191,12 +241,14 @@ final class NavigationRouter: ObservableObject {
     }
 
     func openTabFromLeaveNow(_ tab: AppTab, appState _: AppState) {
-        isShowingLeaveNowMode = false
+        activeOverlay = nil
         selectedTab = tab
         if tab != .plan {
             requestedPlanFocus = nil
         }
     }
+
+    // MARK: - Scroll
 
     func requestScrollToTop(for tab: AppTab) {
         tabScrollToTopRequests[tab, default: 0] += 1
@@ -205,6 +257,8 @@ final class NavigationRouter: ObservableObject {
     func scrollToTopRequestID(for tab: AppTab) -> Int {
         tabScrollToTopRequests[tab, default: 0]
     }
+
+    // MARK: - Private
 
     private func performQuickAction(_ action: EmergencyQuickAction, appState: AppState) {
         switch action {
@@ -216,14 +270,17 @@ final class NavigationRouter: ObservableObject {
             presentEmergencyGuides(appState: appState)
         case .stealthMode:
             selectedTab = .home
-            isShowingEmergencyGuides = false
+            activeOverlay = nil
             highlightedGuideCategory = nil
-            isShowingBlackout = false
-            isShowingEmergencyMode = false
-            isShowingLeaveNowMode = false
             appState.enableStealthMode()
         case .flashlight:
             presentBlackout(appState: appState)
+        }
+    }
+
+    private func endSessionIfNoOverlayActive(appState: AppState) {
+        if activeOverlay == nil && !appState.isLowBatterySurvivalModeEnabled {
+            appState.endEmergencyAccessSession()
         }
     }
 

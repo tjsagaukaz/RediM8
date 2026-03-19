@@ -56,13 +56,13 @@ struct PlanView: View {
         var title: String {
             switch self {
             case .basics:
-                "Basics"
+                "Core Setup"
             case .supplies:
-                "Supplies"
+                "Supplies & Storage"
             case .roles:
-                "Roles"
+                "People & Contacts"
             case .scenarios:
-                "Scenarios"
+                "Risk Scenarios"
             }
         }
 
@@ -71,11 +71,11 @@ struct PlanView: View {
             case .basics:
                 "Routes, kit, go bag"
             case .supplies:
-                "Water, food, expiry"
+                "Water, food, reserves"
             case .roles:
-                "Family, contacts, tasks"
+                "Household, contacts, tasks"
             case .scenarios:
-                "Hazard-driven prompts"
+                "Hazard-driven priorities"
             }
         }
 
@@ -245,29 +245,30 @@ struct PlanView: View {
         ) {
             TrustPillGroup(items: [
                 TrustPillItem(title: "OFFLINE READY", tone: .neutral),
-                TrustPillItem(title: "72H TARGETS", tone: .neutral),
+                TrustPillItem(title: "CURRENT PRIORITY", tone: .neutral),
                 TrustPillItem(title: "ACTION FIRST", tone: .neutral)
             ])
 
             heroReadinessSummary(
                 value: Double(overallScore) / 100,
                 tint: accent,
-                title: overallScore.percentageText,
-                subtitle: "Ready",
-                badge: StatusBadge(tier: appState.prepScore.tier),
-                summaryTitle: "Overall readiness score",
-                summaryDetail: "This score combines supplies, water runway, medical prep, power, communications, and evacuation planning.",
-                supportingLine: appState.prepScore.milestoneCaption
+                title: householdReadinessLabel,
+                subtitle: "Preparedness",
+                badge: priorityBadge(title: "Current Priority", tint: accent),
+                summaryTitle: householdPriorityLine,
+                summaryDetail: householdTargetLine,
+                supportingLine: householdTimeToReadyLine
             )
 
             if let suggestion = householdPrioritySuggestion {
                 planFocusCard(
-                    eyebrow: "Today's readiness action",
+                    eyebrow: "Next Action",
                     iconName: suggestion.category.systemImage,
-                    title: suggestion.title,
+                    title: nextActionTitle(for: suggestion),
                     detail: suggestion.detail,
-                    emphasis: "+\(suggestion.impact)%",
-                    supporting: suggestion.category.quickTaskEstimate,
+                    emphasis: "Impact +\(suggestion.impact)%",
+                    secondaryEmphasis: nextActionTimeLabel(for: suggestion.category),
+                    supporting: householdTargetLine,
                     tint: accent
                 )
             }
@@ -275,8 +276,8 @@ struct PlanView: View {
             LazyVGrid(columns: planHeroMetricColumns, spacing: 10) {
                 planHeroMetricTile(
                     title: "Go Bag",
-                    value: goBagViewModel.plan.readiness.percentage.percentageText,
-                    detail: "\(goBagViewModel.plan.readiness.completedCount) / \(goBagViewModel.plan.readiness.totalCount) packed",
+                    value: goBagStatusLabel,
+                    detail: goBagReadyToLeaveLine,
                     tint: readinessTint(for: goBagViewModel.evacuationPrepScore)
                 )
                 planHeroMetricTile(
@@ -315,9 +316,9 @@ struct PlanView: View {
             heroReadinessSummary(
                 value: readiness.progress,
                 tint: tint,
-                title: readiness.percentage.percentageText,
+                title: readinessOperationalLabel(for: readiness.percentage),
                 subtitle: "Vehicle",
-                badge: Text(vehicleCriticalOutstandingCount == 0 ? "CRITICAL ITEMS COVERED" : "\(vehicleCriticalOutstandingCount) PRIORITY OPEN")
+                badge: Text(vehicleCriticalOutstandingCount == 0 ? "MOVE READY" : "CURRENT PRIORITY")
                     .font(RediTypography.caption)
                     .foregroundStyle(vehicleCriticalOutstandingCount == 0 ? ColorTheme.ready : ColorTheme.warning)
                     .padding(.horizontal, 12)
@@ -326,18 +327,19 @@ struct PlanView: View {
                         (vehicleCriticalOutstandingCount == 0 ? ColorTheme.ready : ColorTheme.warning).opacity(0.14),
                         in: Capsule()
                     ),
-                summaryTitle: "Vehicle readiness",
+                summaryTitle: vehicleCriticalOutstandingCount == 0 ? "Vehicle movement baseline is covered." : "\(vehicleCriticalOutstandingCount) priority vehicle item\(vehicleCriticalOutstandingCount == 1 ? "" : "s") still open.",
                 summaryDetail: "\(readiness.completedCount) of \(readiness.totalCount) vehicle essentials are checked and staged for movement.",
-                supportingLine: vehicleScenarioSummary
+                supportingLine: vehicleTimeToReadyLine
             )
 
             if let nextAction = vehicleKitViewModel.plan.nextActions.first {
                 planFocusCard(
-                    eyebrow: "Lift Readiness Fast",
+                    eyebrow: "Next Action",
                     iconName: "vehicle",
                     title: nextAction,
                     detail: vehicleKitViewModel.plan.contextLines.first ?? "Finish the highest-priority vehicle essentials before you move.",
-                    emphasis: "~+\(estimatedLift(for: readiness))%",
+                    emphasis: "Impact ~+\(estimatedLift(for: readiness))%",
+                    secondaryEmphasis: vehicleTimeToReadyBadge,
                     supporting: vehicleScenarioSummary,
                     tint: ColorTheme.textTertiary
                 )
@@ -367,7 +369,7 @@ struct PlanView: View {
     }
 
     private var householdWorkspaceDeck: some View {
-        PanelCard(title: "Planning Lanes", subtitle: "Work one household job at a time so routes, supplies, and family tasks stop competing in one long scroll.") {
+        PanelCard(title: "Preparation Areas", subtitle: "Work one operational area at a time so routes, supplies, and people do not compete in one long scroll.") {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 ForEach(HouseholdWorkspace.allCases) { workspace in
                     householdWorkspaceButton(workspace)
@@ -378,8 +380,8 @@ struct PlanView: View {
 
     private var householdReadinessBreakdownCard: some View {
         PanelCard(
-            title: "Readiness Breakdown",
-            subtitle: "See which lanes are weakest so the next fix stays obvious."
+            title: "Weakest Areas",
+            subtitle: "Start where the risk is highest so the next fix stays obvious."
         ) {
             VStack(alignment: .leading, spacing: 12) {
                 ForEach(orderedCategoryScores) { categoryScore in
@@ -431,17 +433,17 @@ struct PlanView: View {
     @ViewBuilder
     private var householdBasicsContent: some View {
         PanelCard(
-            title: "Go Bag",
-            subtitle: "Evacuation bag readiness and rapid departure checklist"
+            title: "Go Bag Status",
+            subtitle: goBagReadyToLeaveLine
         ) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .bottom, spacing: 12) {
-                    Text(goBagViewModel.plan.readiness.percentage.percentageText)
+                    Text(goBagStatusLabel)
                         .font(.system(size: 36, weight: .bold))
                         .foregroundStyle(ColorTheme.text)
-                    Text("Ready")
+                    Text(goBagReadyToLeaveLine)
                         .font(.headline.weight(.semibold))
-                        .foregroundStyle(goBagViewModel.plan.readiness.percentage >= 67 ? ColorTheme.ready : ColorTheme.warning)
+                        .foregroundStyle(goBagDepartureReady ? ColorTheme.ready : ColorTheme.warning)
                 }
 
                 Text("\(goBagViewModel.plan.readiness.completedCount) / \(goBagViewModel.plan.readiness.totalCount) items packed")
@@ -454,9 +456,19 @@ struct PlanView: View {
                     height: 11
                 )
 
+                Text(goBagTimeToReadyLine)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(ColorTheme.textSecondary)
+
+                if goBagMissingCount > 0 {
+                    Text("Missing critical items: \(goBagMissingCount)")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(ColorTheme.warning)
+                }
+
                 if !goBagViewModel.plan.nextActions.isEmpty {
                     checklistPreviewCard(
-                        title: "Next 3 items",
+                        title: "Pack Next",
                         items: goBagViewModel.plan.nextActions,
                         tint: ColorTheme.warning
                     )
@@ -466,11 +478,11 @@ struct PlanView: View {
                     isShowingGoBag = true
                 } label: {
                     RediCommandCard(
-                        title: "Open Go Bag Mode",
-                        detail: "Open the detailed pack list, missing items, and section-by-section progress.",
+                        title: "Start Packing",
+                        detail: "Open the detailed pack list, blockers, and section-by-section pack status.",
                         systemImage: "backpack.fill",
                         tint: ColorTheme.warning,
-                        badge: goBagViewModel.plan.readiness.percentage.percentageText,
+                        badge: goBagStatusLabel,
                         prominence: .accented,
                         layout: .rail
                     )
@@ -482,7 +494,7 @@ struct PlanView: View {
         PanelCard(title: "Emergency Kit Checklist", subtitle: "Core gear plus scenario prompts") {
             VStack(alignment: .leading, spacing: 18) {
                 planningChecklistSection(
-                    title: "Critical",
+                    title: "Required First",
                     detail: "Cover these first before secondary lighting and backup gear.",
                     tint: ColorTheme.danger,
                     kinds: criticalChecklistKinds
@@ -491,7 +503,7 @@ struct PlanView: View {
                 Divider().background(ColorTheme.divider)
 
                 planningChecklistSection(
-                    title: "Important",
+                    title: "Secondary",
                     detail: "Add these once the medical and communications basics are already covered.",
                     tint: ColorTheme.warning,
                     kinds: importantChecklistKinds
@@ -906,6 +918,61 @@ struct PlanView: View {
         appState.prepScore.suggestions.first
     }
 
+    private var householdReadinessLabel: String {
+        readinessOperationalLabel(for: appState.prepScore.overall)
+    }
+
+    private var householdPriorityLine: String {
+        guard let suggestion = householdPrioritySuggestion else {
+            return "Current priority: Maintain routes, supplies, and household contacts."
+        }
+
+        switch suggestion.category {
+        case .food:
+            return "Current priority: Food supply below minimum threshold (\(viewModel.draft.supplies.foodDays.roundedIntString) days)"
+        case .water:
+            return "Current priority: Water reserve below target (\(viewModel.waterRuntimeEstimate.estimatedDaysText))"
+        case .power:
+            return "Current priority: Backup power is below baseline"
+        case .communication:
+            return "Current priority: Household communication plan is incomplete"
+        case .medical:
+            return "Current priority: Medical kit and critical records are incomplete"
+        case .evacuation:
+            return "Current priority: You are not ready to leave within 10 minutes"
+        }
+    }
+
+    private var householdTargetLine: String {
+        guard let suggestion = householdPrioritySuggestion else {
+            return "Target: Keep your baseline current and review for seasonal risk changes."
+        }
+
+        switch suggestion.category {
+        case .food:
+            return "Target: 7-14 days of household food."
+        case .water:
+            return "Target: \(viewModel.waterRuntimeEstimate.recommendedReserveDays)-day household water reserve."
+        case .power:
+            return "Target: Lighting, charging, and battery backup staged."
+        case .communication:
+            return "Target: Local signal path and contact plan confirmed."
+        case .medical:
+            return "Target: Critical medications, first aid, and saved records."
+        case .evacuation:
+            return "Target: Route, meeting point, and go-time checks confirmed."
+        }
+    }
+
+    private var householdTimeToReadyLine: String {
+        let minutes = estimatedMinutesToBaseline
+        guard minutes > 0 else {
+            return "Estimated time to basic readiness: baseline covered."
+        }
+
+        return "Estimated time to basic readiness: \(formattedDuration(minutes: minutes))."
+    }
+
     private var savedRouteCount: Int {
         viewModel.draft.evacuationRoutes.compactMap(\.nilIfBlank).count
     }
@@ -933,6 +1000,17 @@ struct PlanView: View {
         }.count
     }
 
+    private var vehicleTimeToReadyLine: String {
+        let minutes = max(vehicleCriticalOutstandingCount, 1) * 8
+        return vehicleCriticalOutstandingCount == 0
+            ? "Estimated time to move: baseline covered."
+            : "Estimated time to move-ready: \(formattedDuration(minutes: minutes))."
+    }
+
+    private var vehicleTimeToReadyBadge: String? {
+        vehicleCriticalOutstandingCount == 0 ? nil : "Time \(formattedDuration(minutes: max(vehicleCriticalOutstandingCount, 1) * 8))"
+    }
+
     private var vehicleScenarioSummary: String {
         let titles = vehicleKitViewModel.plan.scenarioTitles
         if titles.isEmpty {
@@ -950,6 +1028,38 @@ struct PlanView: View {
         default:
             ColorTheme.danger
         }
+    }
+
+    private var goBagMissingCount: Int {
+        goBagViewModel.plan.categories
+            .flatMap(\.items)
+            .filter { !goBagViewModel.isItemComplete($0.id) }
+            .count
+    }
+
+    private var goBagDepartureReady: Bool {
+        goBagViewModel.plan.nextActions.isEmpty
+    }
+
+    private var goBagStatusLabel: String {
+        if goBagDepartureReady {
+            return "READY"
+        }
+        if goBagViewModel.plan.readiness.percentage >= 67 {
+            return "PARTIAL"
+        }
+        return "NOT READY"
+    }
+
+    private var goBagReadyToLeaveLine: String {
+        "Ready to leave: \(goBagDepartureReady ? "YES" : "NO")"
+    }
+
+    private var goBagTimeToReadyLine: String {
+        let blockers = max(min(goBagViewModel.plan.nextActions.count, 4), 1)
+        return goBagDepartureReady
+            ? "Estimated time to go-bag baseline: covered."
+            : "Estimated time to go-bag baseline: \(formattedDuration(minutes: blockers * 6))."
     }
 
     private func heroReadinessSummary<Badge: View>(
@@ -1039,6 +1149,7 @@ struct PlanView: View {
         title: String,
         detail: String,
         emphasis: String,
+        secondaryEmphasis: String? = nil,
         supporting: String,
         tint: Color
     ) -> some View {
@@ -1078,6 +1189,13 @@ struct PlanView: View {
                 .font(.subheadline)
                 .foregroundStyle(ColorTheme.textSecondary)
 
+            HStack(spacing: 8) {
+                emphasisBadge(emphasis, tint: tint)
+                if let secondaryEmphasis {
+                    emphasisBadge(secondaryEmphasis, tint: ColorTheme.textTertiary)
+                }
+            }
+
             Text(supporting)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(ColorTheme.textTertiary)
@@ -1114,6 +1232,7 @@ struct PlanView: View {
 
     private func readinessBreakdownRow(_ categoryScore: CategoryScore) -> some View {
         let tint = readinessTint(for: categoryScore.score)
+        let severity = readinessSeverityLabel(for: categoryScore.score)
 
         return HStack(alignment: .center, spacing: 12) {
             ZStack {
@@ -1131,6 +1250,13 @@ struct PlanView: View {
                     Text(categoryScore.category.title)
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(ColorTheme.text)
+
+                    Text(severity)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(tint)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(tint.opacity(0.14), in: Capsule())
 
                     Spacer(minLength: 0)
 
@@ -1152,6 +1278,111 @@ struct PlanView: View {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .stroke(tint.opacity(0.12), lineWidth: 1)
         )
+    }
+
+    private func priorityBadge(title: String, tint: Color) -> some View {
+        Text(title.uppercased())
+            .font(RediTypography.caption)
+            .foregroundStyle(tint)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(tint.opacity(0.14), in: Capsule())
+    }
+
+    private func emphasisBadge(_ title: String, tint: Color) -> some View {
+        Text(title.uppercased())
+            .font(RediTypography.caption)
+            .foregroundStyle(tint)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(tint.opacity(0.14), in: Capsule())
+    }
+
+    private func readinessOperationalLabel(for score: Int) -> String {
+        switch score {
+        case ..<35:
+            "LOW"
+        case 35..<65:
+            "GUARDED"
+        case 65..<85:
+            "STABLE"
+        default:
+            "READY"
+        }
+    }
+
+    private func readinessSeverityLabel(for score: Int) -> String {
+        switch score {
+        case ..<20:
+            "Critical"
+        case 20..<45:
+            "Low"
+        case 45..<70:
+            "Moderate"
+        case 70..<100:
+            "Stable"
+        default:
+            "Ready"
+        }
+    }
+
+    private var estimatedMinutesToBaseline: Int {
+        Array(appState.prepScore.suggestions.prefix(3)).reduce(0) { partialResult, suggestion in
+            partialResult + estimatedMinutes(for: suggestion.category)
+        }
+    }
+
+    private func estimatedMinutes(for category: PrepCategory) -> Int {
+        switch category {
+        case .water:
+            10
+        case .food:
+            15
+        case .medical:
+            10
+        case .power:
+            15
+        case .communication:
+            5
+        case .evacuation:
+            12
+        }
+    }
+
+    private func nextActionTitle(for suggestion: ImprovementSuggestion) -> String {
+        switch suggestion.category {
+        case .food:
+            "Increase food supply to 7+ days"
+        case .water:
+            "Increase water reserve to target"
+        case .medical:
+            "Stage medical kit and critical records"
+        case .power:
+            "Stage backup power and lighting"
+        case .communication:
+            "Lock in household communication plan"
+        case .evacuation:
+            "Confirm route and departure plan"
+        }
+    }
+
+    private func nextActionTimeLabel(for category: PrepCategory) -> String {
+        "Time \(formattedDuration(minutes: estimatedMinutes(for: category)))"
+    }
+
+    private func formattedDuration(minutes: Int) -> String {
+        guard minutes >= 60 else {
+            return "~\(minutes) min"
+        }
+
+        let hours = minutes / 60
+        let remainingMinutes = minutes % 60
+
+        if remainingMinutes == 0 {
+            return "~\(hours) hr"
+        }
+
+        return "~\(hours) hr \(remainingMinutes) min"
     }
 
     private func customPlanningWorkspaceCard(for workspace: HouseholdWorkspace) -> some View {
@@ -1538,6 +1769,30 @@ struct PlanView: View {
             }
             DispatchQueue.main.async {
                 proxy.scrollTo(PlanFocus.vehicleKit, anchor: .top)
+            }
+        case .supplies:
+            withAnimation(RediMotion.selection) {
+                selectedSection = .household
+                selectedHouseholdWorkspace = .supplies
+            }
+            DispatchQueue.main.async {
+                proxy.scrollTo(PlanFocus.supplies, anchor: .top)
+            }
+        case .medicalProfile:
+            withAnimation(RediMotion.selection) {
+                selectedSection = .household
+                selectedHouseholdWorkspace = .basics
+            }
+            DispatchQueue.main.async {
+                proxy.scrollTo(PlanFocus.medicalProfile, anchor: .top)
+            }
+        case .gearChecklist:
+            withAnimation(RediMotion.selection) {
+                selectedSection = .household
+                selectedHouseholdWorkspace = .basics
+            }
+            DispatchQueue.main.async {
+                proxy.scrollTo(PlanFocus.gearChecklist, anchor: .top)
             }
         }
 

@@ -55,4 +55,25 @@ final class SettingsViewModelTests: XCTestCase {
 
         XCTAssertNil(viewModel.notice)
     }
+
+    @MainActor
+    func testResetToEmergencySafeDefaultsRestoresRecommendedSettings() {
+        let appState = AppState(store: nil)
+        let viewModel = SettingsViewModel(appState: appState)
+
+        appState.enableStealthMode()
+        appState.mutateSettings { settings in
+            settings.privacy.isAnonymousModeEnabled = true
+            settings.privacy.locationShareMode = .off
+            settings.signalDiscovery.discoversNearbyUsers = false
+            settings.signalDiscovery.rangeMode = .maximumRange
+            settings.maps.defaultLayers = [.communityBeacons]
+        }
+
+        viewModel.resetToEmergencySafeDefaults()
+
+        XCTAssertFalse(appState.isStealthModeEnabled)
+        XCTAssertEqual(appState.settings, .emergencySafe)
+        XCTAssertEqual(viewModel.notice?.title, "Emergency-Safe Defaults Restored")
+    }
 }

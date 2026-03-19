@@ -73,9 +73,7 @@ final class StoreKitService: ObservableObject {
             }
             products = mapped
         } catch {
-            #if DEBUG
-            print("[StoreKitService] Failed to load products: \(error)")
-            #endif
+            RediLogger.commerce.error("Failed to load StoreKit products: \(error.localizedDescription, privacy: .public)")
             errorMessage = "Unable to load pricing. Please check your connection."
         }
     }
@@ -164,6 +162,14 @@ final class StoreKitService: ObservableObject {
 
     func displayPrice(for productID: ProProductID) -> String? {
         products[productID]?.displayPrice
+    }
+
+    func priceValue(for productID: ProProductID) -> Decimal? {
+        products[productID]?.price
+    }
+
+    var hasLoadedAllProducts: Bool {
+        products.count == ProProductID.allCases.count
     }
 
     // MARK: - Private

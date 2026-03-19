@@ -16,10 +16,24 @@ final class FamilyService {
         guard let store else {
             return .empty
         }
-        return (try? store.load(UserProfile.self, for: StorageKey.profile)) ?? .empty
+
+        do {
+            return try store.load(UserProfile.self, for: StorageKey.profile) ?? .empty
+        } catch {
+            RediLogger.persistence.error("Failed to load user profile: \(error.localizedDescription, privacy: .public)")
+            return .empty
+        }
     }
 
     func saveProfile(_ profile: UserProfile) {
-        try? store?.save(profile, for: StorageKey.profile)
+        guard let store else {
+            return
+        }
+
+        do {
+            try store.save(profile, for: StorageKey.profile)
+        } catch {
+            RediLogger.persistence.error("Failed to save user profile: \(error.localizedDescription, privacy: .public)")
+        }
     }
 }

@@ -46,9 +46,9 @@ final class MonetizationTests: XCTestCase {
 
         XCTAssertTrue(emergencyRows.contains("emergency_mode"))
         XCTAssertTrue(emergencyRows.contains("official_alerts"))
-        XCTAssertTrue(emergencyRows.contains("offline_map"))
+        XCTAssertTrue(emergencyRows.contains("basic_routing"))
         XCTAssertTrue(emergencyRows.contains("guide_library"))
-        XCTAssertTrue(emergencyRows.contains("community_reports"))
+        XCTAssertTrue(emergencyRows.contains("mesh_receive"))
 
         XCTAssertEqual(
             catalog.featureMatrix.first(where: { $0.id == "emergency_mode" })?.freeValue,

@@ -42,6 +42,7 @@ final class AppState: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var storedScreenBrightness: CGFloat?
     private var storedIdleTimerDisabled: Bool?
+    private var hasStartedSystems = false
 
     convenience init() {
         self.init(environment: .live())
@@ -139,7 +140,6 @@ final class AppState: ObservableObject {
         emergencyUnlockState = mapSystem.emergencyUnlockState
 
         bindSystems()
-        startSystems()
         applySettings(loadedSettings, persist: !hasStoredSettings)
     }
 
@@ -185,6 +185,12 @@ final class AppState: ObservableObject {
 
     func refreshScore() {
         preparedness.refreshScore()
+    }
+
+    func startIfNeeded() {
+        guard !hasStartedSystems else { return }
+        hasStartedSystems = true
+        startSystems()
     }
 
     func setMapLayer(_ layer: MapLayer, isEnabled: Bool) {

@@ -26,8 +26,18 @@ final class MapDataService {
         self.waterPointService = waterPointService ?? WaterPointService(bundle: bundle)
         self.fireTrailService = fireTrailService ?? FireTrailService(bundle: bundle)
         self.shelterService = shelterService ?? ShelterService(bundle: bundle)
-        trackDataset = (try? bundle.decode("TrackSegments.json", as: TrackDataset.self)) ?? TrackDataset(lastUpdated: .distantPast, tracks: [])
-        packCatalog = (try? bundle.decode("MapPacks.json", as: OfflineMapPackCatalog.self)) ?? OfflineMapPackCatalog(lastUpdated: .distantPast, packs: [])
+        do {
+            trackDataset = try bundle.decode("TrackSegments.json", as: TrackDataset.self)
+        } catch {
+            RediLogger.basemap.error("Failed to decode TrackSegments.json: \(error.localizedDescription)")
+            trackDataset = TrackDataset(lastUpdated: .distantPast, tracks: [])
+        }
+        do {
+            packCatalog = try bundle.decode("MapPacks.json", as: OfflineMapPackCatalog.self)
+        } catch {
+            RediLogger.basemap.error("Failed to decode MapPacks.json: \(error.localizedDescription)")
+            packCatalog = OfflineMapPackCatalog(lastUpdated: .distantPast, packs: [])
+        }
     }
 
     var availableLayers: [MapLayer] {
@@ -57,25 +67,51 @@ final class MapDataService {
     }
 
     func loadEnabledLayers() -> Set<MapLayer> {
-        if let stored = try? store?.load(StoredMapLayerSelection.self, for: StorageKey.enabledLayers) {
-            return stored.enabledLayers
+        guard let store else {
+            return defaultEnabledLayers
         }
-        return defaultEnabledLayers
+
+        do {
+            if let stored = try store.load(StoredMapLayerSelection.self, for: StorageKey.enabledLayers) {
+                return stored.enabledLayers
+            }
+            return defaultEnabledLayers
+        } catch {
+            RediLogger.persistence.error("Failed to load enabled map layers: \(error.localizedDescription, privacy: .public)")
+            return defaultEnabledLayers
+        }
     }
 
     func saveEnabledLayers(_ enabledLayers: Set<MapLayer>) {
-        try? store?.save(StoredMapLayerSelection(enabledLayers: enabledLayers), for: StorageKey.enabledLayers)
+        guard let store else {
+            return
+        }
+
+        do {
+            try store.save(StoredMapLayerSelection(enabledLayers: enabledLayers), for: StorageKey.enabledLayers)
+        } catch {
+            RediLogger.persistence.error("Failed to save enabled map layers: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     func loadInstalledPackIDs() -> Set<String> {
-        if let stored = try? store?.load(StoredMapPackSelection.self, for: StorageKey.installedPackIDs) {
+        guard let store else {
+            return defaultInstalledPackIDs
+        }
+
+        do {
+            guard let stored = try store.load(StoredMapPackSelection.self, for: StorageKey.installedPackIDs) else {
+                return defaultInstalledPackIDs
+            }
             let installedPackIDs = stored.installedPackIDs
             guard !installedPackIDs.isEmpty else {
                 return defaultInstalledPackIDs
             }
             return installedPackIDs
+        } catch {
+            RediLogger.persistence.error("Failed to load installed map packs: \(error.localizedDescription, privacy: .public)")
+            return defaultInstalledPackIDs
         }
-        return defaultInstalledPackIDs
     }
 
     func installPack(_ packID: String, into installedPackIDs: Set<String>) -> Set<String> {
@@ -140,7 +176,15 @@ final class MapDataService {
     }
 
     private func saveInstalledPackIDs(_ installedPackIDs: Set<String>) {
-        try? store?.save(StoredMapPackSelection(installedPackIDs: installedPackIDs), for: StorageKey.installedPackIDs)
+        guard let store else {
+            return
+        }
+
+        do {
+            try store.save(StoredMapPackSelection(installedPackIDs: installedPackIDs), for: StorageKey.installedPackIDs)
+        } catch {
+            RediLogger.persistence.error("Failed to save installed map packs: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     private func isFeatureAvailable(_ featurePackIDs: [String], within installedPackIDs: Set<String>) -> Bool {

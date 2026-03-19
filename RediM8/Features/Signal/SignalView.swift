@@ -9,7 +9,7 @@ private enum SignalWorkspace: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .communicate: "Communicate"
+        case .communicate: "Signal"
         case .network: "Network"
         case .system: "System"
         }
@@ -17,9 +17,9 @@ private enum SignalWorkspace: String, CaseIterable, Identifiable {
 
     var subtitle: String {
         switch self {
-        case .communicate: "Alerts, messages, and situation reports"
-        case .network: "Roll call, nearby peers, and relayed reports"
-        case .system: "Local scanner, diagnostics, and session state"
+        case .communicate: "Broadcasts, direct signals, and field reports"
+        case .network: "Nearby devices, roll call, and relayed reports"
+        case .system: "Scanner, limits, and session activity"
         }
     }
 }
@@ -33,7 +33,7 @@ struct SignalView: View {
     @State private var isSignalPulseActive = false
     @State private var selectedWorkspace: SignalWorkspace = .communicate
     @State private var assistantContext: AssistantLaunchContext?
-    private let quickMessageTemplates = ["Need water", "Safe here", "Fire nearby", "Need pickup"]
+    private let quickMessageTemplates = ["NEED WATER", "SAFE LOCATION", "FIRE NEARBY", "NEED PICKUP"]
 
     init(appState: AppState, scrollToTopRequestID: Int = 0) {
         self.appState = appState
@@ -122,18 +122,18 @@ struct SignalView: View {
         ThumbActionDock {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) {
+                    broadcastDockButton
                     shareGPSDockButton
                     reportDockButton
-                    broadcastDockButton
                 }
 
                 VStack(spacing: 8) {
+                    broadcastDockButton
+
                     HStack(spacing: 8) {
                         shareGPSDockButton
                         reportDockButton
                     }
-
-                    broadcastDockButton
                 }
             }
         }
@@ -141,8 +141,8 @@ struct SignalView: View {
 
     private var broadcastDockButton: some View {
         signalDockButton(
-            title: "Broadcast",
-            detail: hasDraftMessage ? "Send draft alert" : "Add text first",
+            title: "Broadcast Alert",
+            detail: hasDraftMessage ? "Send urgent alert nearby" : "Add text first",
             status: broadcastDockStatus,
             systemImage: "exclamationmark.triangle.fill",
             tint: canTriggerBroadcast ? ColorTheme.danger : ColorTheme.warning,
@@ -155,8 +155,8 @@ struct SignalView: View {
 
     private var shareGPSDockButton: some View {
         signalDockButton(
-            title: "Share GPS",
-            detail: canShareCurrentLocation ? "Send current location" : shareDockDetail,
+            title: "Share Location",
+            detail: canShareCurrentLocation ? "Send current position" : shareDockDetail,
             status: shareDockStatus,
             systemImage: "location.fill",
             tint: canShareCurrentLocation ? ColorTheme.accent : ColorTheme.warning,
@@ -169,8 +169,8 @@ struct SignalView: View {
 
     private var reportDockButton: some View {
         signalDockButton(
-            title: viewModel.activeBeacon == nil ? "Report" : "Update",
-            detail: viewModel.activeBeacon == nil ? "Community situation" : "Refresh live beacon",
+            title: viewModel.activeBeacon == nil ? "Send Report" : "Update Report",
+            detail: viewModel.activeBeacon == nil ? "Broadcast local situation" : "Refresh live broadcast",
             status: reportDockStatus,
             systemImage: "dot.radiowaves.left.and.right",
             tint: reportDockTint,
@@ -190,25 +190,25 @@ struct SignalView: View {
     private var signalCommandStatusGrid: some View {
         LazyVGrid(columns: signalCommandColumns, spacing: 10) {
             commandStatusTile(
-                title: "Share GPS",
+                title: "Broadcast Alert",
+                value: broadcastDockStatus,
+                detail: "Emergency message to nearby devices",
+                iconName: "exclamationmark.triangle.fill",
+                tint: canTriggerBroadcast ? ColorTheme.danger : ColorTheme.warning
+            )
+            commandStatusTile(
+                title: "Share Location",
                 value: shareDockStatus,
-                detail: canShareCurrentLocation ? "Current position" : shareDockDetail,
+                detail: canShareCurrentLocation ? "Current position ready" : shareDockDetail,
                 iconName: "location.fill",
                 tint: canShareCurrentLocation ? ColorTheme.accent : ColorTheme.warning
             )
             commandStatusTile(
-                title: "Report",
+                title: "Send Report",
                 value: reportDockStatus,
-                detail: viewModel.activeBeacon == nil ? (canManageReport ? "Community situation" : "Enable reports + GPS") : "Update live report",
+                detail: viewModel.activeBeacon == nil ? (canManageReport ? "Short local report" : "Enable reports + GPS") : "Live report broadcasting",
                 iconName: "dot.radiowaves.left.and.right",
                 tint: reportDockTint
-            )
-            commandStatusTile(
-                title: "Broadcast",
-                value: broadcastDockStatus,
-                detail: "Emergency text broadcast",
-                iconName: "exclamationmark.triangle.fill",
-                tint: canTriggerBroadcast ? ColorTheme.danger : ColorTheme.warning
             )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -216,9 +216,9 @@ struct SignalView: View {
 
     private var signalCommandCenterCard: some View {
         ModeHeroCard(
-            eyebrow: "Local Comms",
+            eyebrow: "Lifeline System",
             title: "Signal",
-            subtitle: "Short-range mesh for when networks fail.",
+            subtitle: "Emergency communication when networks fail.",
             iconName: "signal",
             accent: signalStatusColor
         ) {
@@ -389,30 +389,30 @@ struct SignalView: View {
 
     private var broadcastDockStatus: String {
         if !viewModel.canBroadcastOutboundSignals {
-            return "Off"
+            return "Receive-only"
         }
         return hasDraftMessage ? "Ready" : "Need Text"
     }
 
     private var shareDockStatus: String {
         if !viewModel.canShareLocation {
-            return "Off"
+            return "Location Off"
         }
-        return viewModel.currentLocation == nil ? "Wait GPS" : "Ready"
+        return viewModel.currentLocation == nil ? "Need GPS" : "Ready"
     }
 
     private var reportDockStatus: String {
         if viewModel.activeBeacon != nil {
             return "Live"
         }
-        return canManageReport ? "Ready" : "Off"
+        return canManageReport ? "Ready" : "Need GPS"
     }
 
     private var shareDockDetail: String {
         if !viewModel.canShareLocation {
             return "Location sharing off"
         }
-        return "Waiting for GPS"
+        return "GPS lock pending"
     }
 
     private var reportDockTint: Color {
@@ -441,50 +441,29 @@ struct SignalView: View {
 
     private var signalAssistantDetail: String {
         if let activeBeacon = viewModel.activeBeacon {
-            return "Use the live \(activeBeacon.type.title.lowercased()) context to route the safest offline guide."
+            return "Get next steps using the live \(activeBeacon.type.title.lowercased()) context before you transmit."
         }
 
         if !trimmedDraftMessage.isEmpty {
-            return "Turn the current draft into a guide-linked answer before you send anything."
+            return "Turn this draft into clear next steps before you send it."
         }
 
-        return "Ask for guide-linked next steps using the current report lane and local context."
+        return "Get next steps based on your current signal and report context."
+    }
+
+    private var urgentSituationReportTypes: [BeaconType] {
+        let urgentOrder: [BeaconType] = [.fireSpotted, .medicalHelp, .floodedRoad]
+        return urgentOrder.filter(viewModel.situationReportTypes.contains)
+    }
+
+    private var importantSituationReportTypes: [BeaconType] {
+        viewModel.situationReportTypes.filter { !urgentSituationReportTypes.contains($0) }
     }
 
     private var sendUpdatePanel: some View {
-        PanelCard(title: "Send Update", subtitle: "Short message only. The command dock below keeps Share GPS, Report, and Broadcast ready.") {
+        PanelCard(title: "Send Signal", subtitle: "Short transmission only. Optimised for low signal.") {
             VStack(alignment: .leading, spacing: 14) {
                 signalCommandStatusGrid
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Quick starts")
-                        .font(RediTypography.heading)
-                        .foregroundStyle(ColorTheme.text)
-
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
-                            ForEach(quickMessageTemplates, id: \.self) { template in
-                                messageTemplateButton(template)
-                            }
-                        }
-                    }
-                }
-
-                TextField("Send short update", text: $viewModel.draftMessage, axis: .vertical)
-                    .lineLimit(4...8)
-                    .textFieldStyle(TacticalTextFieldStyle())
-                    .frame(minHeight: 108, alignment: .topLeading)
-                    .disabled(!viewModel.canBroadcastOutboundSignals)
-
-                Text("Try: Need water, Safe here, Fire nearby")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
-                if let composeAvailabilityMessage = viewModel.composeAvailabilityMessage {
-                    Text(composeAvailabilityMessage)
-                        .font(.caption)
-                        .foregroundStyle(viewModel.canBroadcastOutboundSignals ? .secondary : ColorTheme.warning)
-                }
 
                 Button {
                     assistantContext = AssistantLaunchContext(
@@ -504,10 +483,52 @@ struct SignalView: View {
                 }
                 .buttonStyle(CardPressButtonStyle())
 
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Quick Starts")
+                        .font(RediTypography.heading)
+                        .foregroundStyle(ColorTheme.text)
+
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(quickMessageTemplates, id: \.self) { template in
+                                messageTemplateButton(template)
+                            }
+                        }
+                    }
+                }
+
+                TextField("What do others need to know?", text: $viewModel.draftMessage, axis: .vertical)
+                    .lineLimit(4...8)
+                    .textFieldStyle(TacticalTextFieldStyle())
+                    .frame(minHeight: 108, alignment: .topLeading)
+                    .disabled(!viewModel.canBroadcastOutboundSignals)
+
+                Text("Use short text such as NEED WATER or FIRE NEARBY.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if let composeAvailabilityMessage = viewModel.composeAvailabilityMessage {
+                    Text(composeAvailabilityMessage)
+                        .font(.caption)
+                        .foregroundStyle(viewModel.canBroadcastOutboundSignals ? .secondary : ColorTheme.warning)
+                }
+
+                signalInsetCard(tint: ColorTheme.danger) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("WHEN TO USE BROADCAST")
+                            .font(RediTypography.caption)
+                            .foregroundStyle(ColorTheme.danger)
+
+                        signalGuidanceLine("No signal or network")
+                        signalGuidanceLine("Urgent situation nearby")
+                        signalGuidanceLine("Need help or need to warn others")
+                    }
+                }
+
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "lock.shield")
                         .foregroundStyle(ColorTheme.accent)
-                    Text("Session feed stays in memory only on this phone.")
+                    Text("Session activity stays in memory only on this phone.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -516,7 +537,7 @@ struct SignalView: View {
     }
 
     private var communitySituationReportsPanel: some View {
-        PanelCard(title: "Community Situation Reports", subtitle: "Broadcast temporary local reports that can carry forward while still fresh") {
+        PanelCard(title: "Community Reports", subtitle: "Broadcast short local reports that can carry while they stay fresh") {
             VStack(alignment: .leading, spacing: 16) {
                 Text(TrustLayer.beaconVerificationReminder)
                     .font(.caption)
@@ -529,7 +550,7 @@ struct SignalView: View {
                         HStack(alignment: .top) {
                             BeaconTypeBadge(type: activeBeacon.type)
                             Spacer()
-                            Text("Active")
+                            Text("Broadcasting")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(ColorTheme.ready)
                                 .padding(.horizontal, 10)
@@ -585,34 +606,50 @@ struct SignalView: View {
                             Button {
                                 viewModel.refreshBeacon()
                             } label: {
-                                Label("Refresh Report", systemImage: "arrow.clockwise")
+                                Label("Refresh Broadcast", systemImage: "arrow.clockwise")
                             }
                             .buttonStyle(PrimaryActionButtonStyle())
 
                             Button {
                                 viewModel.deactivateBeacon()
                             } label: {
-                                Label("Stop Report", systemImage: "xmark.circle")
+                                Label("Stop Broadcast", systemImage: "xmark.circle")
                             }
                             .buttonStyle(SecondaryActionButtonStyle())
                         }
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Report Situation")
-                        .font(RediTypography.heading)
-                        .foregroundStyle(ColorTheme.text)
+                if !urgentSituationReportTypes.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Urgent")
+                            .font(RediTypography.heading)
+                            .foregroundStyle(ColorTheme.text)
 
-                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                        ForEach(viewModel.situationReportTypes) { type in
-                            situationReportButton(type)
+                        LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                            ForEach(urgentSituationReportTypes) { type in
+                                situationReportButton(type)
+                            }
+                        }
+                    }
+                }
+
+                if !importantSituationReportTypes.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Important")
+                            .font(RediTypography.heading)
+                            .foregroundStyle(ColorTheme.text)
+
+                        LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                            ForEach(importantSituationReportTypes) { type in
+                                situationReportButton(type)
+                            }
                         }
                     }
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Quick signal templates")
+                    Text("Quick Starts")
                         .font(RediTypography.heading)
                         .foregroundStyle(ColorTheme.text)
 
@@ -708,9 +745,9 @@ struct SignalView: View {
     }
 
     private var nearbySituationReportsPanel: some View {
-        PanelCard(title: "Nearby Situation Reports", subtitle: "Temporary local reports discovered directly or relayed over the mesh") {
+        PanelCard(title: "Nearby Reports", subtitle: "Temporary local reports discovered directly or relayed over the mesh") {
             if viewModel.displayedBeacons.isEmpty {
-                Text("No nearby situation reports yet. No nearby RediM8 users or report markers are currently visible in this session.")
+                Text("No nearby reports yet. No nearby devices or relayed report markers are visible in this session.")
                     .font(RediTypography.body)
                     .foregroundStyle(.secondary)
             } else {
@@ -793,9 +830,9 @@ struct SignalView: View {
     }
 
     private var nearbyUsersPanel: some View {
-        PanelCard(title: "Nearby Users", subtitle: "Discovered over short-range local mesh only") {
+        PanelCard(title: "Nearby Devices", subtitle: "Discovered over short-range local mesh only") {
             if viewModel.nearbyPeers.isEmpty {
-                Text("No nearby RediM8 users detected. Keep Bluetooth and Wi-Fi enabled, then move devices within likely short range.")
+                Text("No nearby devices detected. Keep Bluetooth and Wi-Fi enabled, then move within likely short range.")
                     .font(RediTypography.body)
                     .foregroundStyle(.secondary)
             } else {
@@ -813,7 +850,7 @@ struct SignalView: View {
                                 }
                                 Spacer()
                                 if viewModel.connectedPeers.contains(peer) {
-                                    Button("Send Draft") {
+                                    Button("Send Signal") {
                                         viewModel.sendDirect(to: peer)
                                     }
                                     .buttonStyle(SecondaryActionButtonStyle())
@@ -1350,7 +1387,7 @@ struct SignalView: View {
             signalMetricTile(
                 title: "Broadcast",
                 value: viewModel.canBroadcastOutboundSignals ? "Ready" : "Receive-only",
-                detail: viewModel.sharingModeSummary,
+                detail: "Emergency alert to nearby devices",
                 iconName: "exclamationmark.triangle.fill",
                 tint: viewModel.canBroadcastOutboundSignals ? ColorTheme.danger : ColorTheme.warning
             )
@@ -1362,11 +1399,11 @@ struct SignalView: View {
                 tint: viewModel.canShareLocation ? ColorTheme.accent : ColorTheme.warning
             )
             signalMetricTile(
-                title: "Relay",
-                value: viewModel.relayStatusSummary,
-                detail: viewModel.lastSignalLabel,
-                iconName: "arrow.triangle.branch",
-                tint: beaconRelayTint
+                title: "Last Activity",
+                value: viewModel.lastSignalLabel,
+                detail: viewModel.sessionMessages.isEmpty ? "No messages received" : "Latest local signal event",
+                iconName: "clock",
+                tint: viewModel.sessionMessages.isEmpty ? ColorTheme.textTertiary : signalStatusColor
             )
         }
     }
@@ -1389,7 +1426,7 @@ struct SignalView: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
-                        Text("MESH STATUS")
+                        Text("LIFELINE STATUS")
                             .font(RediTypography.label)
                             .tracking(1.2)
                             .foregroundStyle(signalStatusColor)
@@ -1440,9 +1477,9 @@ struct SignalView: View {
 
     private var meshStatusSnapshot: some View {
         HStack(spacing: 10) {
-            meshBannerStat(title: "Links", value: viewModel.connectedPeerSummary, tint: signalStatusColor)
+            meshBannerStat(title: "Connections", value: viewModel.connectedPeerSummary, tint: signalStatusColor)
             meshBannerStat(title: "Relay", value: viewModel.relayStatusSummary, tint: beaconRelayTint)
-            meshBannerStat(title: "Last", value: viewModel.lastSignalLabel, tint: signalStatusColor)
+            meshBannerStat(title: "Last Activity", value: viewModel.lastSignalLabel, tint: signalStatusColor)
         }
     }
 
@@ -1462,7 +1499,7 @@ struct SignalView: View {
     }
 
     private var beaconRelayTint: Color {
-        viewModel.relayStatusSummary == "No relay queue" ? ColorTheme.textTertiary : ColorTheme.accent
+        viewModel.relayStatusSummary == "No relay queued" ? ColorTheme.textTertiary : ColorTheme.accent
     }
 
     private var scannerAccentColor: Color {
@@ -1618,6 +1655,20 @@ struct SignalView: View {
         }
     }
 
+    private func signalGuidanceLine(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .fill(ColorTheme.danger)
+                .frame(width: 6, height: 6)
+                .padding(.top, 6)
+
+            Text(text)
+                .font(RediTypography.body)
+                .foregroundStyle(ColorTheme.text)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
     private func meshDetailRow(label: String, value: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Text(label)
@@ -1668,8 +1719,17 @@ struct SignalView: View {
         .buttonStyle(CardPressButtonStyle())
     }
 
-    private func quickTemplateTint(for _: String) -> Color {
-        ColorTheme.textTertiary
+    private func quickTemplateTint(for template: String) -> Color {
+        if template.contains("FIRE") {
+            return ColorTheme.danger
+        }
+        if template.contains("SAFE") {
+            return ColorTheme.ready
+        }
+        if template.contains("WATER") {
+            return ColorTheme.accent
+        }
+        return ColorTheme.warning
     }
 
     private var orderedSelectedResources: [BeaconResource] {
@@ -1679,7 +1739,7 @@ struct SignalView: View {
     private var signalIntelligenceEditor: some View {
         signalInsetCard(tint: beaconAccentColor(for: viewModel.selectedBeaconType)) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Signal Intelligence")
+                Text("Report Details")
                     .font(RediTypography.heading)
                     .foregroundStyle(ColorTheme.text)
 
@@ -1810,13 +1870,13 @@ struct SignalView: View {
 
     private func signalHighlightsBlock(_ highlights: [(label: String, value: String)], accent: Color) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Structured payload")
+            Text("Signal Details")
                 .font(RediTypography.caption)
                 .foregroundStyle(accent)
 
             ForEach(Array(highlights.enumerated()), id: \.offset) { _, item in
                 HStack(alignment: .top, spacing: 10) {
-                    Text(item.label)
+                    Text(item.label.uppercased())
                         .font(RediTypography.caption)
                         .foregroundStyle(ColorTheme.textTertiary)
                         .frame(width: 76, alignment: .leading)
@@ -1850,7 +1910,7 @@ struct SignalView: View {
                     Spacer(minLength: 0)
                 }
 
-                Text(type.buttonTitle)
+                Text(type.buttonTitle.uppercased())
                     .font(RediTypography.bodyStrong)
                     .foregroundStyle(ColorTheme.text)
 
@@ -1905,8 +1965,8 @@ struct SignalView: View {
         if viewModel.nearbyPeers.isEmpty && viewModel.connectedPeers.isEmpty {
             rows.append(
                 SignalFailureRowModel(
-                    title: "No nearby RediM8 users detected",
-                    detail: "RediM8 is still listening, but nothing nearby is discoverable right now. Keep Bluetooth and Wi-Fi enabled and close distance before relying on Signal.",
+                    title: "No mesh connection",
+                    detail: "RediM8 is still listening, but no nearby devices are discoverable right now. Keep Bluetooth and Wi-Fi enabled, move closer to others, or use broadcast.",
                     iconName: "antenna.radiowaves.left.and.right.slash",
                     tint: ColorTheme.warning
                 )
@@ -1938,7 +1998,7 @@ struct SignalView: View {
         if viewModel.sessionMessages.isEmpty {
             rows.append(
                 SignalFailureRowModel(
-                    title: "No recent mesh activity",
+                    title: "No recent signal activity",
                     detail: "No alerts, direct messages, or connection events have been seen in this session yet.",
                     iconName: "clock.badge.xmark.fill",
                     tint: ColorTheme.textTertiary

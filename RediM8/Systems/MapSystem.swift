@@ -100,6 +100,10 @@ final class MapSystem: ObservableObject, AppSystem {
         mapDataService.saveEnabledLayers(settings.maps.defaultLayers)
     }
 
+    func refreshAfterLocationChange() {
+        refreshEmergencyUnlockState()
+    }
+
     private func refreshEmergencyUnlockState(referenceDate: Date = .now) {
         let installedPackIDs = mapDataService.loadInstalledPackIDs()
         let installedPacks = mapDataService.packs(withIDs: installedPackIDs)

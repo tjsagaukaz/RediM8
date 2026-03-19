@@ -217,8 +217,9 @@ final class OfflineRoutingService: ObservableObject {
 
         func contains(_ coordinate: CLLocationCoordinate2D) -> Bool {
             let b = bbox
-            return coordinate.latitude >= b.minLat && coordinate.latitude <= b.maxLat
-                && coordinate.longitude >= b.minLon && coordinate.longitude <= b.maxLon
+            let tolerance = 0.00001
+            return coordinate.latitude >= b.minLat - tolerance && coordinate.latitude <= b.maxLat + tolerance
+                && coordinate.longitude >= b.minLon - tolerance && coordinate.longitude <= b.maxLon + tolerance
         }
     }
 
@@ -316,9 +317,9 @@ final class OfflineRoutingService: ObservableObject {
 
         // Verify CRC32 if present (v2+ with checksum flag)
         if data.count >= OSRGHeader.size {
-            let flags = data.withUnsafeBytes { $0.load(fromByteOffset: 6, as: UInt16.self) }
+            let flags = readUInt16(from: data, at: 6)
             if flags & 0x02 != 0 { // bit 1 = has CRC32
-                let storedCRC = data.withUnsafeBytes { $0.load(fromByteOffset: 36, as: UInt32.self) }
+                let storedCRC = readUInt32(from: data, at: 36)
                 // CRC32 is computed over everything after the header
                 let payloadData = data[OSRGHeader.size...]
                 let computedCRC = Self.crc32(payloadData)
@@ -981,7 +982,7 @@ final class OfflineRoutingService: ObservableObject {
     /// Int32 range covers ±2147 degrees — more than enough for lat/lon.
     /// Precision: ~0.11 metres at the equator.
     nonisolated static func degreesToMicrodegrees(_ degrees: Double) -> Int32 {
-        Int32(clamping: Int64(degrees * 1_000_000))
+        Int32(clamping: Int64((degrees * 1_000_000).rounded()))
     }
 
     nonisolated static func microdegreesToDegrees(_ micro: Int32) -> Double {
@@ -997,7 +998,7 @@ final class OfflineRoutingService: ObservableObject {
         let magic = String(data: data[0 ..< 4], encoding: .ascii)
         guard magic == OSRGHeader.magic else { throw RoutingError.graphCorrupted }
 
-        let formatVersion = data.withUnsafeBytes { $0.load(fromByteOffset: 4, as: UInt16.self) }
+        let formatVersion = readUInt16(from: data, at: 4)
 
         switch formatVersion {
         case 1:
@@ -1013,20 +1014,18 @@ final class OfflineRoutingService: ObservableObject {
     private func deserializeV2(_ data: Data, mappedData: Data) throws -> RoutingGraph {
         guard data.count >= OSRGHeader.size else { throw RoutingError.graphCorrupted }
 
-        let header = data.withUnsafeBytes { buf -> OSRGHeader in
-            OSRGHeader(
-                formatVersion: buf.load(fromByteOffset: 4, as: UInt16.self),
-                flags: buf.load(fromByteOffset: 6, as: UInt16.self),
-                nodeCount: buf.load(fromByteOffset: 8, as: UInt32.self),
-                edgeCount: buf.load(fromByteOffset: 12, as: UInt32.self),
-                bboxMinLat: buf.load(fromByteOffset: 16, as: Int32.self),
-                bboxMinLon: buf.load(fromByteOffset: 20, as: Int32.self),
-                bboxMaxLat: buf.load(fromByteOffset: 24, as: Int32.self),
-                bboxMaxLon: buf.load(fromByteOffset: 28, as: Int32.self),
-                regionNameLength: buf.load(fromByteOffset: 32, as: UInt16.self),
-                versionStringLength: buf.load(fromByteOffset: 34, as: UInt16.self)
-            )
-        }
+        let header = OSRGHeader(
+            formatVersion: readUInt16(from: data, at: 4),
+            flags: readUInt16(from: data, at: 6),
+            nodeCount: readUInt32(from: data, at: 8),
+            edgeCount: readUInt32(from: data, at: 12),
+            bboxMinLat: readInt32(from: data, at: 16),
+            bboxMinLon: readInt32(from: data, at: 20),
+            bboxMaxLat: readInt32(from: data, at: 24),
+            bboxMaxLon: readInt32(from: data, at: 28),
+            regionNameLength: readUInt16(from: data, at: 32),
+            versionStringLength: readUInt16(from: data, at: 34)
+        )
 
         let nodeCount = Int(header.nodeCount)
         let edgeCount = Int(header.edgeCount)
@@ -1047,10 +1046,10 @@ final class OfflineRoutingService: ObservableObject {
             let baseLat = header.bboxMinLat
             let baseLon = header.bboxMinLon
             for _ in 0 ..< nodeCount {
-                let id = data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) }
-                let dLat = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 4, as: Int32.self) }
-                let dLon = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 8, as: Int32.self) }
-                let level = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 12, as: UInt16.self) }
+                let id = readUInt32(from: data, at: offset)
+                let dLat = readInt32(from: data, at: offset + 4)
+                let dLon = readInt32(from: data, at: offset + 8)
+                let level = readUInt16(from: data, at: offset + 12)
                 let lat = Float(Self.microdegreesToDegrees(baseLat &+ dLat))
                 let lon = Float(Self.microdegreesToDegrees(baseLon &+ dLon))
                 nodes.append(GraphNode(id: id, latitude: lat, longitude: lon, level: level))
@@ -1059,10 +1058,10 @@ final class OfflineRoutingService: ObservableObject {
         } else {
             // Absolute float coordinates (same as v1 node layout)
             for _ in 0 ..< nodeCount {
-                let id = data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) }
-                let lat = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 4, as: Float.self) }
-                let lon = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 8, as: Float.self) }
-                let level = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 12, as: UInt16.self) }
+                let id = readUInt32(from: data, at: offset)
+                let lat = readFloat(from: data, at: offset + 4)
+                let lon = readFloat(from: data, at: offset + 8)
+                let level = readUInt16(from: data, at: offset + 12)
                 nodes.append(GraphNode(id: id, latitude: lat, longitude: lon, level: level))
                 offset += 14
             }
@@ -1072,10 +1071,10 @@ final class OfflineRoutingService: ObservableObject {
         var edges: [GraphEdge] = []
         edges.reserveCapacity(edgeCount)
         for _ in 0 ..< edgeCount {
-            let from = data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) }
-            let to = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 4, as: UInt32.self) }
-            let weight = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 8, as: UInt32.self) }
-            let shortcut = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 12, as: UInt32.self) }
+            let from = readUInt32(from: data, at: offset)
+            let to = readUInt32(from: data, at: offset + 4)
+            let weight = readUInt32(from: data, at: offset + 8)
+            let shortcut = readUInt32(from: data, at: offset + 12)
             edges.append(GraphEdge(from: from, to: to, weightMetres: weight, shortcutMidNode: shortcut))
             offset += 16
         }
@@ -1085,10 +1084,10 @@ final class OfflineRoutingService: ObservableObject {
 
     /// V1 fallback deserialization (original 32-byte header, UInt32 version field).
     private func deserializeV1(_ data: Data) throws -> RoutingGraph {
-        let nodeCount = Int(data.withUnsafeBytes { $0.load(fromByteOffset: 8, as: UInt32.self) })
-        let edgeCount = Int(data.withUnsafeBytes { $0.load(fromByteOffset: 12, as: UInt32.self) })
-        let regionNameLength = Int(data.withUnsafeBytes { $0.load(fromByteOffset: 16, as: UInt16.self) })
-        let versionStringLength = Int(data.withUnsafeBytes { $0.load(fromByteOffset: 18, as: UInt16.self) })
+        let nodeCount = Int(readUInt32(from: data, at: 8))
+        let edgeCount = Int(readUInt32(from: data, at: 12))
+        let regionNameLength = Int(readUInt16(from: data, at: 16))
+        let versionStringLength = Int(readUInt16(from: data, at: 18))
 
         var offset = 32
         let regionName = String(data: data[offset ..< offset + regionNameLength], encoding: .utf8) ?? "Unknown"
@@ -1104,10 +1103,10 @@ final class OfflineRoutingService: ObservableObject {
         var maxLon: Float = -.greatestFiniteMagnitude
 
         for _ in 0 ..< nodeCount {
-            let id = data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) }
-            let lat = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 4, as: Float.self) }
-            let lon = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 8, as: Float.self) }
-            let level = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 12, as: UInt16.self) }
+            let id = readUInt32(from: data, at: offset)
+            let lat = readFloat(from: data, at: offset + 4)
+            let lon = readFloat(from: data, at: offset + 8)
+            let level = readUInt16(from: data, at: offset + 12)
             nodes.append(GraphNode(id: id, latitude: lat, longitude: lon, level: level))
             minLat = min(minLat, lat); maxLat = max(maxLat, lat)
             minLon = min(minLon, lon); maxLon = max(maxLon, lon)
@@ -1117,10 +1116,10 @@ final class OfflineRoutingService: ObservableObject {
         var edges: [GraphEdge] = []
         edges.reserveCapacity(edgeCount)
         for _ in 0 ..< edgeCount {
-            let from = data.withUnsafeBytes { $0.load(fromByteOffset: offset, as: UInt32.self) }
-            let to = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 4, as: UInt32.self) }
-            let weight = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 8, as: UInt32.self) }
-            let shortcut = data.withUnsafeBytes { $0.load(fromByteOffset: offset + 12, as: UInt32.self) }
+            let from = readUInt32(from: data, at: offset)
+            let to = readUInt32(from: data, at: offset + 4)
+            let weight = readUInt32(from: data, at: offset + 8)
+            let shortcut = readUInt32(from: data, at: offset + 12)
             edges.append(GraphEdge(from: from, to: to, weightMetres: weight, shortcutMidNode: shortcut))
             offset += 16
         }
@@ -1244,6 +1243,26 @@ final class OfflineRoutingService: ObservableObject {
 
     private func appendFloat(_ data: inout Data, _ value: Float) {
         withUnsafeBytes(of: value) { data.append(contentsOf: $0) }
+    }
+
+    private func readUInt16(from data: Data, at offset: Int) -> UInt16 {
+        UInt16(data[offset])
+            | (UInt16(data[offset + 1]) << 8)
+    }
+
+    private func readUInt32(from data: Data, at offset: Int) -> UInt32 {
+        UInt32(data[offset])
+            | (UInt32(data[offset + 1]) << 8)
+            | (UInt32(data[offset + 2]) << 16)
+            | (UInt32(data[offset + 3]) << 24)
+    }
+
+    private func readInt32(from data: Data, at offset: Int) -> Int32 {
+        Int32(bitPattern: readUInt32(from: data, at: offset))
+    }
+
+    private func readFloat(from data: Data, at offset: Int) -> Float {
+        Float(bitPattern: readUInt32(from: data, at: offset))
     }
 
     // MARK: - CRC32

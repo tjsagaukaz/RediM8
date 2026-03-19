@@ -5,6 +5,102 @@ import XCTest
 private typealias HazardKind = HazardIntelligenceService.HazardKind
 
 final class HazardFeedServiceTests: XCTestCase {
+    @MainActor
+    func testSuccessfulRefreshWithoutHazardsStillUpdatesFreshness() async {
+        let service = HazardFeedService(session: makeMockSession { request in
+            let url = try XCTUnwrap(request.url)
+
+            switch url.absoluteString {
+            case "https://www.bom.gov.au/fwo/IDZ00054.warnings_land.xml":
+                return self.makeResponse(
+                    url: url,
+                    contentType: "application/xml",
+                    body: """
+                    <?xml version="1.0" encoding="UTF-8"?>
+                    <rss version="2.0" xmlns:georss="http://www.georss.org/georss">
+                    <channel>
+                        <title>BOM Warnings</title>
+                    </channel>
+                    </rss>
+                    """
+                )
+
+            case "https://feeds.nsw.gov.au/fire/data.json",
+                 "https://data.emergency.vic.gov.au/Show?pageId=getIncidentJSON":
+                return self.makeResponse(
+                    url: url,
+                    body: """
+                    {
+                      "type": "FeatureCollection",
+                      "features": []
+                    }
+                    """
+                )
+
+            default:
+                XCTFail("Unexpected hazard feed request: \(url.absoluteString)")
+                throw URLError(.badURL)
+            }
+        })
+        let hazardService = HazardIntelligenceService(store: nil)
+
+        await service.fetchAllFeeds(into: hazardService)
+
+        XCTAssertNotNil(service.lastFetchAt)
+        XCTAssertNotNil(service.lastSuccessfulFetch)
+        XCTAssertNil(service.lastRefreshError)
+        XCTAssertTrue(service.lastFetchErrors.isEmpty)
+        XCTAssertFalse(service.isFeedStale)
+        XCTAssertEqual(hazardService.reports.count, 0)
+    }
+
+    @MainActor
+    func testFailedRefreshSurfacesUserFacingErrorInsteadOfLookingClear() async {
+        let service = HazardFeedService(session: makeMockSession { request in
+            _ = try XCTUnwrap(request.url)
+            throw URLError(.notConnectedToInternet)
+        })
+        let hazardService = HazardIntelligenceService(store: nil)
+
+        await service.fetchAllFeeds(into: hazardService)
+
+        XCTAssertNil(service.lastSuccessfulFetch)
+        XCTAssertEqual(hazardService.reports.count, 0)
+        XCTAssertEqual(service.lastFetchErrors.count, 3)
+        XCTAssertTrue(service.lastRefreshError?.contains("unavailable") == true)
+    }
+
+    @MainActor
+    func testPartialRefreshReportsIncompleteHazardCoverage() async {
+        let service = HazardFeedService(session: makeMockSession { request in
+            let url = try XCTUnwrap(request.url)
+
+            if url.absoluteString == "https://www.bom.gov.au/fwo/IDZ00054.warnings_land.xml" {
+                return self.makeResponse(
+                    url: url,
+                    contentType: "application/xml",
+                    body: """
+                    <?xml version="1.0" encoding="UTF-8"?>
+                    <rss version="2.0" xmlns:georss="http://www.georss.org/georss">
+                    <channel>
+                        <title>BOM Warnings</title>
+                    </channel>
+                    </rss>
+                    """
+                )
+            }
+
+            throw URLError(.timedOut)
+        })
+        let hazardService = HazardIntelligenceService(store: nil)
+
+        await service.fetchAllFeeds(into: hazardService)
+
+        XCTAssertNotNil(service.lastSuccessfulFetch)
+        XCTAssertFalse(service.isFeedStale)
+        XCTAssertTrue(service.lastRefreshError?.contains("Some live hazard feeds could not be refreshed") == true)
+        XCTAssertEqual(hazardService.reports.count, 0)
+    }
 
     // MARK: - GeoJSON Parsing
 
@@ -148,6 +244,34 @@ final class HazardFeedServiceTests: XCTestCase {
         XCTAssertEqual(hazardService.reports.count, 2, "Should parse 2 BOM warnings")
         XCTAssertTrue(hazardService.reports.allSatisfy { $0.confidence == .verified })
     }
+
+    private func makeMockSession(
+        handler: @escaping (URLRequest) throws -> (HTTPURLResponse, Data)
+    ) -> URLSession {
+        HazardFeedMockURLProtocol.requestHandler = handler
+        addTeardownBlock {
+            HazardFeedMockURLProtocol.requestHandler = nil
+        }
+
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [HazardFeedMockURLProtocol.self]
+        return URLSession(configuration: configuration)
+    }
+
+    private func makeResponse(
+        url: URL,
+        statusCode: Int = 200,
+        contentType: String = "application/json",
+        body: String
+    ) -> (HTTPURLResponse, Data) {
+        let response = HTTPURLResponse(
+            url: url,
+            statusCode: statusCode,
+            httpVersion: nil,
+            headerFields: ["Content-Type": contentType]
+        )!
+        return (response, Data(body.utf8))
+    }
 }
 
 // MARK: - Test Helper: Minimal BOM RSS Parser
@@ -218,4 +342,34 @@ private final class TestBOMRSSDelegate: NSObject, XMLParserDelegate {
             title: currentTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         ))
     }
+}
+
+private final class HazardFeedMockURLProtocol: URLProtocol {
+    static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        guard let handler = Self.requestHandler else {
+            XCTFail("Missing request handler")
+            return
+        }
+
+        do {
+            let (response, data) = try handler(request)
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+    }
+
+    override func stopLoading() {}
 }

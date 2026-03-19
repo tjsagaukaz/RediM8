@@ -16,10 +16,24 @@ final class SettingsService {
         guard let store else {
             return nil
         }
-        return try? store.load(AppSettings.self, for: StorageKey.appSettings)
+
+        do {
+            return try store.load(AppSettings.self, for: StorageKey.appSettings)
+        } catch {
+            RediLogger.persistence.error("Failed to load app settings: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
     }
 
     func saveSettings(_ settings: AppSettings) {
-        try? store?.save(settings, for: StorageKey.appSettings)
+        guard let store else {
+            return
+        }
+
+        do {
+            try store.save(settings, for: StorageKey.appSettings)
+        } catch {
+            RediLogger.persistence.error("Failed to save app settings: \(error.localizedDescription, privacy: .public)")
+        }
     }
 }

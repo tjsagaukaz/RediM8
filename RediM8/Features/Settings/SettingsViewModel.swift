@@ -11,6 +11,7 @@ final class SettingsViewModel: ObservableObject {
     @Published var notice: SettingsNotice?
     @Published var isShowingResetNodeAlert = false
     @Published var isShowingClearCacheAlert = false
+    @Published var isShowingEmergencySafeDefaultsAlert = false
 
     let appState: AppState
 
@@ -59,6 +60,18 @@ final class SettingsViewModel: ObservableObject {
         notice = SettingsNotice(
             title: "Cache Cleared",
             message: "Nearby report cache and session messages were removed from this device."
+        )
+    }
+
+    func resetToEmergencySafeDefaults() {
+        appState.disableStealthMode()
+        appState.mutateSettings { settings in
+            settings = .emergencySafe
+        }
+
+        notice = SettingsNotice(
+            title: "Emergency-Safe Defaults Restored",
+            message: "This device now uses approximate location sharing, balanced signal behavior, critical map layers, and visible emergency-safe communication settings."
         )
     }
 

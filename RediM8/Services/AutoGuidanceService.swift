@@ -199,8 +199,11 @@ final class AutoGuidanceService: ObservableObject {
         guard state == .navigating, let dest = destination else { return false }
 
         // Re-route and check new exposure
-        guard let route = try? offlineRoutingService.route(from: userLocation, to: dest) else {
-            // Can't even route anymore — definitely compromised
+        let route: OfflineRoutingService.Route
+        do {
+            route = try offlineRoutingService.route(from: userLocation, to: dest)
+        } catch {
+            RediLogger.routing.error("Route check failed during guidance: \(error.localizedDescription)")
             return true
         }
 

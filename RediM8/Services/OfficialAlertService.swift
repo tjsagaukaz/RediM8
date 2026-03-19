@@ -40,7 +40,18 @@ final class OfficialAlertService: ObservableObject {
         self.store = store
         self.session = session
         self.feedSources = feedSources ?? Self.defaultFeedSources
-        library = cachedLibrary ?? ((try? store?.load(OfficialAlertLibrary.self, for: StorageKey.library)) ?? .empty)
+        if let cachedLibrary {
+            library = cachedLibrary
+        } else if let store {
+            do {
+                library = try store.load(OfficialAlertLibrary.self, for: StorageKey.library) ?? .empty
+            } catch {
+                RediLogger.alerts.error("Failed to load cached official alerts: \(error.localizedDescription, privacy: .public)")
+                library = .empty
+            }
+        } else {
+            library = .empty
+        }
     }
 
     var activeAlerts: [OfficialAlert] {
@@ -117,6 +128,7 @@ final class OfficialAlertService: ObservableObject {
                 mergedAlerts.append(contentsOf: alerts)
                 availableSources.append(librarySource)
             } catch {
+                RediLogger.alerts.error("Failed to refresh official alerts from \(source.name, privacy: .public): \(error.localizedDescription, privacy: .public)")
                 failures.append(source)
             }
         }
@@ -139,7 +151,13 @@ final class OfficialAlertService: ObservableObject {
             failures: failures,
             referenceDate: .now
         )
-        try? store?.save(library, for: StorageKey.library)
+        if let store {
+            do {
+                try store.save(library, for: StorageKey.library)
+            } catch {
+                RediLogger.alerts.error("Failed to cache official alerts: \(error.localizedDescription, privacy: .public)")
+            }
+        }
 
         if failures.isEmpty {
             lastRefreshError = nil
@@ -228,9 +246,25 @@ final class OfficialAlertService: ObservableObject {
     }
 
     func safeModeAlert(currentLocation: CLLocation?, installedPacks: [OfflineMapPack]) -> OfficialAlert? {
-        nearbyAlerts(currentLocation: currentLocation, installedPacks: installedPacks)
-            .first(where: { $0.isAreaScoped && $0.severity.triggersSafeMode })
+        // Emergency unlock requires the user to actually be near the alert,
+        // not just in the same state or map pack region. Without a confirmed
+        // location, no unlock — we do not gate-lift for distant incidents.
+        guard let currentLocation else {
+            return nil
+        }
+
+        return activeAlerts
+            .filter { $0.isAreaScoped && $0.severity.triggersSafeMode }
+            .filter { $0.isRelevant(to: currentLocation, paddingKilometres: Self.emergencyUnlockProximityKm) }
+            .sorted { Self.compareDistanceAware(lhs: $0, rhs: $1, referenceLocation: currentLocation) }
+            .first
     }
+
+    /// Maximum distance (km) from an alert's declared area before
+    /// RediM8 will consider the user "nearby" for emergency unlock.
+    /// Deliberately conservative — an alert 50 km away may still
+    /// be approaching, but one 200 km away should not unlock Pro.
+    static let emergencyUnlockProximityKm: Double = 50
 
     static func parseCAPFeed(_ data: Data, source: OfficialAlertSource) throws -> [OfficialAlert] {
         let parser = XMLParser(data: data)
@@ -543,7 +577,8 @@ final class OfficialAlertService: ObservableObject {
         ]
         return raw.compactMap { item in
             guard let url = URL(string: item.urlString) else {
-                preconditionFailure("Invalid feed source URL: \(item.urlString)")
+                RediLogger.alerts.error("Invalid feed source URL skipped: \(item.urlString, privacy: .public)")
+                return nil
             }
             return FeedSource(id: item.id, name: item.name, jurisdiction: item.jurisdiction, url: url, format: item.format)
         }

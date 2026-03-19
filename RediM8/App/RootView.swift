@@ -35,6 +35,7 @@ struct RootView: View {
             Text("Battery is at \(appState.batteryStatus.percentageText). RediM8 can switch to a simplified interface to preserve power.")
         }
         .onAppear {
+            appState.startIfNeeded()
             QuickActionCoordinator.shared.bind(appState: appState)
             router.handlePendingQuickAction(from: appState)
             Task {
@@ -160,7 +161,7 @@ struct RootView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             mainTabBar
         }
-        .fullScreenCover(isPresented: $router.isShowingEmergencyMode) {
+        .fullScreenCover(isPresented: router.emergencyModeBinding) {
             EmergencyModeView(
                 appState: appState,
                 dismiss: { router.dismissEmergencyMode(appState: appState) },
@@ -170,7 +171,7 @@ struct RootView: View {
                 openLeaveNow: { router.openLeaveNowFromEmergency() }
             )
         }
-        .fullScreenCover(isPresented: $router.isShowingLeaveNowMode) {
+        .fullScreenCover(isPresented: router.leaveNowModeBinding) {
             LeaveNowView(
                 appState: appState,
                 dismiss: { router.dismissLeaveNowMode(appState: appState) },
@@ -178,7 +179,7 @@ struct RootView: View {
                 openSignal: { router.openTabFromLeaveNow(.signal, appState: appState) }
             )
         }
-        .fullScreenCover(isPresented: $router.isShowingBlackout) {
+        .fullScreenCover(isPresented: router.blackoutBinding) {
             BlackoutModeView(
                 appState: appState,
                 dismiss: { router.dismissBlackout(appState: appState) },
@@ -188,7 +189,7 @@ struct RootView: View {
                 }
             )
         }
-        .sheet(isPresented: $router.isShowingEmergencyGuides, onDismiss: {
+        .sheet(isPresented: router.emergencyGuidesBinding, onDismiss: {
             router.didDismissEmergencyGuides(appState: appState)
         }) {
             NavigationStack {

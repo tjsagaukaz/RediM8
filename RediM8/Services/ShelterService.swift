@@ -38,8 +38,13 @@ final class ShelterService {
     private(set) var lastNearbyNetworkError: String?
 
     init(bundle: Bundle = .main, session: URLSession = .shared) {
-        let dataset = (try? bundle.decode("Shelters.json", as: ShelterDataset.self))
-            ?? ShelterDataset(lastUpdated: .distantPast, shelters: [])
+        let dataset: ShelterDataset
+        do {
+            dataset = try bundle.decode("Shelters.json", as: ShelterDataset.self)
+        } catch {
+            RediLogger.spatial.error("Failed to decode Shelters.json: \(error.localizedDescription)")
+            dataset = ShelterDataset(lastUpdated: .distantPast, shelters: [])
+        }
         self.shelterDataset = dataset
         self.spatialIndex = SpatialIndex(items: dataset.shelters) {
             CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude)

@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RediM8 Privacy Policy</title>
+  <meta name="description" content="RediM8 privacy policy. Local-first emergency preparedness with no analytics, no tracking, and on-device data by default.">
+  <style>
+    :root {
+      --bg: #091115;
+      --panel: #101b20;
+      --panel-2: #15242b;
+      --line: rgba(255, 255, 255, 0.09);
+      --text: #eef5f3;
+      --muted: #aab8b3;
+      --accent: #75d7ba;
+      --accent-2: #5ea6ff;
+      --warn: #ffbf5a;
+      --good: #8de27b;
+      --shadow: 0 28px 70px rgba(0, 0, 0, 0.32);
+      --radius: 18px;
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      color-scheme: dark;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "SF Pro Display", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(94, 166, 255, 0.12), transparent 30%),
+        radial-gradient(circle at top right, rgba(117, 215, 186, 0.12), transparent 28%),
+        linear-gradient(180deg, #0b1317 0%, var(--bg) 100%);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .wrap {
+      width: min(calc(100% - 32px), var(--max));
+      margin: 0 auto;
+    }
+
+    .hero {
+      padding: 56px 0 28px;
+    }
+
+    .hero-card,
+    .panel,
+    .policy-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card {
+      padding: 28px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -40px -40px auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(117, 215, 186, 0.20), transparent 70%);
+      pointer-events: none;
+    }
+
+    .eyebrow,
+    .section-kicker {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      letter-spacing: -0.03em;
+    }
+
+    h1 {
+      font-size: clamp(36px, 6vw, 60px);
+      line-height: 0.95;
+      max-width: 12ch;
+    }
+
+    h2 {
+      font-size: clamp(24px, 4vw, 34px);
+      line-height: 1.02;
+    }
+
+    h3 {
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .hero-copy {
+      max-width: 720px;
+      margin-top: 14px;
+      font-size: 18px;
+      color: var(--muted);
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+    }
+
+    .pill.good { color: var(--good); }
+    .pill.info { color: var(--accent-2); }
+    .pill.warn { color: var(--warn); }
+
+    .hero-note {
+      margin-top: 18px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .section {
+      padding: 14px 0 6px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .panel,
+    .policy-card {
+      padding: 22px;
+    }
+
+    .panel p,
+    .policy-card p,
+    .policy-card li,
+    .policy-legal li {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .summary-list,
+    .policy-list,
+    .legal-list {
+      list-style: none;
+      padding: 0;
+      margin: 16px 0 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .summary-list li,
+    .policy-list li,
+    .legal-list li {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .summary-list li::before,
+    .policy-list li::before,
+    .legal-list li::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      margin-top: 0.5em;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(117, 215, 186, 0.12);
+    }
+
+    .policy-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .policy-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+
+    .policy-subtitle {
+      color: var(--muted);
+      margin-top: 8px;
+      font-size: 15px;
+    }
+
+    .policy-legal {
+      margin-top: 18px;
+    }
+
+    .policy-legal h3 {
+      margin-bottom: 12px;
+    }
+
+    .legal-list li::before {
+      background: var(--accent-2);
+      box-shadow: 0 0 0 6px rgba(94, 166, 255, 0.12);
+    }
+
+    .footer {
+      padding: 28px 0 56px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .grid.two,
+      .grid.three,
+      .policy-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        padding-top: 32px;
+      }
+
+      .hero-card,
+      .panel,
+      .policy-card {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="hero-card">
+        <div class="eyebrow">Privacy Policy</div>
+        <h1>Privacy at a glance</h1>
+        <p class="hero-copy">
+          We built RediM8 so you can rely on it without worrying about your data.
+          The app is designed to work offline and protect privacy by default.
+        </p>
+        <div class="pill-row">
+          <span class="pill good">On-device data</span>
+          <span class="pill info">No analytics</span>
+          <span class="pill warn">Offline first</span>
+        </div>
+        <p class="hero-note">Effective 18 March 2026</p>
+      </div>
+    </section>
+
+    <section class="section grid two">
+      <article class="panel">
+        <div class="section-kicker">Quick summary</div>
+        <h2>Privacy at a glance</h2>
+        <ul class="summary-list">
+          <li><span>Your data stays on your device.</span></li>
+          <li><span>We do not track you or collect analytics.</span></li>
+          <li><span>We do not sell or share personal data.</span></li>
+          <li><span>Location is never sent to RediM8 servers.</span></li>
+          <li><span>Live nearby searches send coordinates only to the map service needed to return local results.</span></li>
+          <li><span>You control what nearby users see, if anything.</span></li>
+        </ul>
+      </article>
+
+      <article class="panel">
+        <div class="section-kicker">Positioning</div>
+        <h2>Why RediM8 is different</h2>
+        <ul class="summary-list">
+          <li><span>Most apps rely on cloud servers and track usage behind the scenes.</span></li>
+          <li><span>RediM8 is designed to work without internet and without collecting your personal data.</span></li>
+          <li><span>Your plans, documents, and emergency information stay on your device and are never accessible to us.</span></li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="policy-grid">
+        <article class="policy-card">
+          <div class="policy-icon">🔒</div>
+          <h3>Data stays on your device</h3>
+          <p class="policy-subtitle">Preparedness data is local-first by default.</p>
+          <ul class="policy-list">
+            <li><span>Household profiles, emergency contacts, preparedness checklists, and go-bag inventories are stored on this device.</span></li>
+            <li><span>Secure Vault files are encrypted locally and we cannot access them.</span></li>
+            <li><span>RediM8 does not operate a cloud account system for your personal emergency data.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card">
+          <div class="policy-icon">📍</div>
+          <h3>Location usage</h3>
+          <p class="policy-subtitle">Used only while you are actively using RediM8.</p>
+          <ul class="policy-list">
+            <li><span>We only use your location while you are actively using the app.</span></li>
+            <li><span>Your location is never stored or sent to RediM8 servers.</span></li>
+            <li><span>If you request nearby live shelter or water results, RediM8 sends search coordinates to the OpenStreetMap Overpass API so it can return local map data.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card">
+          <div class="policy-icon">📡</div>
+          <h3>Local communication</h3>
+          <p class="policy-subtitle">Bluetooth and local Wi-Fi support nearby mesh awareness.</p>
+          <ul class="policy-list">
+            <li><span>Bluetooth and local Wi-Fi help RediM8 discover nearby devices when networks fail.</span></li>
+            <li><span>Your chosen display name can be shared with nearby peers during mesh sessions.</span></li>
+            <li><span>No analytics, advertising identifiers, or hidden telemetry are attached to those local exchanges.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card">
+          <div class="policy-icon">📷</div>
+          <h3>Camera and documents</h3>
+          <p class="policy-subtitle">Used for torch, scanning, and secure local storage.</p>
+          <ul class="policy-list">
+            <li><span>Camera access supports Blackout Mode torch tools and document scanning.</span></li>
+            <li><span>Photo Library access lets you import images of IDs and records.</span></li>
+            <li><span>Imported files are encrypted and stored locally.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card">
+          <div class="policy-icon">🚫</div>
+          <h3>What we do not collect</h3>
+          <p class="policy-subtitle">No tracking stack, ads, or hidden profiling.</p>
+          <ul class="policy-list">
+            <li><span>We do not collect analytics, crash reports, advertising identifiers, IP addresses, device fingerprints, or usage telemetry.</span></li>
+            <li><span>RediM8 contains no third-party analytics SDKs, no tracking pixels, and no advertising frameworks.</span></li>
+            <li><span>We do not sell data, build marketing profiles, or share personal information with data brokers.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card">
+          <div class="policy-icon">🧾</div>
+          <h3>Third-party services</h3>
+          <p class="policy-subtitle">Only the services required to provide alerts, maps, and purchases.</p>
+          <ul class="policy-list">
+            <li><span>RediM8 fetches public emergency alert feeds from Australian agencies over HTTPS.</span></li>
+            <li><span>Nearby live shelter and water searches use the OpenStreetMap Overpass API.</span></li>
+            <li><span>In-app purchases are handled by Apple through StoreKit, and we do not receive your payment details.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card">
+          <div class="policy-icon">🗝️</div>
+          <h3>Security and deletion</h3>
+          <p class="policy-subtitle">Protected on device, removable by you.</p>
+          <ul class="policy-list">
+            <li><span>All user data is stored on-device using SQLite with iOS Data Protection.</span></li>
+            <li><span>Vault documents use AES-256-GCM encryption with Keychain-backed keys and biometric or passcode protection.</span></li>
+            <li><span>Deleting the app removes your local data. There is no server-side personal dataset to request deletion of.</span></li>
+          </ul>
+        </article>
+
+        <article class="policy-card">
+          <div class="policy-icon">📄</div>
+          <h3>Policy details</h3>
+          <p class="policy-subtitle">Updates, children, and contact.</p>
+          <ul class="policy-list">
+            <li><span>RediM8 is not directed at children under 13, and we do not knowingly collect personal information from children.</span></li>
+            <li><span>We may update this policy over time, with changes reflected in the app and on our website.</span></li>
+            <li><span>Questions about privacy can be sent to <a href="mailto:support@redim8.com.au">support@redim8.com.au</a>.</span></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <article class="panel policy-legal">
+        <div class="section-kicker">Legal text</div>
+        <h2>Full privacy policy</h2>
+        <ul class="legal-list">
+          <li><span>RediM8 Pty Ltd (ABN pending) operates the RediM8 mobile application.</span></li>
+          <li><span>Household profiles, emergency contacts, preparedness checklists, go-bag inventories, and Secure Vault files are created and stored entirely on your device. We do not have access to this data.</span></li>
+          <li><span>RediM8 accesses your location only while the app is in use for map features, compass heading, nearby resource discovery, and mesh peer positioning.</span></li>
+          <li><span>Location data is never transmitted to our servers. When you request nearby live shelter or water results, RediM8 sends your search coordinates to the OpenStreetMap Overpass API to fetch local open map data.</span></li>
+          <li><span>Bluetooth and local Wi-Fi are used to discover nearby devices for offline emergency mesh messaging. Your chosen display name is shared with nearby peers during mesh sessions. No other personal data is transmitted.</span></li>
+          <li><span>Camera access is used for the torch in Blackout Mode and to scan documents into Secure Vault. Photo Library access lets you import photos of IDs and documents. These files are encrypted and stored locally.</span></li>
+          <li><span>Device motion is used solely to stabilise compass and blackout tools. Motion data is not stored or transmitted.</span></li>
+          <li><span>We do not collect analytics, crash reports, advertising identifiers, IP addresses, device fingerprints, or usage telemetry.</span></li>
+          <li><span>All user data is stored on-device using SQLite with iOS Data Protection. Secure Vault documents are encrypted with AES-256-GCM using keys stored in the device Keychain with biometric or passcode protection. Vault data is excluded from iCloud backup.</span></li>
+          <li><span>RediM8 fetches publicly available emergency alert feeds from Australian government agencies over HTTPS and queries the OpenStreetMap Overpass API for water and shelter point-of-interest data. Nearby Overpass searches include the map coordinates needed to return local results.</span></li>
+          <li><span>RediM8 Pro subscriptions are processed by Apple through StoreKit. We do not receive or store your payment details. Purchase history is managed by your Apple ID.</span></li>
+          <li><span>Since all data is stored locally, deleting the app removes your data. There is no server-side data to request deletion of.</span></li>
+        </ul>
+      </article>
+    </section>
+
+    <footer class="footer">
+      RediM8 Pty Ltd, Australia.
+    </footer>
+  </main>
+</body>
+</html>

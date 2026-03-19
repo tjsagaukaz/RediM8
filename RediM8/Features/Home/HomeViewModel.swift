@@ -91,8 +91,8 @@ final class HomeViewModel: ObservableObject {
         )
         vehicleReadinessPlan = appState.vehicleReadinessService.plan(for: appState.profile)
         officialAlertSummary = OfficialAlertHomeSummary(
-            title: "No warnings for your area",
-            detail: "Official alerts will appear here when RediM8 has a cached public warning snapshot for your location.",
+            title: "No active threats in your area",
+            detail: "Monitoring official feeds and local conditions.",
             tone: .ready
         )
         connectedMeshPeerCount = appState.meshService.connectedPeers.count
@@ -281,7 +281,7 @@ final class HomeViewModel: ObservableObject {
     }
 
     func onAppear() {
-        locationService.start()
+        locationService.start(requestAccess: false)
         Task {
             await officialAlertService.refreshIfNeeded()
         }
@@ -470,8 +470,8 @@ final class HomeViewModel: ObservableObject {
 
         if officialAlertService.hasCachedData {
             officialAlertSummary = OfficialAlertHomeSummary(
-                title: "No warnings for your area",
-                detail: "Cached \(officialCoverageSummary) official warning feeds show no area-scoped or jurisdiction-matched alerts right now. RediM8 does not replace official emergency alert systems.",
+                title: "No active threats in your area",
+                detail: "Monitoring official feeds and local conditions across cached \(officialCoverageSummary) warning sources.",
                 tone: .ready
             )
         } else {
