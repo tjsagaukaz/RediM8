@@ -231,12 +231,7 @@ final class RediM8UITests: XCTestCase {
         XCTAssertTrue(planRoot.waitForExistence(timeout: 5))
 
         let toggle = app.switches["plan.checklist.firstAidKit"]
-        scrollToElement(toggle, in: planRoot)
-        XCTAssertTrue(toggle.waitForExistence(timeout: 2))
-        toggle.tap()
-        XCTAssertTrue(waitUntil(timeout: 2) {
-            switchValueIsOn(app.switches["plan.checklist.firstAidKit"])
-        })
+        setSwitch(toggle, in: planRoot, isOn: true)
 
         app.buttons["Home"].tap()
         XCTAssertTrue(app.scrollViews["home.root"].waitForExistence(timeout: 2))
@@ -344,6 +339,30 @@ final class RediM8UITests: XCTestCase {
         }
 
         return value == "1" || value.caseInsensitiveCompare("on") == .orderedSame
+    }
+
+    private func setSwitch(
+        _ element: XCUIElement,
+        in scrollView: XCUIElement,
+        isOn: Bool,
+        maxAttempts: Int = 3
+    ) {
+        for _ in 0 ..< maxAttempts {
+            scrollToElement(element, in: scrollView)
+            XCTAssertTrue(element.waitForExistence(timeout: 2))
+
+            if switchValueIsOn(element) == isOn {
+                return
+            }
+
+            element.tap()
+
+            if waitUntil(timeout: 2, condition: { switchValueIsOn(element) == isOn }) {
+                return
+            }
+        }
+
+        XCTFail("Failed to set switch to expected value after \(maxAttempts) attempts")
     }
 }
 

@@ -5,6 +5,7 @@ import os
 enum RediLogger {
     static let app = Logger(subsystem: "com.redim8.app", category: "app")
     static let routing = Logger(subsystem: "com.redim8.app", category: "routing")
+    static let performance = Logger(subsystem: "com.redim8.app", category: "performance")
     static let basemap = Logger(subsystem: "com.redim8.app", category: "basemap")
     static let spatial = Logger(subsystem: "com.redim8.app", category: "spatial")
     static let safety = Logger(subsystem: "com.redim8.app", category: "safety")

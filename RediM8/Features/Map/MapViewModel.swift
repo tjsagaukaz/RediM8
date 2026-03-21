@@ -1073,9 +1073,12 @@ final class MapViewModel: ObservableObject {
     }
 
     func onAppear() {
+        let startTime = CFAbsoluteTimeGetCurrent()
         isVisible = true
         recenter(requestAccessIfNeeded: false)
         guard !disablesAutomaticRuntimeActivity else {
+            let elapsed = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+            RediLogger.performance.debug("Map screen activation prepared in \(elapsed, privacy: .public) ms")
             return
         }
         syncCommunityMonitoring()
@@ -1083,6 +1086,8 @@ final class MapViewModel: ObservableObject {
         Task {
             await officialAlertService.refreshIfNeeded()
         }
+        let elapsed = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+        RediLogger.performance.debug("Map screen activation prepared in \(elapsed, privacy: .public) ms")
     }
 
     func onDisappear() {
@@ -1583,10 +1588,18 @@ final class MapViewModel: ObservableObject {
 
     @MainActor
     private func refreshNearbyNetworkResources(near coordinate: CLLocationCoordinate2D) async {
+        let startTime = CFAbsoluteTimeGetCurrent()
         async let waterRefresh = waterPointService.refreshNearbyNetworkData(near: coordinate)
         async let shelterRefresh = shelterService.refreshNearbyNetworkData(near: coordinate)
         _ = await (waterRefresh, shelterRefresh)
         reloadOfflineMapFeatures()
+        let elapsed = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+        let installedPackCount = installedPackIDs.count
+        let waterPointCount = waterPoints.count
+        let shelterCount = shelters.count
+        RediLogger.performance.debug(
+            "Nearby map resources refreshed in \(elapsed, privacy: .public) ms (\(installedPackCount, privacy: .public) packs, \(waterPointCount, privacy: .public) water points, \(shelterCount, privacy: .public) shelters)"
+        )
     }
 
     private func reloadOfficialAlerts() {

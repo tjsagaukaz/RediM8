@@ -190,9 +190,12 @@ final class NavigationRouter: ObservableObject {
     }
 
     func presentEmergencyMode(appState: AppState) {
+        let startTime = CFAbsoluteTimeGetCurrent()
         appState.beginEmergencyAccessSession()
         highlightedGuideCategory = nil
         setOverlay(.emergencyMode)
+        let elapsed = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+        RediLogger.performance.debug("Emergency mode transition prepared in \(elapsed, privacy: .public) ms")
     }
 
     func presentLeaveNowMode(appState: AppState) {

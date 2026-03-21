@@ -49,63 +49,11 @@ final class PlanViewModel: ObservableObject {
         waterRuntimeEstimate = initialWaterEstimate
         completedEmergencyChecklistItemIDs = initialCompletedIDs
         refreshDerivedState(for: initialDraft)
-
-        appState.$profile
-            .sink { [weak self] profile in
-                guard let self else { return }
-                if self.draft != profile {
-                    self.draft = profile
-                }
-                self.refreshDerivedState(for: profile)
-            }
-            .store(in: &cancellables)
-
-        $draft
-            .removeDuplicates()
-            .sink { [weak self] profile in
-                self?.refreshDerivedState(for: profile)
-            }
-            .store(in: &cancellables)
-
-        $draft
-            .removeDuplicates()
-            .dropFirst()
-            .debounce(for: .milliseconds(250), scheduler: RunLoop.main)
-            .sink { [weak self] profile in
-                self?.appState.applyProfile(profile)
-            }
-            .store(in: &cancellables)
-
-        $completedEmergencyChecklistItemIDs
-            .dropFirst()
-            .sink { [weak self] ids in
-                self?.appState.emergencyPlanService.saveCompletedChecklistItemIDs(ids)
-            }
-            .store(in: &cancellables)
-
-        appState.$prepScore
-            .sink { [weak self] _ in
-                guard let self else { return }
-                self.refreshPreparednessGearRecommendations(for: self.draft)
-            }
-            .store(in: &cancellables)
-
-        appState.$activePrioritySituation
-            .sink { [weak self] _ in
-                guard let self else { return }
-                self.refreshPreparednessGearRecommendations(for: self.draft)
-            }
-            .store(in: &cancellables)
-
-        locationService.$currentLocation
-            .sink { [weak self] location in
-                Task { @MainActor [weak self] in
-                    guard let self else { return }
-                    await self.refreshNearbyNetworkResources(for: location)
-                    self.refreshWaterSourceGuidance()
-                }
-            }
-            .store(in: &cancellables)
+        bindProfileUpdates()
+        bindDraftUpdates()
+        bindChecklistPersistence()
+        bindPreparednessRefreshes()
+        bindLocationUpdates()
     }
 
     func addFamilyMember() {
@@ -230,6 +178,77 @@ final class PlanViewModel: ObservableObject {
         appState.guideService.guides(ids: ids)
     }
 
+    private func bindProfileUpdates() {
+        appState.$profile
+            .sink { [weak self] profile in
+                guard let self else { return }
+                if self.draft != profile {
+                    self.draft = profile
+                }
+                self.refreshDerivedState(for: profile)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func bindDraftUpdates() {
+        $draft
+            .removeDuplicates()
+            .sink { [weak self] profile in
+                self?.refreshDerivedState(for: profile)
+            }
+            .store(in: &cancellables)
+
+        $draft
+            .removeDuplicates()
+            .dropFirst()
+            .debounce(for: .milliseconds(250), scheduler: RunLoop.main)
+            .sink { [weak self] profile in
+                self?.appState.applyProfile(profile)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func bindChecklistPersistence() {
+        $completedEmergencyChecklistItemIDs
+            .dropFirst()
+            .sink { [weak self] ids in
+                self?.appState.emergencyPlanService.saveCompletedChecklistItemIDs(ids)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func bindPreparednessRefreshes() {
+        appState.$prepScore
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.refreshPreparednessGearRecommendations(for: self.draft)
+            }
+            .store(in: &cancellables)
+
+        appState.$activePrioritySituation
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.refreshPreparednessGearRecommendations(for: self.draft)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func bindLocationUpdates() {
+        locationService.$currentLocation
+            .sink { [weak self] location in
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    await self.handleLocationUpdate(location)
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func handleLocationUpdate(_ location: CLLocation?) async {
+        await refreshNearbyWaterNetworkResources(for: location)
+        refreshWaterSourceGuidance()
+    }
+
     private func refreshDerivedState(for profile: UserProfile) {
         scenarioTasks = appState.scenarioEngine.personalizedTasks(for: profile)
         recommendedGear = appState.scenarioEngine.recommendedGear(for: profile)
@@ -295,7 +314,7 @@ final class PlanViewModel: ObservableObject {
         }
     }
 
-    private func refreshNearbyNetworkResources(for location: CLLocation?) async {
+    private func refreshNearbyWaterNetworkResources(for location: CLLocation?) async {
         guard let coordinate = location?.coordinate else {
             return
         }

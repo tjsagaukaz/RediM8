@@ -61,10 +61,13 @@ final class PreparednessSystem: ObservableObject, AppSystem {
     func stop() {}
 
     func applyProfile(_ profile: UserProfile) {
+        let startTime = CFAbsoluteTimeGetCurrent()
         let normalizedProfile = profile.withNormalizedChecklistItems()
         self.profile = normalizedProfile
         familyService.saveProfile(normalizedProfile)
         refreshScore()
+        let elapsed = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
+        RediLogger.performance.debug("Preparedness profile sync applied in \(elapsed, privacy: .public) ms")
     }
 
     func mutateProfile(_ update: (inout UserProfile) -> Void) {

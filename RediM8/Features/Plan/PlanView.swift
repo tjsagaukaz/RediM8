@@ -1,259 +1,6 @@
 import SwiftUI
 
 struct PlanView: View {
-    private enum PlanSection: String, CaseIterable, Identifiable {
-        case household
-        case vehicleKit
-
-        var id: String { rawValue }
-
-        var title: String {
-            switch self {
-            case .household:
-                "Household"
-            case .vehicleKit:
-                "Vehicle"
-            }
-        }
-
-        var detail: String {
-            switch self {
-            case .household:
-                "Go bag, water, family"
-            case .vehicleKit:
-                "Fuel, recovery, route"
-            }
-        }
-
-        var iconName: String {
-            switch self {
-            case .household:
-                "checklist"
-            case .vehicleKit:
-                "vehicle"
-            }
-        }
-
-        var accent: Color {
-            switch self {
-            case .household:
-                ColorTheme.textTertiary
-            case .vehicleKit:
-                ColorTheme.textTertiary
-            }
-        }
-
-    }
-
-    private enum HouseholdWorkspace: String, CaseIterable, Identifiable {
-        case prepare
-        case basics
-        case supplies
-        case roles
-        case scenarios
-
-        var id: String { rawValue }
-
-        var title: String {
-            switch self {
-            case .prepare:
-                "Prepare"
-            case .basics:
-                "Core Setup"
-            case .supplies:
-                "Supplies & Storage"
-            case .roles:
-                "People & Contacts"
-            case .scenarios:
-                "Risk Scenarios"
-            }
-        }
-
-        var detail: String {
-            switch self {
-            case .prepare:
-                "Readiness hub"
-            case .basics:
-                "Routes, kit, go bag"
-            case .supplies:
-                "Water, food, reserves"
-            case .roles:
-                "Household, contacts, tasks"
-            case .scenarios:
-                "Hazard-driven priorities"
-            }
-        }
-
-        var iconName: String {
-            switch self {
-            case .prepare:
-                "checklist"
-            case .basics:
-                "checklist"
-            case .supplies:
-                "water"
-            case .roles:
-                "family"
-            case .scenarios:
-                "warning"
-            }
-        }
-
-        var accent: Color {
-            switch self {
-            case .prepare:
-                ColorTheme.textTertiary
-            case .basics:
-                ColorTheme.textTertiary
-            case .supplies:
-                ColorTheme.textTertiary
-            case .roles:
-                ColorTheme.textTertiary
-            case .scenarios:
-                ColorTheme.textTertiary
-            }
-        }
-
-        var planWorkspaceID: PlanWorkspaceID {
-            switch self {
-            case .prepare:
-                .householdBasics
-            case .basics:
-                .householdBasics
-            case .supplies:
-                .householdSupplies
-            case .roles:
-                .householdRoles
-            case .scenarios:
-                .householdScenarios
-            }
-        }
-    }
-
-    enum PrepareDestination: Identifiable {
-        case scenario(PrepareScenario)
-
-        var id: String {
-            switch self {
-            case let .scenario(scenario):
-                "scenario:\(scenario.rawValue)"
-            }
-        }
-    }
-
-    enum PrepareScenario: String, CaseIterable, Identifiable {
-        case blackout
-        case bushfire
-        case flood
-        case household
-
-        var id: String { rawValue }
-
-        var title: String {
-            switch self {
-            case .blackout:
-                "Blackout Readiness"
-            case .bushfire:
-                "Bushfire Preparation"
-            case .flood:
-                "Flood Readiness"
-            case .household:
-                "Household Preparedness"
-            }
-        }
-
-        var subtitle: String {
-            switch self {
-            case .blackout:
-                "Stay operational when power and networks fail."
-            case .bushfire:
-                "Prepare early and reduce risk before conditions escalate."
-            case .flood:
-                "Protect critical items and move safely if water rises."
-            case .household:
-                "Build a baseline level of safety for everyday emergencies."
-            }
-        }
-
-        var iconName: String {
-            switch self {
-            case .blackout:
-                "battery"
-            case .bushfire:
-                "fire_trail"
-            case .flood:
-                "flood"
-            case .household:
-                "checklist"
-            }
-        }
-
-        var overview: String {
-            switch self {
-            case .blackout:
-                "Power outages can disrupt lighting, communication, refrigeration, and access to essential services. Prepare the basics before the next outage starts."
-            case .bushfire:
-                "Bushfire preparation works best before smoke, traffic, and warnings compress your decision window. Focus on leave-ready basics and protective gear early."
-            case .flood:
-                "Flood readiness is about moving early, protecting essential items, and avoiding routes that can become dangerous quickly once water starts rising."
-            case .household:
-                "A simple baseline across water, first aid, communication, and documents makes every other emergency easier to handle calmly."
-            }
-        }
-
-        var coreNeeds: [String] {
-            switch self {
-            case .blackout:
-                ["Lighting", "Backup power", "Communication", "Water supply"]
-            case .bushfire:
-                ["Leave-ready kit", "Protective masks", "Communication", "Documents and essentials"]
-            case .flood:
-                ["Waterproof storage", "Safe drinking water", "Communication", "Higher-ground readiness"]
-            case .household:
-                ["Water", "First aid", "Communication", "Documents and family contacts"]
-            }
-        }
-
-        var gearTypes: [GearType] {
-            switch self {
-            case .blackout:
-                [.lighting, .backupPower, .communicationRadio, .waterStorage]
-            case .bushfire:
-                [.goBagBundle, .respiratoryMasks, .communicationRadio, .documentProtection, .fireBlanket]
-            case .flood:
-                [.waterproofStorage, .waterPurification, .communicationRadio, .waterStorage]
-            case .household:
-                [.goBagBundle, .waterStorage, .firstAid, .communicationRadio, .documentProtection]
-            }
-        }
-
-        var scenarioOverrides: [ScenarioKind] {
-            switch self {
-            case .blackout:
-                [.powerOutages]
-            case .bushfire:
-                [.bushfires]
-            case .flood:
-                [.floods]
-            case .household:
-                [.generalEmergencies]
-            }
-        }
-
-        var guideIDs: [String] {
-            switch self {
-            case .blackout:
-                ["generator_safety_after_storm", "shelter_in_place_steps", "household_evacuation_quick_start"]
-            case .bushfire:
-                ["bushfire_leave_early_plan", "smoke_exposure_reduction", "household_evacuation_quick_start"]
-            case .flood:
-                ["flood_evacuation_timing", "boil_filter_disinfect_water", "shelter_in_place_steps"]
-            case .household:
-                ["household_evacuation_quick_start", "shelter_in_place_steps", "boil_filter_disinfect_water"]
-            }
-        }
-    }
-
     @ObservedObject private var appState: AppState
     @StateObject private var viewModel: PlanViewModel
     @StateObject private var goBagViewModel: GoBagViewModel
@@ -436,20 +183,21 @@ struct PlanView: View {
                 TrustPillItem(title: "ACTION FIRST", tone: .neutral)
             ])
 
-            heroReadinessSummary(
+            PlanReadinessSummary(
                 value: Double(overallScore) / 100,
                 tint: accent,
                 title: householdReadinessLabel,
                 subtitle: "Preparedness",
-                badge: priorityBadge(title: "Current Priority", tint: accent),
                 summaryTitle: householdPriorityLine,
                 summaryDetail: householdTargetLine,
                 supportingLine: householdTimeToReadyLine
-            )
+            ) {
+                PlanCapsuleBadge(title: "Current Priority", tint: accent)
+            }
             .accessibilityIdentifier("plan.household.readinessSummary")
 
             if let suggestion = householdPrioritySuggestion {
-                planFocusCard(
+                PlanFocusCard(
                     eyebrow: "Next Action",
                     iconName: suggestion.category.systemImage,
                     title: nextActionTitle(for: suggestion),
@@ -462,19 +210,19 @@ struct PlanView: View {
             }
 
             LazyVGrid(columns: planHeroMetricColumns, spacing: 10) {
-                planHeroMetricTile(
+                PlanHeroMetricTile(
                     title: "Go Bag",
                     value: goBagStatusLabel,
                     detail: goBagReadyToLeaveLine,
                     tint: readinessTint(for: goBagViewModel.evacuationPrepScore)
                 )
-                planHeroMetricTile(
+                PlanHeroMetricTile(
                     title: "Water",
                     value: viewModel.waterRuntimeEstimate.estimatedDaysText,
                     detail: viewModel.waterRuntimeEstimate.statusTitle,
                     tint: waterStatusTint
                 )
-                planHeroMetricTile(
+                PlanHeroMetricTile(
                     title: "Routes",
                     value: "\(savedRouteCount)",
                     detail: savedRouteCount == 1 ? "offline route saved" : "offline routes saved",
@@ -501,27 +249,23 @@ struct PlanView: View {
                 TrustPillItem(title: "OFFLINE ROUTES", tone: .neutral)
             ])
 
-            heroReadinessSummary(
+            PlanReadinessSummary(
                 value: readiness.progress,
                 tint: tint,
                 title: readinessOperationalLabel(for: readiness.percentage),
                 subtitle: "Vehicle",
-                badge: Text(vehicleCriticalOutstandingCount == 0 ? "MOVE READY" : "CURRENT PRIORITY")
-                    .font(RediTypography.caption)
-                    .foregroundStyle(vehicleCriticalOutstandingCount == 0 ? ColorTheme.ready : ColorTheme.warning)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(
-                        (vehicleCriticalOutstandingCount == 0 ? ColorTheme.ready : ColorTheme.warning).opacity(0.14),
-                        in: Capsule()
-                    ),
                 summaryTitle: vehicleCriticalOutstandingCount == 0 ? "Vehicle movement baseline is covered." : "\(vehicleCriticalOutstandingCount) priority vehicle item\(vehicleCriticalOutstandingCount == 1 ? "" : "s") still open.",
                 summaryDetail: "\(readiness.completedCount) of \(readiness.totalCount) vehicle essentials are checked and staged for movement.",
                 supportingLine: vehicleTimeToReadyLine
-            )
+            ) {
+                PlanCapsuleBadge(
+                    title: vehicleCriticalOutstandingCount == 0 ? "Move Ready" : "Current Priority",
+                    tint: vehicleCriticalOutstandingCount == 0 ? ColorTheme.ready : ColorTheme.warning
+                )
+            }
 
             if let nextAction = vehicleKitViewModel.plan.nextActions.first {
-                planFocusCard(
+                PlanFocusCard(
                     eyebrow: "Next Action",
                     iconName: "vehicle",
                     title: nextAction,
@@ -534,19 +278,19 @@ struct PlanView: View {
             }
 
             LazyVGrid(columns: planHeroMetricColumns, spacing: 10) {
-                planHeroMetricTile(
+                PlanHeroMetricTile(
                     title: "Priority",
                     value: "\(vehicleCriticalOutstandingCount)",
                     detail: vehicleCriticalOutstandingCount == 1 ? "critical item open" : "critical items open",
                     tint: vehicleCriticalOutstandingCount == 0 ? ColorTheme.ready : ColorTheme.warning
                 )
-                planHeroMetricTile(
+                PlanHeroMetricTile(
                     title: "Fuel",
                     value: "\(viewModel.draft.supplies.fuelLitres.roundedIntString)L",
                     detail: "tracked reserve",
                     tint: ColorTheme.textTertiary
                 )
-                planHeroMetricTile(
+                PlanHeroMetricTile(
                     title: "Routes",
                     value: "\(savedRouteCount)",
                     detail: savedRouteCount == 1 ? "offline route saved" : "offline routes saved",
@@ -569,11 +313,15 @@ struct PlanView: View {
     private var householdReadinessBreakdownCard: some View {
         PanelCard(
             title: "Weakest Areas",
-            subtitle: "Start where the risk is highest so the next fix stays obvious."
+                subtitle: "Start where the risk is highest so the next fix stays obvious."
         ) {
             VStack(alignment: .leading, spacing: 12) {
                 ForEach(orderedCategoryScores) { categoryScore in
-                    readinessBreakdownRow(categoryScore)
+                    PlanReadinessBreakdownRow(
+                        categoryScore: categoryScore,
+                        tint: readinessTint(for: categoryScore.score),
+                        severity: readinessSeverityLabel(for: categoryScore.score)
+                    )
                 }
             }
         }
@@ -1382,242 +1130,6 @@ struct PlanView: View {
             : "Estimated time to go-bag baseline: \(formattedDuration(minutes: blockers * 6))."
     }
 
-    private func heroReadinessSummary<Badge: View>(
-        value: Double,
-        tint: Color,
-        title: String,
-        subtitle: String,
-        badge: Badge,
-        summaryTitle: String,
-        summaryDetail: String,
-        supportingLine: String
-    ) -> some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(alignment: .center, spacing: 18) {
-                ReadinessRing(
-                    value: value,
-                    tint: tint,
-                    title: title,
-                    subtitle: subtitle
-                )
-
-                readinessSummaryTextBlock(
-                    value: value,
-                    tint: tint,
-                    badge: badge,
-                    summaryTitle: summaryTitle,
-                    summaryDetail: summaryDetail,
-                    supportingLine: supportingLine
-                )
-            }
-
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .center, spacing: 16) {
-                    ReadinessRing(
-                        value: value,
-                        tint: tint,
-                        title: title,
-                        subtitle: subtitle,
-                        size: 104,
-                        lineWidth: 11
-                    )
-
-                    readinessSummaryTextBlock(
-                        value: value,
-                        tint: tint,
-                        badge: badge,
-                        summaryTitle: summaryTitle,
-                        summaryDetail: summaryDetail,
-                        supportingLine: supportingLine
-                    )
-                }
-            }
-        }
-    }
-
-    private func readinessSummaryTextBlock<Badge: View>(
-        value: Double,
-        tint: Color,
-        badge: Badge,
-        summaryTitle: String,
-        summaryDetail: String,
-        supportingLine: String
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            badge
-
-            Text(summaryTitle)
-                .font(.headline.weight(.bold))
-                .foregroundStyle(ColorTheme.text)
-
-            Text(summaryDetail)
-                .font(.subheadline)
-                .foregroundStyle(ColorTheme.textSecondary)
-
-            ReadinessMeter(value: value, tint: tint, height: 12)
-
-            Text(supportingLine)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(ColorTheme.textTertiary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func planFocusCard(
-        eyebrow: String,
-        iconName: String,
-        title: String,
-        detail: String,
-        emphasis: String,
-        secondaryEmphasis: String? = nil,
-        supporting: String,
-        tint: Color
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(tint.opacity(0.16))
-                        .frame(width: 48, height: 48)
-
-                    RediIcon(iconName)
-                        .foregroundStyle(tint)
-                        .frame(width: 20, height: 20)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(eyebrow.uppercased())
-                        .font(RediTypography.caption)
-                        .foregroundStyle(tint)
-
-                    Text(title)
-                        .font(.headline.weight(.bold))
-                        .foregroundStyle(ColorTheme.text)
-                }
-
-                Spacer(minLength: 0)
-
-                Text(emphasis)
-                    .font(.subheadline.weight(.bold))
-                    .foregroundStyle(tint)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 7)
-                    .background(tint.opacity(0.14), in: Capsule())
-            }
-
-            Text(detail)
-                .font(.subheadline)
-                .foregroundStyle(ColorTheme.textSecondary)
-
-            HStack(spacing: 8) {
-                emphasisBadge(emphasis, tint: tint)
-                if let secondaryEmphasis {
-                    emphasisBadge(secondaryEmphasis, tint: ColorTheme.textTertiary)
-                }
-            }
-
-            Text(supporting)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(ColorTheme.textTertiary)
-        }
-        .padding(16)
-        .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.hero, style: .continuous))
-    }
-
-    private func planHeroMetricTile(
-        title: String,
-        value: String,
-        detail: String,
-        tint: Color
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title.uppercased())
-                .font(RediTypography.caption)
-                .foregroundStyle(ColorTheme.textTertiary)
-
-            Text(value)
-                .font(.headline.weight(.bold))
-                .foregroundStyle(ColorTheme.text)
-                .lineLimit(1)
-
-            Text(detail)
-                .font(.caption)
-                .foregroundStyle(tint)
-                .lineLimit(2)
-        }
-        .frame(maxWidth: .infinity, minHeight: 86, alignment: .leading)
-        .padding(14)
-        .background(ColorTheme.panel, in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
-    }
-
-    private func readinessBreakdownRow(_ categoryScore: CategoryScore) -> some View {
-        let tint = readinessTint(for: categoryScore.score)
-        let severity = readinessSeverityLabel(for: categoryScore.score)
-
-        return HStack(alignment: .center, spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(tint.opacity(0.14))
-                    .frame(width: 40, height: 40)
-
-                RediIcon(categoryScore.category.systemImage)
-                    .foregroundStyle(tint)
-                    .frame(width: 18, height: 18)
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 8) {
-                    Text(categoryScore.category.title)
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(ColorTheme.text)
-
-                    Text(severity)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(tint)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(tint.opacity(0.14), in: Capsule())
-
-                    Spacer(minLength: 0)
-
-                    Text("\(categoryScore.score)%")
-                        .font(.subheadline.weight(.bold))
-                        .foregroundStyle(tint)
-                }
-
-                ReadinessMeter(
-                    value: Double(categoryScore.score) / 100,
-                    tint: tint,
-                    height: 8
-                )
-            }
-        }
-        .padding(14)
-        .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(tint.opacity(0.12), lineWidth: 1)
-        )
-    }
-
-    private func priorityBadge(title: String, tint: Color) -> some View {
-        Text(title.uppercased())
-            .font(RediTypography.caption)
-            .foregroundStyle(tint)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(tint.opacity(0.14), in: Capsule())
-    }
-
-    private func emphasisBadge(_ title: String, tint: Color) -> some View {
-        Text(title.uppercased())
-            .font(RediTypography.caption)
-            .foregroundStyle(tint)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(tint.opacity(0.14), in: Capsule())
-    }
-
     private func readinessOperationalLabel(for score: Int) -> String {
         switch score {
         case ..<35:
@@ -2137,393 +1649,6 @@ struct PlanView: View {
             withAnimation(RediMotion.selection) {
                 proxy.scrollTo(PlanScrollAnchor.top, anchor: .top)
             }
-        }
-    }
-}
-
-private struct PreparednessGearRecommendationSheet: View {
-    @Environment(\.dismiss) private var dismiss
-
-    let recommendation: PreparednessGearRecommendation
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                PreparednessGearRecommendationHeader(
-                    reason: recommendation.reason,
-                    heroThumbnailAssetName: recommendation.heroThumbnailAssetName
-                )
-
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(recommendation.options) { option in
-                        PreparednessGearOptionCard(option: option)
-                    }
-                }
-
-                PreparednessGearRecommendationFootnote(disclosureText: recommendation.disclosureText)
-            }
-            .padding(RediSpacing.screen)
-        }
-        .navigationTitle(recommendation.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") {
-                    dismiss()
-                }
-            }
-        }
-        .background(ColorTheme.background.ignoresSafeArea())
-    }
-}
-
-private struct PreparednessGearRecommendationCard: View {
-    let recommendation: PreparednessGearRecommendation
-    let action: () -> Void
-
-    var body: some View {
-        let tint = preparednessGearPriorityTint(recommendation.priority)
-
-        return VStack(alignment: .leading, spacing: 12) {
-            if let heroThumbnailAssetName = recommendation.heroThumbnailAssetName {
-                Image(heroThumbnailAssetName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 132)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            }
-
-            HStack(alignment: .top, spacing: 12) {
-                RediIcon(recommendation.systemImage)
-                    .foregroundStyle(tint)
-                    .frame(width: 24, height: 24, alignment: .center)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(recommendation.title)
-                            .font(.headline)
-                            .foregroundStyle(ColorTheme.text)
-
-                        Text(recommendation.priority.title.uppercased())
-                            .font(RediTypography.caption)
-                            .foregroundStyle(tint)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(tint.opacity(0.14), in: Capsule())
-
-                        if recommendation.featuredOption?.isBundle == true {
-                            Text("BUNDLE")
-                                .font(RediTypography.caption)
-                                .foregroundStyle(ColorTheme.accent)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(ColorTheme.accent.opacity(0.14), in: Capsule())
-                        }
-                    }
-
-                    Text(recommendation.reason)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            HStack {
-                Spacer()
-
-                Button(action: action) {
-                    Label(recommendation.ctaTitle.uppercased(), systemImage: "arrow.up.right")
-                        .font(RediTypography.caption)
-                        .foregroundStyle(ColorTheme.accent)
-                }
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(tint.opacity(0.12), lineWidth: 1)
-        )
-    }
-}
-
-private struct PrepareScenarioDetailView: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var selectedRecommendation: PreparednessGearRecommendation?
-    @State private var selectedGuide: Guide?
-
-    let scenario: PlanView.PrepareScenario
-    let recommendations: [PreparednessGearRecommendation]
-    let relatedGuides: [Guide]
-    let areGearRecommendationsSuppressed: Bool
-
-    private var bundleRecommendation: PreparednessGearRecommendation? {
-        recommendations.first(where: { $0.featuredOption?.isBundle == true })
-    }
-
-    private var individualRecommendations: [PreparednessGearRecommendation] {
-        recommendations.filter { $0.id != bundleRecommendation?.id }
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(scenario.overview)
-                        .font(.body)
-                        .foregroundStyle(ColorTheme.textSecondary)
-
-                    Text("Core needs")
-                        .font(.headline.weight(.bold))
-                        .foregroundStyle(ColorTheme.text)
-                }
-
-                PanelCard(title: nil, subtitle: nil) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach(Array(scenario.coreNeeds.enumerated()), id: \.offset) { index, need in
-                            HStack(alignment: .top, spacing: 10) {
-                                Text("\(index + 1).")
-                                    .font(.headline.weight(.bold))
-                                    .foregroundStyle(ColorTheme.textTertiary)
-
-                                Text(need)
-                                    .font(.headline)
-                                    .foregroundStyle(ColorTheme.text)
-                            }
-                        }
-                    }
-                }
-
-                if areGearRecommendationsSuppressed {
-                    PanelCard(title: "Gear suggestions paused", subtitle: "RediM8 keeps active priority situations focused on immediate action.") {
-                        Text("Come back to this preparation view after the active event settles. For now, use Ask Redi, the map, or emergency tools for the fastest next step.")
-                            .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textSecondary)
-                    }
-                } else if let bundleRecommendation {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Fastest way to prepare")
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(ColorTheme.text)
-
-                        PreparednessGearRecommendationCard(recommendation: bundleRecommendation) {
-                            selectedRecommendation = bundleRecommendation
-                        }
-                    }
-                }
-
-                if !areGearRecommendationsSuppressed, !individualRecommendations.isEmpty {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(bundleRecommendation == nil ? "Recommended equipment" : "Build individually")
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(ColorTheme.text)
-
-                        VStack(alignment: .leading, spacing: 12) {
-                            ForEach(individualRecommendations) { recommendation in
-                                PreparednessGearRecommendationCard(recommendation: recommendation) {
-                                    selectedRecommendation = recommendation
-                                }
-                            }
-                        }
-                    }
-                } else if !areGearRecommendationsSuppressed {
-                    PanelCard(title: "Current setup", subtitle: "Your saved household details already cover the main essentials RediM8 checks for this scenario.") {
-                        Text("You can still review the guides below if you want a refresher on the core steps and readiness checks.")
-                            .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textSecondary)
-                    }
-                }
-
-                if !relatedGuides.isEmpty {
-                    PanelCard(title: "Learn the basics", subtitle: "Open the deeper offline reference when you want the full guide behind these essentials.") {
-                        VStack(alignment: .leading, spacing: 12) {
-                            ForEach(relatedGuides) { guide in
-                                Button {
-                                    selectedGuide = guide
-                                } label: {
-                                    RediCommandCard(
-                                        title: guide.title,
-                                        detail: guide.summary,
-                                        iconName: guide.heroIconName,
-                                        tint: ColorTheme.textTertiary,
-                                        badge: "Guide",
-                                        prominence: .neutral,
-                                        layout: .rail,
-                                        minHeight: 78
-                                    )
-                                }
-                                .buttonStyle(CardPressButtonStyle())
-                            }
-                        }
-                    }
-                }
-            }
-            .padding(RediSpacing.screen)
-        }
-        .background(ColorTheme.background.ignoresSafeArea())
-        .navigationTitle(scenario.title)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") {
-                    dismiss()
-                }
-            }
-        }
-        .sheet(item: $selectedRecommendation) { recommendation in
-            NavigationStack {
-                PreparednessGearRecommendationSheet(recommendation: recommendation)
-            }
-            .rediSheetPresentation()
-        }
-        .sheet(item: $selectedGuide) { guide in
-            NavigationStack {
-                GuideDetailView(guide: guide)
-            }
-            .rediSheetPresentation()
-        }
-    }
-}
-
-private struct PreparednessGearRecommendationHeader: View {
-    let reason: String
-    let heroThumbnailAssetName: String?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let heroThumbnailAssetName {
-                Image(heroThumbnailAssetName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 176)
-                    .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-            }
-
-            Text(reason)
-                .font(.body)
-                .foregroundStyle(ColorTheme.textSecondary)
-
-            Text("Recommended equipment")
-                .font(.headline.weight(.bold))
-                .foregroundStyle(ColorTheme.text)
-        }
-    }
-}
-
-private struct PreparednessGearOptionCard: View {
-    let option: PreparednessGearOption
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if let thumbnailAssetName = option.thumbnailAssetName {
-                Image(thumbnailAssetName)
-                    .resizable()
-                    .scaledToFill()
-                    .frame(maxWidth: .infinity)
-                    .frame(height: option.isBundle ? 150 : 110)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            }
-
-            HStack(alignment: .top, spacing: 10) {
-                RediIcon(option.category.systemImageName)
-                    .foregroundStyle(ColorTheme.textTertiary)
-                    .frame(width: 20, height: 20)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(option.title)
-                            .font(.headline)
-                            .foregroundStyle(ColorTheme.text)
-
-                        Text(option.badgeTitle.uppercased())
-                            .font(RediTypography.caption)
-                            .foregroundStyle(option.isBundle ? ColorTheme.accent : ColorTheme.textTertiary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background((option.isBundle ? ColorTheme.accent : ColorTheme.textTertiary).opacity(0.12), in: Capsule())
-                    }
-
-                    Text(option.detail)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            if let partnerURL = option.partnerURL {
-                PreparednessGearPartnerLink(partnerURL: partnerURL)
-                    .padding(.leading, 30)
-            }
-        }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-    }
-}
-
-private struct PreparednessGearPartnerLink: View {
-    let partnerURL: URL
-
-    var body: some View {
-        Link(destination: partnerURL) {
-            Label("OPEN PARTNER LINK", systemImage: "arrow.up.right")
-                .font(RediTypography.caption)
-                .foregroundStyle(ColorTheme.accent)
-        }
-    }
-}
-
-private struct PreparednessGearRecommendationFootnote: View {
-    let disclosureText: String?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Optional gear guidance only. RediM8 keeps urgent and medical flows focused on immediate action.")
-                .font(.caption)
-                .foregroundStyle(ColorTheme.textTertiary)
-
-            if let disclosureText {
-                Text(disclosureText)
-                    .font(.caption)
-                    .foregroundStyle(ColorTheme.textTertiary)
-            }
-        }
-    }
-}
-
-private func preparednessGearPriorityTint(_ priority: PreparednessGearRecommendationPriority) -> Color {
-    switch priority {
-    case .critical:
-        ColorTheme.warning
-    case .recommended:
-        ColorTheme.textTertiary
-    }
-}
-
-private extension GearCategory {
-    var systemImageName: String {
-        switch self {
-        case .water:
-            "water"
-        case .food:
-            "food"
-        case .medical:
-            "first_aid"
-        case .power:
-            "battery"
-        case .communication:
-            "radio"
-        case .fireSafety:
-            "fire_blanket"
-        case .tools:
-            "wrench.and.screwdriver.fill"
-        case .vehicle:
-            "vehicle"
-        case .lighting:
-            "flashlight"
-        case .navigation:
-            "compass"
         }
     }
 }

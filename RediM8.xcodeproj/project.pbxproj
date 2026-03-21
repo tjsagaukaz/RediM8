@@ -93,6 +93,7 @@
 		587BF86F3191AC03C4D90841 /* SignalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E3422BA028D17130682664F /* SignalViewModel.swift */; };
 		593B408E66762C59E041E526 /* MapPacks.json in Resources */ = {isa = PBXBuildFile; fileRef = 2AA7EF573830E88E4685ACDB /* MapPacks.json */; };
 		5986AC39F020A1A68FFD7C27 /* MapAssetIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = A28278FBD21FCFF427D6F891 /* MapAssetIcon.swift */; };
+		59A66642936779CF591EAC57 /* PlanPreparednessComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6DEF553AAD63CC9584B97E7 /* PlanPreparednessComponents.swift */; };
 		59AEDBE60DDAA9FCC211E484 /* MotionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17C1A710B704531E4525896F /* MotionService.swift */; };
 		5B1520BBA9A06B6231320BBE /* AssistantKnowledgeGuide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6410D20DFF4EF3ED0C18B789 /* AssistantKnowledgeGuide.swift */; };
 		5B848C17B25E01DDC3AF65C7 /* ArchitectureBoundaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0382BC7FE24F21E865B37132 /* ArchitectureBoundaryTests.swift */; };
@@ -175,6 +176,7 @@
 		966B5002A37912A8C2FAF4A1 /* ElevationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AAC012F53AB77B06BC81960 /* ElevationService.swift */; };
 		98B015B9F276010F6C836BFA /* GuideService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1122419460AAD6AC86F08CE0 /* GuideService.swift */; };
 		993A4B1B3B80EE945A76E2C7 /* SurvivalSkillsGuides.json in Resources */ = {isa = PBXBuildFile; fileRef = C7759360F9B8CB4CF7686AE1 /* SurvivalSkillsGuides.json */; };
+		9A404A0EAAC3742D625D7FDB /* PlanHeroComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E919C52B1187A1D43F01D7B /* PlanHeroComponents.swift */; };
 		9B0D222ECF51424047B0F4AA /* PreparednessGearRecommendationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B161736D49549BA79B0E2D1E /* PreparednessGearRecommendationService.swift */; };
 		9B0E303F0E4FDE1838810795 /* AssistantMedicalProtocolCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 976747CC9B42FE2C9EE99177 /* AssistantMedicalProtocolCatalog.swift */; };
 		9B6D7234C22129B84AA2849B /* PreparednessSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59EB1A827BC405D716D4FC9 /* PreparednessSystem.swift */; };
@@ -262,6 +264,7 @@
 		F490F9344CF29838B00574F5 /* AssistantResponseCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4867A90E867B30064159E82B /* AssistantResponseCard.swift */; };
 		F5CE06BCBE230A3A5FAF31A3 /* ResourceCategories.json in Resources */ = {isa = PBXBuildFile; fileRef = B38184A36F4047A9B4E1F4D6 /* ResourceCategories.json */; };
 		F5CE9C292B722138BD9A1782 /* ScenarioSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47234335787B5614814768E5 /* ScenarioSelectionView.swift */; };
+		F5E2654CD39A642B3F41D445 /* PlanViewTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25D7CB9B79DF0F37C90DFE81 /* PlanViewTypes.swift */; };
 		F63C1DCEE53422BCC9555733 /* SecureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6126E00F4232C078F8908B7 /* SecureStore.swift */; };
 		F6C6E3636DBE6FEEF00BEA56 /* OfficialAlert.swift in Sources */ = {isa = PBXBuildFile; fileRef = 731652C5575FF5291D05402F /* OfficialAlert.swift */; };
 		F9FCB6DC21C3E81047CEFF3D /* BowDrillDiagrams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FD56046A1AF4086683FE89 /* BowDrillDiagrams.swift */; };
@@ -342,6 +345,7 @@
 		21D36BB7D827BE0C46432CE1 /* OfflineAssistantModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAssistantModelTests.swift; sourceTree = "<group>"; };
 		2333635E6C92D32147B2BA0E /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		2403051C32CE57971E35E46B /* Gear.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Gear.json; sourceTree = "<group>"; };
+		25D7CB9B79DF0F37C90DFE81 /* PlanViewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanViewTypes.swift; sourceTree = "<group>"; };
 		2619DE2C2FAA65B077305B4C /* SpatialIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialIndexTests.swift; sourceTree = "<group>"; };
 		261BBAAAD0188C1ED68C12A7 /* HiddenModeIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiddenModeIndicatorView.swift; sourceTree = "<group>"; };
 		29FAABC8520CD8EC4189DB8D /* AskRediView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskRediView.swift; sourceTree = "<group>"; };
@@ -472,6 +476,7 @@
 		9D0DDB7D31DAACC4331FAB6F /* ResourceMarker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceMarker.swift; sourceTree = "<group>"; };
 		9D6447B48448EC24703BB619 /* NearestResourceServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearestResourceServiceTests.swift; sourceTree = "<group>"; };
 		9E3422BA028D17130682664F /* SignalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignalViewModel.swift; sourceTree = "<group>"; };
+		9E919C52B1187A1D43F01D7B /* PlanHeroComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanHeroComponents.swift; sourceTree = "<group>"; };
 		A0AE9687EC66EFE2EE65AA1F /* GoBagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoBagView.swift; sourceTree = "<group>"; };
 		A165FB5447C1AFB0324DD7D2 /* OfflineRoutingServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineRoutingServiceTests.swift; sourceTree = "<group>"; };
 		A28278FBD21FCFF427D6F891 /* MapAssetIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapAssetIcon.swift; sourceTree = "<group>"; };
@@ -489,6 +494,7 @@
 		B45DC576849C1161094E81B9 /* AssistantSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantSessionState.swift; sourceTree = "<group>"; };
 		B6126E00F4232C078F8908B7 /* SecureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureStore.swift; sourceTree = "<group>"; };
 		B61A48D4025B9665B9EFE907 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B6DEF553AAD63CC9584B97E7 /* PlanPreparednessComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanPreparednessComponents.swift; sourceTree = "<group>"; };
 		BAB24B83D820271A8F95BA06 /* MapDataServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapDataServiceTests.swift; sourceTree = "<group>"; };
 		BC9A79528E8FB59EAB79CEF3 /* NearestResourceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearestResourceView.swift; sourceTree = "<group>"; };
 		BD57FCD299E6713AACBDAF0E /* MapSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapSystem.swift; sourceTree = "<group>"; };
@@ -724,8 +730,11 @@
 				75A5E28AEF237CB613577605 /* Emergency72HourView.swift */,
 				A0AE9687EC66EFE2EE65AA1F /* GoBagView.swift */,
 				5651F034F775D4F5471D8118 /* GoBagViewModel.swift */,
+				9E919C52B1187A1D43F01D7B /* PlanHeroComponents.swift */,
+				B6DEF553AAD63CC9584B97E7 /* PlanPreparednessComponents.swift */,
 				1C73AB47259F4917B88FD84E /* PlanView.swift */,
 				6373A5CBCE3ED15D049C2D2F /* PlanViewModel.swift */,
+				25D7CB9B79DF0F37C90DFE81 /* PlanViewTypes.swift */,
 				69489959402789E83ABB30A2 /* SecureVaultView.swift */,
 				AC5367C1A1DC55FCD4C0B5C2 /* VehicleKitView.swift */,
 				92328046E77C8D10BDC9B06D /* VehicleKitViewModel.swift */,
@@ -1331,8 +1340,11 @@
 				A8F93DD64533435E876C8195 /* OnboardingViewModel.swift in Sources */,
 				159415960755FE05606B1AA8 /* PanelCard.swift in Sources */,
 				92D411E14FF4938B27F1A8E8 /* PermissionsManager.swift in Sources */,
+				9A404A0EAAC3742D625D7FDB /* PlanHeroComponents.swift in Sources */,
+				59A66642936779CF591EAC57 /* PlanPreparednessComponents.swift in Sources */,
 				E498A20CAE2A344456D47CAB /* PlanView.swift in Sources */,
 				9D1542B6F48B9DBE40DB8951 /* PlanViewModel.swift in Sources */,
+				F5E2654CD39A642B3F41D445 /* PlanViewTypes.swift in Sources */,
 				2C35DE5A39BD8D15D48C6E6D /* PowerSystem.swift in Sources */,
 				536D8DF80183BF34E62EB04E /* PredictiveCollapseService.swift in Sources */,
 				4321BBE5DF5420553FBD9C21 /* PrepScenario.swift in Sources */,

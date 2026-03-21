@@ -130,12 +130,18 @@ final class OfficialAlertService: ObservableObject {
             return
         }
 
-        isRefreshing = true
-        defer { isRefreshing = false }
-
+        let refreshStartTime = CFAbsoluteTimeGetCurrent()
         var mergedAlerts: [OfficialAlert] = []
         var availableSources: [OfficialAlertSource] = []
         var failures: [FeedSource] = []
+        isRefreshing = true
+        defer {
+            isRefreshing = false
+            let elapsed = Int((CFAbsoluteTimeGetCurrent() - refreshStartTime) * 1000)
+            RediLogger.performance.debug(
+                "Official alert refresh completed in \(elapsed, privacy: .public) ms (\(availableSources.count, privacy: .public) sources, \(mergedAlerts.count, privacy: .public) alerts, \(failures.count, privacy: .public) failures)"
+            )
+        }
 
         for source in feedSources {
             do {
