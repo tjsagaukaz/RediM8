@@ -156,10 +156,12 @@ final class RediM8UITests: XCTestCase {
         app.buttons["home.commandTools.toggle"].tap()
 
         let trigger = app.buttons["home.emergencyModeTrigger"]
+        XCTAssertTrue(trigger.waitForExistence(timeout: 5))
         trigger.tap()
         XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
 
         app.buttons["emergency.mode.close"].tap()
+        XCTAssertTrue(app.scrollViews["home.root"].waitForExistence(timeout: 2))
         XCTAssertTrue(trigger.waitForExistence(timeout: 2))
 
         trigger.tap()
@@ -217,7 +219,7 @@ final class RediM8UITests: XCTestCase {
     func testPlanSupplyWorkspaceShowsFirstAidGapRecommendation() {
         let app = makePlanSuppliesReadyApp()
 
-        app.launch()
+        launchApp(app)
 
         let planRoot = app.scrollViews["plan.root"]
         XCTAssertTrue(planRoot.waitForExistence(timeout: 5))
@@ -234,7 +236,7 @@ final class RediM8UITests: XCTestCase {
     func testPlanChecklistStateSurvivesHomeRoundTrip() {
         let app = makePlanReadyApp()
 
-        app.launch()
+        launchApp(app)
 
         let planRoot = app.scrollViews["plan.root"]
         XCTAssertTrue(planRoot.waitForExistence(timeout: 5))
@@ -312,7 +314,7 @@ final class RediM8UITests: XCTestCase {
         return app
     }
 
-    private func scrollToElement(_ element: XCUIElement, in scrollView: XCUIElement, maxSwipes: Int = 6) {
+    private func scrollToElement(_ element: XCUIElement, in scrollView: XCUIElement, maxSwipes: Int = 12) {
         var attempts = 0
         while !element.isHittable && attempts < maxSwipes {
             scrollView.swipeUp()
@@ -378,19 +380,39 @@ final class RediM8UITests: XCTestCase {
         for _ in 0 ..< maxAttempts {
             scrollToElement(element, in: scrollView)
             XCTAssertTrue(element.waitForExistence(timeout: 2))
+            XCTAssertTrue(waitUntil(timeout: 2) { element.isHittable })
 
             if switchValueIsOn(element) == isOn {
                 return
             }
 
-            element.tap()
-
-            if waitUntil(timeout: 2, condition: { switchValueIsOn(element) == isOn }) {
+            if setSwitchStateViaTap(element, isOn: isOn) {
                 return
             }
         }
 
-        XCTFail("Failed to set switch to expected value after \(maxAttempts) attempts")
+        XCTFail(
+            "Failed to set switch to expected value after \(maxAttempts) attempts. Final value: \(String(describing: element.value))"
+        )
+    }
+
+    private func setSwitchStateViaTap(_ element: XCUIElement, isOn: Bool) -> Bool {
+        let tapStrategies: [(XCUIElement) -> Void] = [
+            { $0.tap() },
+            { $0.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.5)).tap() },
+            { $0.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap() }
+        ]
+
+        for tap in tapStrategies {
+            tap(element)
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+
+            if waitUntil(timeout: 0.75, condition: { switchValueIsOn(element) == isOn }) {
+                return true
+            }
+        }
+
+        return false
     }
 }
 

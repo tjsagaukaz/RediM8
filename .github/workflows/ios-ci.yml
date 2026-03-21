@@ -28,9 +28,6 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Resolve Swift packages
-        run: xcodebuild -resolvePackageDependencies -project RediM8.xcodeproj -scheme RediM8
-
       - name: Build
         run: >
           xcodebuild

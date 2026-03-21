@@ -16,9 +16,6 @@ echo "Resetting DerivedData at $DERIVED_DATA_PATH..."
 mkdir -p "$DERIVED_DATA_PATH"
 find "$DERIVED_DATA_PATH" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
-echo "Resolving packages..."
-xcodebuild -resolvePackageDependencies -project RediM8.xcodeproj -scheme RediM8
-
 COMMON_ARGS=(
   -project RediM8.xcodeproj
   -scheme RediM8

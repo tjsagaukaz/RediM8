@@ -586,6 +586,7 @@ struct PlanView: View {
                 )
             }
         }
+        .id(PlanFocus.gearChecklist)
 
         if viewModel.isBushfireModeEnabled {
             PanelCard(title: "Bushfire Readiness Planner", subtitle: "Property preparation and seasonal checks for bushfire conditions") {
@@ -664,6 +665,10 @@ struct PlanView: View {
 
     @ViewBuilder
     private var householdSuppliesContent: some View {
+        Color.clear
+            .frame(height: 0)
+            .id(PlanFocus.supplies)
+
         PanelCard(title: "Water Runtime Calculator", subtitle: "Adjust people, pets, and stored water to see how long your supply lasts") {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .bottom, spacing: 18) {
@@ -823,6 +828,10 @@ struct PlanView: View {
 
     @ViewBuilder
     private var householdRolesContent: some View {
+        Color.clear
+            .frame(height: 0)
+            .id(PlanFocus.medicalProfile)
+
         PanelCard(title: "Family Emergency Plan", subtitle: "Contacts, roles, medical notes and meeting points") {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Family members")
@@ -1577,65 +1586,61 @@ struct PlanView: View {
             return
         }
 
+        let targetFocus: PlanFocus
+
         switch requestedFocus {
         case .householdOverview:
             withAnimation(RediMotion.selection) {
                 selectedSection = .household
                 selectedHouseholdWorkspace = .prepare
             }
-            DispatchQueue.main.async {
-                proxy.scrollTo(PlanFocus.householdOverview, anchor: .top)
-            }
+            targetFocus = .householdOverview
         case .waterRuntime:
             withAnimation(RediMotion.selection) {
                 selectedSection = .household
                 selectedHouseholdWorkspace = .supplies
             }
-            DispatchQueue.main.async {
-                proxy.scrollTo(PlanFocus.waterRuntime, anchor: .top)
-            }
+            targetFocus = .waterRuntime
         case .evacuationRoutes:
             withAnimation(RediMotion.selection) {
                 selectedSection = .household
                 selectedHouseholdWorkspace = .basics
             }
-            DispatchQueue.main.async {
-                proxy.scrollTo(PlanFocus.evacuationRoutes, anchor: .top)
-            }
+            targetFocus = .evacuationRoutes
         case .vehicleKit:
             withAnimation(RediMotion.selection) {
                 selectedSection = .vehicleKit
             }
-            DispatchQueue.main.async {
-                proxy.scrollTo(PlanFocus.vehicleKit, anchor: .top)
-            }
+            targetFocus = .vehicleKit
         case .supplies:
             withAnimation(RediMotion.selection) {
                 selectedSection = .household
                 selectedHouseholdWorkspace = .supplies
             }
-            DispatchQueue.main.async {
-                proxy.scrollTo(PlanFocus.supplies, anchor: .top)
-            }
+            targetFocus = .supplies
         case .medicalProfile:
             withAnimation(RediMotion.selection) {
                 selectedSection = .household
                 selectedHouseholdWorkspace = .basics
             }
-            DispatchQueue.main.async {
-                proxy.scrollTo(PlanFocus.medicalProfile, anchor: .top)
-            }
+            targetFocus = .medicalProfile
         case .gearChecklist:
             withAnimation(RediMotion.selection) {
                 selectedSection = .household
                 selectedHouseholdWorkspace = .basics
             }
-            DispatchQueue.main.async {
-                proxy.scrollTo(PlanFocus.gearChecklist, anchor: .top)
-            }
+            targetFocus = .gearChecklist
         }
 
-        DispatchQueue.main.async {
+        Task { @MainActor in
+            // Give SwiftUI a moment to render the newly selected workspace before scrolling.
+            await Task.yield()
+            await Task.yield()
+
+            withAnimation(RediMotion.selection) {
+                proxy.scrollTo(targetFocus, anchor: .top)
+            }
+
             self.requestedFocus = nil
         }
     }
