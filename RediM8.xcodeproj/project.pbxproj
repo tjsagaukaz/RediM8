@@ -25,6 +25,7 @@
 		10AF79791562201E2524A7A1 /* AssistantService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D9332097C3B73921F277720 /* AssistantService.swift */; };
 		111DC98C7BBE4BC67650187A /* TrustLayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57AC746702C41D20910B1626 /* TrustLayerTests.swift */; };
 		112C7CC8D093D181B82075EF /* AssistantIntentClassifierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9764322ABA2173679AB630C9 /* AssistantIntentClassifierTests.swift */; };
+		12D37B9729D5CDDEB0A5D959 /* HomeStatusSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9D35FF0E54ACEDEA2057939 /* HomeStatusSection.swift */; };
 		14D42616D78B117BED9C333A /* NearestResourceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC9A79528E8FB59EAB79CEF3 /* NearestResourceView.swift */; };
 		159415960755FE05606B1AA8 /* PanelCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071815223F57278E2156263B /* PanelCard.swift */; };
 		1640822F21B43562A3B3357B /* MapServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7485C0D42FF7E23400041A72 /* MapServiceTests.swift */; };
@@ -34,9 +35,11 @@
 		18BF3836EFD4EF6B5F3A2E73 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B61A48D4025B9665B9EFE907 /* SettingsView.swift */; };
 		1903C13364D1607FF43FDBDE /* NearestResourceServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6447B48448EC24703BB619 /* NearestResourceServiceTests.swift */; };
 		195A5A26129B0E8AC13C1F0A /* SurvivalContextService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B80999D9311F2340C0560E9 /* SurvivalContextService.swift */; };
+		199ED8ED692C442E6BBD1AB6 /* HomeQuickActionsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 805470BE3A2E7778E66DAAB6 /* HomeQuickActionsSection.swift */; };
 		1A925A0466407282BE1B10D8 /* AskRediView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29FAABC8520CD8EC4189DB8D /* AskRediView.swift */; };
 		1AA9294C8BAC3088CE2A3CEC /* ColorTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AF112E1CF25C3DC8921009C /* ColorTheme.swift */; };
 		1DA513A7CE6F25F96AC86F0D /* WaterPointService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49055EBB0F70AAAFE63B4035 /* WaterPointService.swift */; };
+		1E8EF462630B61C15D22B092 /* HomePreparednessSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31DA701C33B9078BCB385BB4 /* HomePreparednessSection.swift */; };
 		2008F6C487D34C39871472AD /* MapContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C95730D22BB3CD740E0C68BD /* MapContainerView.swift */; };
 		214EF52C795797F8D2E7E104 /* WaterPoints.json in Resources */ = {isa = PBXBuildFile; fileRef = BF37F48AF9932F5AE23F8CC9 /* WaterPoints.json */; };
 		224E7BDB9DDE02119AFCC3BE /* NavigationRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E6775085D6C21E5159461E1 /* NavigationRouter.swift */; };
@@ -66,6 +69,7 @@
 		308AC7980CE58C6F5B1CF157 /* OfflineAssistantModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21D36BB7D827BE0C46432CE1 /* OfflineAssistantModelTests.swift */; };
 		30B1FF5F299A2ABA25F56472 /* DebrisHutDiagrams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17B2F68D74248D49626A5232 /* DebrisHutDiagrams.swift */; };
 		314D319D94FFDBC8F2B1844A /* australia-fallback-manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = 7E3A94A2C1077F6DDB5C4F55 /* australia-fallback-manifest.json */; };
+		3302D948596CA1E9C56BEC95 /* HomePremiumSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B3C538EF25DED941D292F53 /* HomePremiumSection.swift */; };
 		33A86EE17114867B0EF81AA4 /* WaterPointServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C55D2FF393A28202B0E2A46D /* WaterPointServiceTests.swift */; };
 		353636499F93DB3576BE7418 /* SignalSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A4EE87A3B3FDAFC9762DB66 /* SignalSystem.swift */; };
 		3559DABEEC4C6374CA0D922A /* SensitiveMapMarkerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAE20F68EC84996C16F1FDB4 /* SensitiveMapMarkerService.swift */; };
@@ -123,6 +127,7 @@
 		680263F59728823ABFB8E57C /* MapService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1920FF4CC63CEBF7B94D71DA /* MapService.swift */; };
 		6A27F5D21D8CB80B49BCEE6F /* PreparednessInsightsServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A33F3951B11ADF4D8123CCB1 /* PreparednessInsightsServiceTests.swift */; };
 		6B782DA9C162CB1B330FCDDA /* WaterRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FD5879C13F853644930F081 /* WaterRuntime.swift */; };
+		6B9BFA71F36ECF01379FD2ED /* HomePresentationSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC62004D0CF8888390B08325 /* HomePresentationSupport.swift */; };
 		6E3CA33442A099E01530ECE6 /* ProFeatureGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17AAB157E164877DAA7CE7F3 /* ProFeatureGate.swift */; };
 		6EBD325D40FF82D1CFE1BF77 /* AssistantProtocolRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE87DF8DCE4C7957A7D36AE4 /* AssistantProtocolRouter.swift */; };
 		6FB2511746FF21927C497836 /* ResourceLocations.json in Resources */ = {isa = PBXBuildFile; fileRef = AD59F029CF42FCB8D3E650BF /* ResourceLocations.json */; };
@@ -267,6 +272,7 @@
 		EE99E4BAF61689F767A15E81 /* OfflineRoutingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFD3C54526F5B9D7C67AF56B /* OfflineRoutingService.swift */; };
 		EF34920D0D84E02FE74A8891 /* AssistantProtocolLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82A67DAC45D11F058B24084 /* AssistantProtocolLibrary.swift */; };
 		EFE2BEA7050958A0F550FAA4 /* HazardIntelligenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07A1C26B92F5C14D817CF99E /* HazardIntelligenceService.swift */; };
+		EFEC3A2C51FF705CD2504C4E /* HomeAlertsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BD49E72BAEEA15095CBD33A /* HomeAlertsSection.swift */; };
 		F113595FF1BE882A261413A3 /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13971571E45688CF953A489F /* HomeViewModel.swift */; };
 		F3A8C5C90E6FE74E4A210398 /* RoutePlanningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 051785F267CAD3EDC0F3C13B /* RoutePlanningView.swift */; };
 		F490F9344CF29838B00574F5 /* AssistantResponseCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4867A90E867B30064159E82B /* AssistantResponseCard.swift */; };
@@ -366,6 +372,7 @@
 		2C606D76FFCE1747E55E2C7B /* RediM8.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RediM8.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2DFC88210BCD296072C83AC5 /* ReadinessReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadinessReportService.swift; sourceTree = "<group>"; };
 		2FD5879C13F853644930F081 /* WaterRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaterRuntime.swift; sourceTree = "<group>"; };
+		31DA701C33B9078BCB385BB4 /* HomePreparednessSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePreparednessSection.swift; sourceTree = "<group>"; };
 		327F9F22FF83CD9C94649399 /* SurvivalModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SurvivalModeView.swift; sourceTree = "<group>"; };
 		33EE4ADF637156984F082D46 /* Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
 		344380CD78CD4CFE56C0F7E7 /* OnboardingContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingContainerView.swift; sourceTree = "<group>"; };
@@ -451,6 +458,7 @@
 		7D9332097C3B73921F277720 /* AssistantService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantService.swift; sourceTree = "<group>"; };
 		7E3A94A2C1077F6DDB5C4F55 /* australia-fallback-manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "australia-fallback-manifest.json"; sourceTree = "<group>"; };
 		80345A9DB356E835D6ECAC92 /* MapInspectorSupportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapInspectorSupportViews.swift; sourceTree = "<group>"; };
+		805470BE3A2E7778E66DAAB6 /* HomeQuickActionsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeQuickActionsSection.swift; sourceTree = "<group>"; };
 		81C4D7B33B6C93AA0FADA77A /* BatteryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryService.swift; sourceTree = "<group>"; };
 		8243DD2657E85345628A14F1 /* SettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewModel.swift; sourceTree = "<group>"; };
 		837638AEFBB8F92CDB1B10D5 /* BushMedicineGuides.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = BushMedicineGuides.json; sourceTree = "<group>"; };
@@ -463,6 +471,8 @@
 		885B92D72A3A146A37C40BB2 /* FamilyServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FamilyServiceTests.swift; sourceTree = "<group>"; };
 		88BC0F4A44EBD9D6E0768F36 /* AssistantPolicies.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = AssistantPolicies.json; sourceTree = "<group>"; };
 		8A922AC71177D8CA92A61FAD /* SecureStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureStoreTests.swift; sourceTree = "<group>"; };
+		8B3C538EF25DED941D292F53 /* HomePremiumSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePremiumSection.swift; sourceTree = "<group>"; };
+		8BD49E72BAEEA15095CBD33A /* HomeAlertsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeAlertsSection.swift; sourceTree = "<group>"; };
 		8C6FBB6918BE3AD2CE86B710 /* OfflineDataManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineDataManagementView.swift; sourceTree = "<group>"; };
 		8C778AEA37BA9F9ED6481109 /* PrepScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrepScore.swift; sourceTree = "<group>"; };
 		908FDB93061D3EE7679F279F /* AssistantProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantProtocol.swift; sourceTree = "<group>"; };
@@ -532,6 +542,7 @@
 		D23E7EE27F3016A4A47A574E /* AssistantResponsePresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantResponsePresentationTests.swift; sourceTree = "<group>"; };
 		D59EB1A827BC405D716D4FC9 /* PreparednessSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreparednessSystem.swift; sourceTree = "<group>"; };
 		D82A67DAC45D11F058B24084 /* AssistantProtocolLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantProtocolLibrary.swift; sourceTree = "<group>"; };
+		DC62004D0CF8888390B08325 /* HomePresentationSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePresentationSupport.swift; sourceTree = "<group>"; };
 		DDF7F44CB63C9A897933748C /* AppStateSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStateSettingsTests.swift; sourceTree = "<group>"; };
 		DE87DF8DCE4C7957A7D36AE4 /* AssistantProtocolRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantProtocolRouter.swift; sourceTree = "<group>"; };
 		DE8EC53D3DF733A89B3EC9CA /* OnboardingLaunchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingLaunchView.swift; sourceTree = "<group>"; };
@@ -567,6 +578,7 @@
 		F66E79616236ED7E9F4BD37F /* NavigationRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationRouterTests.swift; sourceTree = "<group>"; };
 		F7E16FDE3D3FBE071249F407 /* MapLibreEmergencyMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapLibreEmergencyMapView.swift; sourceTree = "<group>"; };
 		F92AC2219DC5E4F56923D0BC /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		F9D35FF0E54ACEDEA2057939 /* HomeStatusSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeStatusSection.swift; sourceTree = "<group>"; };
 		FA01884E3F8E05C438E254C5 /* AssistantAnswerComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantAnswerComposer.swift; sourceTree = "<group>"; };
 		FA090E6B3FCA7658985D927A /* NearestResourceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearestResourceService.swift; sourceTree = "<group>"; };
 		FA8E91C7D2AE6E8681D6F5D9 /* MapDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapDataService.swift; sourceTree = "<group>"; };
@@ -953,6 +965,12 @@
 		CED27AE344F552DBF1CC24F7 /* Home */ = {
 			isa = PBXGroup;
 			children = (
+				8BD49E72BAEEA15095CBD33A /* HomeAlertsSection.swift */,
+				8B3C538EF25DED941D292F53 /* HomePremiumSection.swift */,
+				31DA701C33B9078BCB385BB4 /* HomePreparednessSection.swift */,
+				DC62004D0CF8888390B08325 /* HomePresentationSupport.swift */,
+				805470BE3A2E7778E66DAAB6 /* HomeQuickActionsSection.swift */,
+				F9D35FF0E54ACEDEA2057939 /* HomeStatusSection.swift */,
 				4DB898A804E5E9F15E96A4DC /* HomeView.swift */,
 				13971571E45688CF953A489F /* HomeViewModel.swift */,
 				9B656B760C667EC333A23EEA /* ProfileCompletionCard.swift */,
@@ -1328,6 +1346,12 @@
 				C24B521E1DD38860C9253BA9 /* HazardFeedService.swift in Sources */,
 				EFE2BEA7050958A0F550FAA4 /* HazardIntelligenceService.swift in Sources */,
 				677F7A85A4E281A93F6C0F4F /* HiddenModeIndicatorView.swift in Sources */,
+				EFEC3A2C51FF705CD2504C4E /* HomeAlertsSection.swift in Sources */,
+				3302D948596CA1E9C56BEC95 /* HomePremiumSection.swift in Sources */,
+				1E8EF462630B61C15D22B092 /* HomePreparednessSection.swift in Sources */,
+				6B9BFA71F36ECF01379FD2ED /* HomePresentationSupport.swift in Sources */,
+				199ED8ED692C442E6BBD1AB6 /* HomeQuickActionsSection.swift in Sources */,
+				12D37B9729D5CDDEB0A5D959 /* HomeStatusSection.swift in Sources */,
 				7D49C2ED76BDFE5564D63159 /* HomeView.swift in Sources */,
 				F113595FF1BE882A261413A3 /* HomeViewModel.swift in Sources */,
 				6041C6EC7C24970224729385 /* LeaveNowView.swift in Sources */,
