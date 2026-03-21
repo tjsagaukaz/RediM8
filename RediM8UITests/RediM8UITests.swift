@@ -52,11 +52,114 @@ final class RediM8UITests: XCTestCase {
         XCTAssertEqual(bushfireScenario.value as? String, "Selected")
     }
 
+    func testEmergencyModeEntryFromHomeIsFastAndFocused() {
+        let app = makeHomeReadyApp()
+
+        app.launch()
+        app.buttons["home.commandTools.toggle"].tap()
+
+        let trigger = app.buttons["home.emergencyModeTrigger"]
+        XCTAssertTrue(trigger.waitForExistence(timeout: 5))
+
+        let startedAt = Date()
+        trigger.tap()
+
+        let closeButton = app.buttons["emergency.mode.close"]
+        XCTAssertTrue(closeButton.waitForExistence(timeout: 2))
+        XCTAssertLessThan(Date().timeIntervalSince(startedAt), 1.75)
+        XCTAssertFalse(trigger.isHittable)
+    }
+
+    func testEmergencyModeDefaultStateStaysMinimal() {
+        let app = makeEmergencyModeApp()
+
+        app.launch()
+
+        XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["emergency.mode.close"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["emergency.mode.instructions"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["emergency.mode.primaryLane"].exists)
+        XCTAssertFalse(app.buttons["emergency.mode.support.blackout"].exists)
+        XCTAssertFalse(app.buttons["emergency.mode.support.firstAid"].exists)
+    }
+
+    func testEmergencyModeSuppressesProAndGearUpsell() {
+        let app = makeEmergencyModeApp()
+
+        app.launch()
+
+        XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
+        XCTAssertFalse(app.buttons["Open Pro Tools"].exists)
+        XCTAssertFalse(app.buttons["See Pro Plans"].exists)
+        XCTAssertFalse(app.buttons["View options"].exists)
+    }
+
+    func testEmergencyModeExitRestoresHomeState() {
+        let app = makeHomeReadyApp()
+
+        app.launch()
+        app.buttons["home.commandTools.toggle"].tap()
+        app.buttons["home.emergencyModeTrigger"].tap()
+
+        XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
+
+        app.buttons["emergency.mode.close"].tap()
+
+        XCTAssertTrue(app.scrollViews["home.root"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["home.emergencyModeTrigger"].waitForExistence(timeout: 2))
+    }
+
+    func testEmergencyModeCanBeReenteredAfterQuickExit() {
+        let app = makeHomeReadyApp()
+
+        app.launch()
+        app.buttons["home.commandTools.toggle"].tap()
+
+        let trigger = app.buttons["home.emergencyModeTrigger"]
+        trigger.tap()
+        XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
+
+        app.buttons["emergency.mode.close"].tap()
+        XCTAssertTrue(trigger.waitForExistence(timeout: 2))
+
+        trigger.tap()
+        XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
+    }
+
+    func testEmergencyModeSurvivesBackgroundAndForeground() {
+        let app = makeEmergencyModeApp()
+
+        app.launch()
+        XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
+
+        XCUIDevice.shared.press(.home)
+        app.activate()
+
+        XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["emergency.mode.close"].isHittable)
+    }
+
     private func makeApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += [
             "-ui-testing",
             "-disable-automatic-alert-refresh"
+        ]
+        return app
+    }
+
+    private func makeHomeReadyApp() -> XCUIApplication {
+        let app = makeApp()
+        app.launchArguments += [
+            "-ui-testing-skip-onboarding"
+        ]
+        return app
+    }
+
+    private func makeEmergencyModeApp() -> XCUIApplication {
+        let app = makeHomeReadyApp()
+        app.launchArguments += [
+            "-ui-testing-start-emergency-mode"
         ]
         return app
     }

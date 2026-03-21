@@ -172,4 +172,46 @@ final class NavigationRouterTests: XCTestCase {
         XCTAssertNil(router.activeOverlay)
         XCTAssertFalse(appState.isEmergencyAccessActive)
     }
+
+    @MainActor
+    func testPresentEmergencyModeTwiceKeepsSingleOverlayAndSessionActive() {
+        let router = NavigationRouter()
+        let appState = AppState(store: nil)
+
+        router.presentEmergencyMode(appState: appState)
+        router.presentEmergencyMode(appState: appState)
+
+        XCTAssertEqual(router.activeOverlay, .emergencyMode)
+        XCTAssertTrue(appState.isEmergencyAccessActive)
+    }
+
+    @MainActor
+    func testEmergencyModeCanBeDismissedAndPresentedAgainQuickly() {
+        let router = NavigationRouter()
+        let appState = AppState(store: nil)
+
+        router.presentEmergencyMode(appState: appState)
+        router.dismissEmergencyMode(appState: appState)
+        router.presentEmergencyMode(appState: appState)
+
+        XCTAssertEqual(router.activeOverlay, .emergencyMode)
+        XCTAssertTrue(appState.isEmergencyAccessActive)
+    }
+
+    @MainActor
+    func testForegroundRestoreReactivatesEmergencySessionWhenOverlayRemainsVisible() {
+        let router = NavigationRouter()
+        let appState = AppState(store: nil)
+
+        router.presentEmergencyMode(appState: appState)
+        router.handleBackgroundTransition(appState: appState)
+
+        XCTAssertTrue(router.isShowingEmergencyMode)
+        XCTAssertFalse(appState.isEmergencyAccessActive)
+
+        router.restoreEmergencyAccessSessionIfNeeded(appState: appState)
+
+        XCTAssertTrue(router.isShowingEmergencyMode)
+        XCTAssertTrue(appState.isEmergencyAccessActive)
+    }
 }

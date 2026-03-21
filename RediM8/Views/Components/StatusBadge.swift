@@ -448,6 +448,7 @@ struct CollapsiblePanelCard<Content: View>: View {
     let surfaceAtmosphere: Color?
     let surfaceEdgeColor: Color?
     let surfaceShadowColor: Color?
+    let accessibilityIdentifier: String?
     @Binding var isExpanded: Bool
     private let content: Content
 
@@ -458,6 +459,7 @@ struct CollapsiblePanelCard<Content: View>: View {
         surfaceAtmosphere: Color? = nil,
         surfaceEdgeColor: Color? = nil,
         surfaceShadowColor: Color? = nil,
+        accessibilityIdentifier: String? = nil,
         isExpanded: Binding<Bool>,
         @ViewBuilder content: () -> Content
     ) {
@@ -467,6 +469,7 @@ struct CollapsiblePanelCard<Content: View>: View {
         self.surfaceAtmosphere = surfaceAtmosphere
         self.surfaceEdgeColor = surfaceEdgeColor
         self.surfaceShadowColor = surfaceShadowColor
+        self.accessibilityIdentifier = accessibilityIdentifier
         _isExpanded = isExpanded
         self.content = content()
     }
@@ -500,6 +503,7 @@ struct CollapsiblePanelCard<Content: View>: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier(accessibilityIdentifier ?? "")
 
             if isExpanded {
                 Rectangle()

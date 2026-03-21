@@ -88,8 +88,14 @@ struct RediM8App: App {
     init() {
         let launchConfiguration = AppLaunchConfiguration.current()
         self.launchConfiguration = launchConfiguration
-        _appState = StateObject(wrappedValue: AppState(environment: launchConfiguration.environment))
-        _navigationRouter = StateObject(wrappedValue: NavigationRouter())
+        if launchConfiguration.usesTestingEnvironment {
+            UIView.setAnimationsEnabled(false)
+        }
+        let appState = AppState(environment: launchConfiguration.environment)
+        let navigationRouter = NavigationRouter()
+        launchConfiguration.apply(to: appState, router: navigationRouter)
+        _appState = StateObject(wrappedValue: appState)
+        _navigationRouter = StateObject(wrappedValue: navigationRouter)
     }
 
     var body: some Scene {

@@ -68,6 +68,7 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, newPhase in
             switch newPhase {
             case .active:
+                router.restoreEmergencyAccessSessionIfNeeded(appState: appState)
                 guard !launchConfiguration.disablesAutomaticAlertRefresh else {
                     return
                 }
@@ -166,6 +167,7 @@ struct RootView: View {
             }
             .frame(maxHeight: .infinity)
         }
+        .accessibilityHidden(router.isShowingEmergencyMode)
         .onAppear {
             loadedTabs.insert(router.selectedTab)
         }
@@ -176,15 +178,19 @@ struct RootView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             mainTabBar
         }
-        .fullScreenCover(isPresented: router.emergencyModeBinding) {
-            EmergencyModeView(
-                appState: appState,
-                dismiss: { router.dismissEmergencyMode(appState: appState) },
-                openBlackout: { router.openBlackoutFromEmergency() },
-                openSignal: { router.openTabFromEmergency(.signal, appState: appState) },
-                openMap: { router.openTabFromEmergency(.map, appState: appState) },
-                openLeaveNow: { router.openLeaveNowFromEmergency() }
-            )
+        .overlay {
+            if router.isShowingEmergencyMode {
+                EmergencyModeView(
+                    appState: appState,
+                    dismiss: { router.dismissEmergencyMode(appState: appState) },
+                    openBlackout: { router.openBlackoutFromEmergency() },
+                    openSignal: { router.openTabFromEmergency(.signal, appState: appState) },
+                    openMap: { router.openTabFromEmergency(.map, appState: appState) },
+                    openLeaveNow: { router.openLeaveNowFromEmergency() }
+                )
+                .transition(.identity)
+                .zIndex(2)
+            }
         }
         .fullScreenCover(isPresented: router.leaveNowModeBinding) {
             LeaveNowView(
@@ -193,6 +199,7 @@ struct RootView: View {
                 openMap: { router.openTabFromLeaveNow(.map, appState: appState) },
                 openSignal: { router.openTabFromLeaveNow(.signal, appState: appState) }
             )
+            .interactiveDismissDisabled()
         }
         .fullScreenCover(isPresented: router.blackoutBinding) {
             BlackoutModeView(
@@ -203,6 +210,7 @@ struct RootView: View {
                     router.dismissBlackout(appState: appState)
                 }
             )
+            .interactiveDismissDisabled()
         }
         .sheet(isPresented: router.emergencyGuidesBinding, onDismiss: {
             router.didDismissEmergencyGuides(appState: appState)

@@ -101,6 +101,12 @@ final class NavigationRouter: ObservableObject {
         appState.endEmergencyAccessSession()
     }
 
+    func restoreEmergencyAccessSessionIfNeeded(appState: AppState) {
+        if activeOverlay != nil || appState.isLowBatterySurvivalModeEnabled {
+            appState.beginEmergencyAccessSession()
+        }
+    }
+
     // MARK: - Tab Navigation
 
     func openAsk() {
@@ -180,30 +186,30 @@ final class NavigationRouter: ObservableObject {
         appState.beginEmergencyAccessSession()
         selectedTab = .home
         highlightedGuideCategory = nil
-        activeOverlay = .blackout
+        setOverlay(.blackout)
     }
 
     func presentEmergencyMode(appState: AppState) {
         appState.beginEmergencyAccessSession()
         highlightedGuideCategory = nil
-        activeOverlay = .emergencyMode
+        setOverlay(.emergencyMode)
     }
 
     func presentLeaveNowMode(appState: AppState) {
         appState.beginEmergencyAccessSession()
         highlightedGuideCategory = nil
-        activeOverlay = .leaveNow
+        setOverlay(.leaveNow)
     }
 
     // MARK: - Overlay Dismissal
 
     func dismissEmergencyMode(appState: AppState) {
-        activeOverlay = nil
+        setOverlay(nil)
         endSessionIfNoOverlayActive(appState: appState)
     }
 
     func dismissBlackout(appState: AppState) {
-        activeOverlay = nil
+        setOverlay(nil)
         endSessionIfNoOverlayActive(appState: appState)
     }
 
@@ -214,28 +220,28 @@ final class NavigationRouter: ObservableObject {
     }
 
     func dismissLeaveNowMode(appState: AppState) {
-        activeOverlay = nil
+        setOverlay(nil)
         endSessionIfNoOverlayActive(appState: appState)
     }
 
     // MARK: - Overlay Transitions
 
     func openBlackoutFromEmergency() {
-        activeOverlay = nil
+        setOverlay(nil)
         DispatchQueue.main.async {
-            self.activeOverlay = .blackout
+            self.setOverlay(.blackout)
         }
     }
 
     func openLeaveNowFromEmergency() {
-        activeOverlay = nil
+        setOverlay(nil)
         DispatchQueue.main.async {
-            self.activeOverlay = .leaveNow
+            self.setOverlay(.leaveNow)
         }
     }
 
     func openTabFromEmergency(_ tab: AppTab, appState _: AppState) {
-        activeOverlay = nil
+        setOverlay(nil)
         selectedTab = tab
         if tab != .plan {
             requestedPlanFocus = nil
@@ -243,7 +249,7 @@ final class NavigationRouter: ObservableObject {
     }
 
     func openTabFromLeaveNow(_ tab: AppTab, appState _: AppState) {
-        activeOverlay = nil
+        setOverlay(nil)
         selectedTab = tab
         if tab != .plan {
             requestedPlanFocus = nil
@@ -254,6 +260,14 @@ final class NavigationRouter: ObservableObject {
 
     func requestScrollToTop(for tab: AppTab) {
         tabScrollToTopRequests[tab, default: 0] += 1
+    }
+
+    private func setOverlay(_ overlay: OverlayMode?) {
+        var transaction = Transaction(animation: nil)
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            activeOverlay = overlay
+        }
     }
 
     func scrollToTopRequestID(for tab: AppTab) -> Int {

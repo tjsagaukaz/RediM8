@@ -118,6 +118,7 @@ struct HomeView: View {
                 .padding(.top, RediSpacing.screen)
                 .padding(.bottom, RediLayout.commandDockContentInset)
             }
+            .accessibilityIdentifier("home.root")
             .scrollIndicators(.hidden)
             .onChange(of: scrollToTopRequestID) { _, _ in
                 scrollToHomeTop(using: proxy)
@@ -947,6 +948,7 @@ struct HomeView: View {
                 "Emergency modes, signal, vault, guides, and vehicle tools."
             ),
             accent: ColorTheme.accent,
+            accessibilityIdentifier: "home.commandTools.toggle",
             isExpanded: $isShowingQuickAccess
         ) {
             quickAccessContent
@@ -979,6 +981,7 @@ struct HomeView: View {
                             prominence: .critical
                         )
                     }
+                    .accessibilityIdentifier("home.emergencyModeTrigger")
                     .buttonStyle(CardPressButtonStyle())
 
                     Button {
