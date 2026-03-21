@@ -33,4 +33,15 @@ struct ChecklistItem: Identifiable, Codable, Equatable {
     static let defaults = ChecklistItemKind.allCases.map {
         ChecklistItem(kind: $0, isChecked: false)
     }
+
+    static func normalized(_ items: [ChecklistItem]) -> [ChecklistItem] {
+        var statesByKind: [ChecklistItemKind: Bool] = [:]
+        for item in items {
+            statesByKind[item.kind] = item.isChecked
+        }
+
+        return ChecklistItemKind.allCases.map { kind in
+            ChecklistItem(kind: kind, isChecked: statesByKind[kind] ?? false)
+        }
+    }
 }

@@ -51,9 +51,11 @@ final class FamilyService {
             return
         }
 
+        let normalizedProfile = profile.withNormalizedChecklistItems()
+
         do {
-            try sensitiveProfileService?.saveProfile(profile.sensitiveProfile)
-            try store.save(profile.redactedForStandardStorage, for: ProfileStorageKey.profile)
+            try sensitiveProfileService?.saveProfile(normalizedProfile.sensitiveProfile)
+            try store.save(normalizedProfile.redactedForStandardStorage, for: ProfileStorageKey.profile)
             try migrationService?.markMigrationCompleted()
         } catch {
             RediLogger.persistence.error("Failed to save user profile: \(error.localizedDescription, privacy: .public)")

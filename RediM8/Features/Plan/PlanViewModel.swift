@@ -197,8 +197,8 @@ final class PlanViewModel: ObservableObject {
         }
     }
 
-    func onAppear() {
-        locationService.start()
+    func onAppear(requestLocationAccess: Bool = true) {
+        locationService.start(requestAccess: requestLocationAccess)
     }
 
     func onDisappear() {

@@ -36,6 +36,7 @@ struct MoreView: View {
     let appState: AppState
     @ObservedObject var router: NavigationRouter
     let scrollToTopRequestID: Int
+    let disablesAutomaticLocationPrompts: Bool
 
     @State private var selectedWorkspace: MoreWorkspace = .plan
     @State private var forwardedPlanScrollToTopRequestID = 0
@@ -147,6 +148,7 @@ struct MoreView: View {
             )
         }
         .buttonStyle(CardPressButtonStyle())
+        .accessibilityIdentifier("more.workspace.\(workspace.rawValue)")
     }
 
     // MARK: - Active Content
@@ -158,7 +160,8 @@ struct MoreView: View {
             PlanView(
                 appState: appState,
                 requestedFocus: $router.requestedPlanFocus,
-                scrollToTopRequestID: router.scrollToTopRequestID(for: .plan) + forwardedPlanScrollToTopRequestID
+                scrollToTopRequestID: router.scrollToTopRequestID(for: .plan) + forwardedPlanScrollToTopRequestID,
+                disablesAutomaticLocationPrompts: disablesAutomaticLocationPrompts
             )
         case .vault:
             SecureVaultView(

@@ -205,6 +205,53 @@ final class RediM8UITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["map.statusDetail"].label.contains("saved references only"))
     }
 
+    func testPlanSupplyWorkspaceShowsFirstAidGapRecommendation() {
+        let app = makePlanSuppliesReadyApp()
+
+        app.launch()
+
+        let planRoot = app.scrollViews["plan.root"]
+        XCTAssertTrue(planRoot.waitForExistence(timeout: 5))
+
+        let recommendationsCard = app.staticTexts["Missing Critical Items"]
+        scrollToElement(recommendationsCard, in: planRoot)
+        XCTAssertTrue(recommendationsCard.waitForExistence(timeout: 2))
+
+        let recommendationTitle = app.staticTexts["First aid kit"]
+        scrollToElement(recommendationTitle, in: planRoot)
+        XCTAssertTrue(recommendationTitle.waitForExistence(timeout: 2))
+    }
+
+    func testPlanChecklistStateSurvivesHomeRoundTrip() {
+        let app = makePlanReadyApp()
+
+        app.launch()
+
+        let planRoot = app.scrollViews["plan.root"]
+        XCTAssertTrue(planRoot.waitForExistence(timeout: 5))
+
+        let toggle = app.switches["plan.checklist.firstAidKit"]
+        scrollToElement(toggle, in: planRoot)
+        XCTAssertTrue(toggle.waitForExistence(timeout: 2))
+        toggle.tap()
+        XCTAssertTrue(waitUntil(timeout: 2) {
+            switchValueIsOn(app.switches["plan.checklist.firstAidKit"])
+        })
+
+        app.buttons["Home"].tap()
+        XCTAssertTrue(app.scrollViews["home.root"].waitForExistence(timeout: 2))
+
+        app.buttons["More"].tap()
+        XCTAssertTrue(planRoot.waitForExistence(timeout: 2))
+
+        let reloadedToggle = app.switches["plan.checklist.firstAidKit"]
+        scrollToElement(reloadedToggle, in: planRoot)
+        XCTAssertTrue(reloadedToggle.waitForExistence(timeout: 2))
+        XCTAssertTrue(waitUntil(timeout: 2) {
+            switchValueIsOn(app.switches["plan.checklist.firstAidKit"])
+        })
+    }
+
     private func makeApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += [
@@ -245,12 +292,58 @@ final class RediM8UITests: XCTestCase {
         return app
     }
 
+    private func makePlanReadyApp() -> XCUIApplication {
+        let app = makeHomeReadyApp()
+        app.launchArguments += [
+            "-ui-testing-start-plan"
+        ]
+        return app
+    }
+
+    private func makePlanSuppliesReadyApp() -> XCUIApplication {
+        let app = makeHomeReadyApp()
+        app.launchArguments += [
+            "-ui-testing-start-plan-supplies"
+        ]
+        return app
+    }
+
     private func scrollToElement(_ element: XCUIElement, in scrollView: XCUIElement, maxSwipes: Int = 6) {
         var attempts = 0
         while !element.isHittable && attempts < maxSwipes {
             scrollView.swipeUp()
             attempts += 1
         }
+    }
+
+    private func waitForNonExistence(of element: XCUIElement, timeout: TimeInterval) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if !element.exists {
+                return true
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        return !element.exists
+    }
+
+    private func waitUntil(timeout: TimeInterval, condition: () -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if condition() {
+                return true
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        return condition()
+    }
+
+    private func switchValueIsOn(_ element: XCUIElement) -> Bool {
+        guard let value = element.value as? String else {
+            return false
+        }
+
+        return value == "1" || value.caseInsensitiveCompare("on") == .orderedSame
     }
 }
 

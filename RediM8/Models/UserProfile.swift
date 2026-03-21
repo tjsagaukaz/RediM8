@@ -544,7 +544,7 @@ struct UserProfile: Codable, Equatable {
         self.selectedScenarios = selectedScenarios
         self.household = household
         self.supplies = supplies
-        self.checklistItems = checklistItems
+        self.checklistItems = ChecklistItem.normalized(checklistItems)
         self.familyMembers = familyMembers
         self.emergencyContacts = emergencyContacts
         self.medicalNotes = medicalNotes
@@ -641,7 +641,7 @@ struct UserProfile: Codable, Equatable {
                 title: "Grab-and-Go Gear",
                 detail: "Mark the gear you already have on hand.",
                 icon: "bag.fill",
-                isComplete: checklistItems.contains(where: \.isChecked)
+                isComplete: normalizedChecklistItems.contains(where: \.isChecked)
             )
         ]
     }
@@ -661,7 +661,7 @@ struct UserProfile: Codable, Equatable {
     }
 
     func checklistState(for kind: ChecklistItemKind) -> Bool {
-        checklistItems.first(where: { $0.kind == kind })?.isChecked ?? false
+        normalizedChecklistItems.first(where: { $0.kind == kind })?.isChecked ?? false
     }
 
     func bushfireChecklistState(for kind: BushfireChecklistItemKind) -> Bool {
@@ -706,7 +706,9 @@ struct UserProfile: Codable, Equatable {
         selectedScenarios = try container.decodeIfPresent([ScenarioKind].self, forKey: .selectedScenarios) ?? [.generalEmergencies]
         household = try container.decodeIfPresent(HouseholdDetails.self, forKey: .household) ?? .default
         supplies = try container.decodeIfPresent(Supplies.self, forKey: .supplies) ?? .empty
-        checklistItems = try container.decodeIfPresent([ChecklistItem].self, forKey: .checklistItems) ?? ChecklistItem.defaults
+        checklistItems = ChecklistItem.normalized(
+            try container.decodeIfPresent([ChecklistItem].self, forKey: .checklistItems) ?? ChecklistItem.defaults
+        )
         familyMembers = try container.decodeIfPresent([FamilyMember].self, forKey: .familyMembers) ?? []
         emergencyContacts = try container.decodeIfPresent([EmergencyContact].self, forKey: .emergencyContacts) ?? []
         medicalNotes = try container.decodeIfPresent(String.self, forKey: .medicalNotes) ?? ""
@@ -736,6 +738,16 @@ struct UserProfile: Codable, Equatable {
 
     static var defaultCustomPlanningWorkspaces: [PlanWorkspaceCustomData] {
         PlanWorkspaceID.allCases.map { PlanWorkspaceCustomData(id: $0) }
+    }
+
+    func withNormalizedChecklistItems() -> UserProfile {
+        var normalized = self
+        normalized.checklistItems = normalizedChecklistItems
+        return normalized
+    }
+
+    private var normalizedChecklistItems: [ChecklistItem] {
+        ChecklistItem.normalized(checklistItems)
     }
 
     private static func normalizedGuideIDs(_ ids: [String]) -> [String] {

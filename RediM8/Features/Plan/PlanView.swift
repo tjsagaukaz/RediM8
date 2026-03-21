@@ -260,6 +260,7 @@ struct PlanView: View {
     @StateObject private var vehicleKitViewModel: VehicleKitViewModel
     @Binding private var requestedFocus: PlanFocus?
     private let scrollToTopRequestID: Int
+    private let disablesAutomaticLocationPrompts: Bool
     @State private var isShowingGoBag = false
     @State private var selectedPreparednessGearRecommendation: PreparednessGearRecommendation?
     @State private var selectedPrepareGuide: Guide?
@@ -267,13 +268,19 @@ struct PlanView: View {
     @State private var selectedSection: PlanSection = .household
     @State private var selectedHouseholdWorkspace: HouseholdWorkspace = .prepare
 
-    init(appState: AppState, requestedFocus: Binding<PlanFocus?>, scrollToTopRequestID: Int) {
+    init(
+        appState: AppState,
+        requestedFocus: Binding<PlanFocus?>,
+        scrollToTopRequestID: Int,
+        disablesAutomaticLocationPrompts: Bool = false
+    ) {
         _appState = ObservedObject(wrappedValue: appState)
         _viewModel = StateObject(wrappedValue: PlanViewModel(appState: appState))
         _goBagViewModel = StateObject(wrappedValue: GoBagViewModel(appState: appState))
         _vehicleKitViewModel = StateObject(wrappedValue: VehicleKitViewModel(appState: appState))
         _requestedFocus = requestedFocus
         self.scrollToTopRequestID = scrollToTopRequestID
+        self.disablesAutomaticLocationPrompts = disablesAutomaticLocationPrompts
     }
 
     var body: some View {
@@ -337,6 +344,7 @@ struct PlanView: View {
                 .padding(.bottom, RediLayout.commandDockContentInset)
                 .animation(RediMotion.selection, value: selectedSection)
             }
+            .accessibilityIdentifier("plan.root")
             .onAppear {
                 applyRequestedFocus(using: proxy)
             }
@@ -349,7 +357,7 @@ struct PlanView: View {
         }
         .navigationTitle("Prepare")
         .background(Color.clear)
-        .onAppear { viewModel.onAppear() }
+        .onAppear { viewModel.onAppear(requestLocationAccess: !disablesAutomaticLocationPrompts) }
         .onDisappear { viewModel.onDisappear() }
         .sheet(isPresented: $isShowingGoBag) {
             NavigationStack {
@@ -438,6 +446,7 @@ struct PlanView: View {
                 summaryDetail: householdTargetLine,
                 supportingLine: householdTimeToReadyLine
             )
+            .accessibilityIdentifier("plan.household.readinessSummary")
 
             if let suggestion = householdPrioritySuggestion {
                 planFocusCard(
@@ -974,6 +983,7 @@ struct PlanView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     ForEach(viewModel.preparednessGearRecommendations) { recommendation in
                         preparednessGearRecommendationRow(recommendation)
+                            .accessibilityIdentifier("plan.recommendation.\(recommendation.id)")
                     }
 
                     Text("Shown during planning only. Active emergency flows stay action-first.")
@@ -981,6 +991,7 @@ struct PlanView: View {
                         .foregroundStyle(ColorTheme.textTertiary)
                 }
             }
+            .accessibilityIdentifier("plan.recommendations.card")
         }
 
         if !viewModel.forgottenItems.isEmpty {
@@ -1778,6 +1789,7 @@ struct PlanView: View {
                 }
                 .toggleStyle(.switch)
                 .tint(tint)
+                .accessibilityIdentifier("plan.checklist.\(kind.rawValue)")
                 .padding(14)
                 .background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 .overlay(

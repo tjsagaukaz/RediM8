@@ -34,6 +34,20 @@ final class AppLaunchConfigurationTests: XCTestCase {
     }
 
     @MainActor
+    func testPlanLaunchPresetStartsOnPlanAndDisablesLocationPrompts() {
+        let configuration = AppLaunchConfiguration.current(arguments: [
+            "RediM8",
+            "-ui-testing",
+            "-ui-testing-skip-onboarding",
+            "-ui-testing-start-plan"
+        ])
+
+        XCTAssertTrue(configuration.startsOnPlan)
+        XCTAssertTrue(configuration.disablesAutomaticLocationPrompts)
+        XCTAssertFalse(configuration.startsOnMap)
+    }
+
+    @MainActor
     func testUnavailableOfficialAlertPresetIsParsed() {
         let configuration = AppLaunchConfiguration.current(arguments: [
             "RediM8",

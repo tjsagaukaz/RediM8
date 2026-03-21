@@ -284,15 +284,21 @@ final class AppState: ObservableObject {
     }
 
     func activatePriorityMode(for situation: PrioritySituation) {
+        activePrioritySituation = situation
         preparedness.activatePriorityMode(for: situation)
     }
 
     func clearPriorityMode() {
+        activePrioritySituation = nil
         preparedness.clearPriorityMode()
     }
 
     func togglePriorityMode(for situation: PrioritySituation) {
-        preparedness.togglePriorityMode(for: situation)
+        if activePrioritySituation == situation {
+            clearPriorityMode()
+        } else {
+            activatePriorityMode(for: situation)
+        }
     }
 
     @discardableResult

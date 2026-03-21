@@ -124,6 +124,8 @@ struct AppLaunchConfiguration {
         static let disableAutomaticAlertRefresh = "-disable-automatic-alert-refresh"
         static let skipOnboarding = "-ui-testing-skip-onboarding"
         static let startEmergencyMode = "-ui-testing-start-emergency-mode"
+        static let startPlan = "-ui-testing-start-plan"
+        static let startPlanSupplies = "-ui-testing-start-plan-supplies"
         static let startMap = "-ui-testing-start-map"
         static let officialAlertsUnavailable = "-ui-testing-official-alerts-unavailable"
         static let officialAlertsRecovered = "-ui-testing-official-alerts-recovered"
@@ -135,7 +137,10 @@ struct AppLaunchConfiguration {
     let usesTestingEnvironment: Bool
     let disablesAutomaticAlertRefresh: Bool
     let disablesAutomaticMapActivity: Bool
+    let disablesAutomaticLocationPrompts: Bool
     let skipsOnboarding: Bool
+    let startsOnPlan: Bool
+    let planStartFocus: PlanFocus?
     let startsOnMap: Bool
     let startsInEmergencyMode: Bool
     let officialAlertScenario: UITestOfficialAlertScenario?
@@ -147,7 +152,17 @@ struct AppLaunchConfiguration {
         let mapScenario = UITestMapScenario(arguments: arguments)
         let disablesAutomaticAlertRefresh =
             usesTestingEnvironment || arguments.contains(Argument.disableAutomaticAlertRefresh)
+        let startsOnPlanSupplies = arguments.contains(Argument.startPlanSupplies)
+        let startsOnPlan = arguments.contains(Argument.startPlan) || startsOnPlanSupplies
         let disablesAutomaticMapActivity = mapScenario != nil
+        let disablesAutomaticLocationPrompts = startsOnPlan
+        let planStartFocus: PlanFocus? = if startsOnPlanSupplies {
+            .supplies
+        } else if startsOnPlan {
+            .gearChecklist
+        } else {
+            nil
+        }
         let startsInEmergencyMode = arguments.contains(Argument.startEmergencyMode)
         let startsOnMap = arguments.contains(Argument.startMap) || mapScenario != nil
         let skipsOnboarding = startsInEmergencyMode || arguments.contains(Argument.skipOnboarding)
@@ -165,7 +180,10 @@ struct AppLaunchConfiguration {
             usesTestingEnvironment: usesTestingEnvironment,
             disablesAutomaticAlertRefresh: disablesAutomaticAlertRefresh,
             disablesAutomaticMapActivity: disablesAutomaticMapActivity,
+            disablesAutomaticLocationPrompts: disablesAutomaticLocationPrompts,
             skipsOnboarding: skipsOnboarding,
+            startsOnPlan: startsOnPlan,
+            planStartFocus: planStartFocus,
             startsOnMap: startsOnMap,
             startsInEmergencyMode: startsInEmergencyMode,
             officialAlertScenario: officialAlertScenario,
@@ -185,7 +203,10 @@ struct AppLaunchConfiguration {
         officialAlertScenario?.apply(to: appState)
         mapScenario?.apply(to: appState)
 
-        if startsOnMap {
+        if startsOnPlan {
+            router.selectedTab = .more
+            router.requestedPlanFocus = planStartFocus
+        } else if startsOnMap {
             router.selectedTab = .map
         }
 

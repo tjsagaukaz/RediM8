@@ -61,8 +61,9 @@ final class PreparednessSystem: ObservableObject, AppSystem {
     func stop() {}
 
     func applyProfile(_ profile: UserProfile) {
-        self.profile = profile
-        familyService.saveProfile(profile)
+        let normalizedProfile = profile.withNormalizedChecklistItems()
+        self.profile = normalizedProfile
+        familyService.saveProfile(normalizedProfile)
         refreshScore()
     }
 

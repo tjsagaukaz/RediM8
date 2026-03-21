@@ -147,7 +147,8 @@ struct RootView: View {
                     MoreView(
                         appState: appState,
                         router: router,
-                        scrollToTopRequestID: router.scrollToTopRequestID(for: .more)
+                        scrollToTopRequestID: router.scrollToTopRequestID(for: .more),
+                        disablesAutomaticLocationPrompts: launchConfiguration.disablesAutomaticLocationPrompts
                     )
                 }
 
