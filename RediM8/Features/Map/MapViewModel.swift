@@ -96,12 +96,13 @@ final class MapViewModel: ObservableObject {
     private let shelterService: ShelterService
     private let beaconService: BeaconService
     private let locationService: LocationService
+    private let disablesAutomaticRuntimeActivity: Bool
     private let resourceCategoryIndex: [String: ResourceCategoryDefinition]
     private let resourceDatasetLastUpdated: Date
     private var offlineLayerLastUpdated: Date
     private var offlineBasemapStatusMessage: String
 
-    init(appState: AppState) {
+    init(appState: AppState, disablesAutomaticRuntimeActivity: Bool = false) {
         self.appState = appState
         officialAlertService = appState.officialAlertService
         hazardFeedService = appState.hazardFeedService
@@ -111,6 +112,7 @@ final class MapViewModel: ObservableObject {
         shelterService = appState.shelterService
         beaconService = appState.beaconService
         locationService = appState.locationService
+        self.disablesAutomaticRuntimeActivity = disablesAutomaticRuntimeActivity
         resourceCategoryIndex = Dictionary(uniqueKeysWithValues: appState.mapService.resourceCategories.map { ($0.id, $0) })
         resourceDatasetLastUpdated = appState.mapService.lastUpdated
         offlineLayerLastUpdated = appState.mapDataService.lastUpdated
@@ -155,6 +157,9 @@ final class MapViewModel: ObservableObject {
                 self.reloadOfflineMapFeatures()
                 self.reloadOfficialAlerts()
                 guard let coordinate = location?.coordinate else {
+                    return
+                }
+                guard !self.disablesAutomaticRuntimeActivity else {
                     return
                 }
                 Task { [weak self] in
@@ -1069,9 +1074,12 @@ final class MapViewModel: ObservableObject {
 
     func onAppear() {
         isVisible = true
+        recenter(requestAccessIfNeeded: false)
+        guard !disablesAutomaticRuntimeActivity else {
+            return
+        }
         syncCommunityMonitoring()
         locationService.start(requestAccess: false)
-        recenter(requestAccessIfNeeded: false)
         Task {
             await officialAlertService.refreshIfNeeded()
         }

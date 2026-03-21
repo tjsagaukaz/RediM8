@@ -155,7 +155,8 @@ struct RootView: View {
                     MapView(
                         appState: appState,
                         scrollToTopRequestID: router.scrollToTopRequestID(for: .map),
-                        openEvacuationRoutes: { router.openEvacuationRoutes() }
+                        openEvacuationRoutes: { router.openEvacuationRoutes() },
+                        disablesAutomaticMapActivity: launchConfiguration.disablesAutomaticMapActivity
                     )
                 }
 

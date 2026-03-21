@@ -14,6 +14,9 @@ final class MapDataService {
     private let waterPointService: WaterPointService
     private let fireTrailService: FireTrailService
     private let shelterService: ShelterService
+    #if DEBUG
+    private var installedPackIDsOverride: Set<String>?
+    #endif
 
     init(
         store: SQLiteStore?,
@@ -95,6 +98,12 @@ final class MapDataService {
     }
 
     func loadInstalledPackIDs() -> Set<String> {
+        #if DEBUG
+        if let installedPackIDsOverride {
+            return installedPackIDsOverride
+        }
+        #endif
+
         guard let store else {
             return defaultInstalledPackIDs
         }
@@ -176,6 +185,12 @@ final class MapDataService {
     }
 
     private func saveInstalledPackIDs(_ installedPackIDs: Set<String>) {
+        #if DEBUG
+        if installedPackIDsOverride != nil {
+            installedPackIDsOverride = installedPackIDs
+        }
+        #endif
+
         guard let store else {
             return
         }
@@ -191,3 +206,12 @@ final class MapDataService {
         featurePackIDs.isEmpty || !Set(featurePackIDs).isDisjoint(with: installedPackIDs)
     }
 }
+
+#if DEBUG
+extension MapDataService {
+    @MainActor
+    func seedInstalledPackIDsForTesting(_ installedPackIDs: Set<String>) {
+        installedPackIDsOverride = installedPackIDs
+    }
+}
+#endif

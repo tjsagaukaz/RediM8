@@ -56,4 +56,32 @@ final class AppLaunchConfigurationTests: XCTestCase {
 
         XCTAssertEqual(configuration.officialAlertScenario, .cachedNearbyWarning)
     }
+
+    @MainActor
+    func testMapNoInstalledPackPresetStartsOnMapAndDisablesAutomaticMapActivity() {
+        let configuration = AppLaunchConfiguration.current(arguments: [
+            "RediM8",
+            "-ui-testing",
+            "-ui-testing-skip-onboarding",
+            "-ui-testing-map-no-installed-pack"
+        ])
+
+        XCTAssertEqual(configuration.mapScenario, .noInstalledPack)
+        XCTAssertTrue(configuration.startsOnMap)
+        XCTAssertTrue(configuration.disablesAutomaticMapActivity)
+    }
+
+    @MainActor
+    func testMapBasemapUnavailablePresetStartsOnMapAndDisablesAutomaticMapActivity() {
+        let configuration = AppLaunchConfiguration.current(arguments: [
+            "RediM8",
+            "-ui-testing",
+            "-ui-testing-skip-onboarding",
+            "-ui-testing-map-basemap-unavailable"
+        ])
+
+        XCTAssertEqual(configuration.mapScenario, .basemapUnavailable)
+        XCTAssertTrue(configuration.startsOnMap)
+        XCTAssertTrue(configuration.disablesAutomaticMapActivity)
+    }
 }

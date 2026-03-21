@@ -7,6 +7,7 @@ struct MapView: View {
     private let appState: AppState
     private let scrollToTopRequestID: Int
     private let openEvacuationRoutes: () -> Void
+    private let disablesAutomaticMapActivity: Bool
     @State private var isShowingFullScreenMap = false
     @State private var isShowingLayers = false
     @State private var isShowingLegend = false
@@ -33,11 +34,22 @@ struct MapView: View {
         GridItem(.adaptive(minimum: 148, maximum: 220), spacing: 12)
     ]
 
-    init(appState: AppState, scrollToTopRequestID: Int = 0, openEvacuationRoutes: @escaping () -> Void = {}) {
+    init(
+        appState: AppState,
+        scrollToTopRequestID: Int = 0,
+        openEvacuationRoutes: @escaping () -> Void = {},
+        disablesAutomaticMapActivity: Bool = false
+    ) {
         self.appState = appState
         self.scrollToTopRequestID = scrollToTopRequestID
         self.openEvacuationRoutes = openEvacuationRoutes
-        _viewModel = StateObject(wrappedValue: MapViewModel(appState: appState))
+        self.disablesAutomaticMapActivity = disablesAutomaticMapActivity
+        _viewModel = StateObject(
+            wrappedValue: MapViewModel(
+                appState: appState,
+                disablesAutomaticRuntimeActivity: disablesAutomaticMapActivity
+            )
+        )
     }
 
     var body: some View {
@@ -104,6 +116,7 @@ struct MapView: View {
                 .padding(.top, RediSpacing.screen)
                 .padding(.bottom, RediLayout.commandDockContentInset)
             }
+            .accessibilityIdentifier("map.root")
             .onChange(of: scrollToTopRequestID) { _, _ in
                 DispatchQueue.main.async {
                     withAnimation(RediMotion.selection) {
@@ -983,9 +996,11 @@ struct MapView: View {
                 Text(viewModel.mapStatusHeadline)
                     .font(.title3.weight(.bold))
                     .foregroundStyle(ColorTheme.text)
+                    .accessibilityIdentifier("map.statusHeadline")
                 Text(viewModel.mapStatusDetail)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(ColorTheme.textMuted)
+                    .accessibilityIdentifier("map.statusDetail")
             }
 
             Spacer(minLength: 0)
@@ -1594,11 +1609,13 @@ struct MapView: View {
                 title: "Map Packs",
                 subtitle: "Install regional coverage and inspect its limits.",
                 accent: ColorTheme.textTertiary,
+                accessibilityIdentifier: "map.packs.toggle",
                 isExpanded: $isShowingMapPacks
             ) {
                 Text(viewModel.coverageLimitSummary)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("map.packs.coverageSummary")
 
                 ForEach(viewModel.availablePacks) { pack in
                     MapPackRow(
@@ -2506,23 +2523,27 @@ private struct MapPackRow: View {
                         onOpen()
                     }
                     .buttonStyle(PrimaryActionButtonStyle())
+                    .accessibilityIdentifier("map.pack.\(pack.id).open")
 
                     if !pack.isBundledByDefault {
                         Button("Remove") {
                             onRemove()
                         }
                         .buttonStyle(SecondaryActionButtonStyle())
+                        .accessibilityIdentifier("map.pack.\(pack.id).remove")
                     }
                 } else {
                     Button("Install") {
                         onInstall()
                     }
                     .buttonStyle(PrimaryActionButtonStyle())
+                    .accessibilityIdentifier("map.pack.\(pack.id).install")
                 }
             }
         }
         .padding(14)
         .background(Color.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .accessibilityIdentifier("map.pack.\(pack.id).card")
     }
 }
 

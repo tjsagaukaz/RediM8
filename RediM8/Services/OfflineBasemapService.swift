@@ -292,6 +292,15 @@ final class OfflineBasemapService: ObservableObject {
         configuration = resolveConfiguration()
     }
 
+    #if DEBUG
+    func seedForTesting(configuration: Configuration) {
+        self.configuration = configuration
+        installStatusText = nil
+        installErrorText = nil
+        isInstalling = false
+    }
+    #endif
+
     private func refreshInstalledPackages() {
         let activeID = activePackageID()
         guard fileManager.fileExists(atPath: managedPackageRoot.path) else {

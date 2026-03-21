@@ -114,6 +114,56 @@ final class OfflineBasemapServiceTests: XCTestCase {
         XCTAssertTrue(configuration.statusMessage.contains("incomplete or invalid"))
     }
 
+    func testRefreshConfigurationRecoversAfterBrokenPackageAssetsAreRestored() throws {
+        let sandboxURL = try makeSandboxDirectory()
+        let packageURL = sandboxURL.appendingPathComponent("RecoverablePremiumPackage", isDirectory: true)
+        try FileManager.default.createDirectory(at: packageURL, withIntermediateDirectories: true)
+
+        try writeText(
+            """
+            {
+              "version": 8,
+              "name": "Recoverable Package",
+              "sprite": "sprite/sprite",
+              "sources": {},
+              "layers": []
+            }
+            """,
+            to: packageURL.appendingPathComponent("style.json")
+        )
+
+        let fallbackStyleURL = try writeFallbackStyle(in: sandboxURL)
+        let service = OfflineBasemapService(
+            bundle: .main,
+            fileManager: .default,
+            searchRoots: [sandboxURL],
+            generatedStyleDirectory: sandboxURL.appendingPathComponent("generated", isDirectory: true),
+            fallbackStyleURL: fallbackStyleURL
+        )
+
+        XCTAssertFalse(service.configuration.isPremiumActive)
+        XCTAssertTrue(service.configuration.statusMessage.contains("unavailable"))
+
+        try FileManager.default.createDirectory(
+            at: packageURL.appendingPathComponent("sprite", isDirectory: true),
+            withIntermediateDirectories: true
+        )
+        try Data("{}".utf8).write(
+            to: packageURL.appendingPathComponent("sprite/sprite.json"),
+            options: .atomic
+        )
+        try Data([0x89, 0x50, 0x4E, 0x47]).write(
+            to: packageURL.appendingPathComponent("sprite/sprite.png"),
+            options: .atomic
+        )
+
+        service.refreshConfiguration()
+
+        XCTAssertTrue(service.configuration.isPremiumActive)
+        XCTAssertTrue(service.configuration.statusMessage.contains("offline basemap active"))
+        XCTAssertTrue(service.configuration.statusMessage.contains("Recoverable Package"))
+    }
+
     @MainActor
     func testInstalledBasemapPackagesAreExcludedFromBackup() async throws {
         let sandboxURL = try makeSandboxDirectory()

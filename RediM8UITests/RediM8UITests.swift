@@ -170,6 +170,41 @@ final class RediM8UITests: XCTestCase {
         XCTAssertTrue(app.buttons["emergency.mode.close"].isHittable)
     }
 
+    func testMapShowsFallbackStateWhenNoOfflinePackIsInstalled() {
+        let app = makeMapReadyApp(mapScenario: .noInstalledPack)
+
+        app.launch()
+
+        XCTAssertTrue(app.scrollViews["map.root"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["map.statusHeadline"].label, "Offline fallback active")
+        XCTAssertEqual(app.staticTexts["map.statusDetail"].label, "Using pack overlays and saved references only")
+    }
+
+    func testMapPackPanelShowsFallbackCoverageContext() {
+        let app = makeMapReadyApp(mapScenario: .noInstalledPack)
+
+        app.launch()
+
+        XCTAssertTrue(app.scrollViews["map.root"].waitForExistence(timeout: 5))
+        let packsToggle = app.buttons["map.packs.toggle"]
+        scrollToElement(packsToggle, in: app.scrollViews["map.root"])
+        packsToggle.tap()
+
+        let coverageSummary = app.staticTexts["map.packs.coverageSummary"]
+        XCTAssertTrue(coverageSummary.waitForExistence(timeout: 2))
+        XCTAssertTrue(coverageSummary.label.contains("No regional pack is installed"))
+    }
+
+    func testMapShowsGracefulFallbackWhenLocalBasemapIsUnavailable() {
+        let app = makeMapReadyApp(mapScenario: .basemapUnavailable)
+
+        app.launch()
+
+        XCTAssertTrue(app.scrollViews["map.root"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["map.statusHeadline"].label, "Offline fallback active")
+        XCTAssertTrue(app.staticTexts["map.statusDetail"].label.contains("saved references only"))
+    }
+
     private func makeApp() -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += [
@@ -200,6 +235,23 @@ final class RediM8UITests: XCTestCase {
         ]
         return app
     }
+
+    private func makeMapReadyApp(mapScenario: MapScenario) -> XCUIApplication {
+        let app = makeHomeReadyApp()
+        app.launchArguments += [
+            "-ui-testing-start-map",
+            mapScenario.launchArgument
+        ]
+        return app
+    }
+
+    private func scrollToElement(_ element: XCUIElement, in scrollView: XCUIElement, maxSwipes: Int = 6) {
+        var attempts = 0
+        while !element.isHittable && attempts < maxSwipes {
+            scrollView.swipeUp()
+            attempts += 1
+        }
+    }
 }
 
 private enum OfficialAlertScenario {
@@ -212,6 +264,20 @@ private enum OfficialAlertScenario {
             "-ui-testing-official-alerts-unavailable"
         case .cachedNearbyWarning:
             "-ui-testing-official-alerts-recovered"
+        }
+    }
+}
+
+private enum MapScenario {
+    case noInstalledPack
+    case basemapUnavailable
+
+    var launchArgument: String {
+        switch self {
+        case .noInstalledPack:
+            "-ui-testing-map-no-installed-pack"
+        case .basemapUnavailable:
+            "-ui-testing-map-basemap-unavailable"
         }
     }
 }
