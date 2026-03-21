@@ -92,6 +92,8 @@ final class MapViewModel: ObservableObject {
     private let hazardFeedService: HazardFeedService
     private let mapService: MapService
     private let mapDataService: MapDataService
+    private let offlineDataController: MapOfflineDataController
+    private let renderController: MapRenderController
     private let waterPointService: WaterPointService
     private let shelterService: ShelterService
     private let beaconService: BeaconService
@@ -101,6 +103,7 @@ final class MapViewModel: ObservableObject {
     private let resourceDatasetLastUpdated: Date
     private var offlineLayerLastUpdated: Date
     private var offlineBasemapStatusMessage: String
+    private var offlineReloadGeneration = 0
 
     init(appState: AppState, disablesAutomaticRuntimeActivity: Bool = false) {
         self.appState = appState
@@ -108,6 +111,8 @@ final class MapViewModel: ObservableObject {
         hazardFeedService = appState.hazardFeedService
         mapService = appState.mapService
         mapDataService = appState.mapDataService
+        offlineDataController = MapOfflineDataController(mapDataService: appState.mapDataService)
+        renderController = MapRenderController(mapService: appState.mapService)
         waterPointService = appState.waterPointService
         shelterService = appState.shelterService
         beaconService = appState.beaconService
@@ -154,7 +159,7 @@ final class MapViewModel: ObservableObject {
             .sink { [weak self] location in
                 guard let self else { return }
                 self.currentLocation = location
-                self.reloadOfflineMapFeatures()
+                self.reloadOfflineMapFeatures(useBackgroundQueue: true)
                 self.reloadOfficialAlerts()
                 guard let coordinate = location?.coordinate else {
                     return
@@ -1102,7 +1107,10 @@ final class MapViewModel: ObservableObject {
            !locationService.authorizationStatus.isAuthorizedForRediM8 {
             locationService.requestAccess()
         }
-        viewportRegion = preferredRegion()
+        viewportRegion = renderController.preferredRegion(
+            currentLocation: currentLocation,
+            installedPacks: installedPacks
+        )
         viewportRevision += 1
     }
 
@@ -1174,10 +1182,7 @@ final class MapViewModel: ObservableObject {
             return
         }
 
-        viewportRegion = MKCoordinateRegion(
-            center: pack.center.coordinate,
-            span: MKCoordinateSpan(latitudeDelta: pack.latitudeDelta, longitudeDelta: pack.longitudeDelta)
-        )
+        viewportRegion = renderController.focusRegion(for: pack)
         viewportRevision += 1
     }
 
@@ -1574,15 +1579,30 @@ final class MapViewModel: ObservableObject {
         Self.headingText(from: heading)
     }
 
-    private func reloadOfflineMapFeatures() {
-        offlineLayerLastUpdated = mapDataService.lastUpdated
-        dirtRoads = mapDataService.dirtRoads(for: installedPackIDs)
-        fireTrails = mapDataService.fireTrails(for: installedPackIDs)
-        waterPoints = mapDataService.waterPoints(for: installedPackIDs, near: currentLocation?.coordinate)
-        shelters = mapDataService.shelters(for: installedPackIDs, near: currentLocation?.coordinate)
-        refreshLastUpdatedText()
-        if let selectedShelterID, !shelters.contains(where: { $0.id == selectedShelterID }) {
-            self.selectedShelterID = nil
+    private func reloadOfflineMapFeatures(useBackgroundQueue: Bool = false) {
+        let installedPackIDs = self.installedPackIDs
+        let currentCoordinate = currentLocation?.coordinate
+
+        guard useBackgroundQueue else {
+            applyOfflineDataSnapshot(
+                offlineDataController.makeSnapshot(
+                    installedPackIDs: installedPackIDs,
+                    currentLocation: currentCoordinate
+                )
+            )
+            return
+        }
+
+        offlineReloadGeneration += 1
+        let generation = offlineReloadGeneration
+        offlineDataController.loadSnapshot(
+            installedPackIDs: installedPackIDs,
+            currentLocation: currentCoordinate
+        ) { [weak self] snapshot in
+            guard let self, generation == self.offlineReloadGeneration else {
+                return
+            }
+            self.applyOfflineDataSnapshot(snapshot)
         }
     }
 
@@ -1592,7 +1612,7 @@ final class MapViewModel: ObservableObject {
         async let waterRefresh = waterPointService.refreshNearbyNetworkData(near: coordinate)
         async let shelterRefresh = shelterService.refreshNearbyNetworkData(near: coordinate)
         _ = await (waterRefresh, shelterRefresh)
-        reloadOfflineMapFeatures()
+        reloadOfflineMapFeatures(useBackgroundQueue: true)
         let elapsed = Int((CFAbsoluteTimeGetCurrent() - startTime) * 1000)
         let installedPackCount = installedPackIDs.count
         let waterPointCount = waterPoints.count
@@ -1609,22 +1629,6 @@ final class MapViewModel: ObservableObject {
         )
     }
 
-    private func preferredRegion() -> MKCoordinateRegion {
-        if let location = currentLocation {
-            return MKCoordinateRegion(
-                center: location.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 1.0, longitudeDelta: 1.0)
-            )
-        }
-        if let firstInstalledPack = installedPacks.first {
-            return MKCoordinateRegion(
-                center: firstInstalledPack.center.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: firstInstalledPack.latitudeDelta, longitudeDelta: firstInstalledPack.longitudeDelta)
-            )
-        }
-        return mapService.fallbackRegion()
-    }
-
     private func distance(to coordinate: CLLocationCoordinate2D) -> CLLocationDistance {
         guard let currentLocation else {
             return .infinity
@@ -1632,9 +1636,23 @@ final class MapViewModel: ObservableObject {
         return currentLocation.distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
     }
 
-    private func refreshLastUpdatedText() {
+    private func applyOfflineDataSnapshot(_ snapshot: MapOfflineDataSnapshot) {
+        availablePacks = snapshot.availablePacks
+        offlineLayerLastUpdated = snapshot.lastUpdated
+        dirtRoads = snapshot.dirtRoads
+        fireTrails = snapshot.fireTrails
+        waterPoints = snapshot.waterPoints
+        shelters = snapshot.shelters
+        resourceDataStatusMessage = snapshot.didLoadOfflineData ? nil : TrustLayer.mapDataUnavailableMessage
+        refreshLastUpdatedText(didLoadOfflineData: snapshot.didLoadOfflineData)
+        if let selectedShelterID, !snapshot.shelters.contains(where: { $0.id == selectedShelterID }) {
+            self.selectedShelterID = nil
+        }
+    }
+
+    private func refreshLastUpdatedText(didLoadOfflineData: Bool) {
         let latestOfflineDate = max(resourceDatasetLastUpdated, offlineLayerLastUpdated)
-        let hasAnyOfflineData = mapService.didLoadBundledResources || mapDataService.didLoadOfflineData
+        let hasAnyOfflineData = mapService.didLoadBundledResources || didLoadOfflineData
         lastUpdatedText = hasAnyOfflineData ? DateFormatter.rediM8MonthYear.string(from: latestOfflineDate) : "Unavailable"
     }
 

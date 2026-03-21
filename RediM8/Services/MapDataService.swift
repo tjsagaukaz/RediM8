@@ -1,7 +1,6 @@
 import CoreLocation
 import Foundation
 
-@MainActor
 final class MapDataService {
     private enum StorageKey {
         static let enabledLayers = "map_enabled_layers"
@@ -209,7 +208,6 @@ final class MapDataService {
 
 #if DEBUG
 extension MapDataService {
-    @MainActor
     func seedInstalledPackIDsForTesting(_ installedPackIDs: Set<String>) {
         installedPackIDsOverride = installedPackIDs
     }
