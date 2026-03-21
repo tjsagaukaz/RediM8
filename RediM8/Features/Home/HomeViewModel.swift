@@ -109,9 +109,10 @@ final class HomeViewModel: ObservableObject {
     private let waterRuntimeService: WaterRuntimeService
     private let goBagService: GoBagService
     private let vehicleReadinessService: VehicleReadinessService
+    private let disablesAutomaticAlertRefresh: Bool
     private var cancellables = Set<AnyCancellable>()
 
-    init(appState: AppState) {
+    init(appState: AppState, disablesAutomaticAlertRefresh: Bool = false) {
         self.appState = appState
         officialAlertService = appState.officialAlertService
         locationService = appState.locationService
@@ -123,6 +124,7 @@ final class HomeViewModel: ObservableObject {
         waterRuntimeService = appState.waterRuntimeService
         goBagService = appState.goBagService
         vehicleReadinessService = appState.vehicleReadinessService
+        self.disablesAutomaticAlertRefresh = disablesAutomaticAlertRefresh
         profile = appState.profile
         prepScore = appState.prepScore
         readinessReport = appState.readinessReportService.generateReport(profile: appState.profile, prepScore: appState.prepScore)
@@ -448,6 +450,10 @@ final class HomeViewModel: ObservableObject {
 
     func onAppear() {
         locationService.start(requestAccess: false)
+        guard !disablesAutomaticAlertRefresh else {
+            return
+        }
+
         Task {
             await officialAlertService.refreshIfNeeded()
         }

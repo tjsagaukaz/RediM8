@@ -422,6 +422,140 @@ final class OfficialAlertServiceTests: XCTestCase {
     }
 
     @MainActor
+    func testRefreshSetsUnavailableErrorWhenAllSourcesFailWithoutCache() async {
+        let source = OfficialAlertService.FeedSource(
+            id: "act_feed",
+            name: "ACT ESA Official Warnings",
+            jurisdiction: .act,
+            url: URL(string: "https://example.com/act.xml")!,
+            format: .cap
+        )
+
+        let session = makeRefreshSession { request in
+            XCTAssertEqual(request.url?.absoluteString, source.url.absoluteString)
+            throw URLError(.notConnectedToInternet)
+        }
+
+        let service = OfficialAlertService(
+            store: nil,
+            session: session,
+            feedSources: [source],
+            cachedLibrary: .empty
+        )
+
+        await service.refresh()
+
+        XCTAssertTrue(service.library.alerts.isEmpty)
+        XCTAssertTrue(service.library.sources.isEmpty)
+        XCTAssertEqual(service.lastRefreshError, OfficialAlertService.noCachedAlertsMessage)
+    }
+
+    @MainActor
+    func testRefreshKeepsHealthySourceWhenAnotherFeedReturnsMalformedPayload() async {
+        let qldSource = OfficialAlertService.FeedSource(
+            id: "qld_feed",
+            name: "Queensland Official Warnings",
+            jurisdiction: .qld,
+            url: URL(string: "https://example.com/qld.xml")!,
+            format: .rss
+        )
+        let nswSource = OfficialAlertService.FeedSource(
+            id: "nsw_feed",
+            name: "NSW RFS Official Warnings",
+            jurisdiction: .nsw,
+            url: URL(string: "https://example.com/nsw.xml")!,
+            format: .rss
+        )
+
+        let session = makeRefreshSession { request in
+            switch request.url?.absoluteString {
+            case qldSource.url.absoluteString:
+                return (
+                    HTTPURLResponse(url: qldSource.url, statusCode: 200, httpVersion: nil, headerFields: nil)!,
+                    Data(Self.sampleRSSFeed.utf8)
+                )
+            case nswSource.url.absoluteString:
+                return (
+                    HTTPURLResponse(url: nswSource.url, statusCode: 200, httpVersion: nil, headerFields: nil)!,
+                    Data("not valid xml".utf8)
+                )
+            default:
+                XCTFail("Unexpected request: \(request.url?.absoluteString ?? "nil")")
+                throw URLError(.badURL)
+            }
+        }
+
+        let service = OfficialAlertService(
+            store: nil,
+            session: session,
+            feedSources: [qldSource, nswSource],
+            cachedLibrary: .empty
+        )
+
+        await service.refresh()
+
+        XCTAssertEqual(service.library.alerts.count, 1)
+        XCTAssertEqual(service.library.alerts.first?.jurisdiction, .qld)
+        XCTAssertEqual(Set(service.library.sources.map(\.id)), [qldSource.id, nswSource.id])
+        XCTAssertEqual(
+            service.lastRefreshError,
+            "Some New South Wales official feeds could not be refreshed. Showing the latest successful snapshot."
+        )
+    }
+
+    @MainActor
+    func testRefreshRecoversAfterFailureAndClearsErrorWithoutDuplicatingAlerts() async {
+        let source = OfficialAlertService.FeedSource(
+            id: "tas_feed",
+            name: "Tasmania Official Weather Warnings",
+            jurisdiction: .tas,
+            url: URL(string: "https://example.com/tas.xml")!,
+            format: .rss
+        )
+        var requestCount = 0
+
+        let session = makeRefreshSession { request in
+            XCTAssertEqual(request.url?.absoluteString, source.url.absoluteString)
+            requestCount += 1
+
+            if requestCount == 1 {
+                throw URLError(.timedOut)
+            }
+
+            return (
+                HTTPURLResponse(url: source.url, statusCode: 200, httpVersion: nil, headerFields: nil)!,
+                Data(Self.sampleRSSFeed.utf8)
+            )
+        }
+
+        let service = OfficialAlertService(
+            store: nil,
+            session: session,
+            feedSources: [source],
+            cachedLibrary: .empty
+        )
+
+        await service.refresh()
+
+        XCTAssertEqual(service.lastRefreshError, OfficialAlertService.noCachedAlertsMessage)
+        XCTAssertTrue(service.library.alerts.isEmpty)
+
+        await service.refresh()
+
+        XCTAssertNil(service.lastRefreshError)
+        XCTAssertEqual(service.library.sources.map(\.id), [source.id])
+        XCTAssertEqual(service.library.alerts.count, 1)
+        let recoveredAlertIDs = service.library.alerts.map(\.id)
+
+        await service.refresh()
+
+        XCTAssertNil(service.lastRefreshError)
+        XCTAssertEqual(service.library.sources.map(\.id), [source.id])
+        XCTAssertEqual(service.library.alerts.count, 1)
+        XCTAssertEqual(service.library.alerts.map(\.id), recoveredAlertIDs)
+    }
+
+    @MainActor
     func testOfficialAlertNotificationServiceUsesExistingAlertsAsBaseline() {
         let alert = OfficialAlert(
             id: "tas_existing",

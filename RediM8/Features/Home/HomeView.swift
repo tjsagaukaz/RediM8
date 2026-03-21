@@ -18,11 +18,21 @@ struct HomeView: View {
     @State private var selectedOfficialAlertScope: HomeOfficialAlertScope = .local
     @State private var selectedOfficialAlertJurisdiction: AustralianJurisdiction?
 
-    init(appState: AppState, router: NavigationRouter, scrollToTopRequestID: Int) {
+    init(
+        appState: AppState,
+        router: NavigationRouter,
+        scrollToTopRequestID: Int,
+        disablesAutomaticAlertRefresh: Bool = false
+    ) {
         self.appState = appState
         self.router = router
         self.scrollToTopRequestID = scrollToTopRequestID
-        _viewModel = StateObject(wrappedValue: HomeViewModel(appState: appState))
+        _viewModel = StateObject(
+            wrappedValue: HomeViewModel(
+                appState: appState,
+                disablesAutomaticAlertRefresh: disablesAutomaticAlertRefresh
+            )
+        )
     }
 
     var body: some View {
@@ -707,6 +717,7 @@ struct HomeView: View {
                     Text(todayLocalStatusTitle)
                         .font(RediTypography.heading)
                         .foregroundStyle(officialAlertToneColor(viewModel.officialAlertSummary.tone))
+                        .accessibilityIdentifier("home.todayLocalStatus.title")
                 }
                 .accessibilityElement(children: .combine)
 
@@ -714,6 +725,7 @@ struct HomeView: View {
                     .font(RediTypography.body)
                     .foregroundStyle(ColorTheme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("home.todayLocalStatus.detail")
 
                 MetricGrid(items: [
                     MetricItem(
@@ -734,6 +746,7 @@ struct HomeView: View {
                 ])
             }
         }
+        .accessibilityIdentifier("home.todayLocalStatus.card")
     }
 
     private var officialAlertsCardContent: some View {

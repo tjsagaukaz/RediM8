@@ -52,6 +52,37 @@ final class RediM8UITests: XCTestCase {
         XCTAssertEqual(bushfireScenario.value as? String, "Selected")
     }
 
+    func testHomeShowsUnavailableOfficialAlertsStateWhenNoCacheExists() {
+        let app = makeHomeReadyApp(officialAlertScenario: .unavailable)
+
+        app.launch()
+
+        XCTAssertTrue(app.scrollViews["home.root"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.otherElements["home.todayLocalStatus.card"].exists)
+        XCTAssertEqual(app.staticTexts["home.todayLocalStatus.title"].label, "Official alerts unavailable")
+        let detail = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "Connect once")
+        ).firstMatch
+        XCTAssertTrue(detail.waitForExistence(timeout: 2))
+    }
+
+    func testHomeShowsRecoveredCachedAlertState() {
+        let app = makeHomeReadyApp(officialAlertScenario: .cachedNearbyWarning)
+
+        app.launch()
+
+        XCTAssertTrue(app.scrollViews["home.root"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.otherElements["home.todayLocalStatus.card"].exists)
+        XCTAssertEqual(
+            app.staticTexts["home.todayLocalStatus.title"].label,
+            "Monitoring official feeds and local conditions"
+        )
+        let detail = app.staticTexts.matching(
+            NSPredicate(format: "label CONTAINS %@", "Queensland Fire and Emergency Services")
+        ).firstMatch
+        XCTAssertTrue(detail.waitForExistence(timeout: 2))
+    }
+
     func testEmergencyModeEntryFromHomeIsFastAndFocused() {
         let app = makeHomeReadyApp()
 
@@ -156,11 +187,31 @@ final class RediM8UITests: XCTestCase {
         return app
     }
 
+    private func makeHomeReadyApp(officialAlertScenario: OfficialAlertScenario) -> XCUIApplication {
+        let app = makeHomeReadyApp()
+        app.launchArguments += [officialAlertScenario.launchArgument]
+        return app
+    }
+
     private func makeEmergencyModeApp() -> XCUIApplication {
         let app = makeHomeReadyApp()
         app.launchArguments += [
             "-ui-testing-start-emergency-mode"
         ]
         return app
+    }
+}
+
+private enum OfficialAlertScenario {
+    case unavailable
+    case cachedNearbyWarning
+
+    var launchArgument: String {
+        switch self {
+        case .unavailable:
+            "-ui-testing-official-alerts-unavailable"
+        case .cachedNearbyWarning:
+            "-ui-testing-official-alerts-recovered"
+        }
     }
 }

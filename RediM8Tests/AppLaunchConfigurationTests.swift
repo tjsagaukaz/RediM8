@@ -32,4 +32,28 @@ final class AppLaunchConfigurationTests: XCTestCase {
         XCTAssertTrue(configuration.skipsOnboarding)
         XCTAssertTrue(configuration.startsInEmergencyMode)
     }
+
+    @MainActor
+    func testUnavailableOfficialAlertPresetIsParsed() {
+        let configuration = AppLaunchConfiguration.current(arguments: [
+            "RediM8",
+            "-ui-testing",
+            "-ui-testing-skip-onboarding",
+            "-ui-testing-official-alerts-unavailable"
+        ])
+
+        XCTAssertEqual(configuration.officialAlertScenario, .unavailable)
+    }
+
+    @MainActor
+    func testRecoveredOfficialAlertPresetIsParsed() {
+        let configuration = AppLaunchConfiguration.current(arguments: [
+            "RediM8",
+            "-ui-testing",
+            "-ui-testing-skip-onboarding",
+            "-ui-testing-official-alerts-recovered"
+        ])
+
+        XCTAssertEqual(configuration.officialAlertScenario, .cachedNearbyWarning)
+    }
 }

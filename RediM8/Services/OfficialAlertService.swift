@@ -9,6 +9,9 @@ final class OfficialAlertService: ObservableObject {
         static let library = "official_alerts.library.v2"
     }
 
+    nonisolated static let noCachedAlertsMessage = "No cached official warnings available yet. Connect once to mirror current public alerts."
+    nonisolated static let cachedSnapshotMessage = "Official warning refresh failed. Showing the last cached snapshot."
+
     enum FeedFormat: Equatable {
         case cap
         case waWarningsJSON
@@ -37,7 +40,8 @@ final class OfficialAlertService: ObservableObject {
         store: SQLiteStore?,
         session: URLSession = .shared,
         feedSources: [FeedSource]? = nil,
-        cachedLibrary: OfficialAlertLibrary? = nil
+        cachedLibrary: OfficialAlertLibrary? = nil,
+        initialLastRefreshError: String? = nil
     ) {
         self.store = store
         self.session = session
@@ -54,6 +58,7 @@ final class OfficialAlertService: ObservableObject {
         } else {
             library = .empty
         }
+        lastRefreshError = initialLastRefreshError
     }
 
     var activeAlerts: [OfficialAlert] {
@@ -157,9 +162,9 @@ final class OfficialAlertService: ObservableObject {
 
         if mergedAlerts.isEmpty {
             if availableSources.isEmpty, !hasCachedData {
-                lastRefreshError = "No cached official warnings available yet. Connect once to mirror current public alerts."
+                lastRefreshError = Self.noCachedAlertsMessage
             } else if availableSources.isEmpty, !failures.isEmpty {
-                lastRefreshError = "Official warning refresh failed. Showing the last cached snapshot."
+                lastRefreshError = Self.cachedSnapshotMessage
             }
         }
 
@@ -192,6 +197,14 @@ final class OfficialAlertService: ObservableObject {
             }
         }
     }
+
+    #if DEBUG
+    func seedForTesting(library: OfficialAlertLibrary, lastRefreshError: String?) {
+        self.library = library
+        self.lastRefreshError = lastRefreshError
+        isRefreshing = false
+    }
+    #endif
 
     private func mergedLibrary(
         refreshedAlerts: [OfficialAlert],

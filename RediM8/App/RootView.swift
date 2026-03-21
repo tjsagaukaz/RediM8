@@ -130,7 +130,8 @@ struct RootView: View {
                     HomeView(
                         appState: appState,
                         router: router,
-                        scrollToTopRequestID: router.scrollToTopRequestID(for: .home)
+                        scrollToTopRequestID: router.scrollToTopRequestID(for: .home),
+                        disablesAutomaticAlertRefresh: launchConfiguration.disablesAutomaticAlertRefresh
                     )
                 }
 
