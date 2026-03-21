@@ -130,6 +130,7 @@ struct ScenarioSelectionView: View {
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
+        .accessibilityIdentifier("onboarding.scenario.\(scenario.kind.rawValue)")
         .accessibilityLabel("\(scenario.name). \(scenario.description)")
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
         .accessibilityHint("\(scenarioFooter(for: scenario.kind)). Double-tap to \(isSelected ? "remove" : "add") this scenario.")

@@ -1,12 +1,43 @@
 import CoreLocation
 import Foundation
+import Network
+
+final class AssistantNetworkStatusService {
+    @MainActor private(set) var isOffline = false
+
+    private let monitor: NWPathMonitor
+    private let queue = DispatchQueue(label: "au.com.redim8.assistant.network")
+
+    init(monitor: NWPathMonitor = NWPathMonitor()) {
+        self.monitor = monitor
+        monitor.pathUpdateHandler = { [weak self] path in
+            Task { @MainActor [weak self] in
+                self?.isOffline = path.status != .satisfied
+            }
+        }
+        monitor.start(queue: queue)
+    }
+
+    deinit {
+        monitor.cancel()
+    }
+}
 
 @MainActor
 protocol AssistantContextProviding {
+    func contextPayload(
+        for query: String,
+        classification: AssistantIntentClassification
+    ) -> AssistantContextPayload
+}
+
+extension AssistantContextProviding {
     func contextSections(
         for query: String,
         classification: AssistantIntentClassification
-    ) -> [AssistantContextSection]
+    ) -> [AssistantContextSection] {
+        contextPayload(for: query, classification: classification).sections
+    }
 }
 
 @MainActor
@@ -19,13 +50,14 @@ final class AssistantContextEnricher: AssistantContextProviding {
     private let mapDataService: MapDataService
     private let locationProvider: () -> CLLocation?
     private let survivalContextService: SurvivalContextService?
+    private let isOfflineProvider: () -> Bool
 
     private var cachedResult: CachedContext?
 
     private struct CachedContext {
         let query: String
         let topic: AssistantIntentTopic
-        let sections: [AssistantContextSection]
+        let payload: AssistantContextPayload
         let builtAt: Date
 
         var isValid: Bool {
@@ -41,7 +73,8 @@ final class AssistantContextEnricher: AssistantContextProviding {
         beaconService: BeaconService,
         mapDataService: MapDataService,
         locationProvider: @escaping () -> CLLocation?,
-        survivalContextService: SurvivalContextService? = nil
+        survivalContextService: SurvivalContextService? = nil,
+        isOfflineProvider: @escaping () -> Bool = { false }
     ) {
         self.waterPointService = waterPointService
         self.shelterService = shelterService
@@ -51,52 +84,63 @@ final class AssistantContextEnricher: AssistantContextProviding {
         self.mapDataService = mapDataService
         self.locationProvider = locationProvider
         self.survivalContextService = survivalContextService
+        self.isOfflineProvider = isOfflineProvider
     }
 
-    func contextSections(
+    func contextPayload(
         for query: String,
         classification: AssistantIntentClassification
-    ) -> [AssistantContextSection] {
+    ) -> AssistantContextPayload {
         if let cached = cachedResult,
            cached.isValid,
            cached.query == query,
            cached.topic == classification.topic {
-            return cached.sections
+            return cached.payload
         }
 
-        let sections = buildContextSections(for: query, classification: classification)
+        let payload = buildContextPayload(for: query, classification: classification)
 
         cachedResult = CachedContext(
             query: query,
             topic: classification.topic,
-            sections: sections,
+            payload: payload,
             builtAt: .now
         )
 
-        return sections
+        return payload
     }
 
-    private func buildContextSections(
+    private func buildContextPayload(
         for query: String,
         classification: AssistantIntentClassification
-    ) -> [AssistantContextSection] {
+    ) -> AssistantContextPayload {
         let normalizedQuery = AssistantIntentClassifier.normalize(query)
         let queryTokens = Set(normalizedQuery.split(separator: " ").map(String.init))
         let currentLocation = locationProvider()
         let installedPackIDs = mapDataService.loadInstalledPackIDs()
         let installedPacks = mapDataService.packs(withIDs: installedPackIDs)
         let isEvacuationQuery = wantsEvacuationContext(tokens: queryTokens, classification: classification)
+        let nearbyAlerts = officialAlertService.nearbyAlerts(
+            currentLocation: currentLocation,
+            installedPacks: installedPacks
+        )
+        let topAlert = nearbyAlerts.first
+        let survivalState = survivalContextService?.computeState()
+        let profileSnapshot = survivalContextService?.profileSnapshot()
+        let snapshot = buildSituationSnapshot(
+            classification: classification,
+            currentLocation: currentLocation,
+            topAlert: topAlert,
+            survivalState: survivalState,
+            profileSnapshot: profileSnapshot
+        )
 
         var sections: [AssistantContextSection] = []
 
         // --- Hazard warnings always come first ---
         if wantsAlertContext(tokens: queryTokens, classification: classification) {
-            let alerts = officialAlertService.nearbyAlerts(
-                currentLocation: currentLocation,
-                installedPacks: installedPacks
-            )
-            if !alerts.isEmpty {
-                sections.append(alertSection(from: alerts, isEvacuation: isEvacuationQuery))
+            if !nearbyAlerts.isEmpty {
+                sections.append(alertSection(from: nearbyAlerts, isEvacuation: isEvacuationQuery))
             }
         }
 
@@ -161,8 +205,7 @@ final class AssistantContextEnricher: AssistantContextProviding {
         }
 
         // --- Proactive survival context (state-aware) ---
-        if let survivalContextService {
-            let survivalState = survivalContextService.computeState()
+        if let survivalContextService, let survivalState {
             let survivalSections = survivalContextService.contextSections(for: survivalState)
 
             // Only inject survival sections that don't duplicate already-shown categories.
@@ -176,7 +219,15 @@ final class AssistantContextEnricher: AssistantContextProviding {
             }
         }
 
-        return sections
+        return AssistantContextPayload(
+            sections: sections,
+            snapshot: snapshot,
+            status: buildAdvisorContextStatus(
+                classification: classification,
+                queryTokens: queryTokens,
+                snapshot: snapshot
+            )
+        )
     }
 
     // MARK: - Section Builders
@@ -339,6 +390,222 @@ final class AssistantContextEnricher: AssistantContextProviding {
             tone: .neutral,
             items: []
         )
+    }
+
+    private func buildSituationSnapshot(
+        classification: AssistantIntentClassification,
+        currentLocation: CLLocation?,
+        topAlert: OfficialAlert?,
+        survivalState: SurvivalContextState?,
+        profileSnapshot: SurvivalProfileSnapshot?
+    ) -> AssistantSituationSnapshot {
+        let proximity = alertProximity(for: topAlert, currentLocation: currentLocation)
+        let hazard = topAlert?.kind ?? inferredHazard(from: classification.topic)
+        let severity = topAlert?.severity
+        let hasDependents = profileSnapshot?.hasDependents ?? false
+        let routeStatus = inferredRouteStatus(
+            classification: classification,
+            severity: severity,
+            hasSavedRoutes: profileSnapshot?.hasSavedRoutes ?? false
+        )
+
+        return AssistantSituationSnapshot(
+            hazard: hazard,
+            severity: severity,
+            proximity: proximity,
+            mode: inferredMode(
+                classification: classification,
+                severity: severity,
+                proximity: proximity,
+                survivalState: survivalState
+            ),
+            routeStatus: routeStatus,
+            lastSyncMinutes: lastOfficialAlertSyncMinutes(),
+            hasDependents: hasDependents
+        )
+    }
+
+    private func buildAdvisorContextStatus(
+        classification: AssistantIntentClassification,
+        queryTokens: Set<String>,
+        snapshot: AssistantSituationSnapshot?
+    ) -> AdvisorContextStatus {
+        let isOffline = isOfflineProvider()
+
+        guard usesAlertDrivenStatus(
+            tokens: queryTokens,
+            classification: classification,
+            snapshot: snapshot
+        ) else {
+            return AdvisorContextStatus(
+                source: .generalGuidance,
+                freshnessMinutes: nil,
+                isOffline: isOffline,
+                hazard: nil,
+                routeStatus: nil
+            )
+        }
+
+        let freshnessMinutes = snapshot?.lastSyncMinutes
+        let staleThresholdMinutes = 30
+        let source: AdvisorContextSource
+
+        if isOffline || freshnessMinutes.map({ $0 > staleThresholdMinutes }) ?? true {
+            source = .lastSyncedAlerts
+        } else {
+            source = .officialAlerts
+        }
+
+        return AdvisorContextStatus(
+            source: source,
+            freshnessMinutes: freshnessMinutes,
+            isOffline: isOffline,
+            hazard: snapshot?.hazard,
+            routeStatus: snapshot?.routeStatus
+        )
+    }
+
+    private func usesAlertDrivenStatus(
+        tokens _: Set<String>,
+        classification: AssistantIntentClassification,
+        snapshot: AssistantSituationSnapshot?
+    ) -> Bool {
+        guard let snapshot else {
+            return false
+        }
+
+        let hasMatchedOfficialHazard = snapshot.hasEnvironmentalHazard
+            || (
+                snapshot.hazard != nil
+                && officialAlertService.activeAlerts.contains { alert in
+                    alert.kind == snapshot.hazard
+                }
+            )
+
+        guard hasMatchedOfficialHazard else {
+            return false
+        }
+
+        switch classification.topic {
+        case .bushfireEvacuation,
+             .floodSafety,
+             .routePlanning,
+             .survivalFire,
+             .survivalFloodStorm,
+             .preparednessPlanning,
+             .waterPlanning,
+             .waterPurification,
+             .fieldComms,
+             .communicationsResponse,
+             .navigationResponse,
+             .vehicleSurvival,
+            .unknown:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func alertProximity(
+        for alert: OfficialAlert?,
+        currentLocation: CLLocation?
+    ) -> AssistantSituationProximity {
+        guard let alert else {
+            return .unknown
+        }
+
+        guard let currentLocation else {
+            return .unknown
+        }
+
+        guard let area = alert.area else {
+            return .near
+        }
+
+        let distance = alert.distance(from: currentLocation)
+        if distance <= area.radiusMetres {
+            return .inside
+        }
+        if alert.isRelevant(to: currentLocation) {
+            return .near
+        }
+        return .far
+    }
+
+    private func inferredMode(
+        classification: AssistantIntentClassification,
+        severity: OfficialAlertSeverity?,
+        proximity: AssistantSituationProximity,
+        survivalState: SurvivalContextState?
+    ) -> AssistantSituationMode {
+        if let severity {
+            switch severity {
+            case .emergencyWarning:
+                return proximity == .inside ? .crisis : .elevated
+            case .watchAndAct:
+                return .elevated
+            case .advice:
+                return .prep
+            }
+        }
+
+        if classification.riskBand == .critical {
+            return .crisis
+        }
+
+        if let survivalState {
+            switch survivalState.highestRisk {
+            case .critical:
+                return .elevated
+            case .high:
+                return .prep
+            case .moderate, .low:
+                break
+            }
+        }
+
+        return .normal
+    }
+
+    private func inferredRouteStatus(
+        classification: AssistantIntentClassification,
+        severity: OfficialAlertSeverity?,
+        hasSavedRoutes: Bool
+    ) -> AssistantRouteStatus? {
+        guard hasSavedRoutes else {
+            return nil
+        }
+
+        switch classification.topic {
+        case .bushfireEvacuation, .floodSafety, .routePlanning, .vehicleSurvival:
+            switch severity {
+            case .emergencyWarning, .watchAndAct:
+                return .atRisk
+            case .advice, nil:
+                return .clear
+            }
+        default:
+            return nil
+        }
+    }
+
+    private func inferredHazard(from topic: AssistantIntentTopic) -> OfficialAlertKind? {
+        switch topic {
+        case .bushfireEvacuation, .survivalFire:
+            return .bushfire
+        case .floodSafety, .survivalFloodStorm:
+            return .flood
+        default:
+            return nil
+        }
+    }
+
+    private func lastOfficialAlertSyncMinutes() -> Int? {
+        let lastUpdated = officialAlertService.library.lastUpdated
+        guard lastUpdated > .distantPast else {
+            return nil
+        }
+        return max(Int(Date().timeIntervalSince(lastUpdated) / 60), 0)
     }
 
     // MARK: - Beacon Filtering

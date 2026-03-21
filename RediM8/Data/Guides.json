@@ -11,7 +11,25 @@
         "Start chest compressions at a steady pace in the centre of the chest.",
         "Continue CPR until the person recovers, help takes over, or you cannot continue."
       ],
-      "notes": "Call 000 and use an AED if one is available."
+      "notes": "Call 000 and use an AED if one is available.",
+      "diagrams": [
+        {
+          "id": "redim8-cpr-sequence",
+          "title": "CPR Response Sequence",
+          "caption": "Check breathing, begin compressions, and apply the AED as soon as it is ready.",
+          "kind": "imageAsset",
+          "assetName": "guide_cpr_basics_plate"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-cpr-sequence-illustration",
+          "title": "Original CPR response sequence illustration",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ]
     },
     {
       "id": "major_bleeding_control",
@@ -24,7 +42,25 @@
         "Bandage the dressing firmly without cutting off circulation.",
         "Call 000 and monitor for shock until help arrives."
       ],
-      "notes": "Use firm direct pressure and do not remove soaked dressings; add more on top."
+      "notes": "Use firm direct pressure and do not remove soaked dressings; add more on top.",
+      "diagrams": [
+        {
+          "id": "redim8-major-bleeding-sequence",
+          "title": "Direct Pressure and Bandage",
+          "caption": "Keep pressure on the wound, add more dressings if needed, and secure the bandage firmly.",
+          "kind": "imageAsset",
+          "assetName": "guide_major_bleeding_plate"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-major-bleeding-illustration",
+          "title": "Original major bleeding control illustration",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ]
     },
     {
       "id": "burns_first_aid",
@@ -50,7 +86,25 @@
         "Apply a cold pack wrapped in cloth to reduce swelling if available.",
         "Seek urgent medical care, especially for severe pain, deformity, or reduced circulation."
       ],
-      "notes": "Only move the person if they are in immediate danger."
+      "notes": "Only move the person if they are in immediate danger.",
+      "diagrams": [
+        {
+          "id": "redim8-fracture-sling-sequence",
+          "title": "Arm Sling Immobilisation",
+          "caption": "Support the arm, apply the sling, and secure it so the limb stays still.",
+          "kind": "imageAsset",
+          "assetName": "guide_fracture_sling_plate"
+        }
+      ],
+      "sources": [
+        {
+          "id": "redim8-fracture-sling-illustration",
+          "title": "Original fracture immobilisation illustration",
+          "publisher": "RediM8",
+          "url": "Offline in-app diagram",
+          "kind": "originalDiagram"
+        }
+      ]
     },
     {
       "id": "snake_bite_first_aid",

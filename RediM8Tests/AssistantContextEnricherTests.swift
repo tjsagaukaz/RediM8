@@ -284,19 +284,67 @@ final class AssistantContextEnricherTests: XCTestCase {
         XCTAssertFalse(section.isHazardWarning)
     }
 
+    func testHazardQueryReturnsOfficialAlertTrustStatus() {
+        let now = Date()
+        let location = CLLocation(latitude: -27.284, longitude: 152.649)
+        let alert = OfficialAlert(
+            id: "qld-bushfire-alert",
+            title: "Bushfire watch and act",
+            message: "Bushfire nearby.",
+            instruction: "Prepare to leave.",
+            issuer: "Queensland Fire Department",
+            sourceName: "Queensland Official Alerts",
+            sourceURLString: "https://example.com/alert",
+            jurisdiction: .qld,
+            kind: .bushfire,
+            severity: .watchAndAct,
+            regionScope: "Brisbane Hills",
+            area: OfficialAlertArea(
+                description: "Brisbane Hills",
+                center: GeoPoint(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude),
+                radiusKilometres: 12
+            ),
+            issuedAt: now.addingTimeInterval(-20 * 60),
+            lastUpdated: now.addingTimeInterval(-12 * 60),
+            expiresAt: now.addingTimeInterval(2 * 60 * 60)
+        )
+        let officialAlertService = OfficialAlertService(
+            store: nil,
+            cachedLibrary: OfficialAlertLibrary(
+                lastUpdated: alert.lastUpdated,
+                sources: [],
+                alerts: [alert]
+            )
+        )
+        let enricher = makeEnricher(
+            officialAlertService: officialAlertService,
+            location: location
+        )
+        let classification = makeClassification(topic: .bushfireEvacuation)
+
+        let payload = enricher.contextPayload(for: "Bushfire nearby — what do I do?", classification: classification)
+
+        XCTAssertEqual(payload.snapshot?.hazard, .bushfire)
+        XCTAssertNil(payload.status.routeStatus)
+        XCTAssertTrue((11 ... 12).contains(payload.snapshot?.lastSyncMinutes ?? -1))
+    }
+
     // MARK: - Helpers
 
     private func makeEnricher(
         beaconService: BeaconService? = nil,
-        location: CLLocation? = CLLocation(latitude: -27.284, longitude: 152.649)
+        officialAlertService: OfficialAlertService? = nil,
+        location: CLLocation? = CLLocation(latitude: -27.284, longitude: 152.649),
+        isOffline: Bool = false
     ) -> AssistantContextEnricher {
         let realBeaconService = beaconService ?? BeaconService(meshService: MeshService(), locationService: LocationService(), store: nil)
+        let realOfficialAlertService = officialAlertService ?? OfficialAlertService(store: nil)
 
         return AssistantContextEnricher(
             waterPointService: WaterPointService(bundle: .main),
             shelterService: ShelterService(bundle: .main),
             fireTrailService: FireTrailService(bundle: .main),
-            officialAlertService: OfficialAlertService(store: nil),
+            officialAlertService: realOfficialAlertService,
             beaconService: realBeaconService,
             mapDataService: MapDataService(
                 store: nil,
@@ -305,7 +353,8 @@ final class AssistantContextEnricherTests: XCTestCase {
                 fireTrailService: FireTrailService(bundle: .main),
                 shelterService: ShelterService(bundle: .main)
             ),
-            locationProvider: { location }
+            locationProvider: { location },
+            isOfflineProvider: { isOffline }
         )
     }
 

@@ -11,6 +11,8 @@ final class LocationService: NSObject, ObservableObject {
     @Published private(set) var authorizationStatus: CLAuthorizationStatus
     @Published private(set) var currentLocation: CLLocation?
     @Published private(set) var heading: CLLocationDirection = 0
+    @Published private(set) var isUpdatingLocation = false
+    @Published private(set) var isUpdatingHeading = false
 
     private let manager: CLLocationManager
     private let permissionsManager: PermissionsManager
@@ -99,15 +101,32 @@ final class LocationService: NSObject, ObservableObject {
         guard activeClients > 0, permissionsManager.canUseLocationUpdates(status: authorizationStatus) else {
             manager.stopUpdatingLocation()
             manager.stopUpdatingHeading()
+            isUpdatingLocation = false
+            isUpdatingHeading = false
             return
         }
 
         manager.startUpdatingLocation()
+        isUpdatingLocation = true
         if CLLocationManager.headingAvailable() {
             manager.startUpdatingHeading()
+            isUpdatingHeading = true
+        } else {
+            manager.stopUpdatingHeading()
+            isUpdatingHeading = false
         }
     }
 }
+
+#if DEBUG
+extension LocationService {
+    @MainActor
+    func simulateAuthorizationStatus(_ status: CLAuthorizationStatus) {
+        authorizationStatus = status
+        syncLocationUpdates()
+    }
+}
+#endif
 
 extension LocationService: CLLocationManagerDelegate {
     nonisolated func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {

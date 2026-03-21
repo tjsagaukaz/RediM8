@@ -85,13 +85,13 @@ final class NavigationRouterTests: XCTestCase {
     }
 
     @MainActor
-    func testOpenLibrarySelectsLibraryTabAndClearsPlanFocus() {
+    func testOpenLibraryResolvesToMoreAndClearsPlanFocus() {
         let router = NavigationRouter()
         router.requestedPlanFocus = .householdOverview
 
         router.openLibrary()
 
-        XCTAssertEqual(router.selectedTab, .library)
+        XCTAssertEqual(router.selectedTab, .more)
         XCTAssertNil(router.requestedPlanFocus)
     }
 

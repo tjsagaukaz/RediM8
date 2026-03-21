@@ -56,6 +56,11 @@ struct SurvivalContextState {
     }
 }
 
+struct SurvivalProfileSnapshot {
+    let hasDependents: Bool
+    let hasSavedRoutes: Bool
+}
+
 // MARK: - Survival Context Service
 
 @MainActor
@@ -114,6 +119,17 @@ final class SurvivalContextService {
             navigationDetail: navigationDetailText(location: location),
             isolationDetail: isolationDetailText(),
             powerDetail: powerDetailText()
+        )
+    }
+
+    func profileSnapshot() -> SurvivalProfileSnapshot {
+        let profile = profileProvider()
+        let hasDependents = profile.household.totalPeople > 1 || profile.household.petCount > 0
+        let hasSavedRoutes = profile.evacuationRoutes.contains { $0.nilIfBlank != nil }
+
+        return SurvivalProfileSnapshot(
+            hasDependents: hasDependents,
+            hasSavedRoutes: hasSavedRoutes
         )
     }
 

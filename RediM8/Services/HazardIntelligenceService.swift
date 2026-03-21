@@ -20,7 +20,7 @@ final class HazardIntelligenceService: ObservableObject {
 
     // MARK: - Persistence Key
 
-    private static let storageKey = "hazard_intelligence_reports"
+    static let storageKey = HazardStorageKey.reports
 
     // MARK: - Types
 
@@ -122,6 +122,15 @@ final class HazardIntelligenceService: ObservableObject {
 
         static func == (lhs: HazardReport, rhs: HazardReport) -> Bool {
             lhs.id == rhs.id
+        }
+
+        var requiresSecureStorage: Bool {
+            switch source {
+            case .manual, .mesh:
+                true
+            case .terrain, .officialAlert:
+                false
+            }
         }
     }
 
@@ -268,6 +277,8 @@ final class HazardIntelligenceService: ObservableObject {
     @Published private(set) var isLowPowerMode: Bool = false
 
     private let store: SQLiteStore?
+    private let sensitiveHazardReportService: SensitiveHazardReportService?
+    private let sensitiveHazardReportMigrationService: SensitiveHazardReportMigrationService?
     private var sweepTimer: Timer?
     private var cachedZones: [OfflineRoutingService.HazardZone]?
     private var cachedZonesHash: Int = 0
@@ -282,8 +293,27 @@ final class HazardIntelligenceService: ObservableObject {
     // MARK: - Init
 
     /// - Parameter store: Optional SQLiteStore for persistence. Pass `nil` for in-memory only (tests).
-    init(store: SQLiteStore? = nil) {
+    init(
+        store: SQLiteStore? = nil,
+        sensitiveHazardReportService: SensitiveHazardReportService? = nil,
+        sensitiveHazardReportMigrationService: SensitiveHazardReportMigrationService? = nil
+    ) {
         self.store = store
+        let resolvedSensitiveHazardReportService = sensitiveHazardReportService ?? store.map {
+            SensitiveHazardReportService(
+                secureStore: SecureStore(namespace: "hazard-\($0.storageNamespace)")
+            )
+        }
+        self.sensitiveHazardReportService = resolvedSensitiveHazardReportService
+        self.sensitiveHazardReportMigrationService = sensitiveHazardReportMigrationService ?? {
+            guard let store, let resolvedSensitiveHazardReportService else {
+                return nil
+            }
+            return SensitiveHazardReportMigrationService(
+                store: store,
+                sensitiveHazardReportService: resolvedSensitiveHazardReportService
+            )
+        }()
         loadPersistedReports()
     }
 
@@ -292,13 +322,25 @@ final class HazardIntelligenceService: ObservableObject {
     /// Load hazard reports from SQLite on startup.
     /// Sweeps expired reports immediately so the zone cache starts clean.
     private func loadPersistedReports() {
+        do {
+            try sensitiveHazardReportMigrationService?.runIfNeeded()
+        } catch {
+            RediLogger.persistence.error("Failed to migrate sensitive hazard reports: \(error.localizedDescription, privacy: .public)")
+        }
+
         guard let store else { return }
         do {
-            if let persisted = try store.load([HazardReport].self, for: Self.storageKey) {
-                reports = persisted.filter { !$0.isExpired }
-                previousHazardCount = reports.count
-                previousMaxSeverity = reports.map(\.severity).max() ?? .low
-            }
+            let standardReports = try store.load([HazardReport].self, for: Self.storageKey) ?? []
+            let sensitiveReports = try sensitiveHazardReportService?.loadReports() ?? []
+            let mergedReports = Array(
+                Dictionary(
+                    (standardReports + sensitiveReports).map { ($0.id, $0) },
+                    uniquingKeysWith: { _, newest in newest }
+                ).values
+            )
+            reports = mergedReports.filter { !$0.isExpired }
+            previousHazardCount = reports.count
+            previousMaxSeverity = reports.map(\.severity).max() ?? .low
         } catch {
             RediLogger.persistence.error("Failed to load persisted hazard reports: \(error.localizedDescription, privacy: .public)")
         }
@@ -309,7 +351,11 @@ final class HazardIntelligenceService: ObservableObject {
         enforceCapacity()
         guard let store else { return }
         do {
-            try store.save(reports, for: Self.storageKey)
+            let standardReports = reports.filter { !$0.requiresSecureStorage }
+            let sensitiveReports = reports.filter(\.requiresSecureStorage)
+            try store.save(standardReports, for: Self.storageKey)
+            try sensitiveHazardReportService?.saveReports(sensitiveReports)
+            try sensitiveHazardReportMigrationService?.markMigrationCompleted()
         } catch {
             RediLogger.persistence.error("Failed to persist hazard reports: \(error.localizedDescription, privacy: .public)")
         }

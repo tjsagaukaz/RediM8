@@ -146,6 +146,38 @@ enum GuideCategory: String, CaseIterable, Codable, Identifiable {
             false
         }
     }
+
+    /// Safe to surface when the assistant is falling back in operational contexts.
+    var isAssistantFallbackSafe: Bool {
+        switch self {
+        case .firstAid,
+             .disasterResponse,
+             .navigation,
+             .waterSafety,
+             .fireSafety,
+             .medical,
+             .heatSafety,
+             .stormSafety,
+             .floodSafety,
+             .fieldComms,
+             .sanitation,
+             .security,
+             .vehicleSurvival:
+            true
+        case .bushcraft,
+             .foodCooking,
+             .foodGrowing,
+             .wildlife,
+             .trapping,
+             .toolcraft,
+             .psychology,
+             .waterSourcing,
+             .shelterBuilding,
+             .firecraft,
+             .navigationAdvanced:
+            false
+        }
+    }
 }
 
 enum GuideDifficulty: String, Codable, Equatable {
@@ -214,6 +246,7 @@ enum GuideSourceKind: String, Codable, Equatable {
 }
 
 enum GuideDiagramKind: String, Codable, Equatable {
+    case imageAsset
     case pressureBandage
     case recoveryPosition
     case bowline
@@ -264,12 +297,14 @@ struct GuideDiagram: Identifiable, Codable, Equatable {
     let title: String
     let caption: String
     let kind: GuideDiagramKind
+    let assetName: String?
 
-    init(id: String, title: String, caption: String, kind: GuideDiagramKind) {
+    init(id: String, title: String, caption: String, kind: GuideDiagramKind, assetName: String? = nil) {
         self.id = id
         self.title = title
         self.caption = caption
         self.kind = kind
+        self.assetName = assetName
     }
 }
 
@@ -438,9 +473,11 @@ struct Guide: Identifiable, Codable, Equatable {
     }
 
     var searchTerms: [String] {
-        ([title, summary] + tags + steps + sections.flatMap(\.steps))
-            .joined(separator: " ")
-            .lowercased()
+        let sectionSteps = sections.flatMap { $0.steps }
+        let searchableContent = [title, summary] + tags + steps + sectionSteps
+        let normalizedContent = searchableContent.joined(separator: " ").lowercased()
+
+        return normalizedContent
             .split(separator: " ")
             .map(String.init)
     }

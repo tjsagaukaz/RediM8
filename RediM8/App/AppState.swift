@@ -28,6 +28,7 @@ final class AppState: ObservableObject {
     @Published private(set) var proEntitlement: ProEntitlement = .free
 
     var isProUser: Bool { proEntitlement.isPro }
+    let officialAlertNotificationService: OfficialAlertNotificationService
 
     let featureFlags: AppFeatureFlags
     let permissionsManager: PermissionsManager
@@ -138,6 +139,12 @@ final class AppState: ObservableObject {
         stealthNodeID = signalSystem.stealthNodeID
         activePrioritySituation = preparednessSystem.activePrioritySituation
         emergencyUnlockState = mapSystem.emergencyUnlockState
+        officialAlertNotificationService = OfficialAlertNotificationService(
+            officialAlertService: services.officialAlertService,
+            locationService: services.locationService,
+            mapDataService: services.mapDataService,
+            settings: loadedSettings.preparedness
+        )
 
         bindSystems()
         applySettings(loadedSettings, persist: !hasStoredSettings)
@@ -156,6 +163,7 @@ final class AppState: ObservableObject {
         signal.updateSettings(settings)
         map.updateSettings(settings)
         power.updateSettings(settings.battery)
+        officialAlertNotificationService.updateSettings(settings.preparedness)
     }
 
     func mutateProfile(_ update: (inout UserProfile) -> Void) {

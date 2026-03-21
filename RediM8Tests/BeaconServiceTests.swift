@@ -334,6 +334,90 @@ final class BeaconServiceTests: XCTestCase {
         XCTAssertEqual(locationService.activeClientCount, 0)
     }
 
+    @MainActor
+    func testBeaconStatePersistsInSecureStoreInsteadOfSQLite() throws {
+        let context = try makePersistenceContext(testName: #function)
+        let service = BeaconService(
+            meshService: MeshService(),
+            locationService: LocationService(),
+            store: context.store,
+            sensitiveBeaconStateService: context.sensitiveBeaconStateService,
+            sensitiveBeaconMigrationService: context.sensitiveBeaconMigrationService
+        )
+
+        service.recordReceivedBeacon(
+            makeBeacon(
+                id: "beacon_secure",
+                nodeID: "Q1W2",
+                type: .medicalHelp,
+                state: .active,
+                updatedAt: .now,
+                expiresAt: .now.addingTimeInterval(2 * 60 * 60),
+                message: "Need first aid",
+                emergencyMedicalSummary: "Asthma"
+            )
+        )
+
+        let secureState = try context.sensitiveBeaconStateService.loadState()
+        let sqliteNearby = try context.store.load([CommunityBeacon].self, for: BeaconStorageKey.nearbyBeacons)
+        let sqliteNodeID = try context.store.load(String.self, for: BeaconStorageKey.localNodeID)
+
+        XCTAssertEqual(secureState.nearbyBeacons.count, 1)
+        XCTAssertFalse(secureState.localNodeID.isEmpty)
+        XCTAssertTrue(sqliteNearby?.isEmpty ?? true)
+        XCTAssertNil(sqliteNodeID)
+    }
+
+    @MainActor
+    func testBeaconServiceMigratesLegacySQLiteStateIntoSecureStore() throws {
+        let context = try makePersistenceContext(testName: #function)
+        let legacyBeacon = makeBeacon(
+            id: "beacon_legacy",
+            nodeID: "L3G4",
+            type: .needHelp,
+            state: .active,
+            updatedAt: .now,
+            expiresAt: .now.addingTimeInterval(2 * 60 * 60),
+            message: "Need pickup"
+        )
+        let legacyRelayEntry = RelayBacklogEntry(
+            beacon: legacyBeacon,
+            sourcePeerDisplayName: "Scout"
+        )
+
+        try context.store.save("LEGACY1", for: BeaconStorageKey.localNodeID)
+        try context.store.save(Optional(legacyBeacon), for: BeaconStorageKey.activeBeacon)
+        try context.store.save([legacyBeacon], for: BeaconStorageKey.nearbyBeacons)
+        try context.store.save([legacyRelayEntry], for: BeaconStorageKey.relayBacklog)
+
+        let service = BeaconService(
+            meshService: MeshService(),
+            locationService: LocationService(),
+            store: context.store,
+            sensitiveBeaconStateService: context.sensitiveBeaconStateService,
+            sensitiveBeaconMigrationService: context.sensitiveBeaconMigrationService
+        )
+
+        let secureState = try context.sensitiveBeaconStateService.loadState()
+        let sqliteNearby = try context.store.load([CommunityBeacon].self, for: BeaconStorageKey.nearbyBeacons) ?? []
+        let sqliteRelayBacklog = try context.store.load([RelayBacklogEntry].self, for: BeaconStorageKey.relayBacklog) ?? []
+        let migrationCompleted = try context.store.load(Bool.self, for: BeaconStorageKey.secureMigrationCompleted)
+
+        XCTAssertEqual(service.localNodeID, "LEGACY1")
+        XCTAssertEqual(service.nearbyBeacons.count, 1)
+        XCTAssertEqual(service.nearbyBeacons.first?.id, legacyBeacon.id)
+        XCTAssertEqual(service.nearbyBeacons.first?.nodeID, legacyBeacon.nodeID)
+        XCTAssertEqual(secureState.localNodeID, "LEGACY1")
+        XCTAssertEqual(secureState.activeBeacon?.id, legacyBeacon.id)
+        XCTAssertEqual(secureState.activeBeacon?.nodeID, legacyBeacon.nodeID)
+        XCTAssertEqual(secureState.relayBacklog.count, 1)
+        XCTAssertEqual(secureState.relayBacklog.first?.beacon.id, legacyRelayEntry.beacon.id)
+        XCTAssertEqual(secureState.relayBacklog.first?.sourcePeerDisplayName, legacyRelayEntry.sourcePeerDisplayName)
+        XCTAssertTrue(sqliteNearby.isEmpty)
+        XCTAssertTrue(sqliteRelayBacklog.isEmpty)
+        XCTAssertEqual(migrationCompleted, true)
+    }
+
     private func makeBeacon(
         id: String,
         nodeID: String,
@@ -367,6 +451,38 @@ final class BeaconServiceTests: XCTestCase {
             signalMetadata: signalMetadata
         )
     }
+
+    private func makePersistenceContext(testName: String) throws -> BeaconPersistenceContext {
+        let store = try SQLiteStore(filename: "BeaconServiceTests-\(UUID().uuidString).sqlite")
+        let secureBaseURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+            .appendingPathComponent("BeaconServiceTests", isDirectory: true)
+            .appendingPathComponent(testName.replacingOccurrences(of: " ", with: "_"), isDirectory: true)
+        try? FileManager.default.removeItem(at: secureBaseURL)
+
+        let secureStore = SecureStore(
+            namespace: "beacon-service-tests",
+            baseURL: secureBaseURL,
+            keyProvider: FixedSecureStoreKeyProvider(byte: 7),
+            fileManager: .default
+        )
+        let sensitiveBeaconStateService = SensitiveBeaconStateService(secureStore: secureStore)
+        let sensitiveBeaconMigrationService = SensitiveBeaconMigrationService(
+            store: store,
+            sensitiveBeaconStateService: sensitiveBeaconStateService
+        )
+
+        return BeaconPersistenceContext(
+            store: store,
+            sensitiveBeaconStateService: sensitiveBeaconStateService,
+            sensitiveBeaconMigrationService: sensitiveBeaconMigrationService
+        )
+    }
+}
+
+private struct BeaconPersistenceContext {
+    let store: SQLiteStore
+    let sensitiveBeaconStateService: SensitiveBeaconStateService
+    let sensitiveBeaconMigrationService: SensitiveBeaconMigrationService
 }
 
 @MainActor

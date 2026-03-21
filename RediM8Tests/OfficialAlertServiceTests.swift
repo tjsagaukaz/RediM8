@@ -1,4 +1,5 @@
 import CoreLocation
+import UserNotifications
 import XCTest
 @testable import RediM8
 
@@ -142,6 +143,111 @@ final class OfficialAlertServiceTests: XCTestCase {
         ))
     }
 
+    func testJurisdictionAlertsReturnAllActiveAlertsForSelectedState() {
+        let qldAreaAlert = OfficialAlert(
+            id: "qld_area",
+            title: "Brisbane Bushfire Warning",
+            message: "Watch and act.",
+            instruction: nil,
+            issuer: "Queensland Fire and Emergency Services",
+            sourceName: "Queensland Official Warnings",
+            sourceURLString: nil,
+            jurisdiction: .qld,
+            kind: .bushfire,
+            severity: .watchAndAct,
+            regionScope: "Brisbane",
+            area: OfficialAlertArea(
+                description: "Brisbane",
+                center: GeoPoint(latitude: -27.47, longitude: 153.02),
+                radiusKilometres: 10
+            ),
+            issuedAt: .now,
+            lastUpdated: .now,
+            expiresAt: .now.addingTimeInterval(3600)
+        )
+        let qldFeedAlert = OfficialAlert(
+            id: "qld_feed",
+            title: "Queensland Flood Warning",
+            message: "Statewide flood warning.",
+            instruction: nil,
+            issuer: "Bureau of Meteorology",
+            sourceName: "Queensland Official Weather Warnings",
+            sourceURLString: nil,
+            jurisdiction: .qld,
+            kind: .flood,
+            severity: .advice,
+            regionScope: "Queensland",
+            area: nil,
+            issuedAt: .now,
+            lastUpdated: .now,
+            expiresAt: .now.addingTimeInterval(3600)
+        )
+        let nswAlert = OfficialAlert(
+            id: "nsw_feed",
+            title: "New South Wales Flood Warning",
+            message: "Statewide flood warning.",
+            instruction: nil,
+            issuer: "Bureau of Meteorology",
+            sourceName: "NSW Official Weather Warnings",
+            sourceURLString: nil,
+            jurisdiction: .nsw,
+            kind: .flood,
+            severity: .watchAndAct,
+            regionScope: "New South Wales",
+            area: nil,
+            issuedAt: .now,
+            lastUpdated: .now,
+            expiresAt: .now.addingTimeInterval(3600)
+        )
+
+        let service = OfficialAlertService(
+            store: nil,
+            feedSources: [],
+            cachedLibrary: OfficialAlertLibrary(lastUpdated: .now, sources: [], alerts: [qldAreaAlert, qldFeedAlert, nswAlert])
+        )
+
+        XCTAssertEqual(service.alerts(for: .qld).map(\.id), ["qld_area", "qld_feed"])
+        XCTAssertEqual(service.australiaWideAlerts().map(\.id), ["qld_area", "nsw_feed", "qld_feed"])
+    }
+
+    func testPreferredJurisdictionPrefersCurrentLocationThenInstalledPackThenCache() {
+        let service = OfficialAlertService(
+            store: nil,
+            feedSources: [],
+            cachedLibrary: OfficialAlertLibrary(
+                lastUpdated: .now,
+                sources: [
+                    OfficialAlertSource(
+                        id: "tas_feed",
+                        name: "Tasmania Official Weather Warnings",
+                        jurisdiction: .tas,
+                        urlString: "https://example.com/tas"
+                    )
+                ],
+                alerts: []
+            )
+        )
+
+        let qldLocation = CLLocation(latitude: -27.47, longitude: 153.02)
+        let nswPack = try! JSONDecoder().decode(
+            OfflineMapPack.self,
+            from: Data(Self.sampleNSWPack.utf8)
+        )
+
+        XCTAssertEqual(
+            service.preferredJurisdiction(currentLocation: qldLocation, installedPacks: [nswPack]),
+            .qld
+        )
+        XCTAssertEqual(
+            service.preferredJurisdiction(currentLocation: nil, installedPacks: [nswPack]),
+            .nsw
+        )
+        XCTAssertEqual(
+            service.preferredJurisdiction(currentLocation: nil, installedPacks: []),
+            .tas
+        )
+    }
+
     func testParseWAWarningsFeedBuildsOfficialAlertFromGeoJSON() throws {
         let source = OfficialAlertSource(
             id: "wa_warnings",
@@ -160,6 +266,27 @@ final class OfficialAlertServiceTests: XCTestCase {
         XCTAssertEqual(alert.regionScope, "Chidlow, Western Australia")
         XCTAssertNotNil(alert.area)
     }
+
+    private static let sampleNSWPack = """
+    {
+      "id": "nsw_pack",
+      "name": "NSW Regional",
+      "subtitle": "New South Wales",
+      "kind": "regional",
+      "sizeMB": 120,
+      "center": {
+        "latitude": -33.86,
+        "longitude": 151.20
+      },
+      "latitudeDelta": 2,
+      "longitudeDelta": 2,
+      "coverageSummary": "NSW",
+      "supportedLayers": ["officialAlerts"],
+      "isBundledByDefault": false,
+      "lastUpdated": 0,
+      "routingGraphFilename": null
+    }
+    """
 
     @MainActor
     func testRefreshPreservesCachedAlertsForFailedSources() async {
@@ -294,6 +421,103 @@ final class OfficialAlertServiceTests: XCTestCase {
         XCTAssertNil(service.lastRefreshError)
     }
 
+    @MainActor
+    func testOfficialAlertNotificationServiceUsesExistingAlertsAsBaseline() {
+        let alert = OfficialAlert(
+            id: "tas_existing",
+            title: "Tasmania Warning",
+            message: "Existing cached warning.",
+            instruction: nil,
+            issuer: "Bureau of Meteorology",
+            sourceName: "Tasmania Official Weather Warnings",
+            sourceURLString: "https://example.com/tas-warning",
+            jurisdiction: .tas,
+            kind: .flood,
+            severity: .watchAndAct,
+            regionScope: "Tasmania",
+            area: nil,
+            issuedAt: .now,
+            lastUpdated: .now,
+            expiresAt: .now.addingTimeInterval(3600)
+        )
+        let officialAlertService = OfficialAlertService(
+            store: nil,
+            feedSources: [],
+            cachedLibrary: OfficialAlertLibrary(lastUpdated: .now, sources: [], alerts: [alert])
+        )
+        let notificationCenter = OfficialAlertNotificationCenterMock()
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+
+        _ = OfficialAlertNotificationService(
+            officialAlertService: officialAlertService,
+            locationService: LocationService(permissionsManager: .live),
+            mapDataService: makeMapDataService(),
+            settings: PreparednessSettings(
+                prepScoreNotificationsEnabled: true,
+                seventyTwoHourPlanAlertsEnabled: true,
+                goBagRemindersEnabled: true,
+                officialAlertNotificationsEnabled: true,
+                officialAlertNotificationScope: .state,
+                officialAlertNotificationJurisdiction: .tas
+            ),
+            notificationCenter: notificationCenter,
+            userDefaults: defaults
+        )
+
+        XCTAssertTrue(notificationCenter.requests.isEmpty)
+    }
+
+    @MainActor
+    func testOfficialAlertNotificationServiceSchedulesNewStateAlertAfterRefresh() async {
+        let source = OfficialAlertService.FeedSource(
+            id: "tas_feed",
+            name: "Tasmania Official Weather Warnings",
+            jurisdiction: .tas,
+            url: URL(string: "https://example.com/tas.xml")!,
+            format: .rss
+        )
+        let session = makeRefreshSession { request in
+            XCTAssertEqual(request.url?.absoluteString, source.url.absoluteString)
+            return (
+                HTTPURLResponse(url: source.url, statusCode: 200, httpVersion: nil, headerFields: nil)!,
+                Data(Self.sampleRSSFeed.data(using: .utf8)!)
+            )
+        }
+
+        let officialAlertService = OfficialAlertService(
+            store: nil,
+            session: session,
+            feedSources: [source],
+            cachedLibrary: .empty
+        )
+        let notificationCenter = OfficialAlertNotificationCenterMock()
+        let defaults = UserDefaults(suiteName: #function)!
+        defaults.removePersistentDomain(forName: #function)
+        let alertNotificationService = OfficialAlertNotificationService(
+            officialAlertService: officialAlertService,
+            locationService: LocationService(permissionsManager: .live),
+            mapDataService: makeMapDataService(),
+            settings: PreparednessSettings(
+                prepScoreNotificationsEnabled: true,
+                seventyTwoHourPlanAlertsEnabled: true,
+                goBagRemindersEnabled: true,
+                officialAlertNotificationsEnabled: true,
+                officialAlertNotificationScope: .state,
+                officialAlertNotificationJurisdiction: .tas
+            ),
+            notificationCenter: notificationCenter,
+            userDefaults: defaults
+        )
+
+        await officialAlertService.refresh()
+        _ = alertNotificationService
+        await waitForNotificationRequest(on: notificationCenter)
+
+        XCTAssertEqual(notificationCenter.requests.count, 1)
+        XCTAssertTrue(notificationCenter.requests[0].content.title.contains("Tasmania"))
+    }
+
     private func makeRefreshSession(
         handler: @escaping (URLRequest) throws -> (HTTPURLResponse, Data)
     ) -> URLSession {
@@ -301,6 +525,32 @@ final class OfficialAlertServiceTests: XCTestCase {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [OfficialAlertMockURLProtocol.self]
         return URLSession(configuration: configuration)
+    }
+
+    private func makeMapDataService() -> MapDataService {
+        let bundle = Bundle.main
+        let waterPointService = WaterPointService(bundle: bundle)
+        let fireTrailService = FireTrailService(bundle: bundle)
+        let shelterService = ShelterService(bundle: bundle)
+        return MapDataService(
+            store: nil,
+            bundle: bundle,
+            waterPointService: waterPointService,
+            fireTrailService: fireTrailService,
+            shelterService: shelterService
+        )
+    }
+
+    private func waitForNotificationRequest(
+        on notificationCenter: OfficialAlertNotificationCenterMock,
+        timeoutNanoseconds: UInt64 = 1_000_000_000
+    ) async {
+        let startedAt = DispatchTime.now().uptimeNanoseconds
+
+        while notificationCenter.requests.isEmpty,
+              DispatchTime.now().uptimeNanoseconds - startedAt < timeoutNanoseconds {
+            try? await Task.sleep(nanoseconds: 25_000_000)
+        }
     }
 
     private static let sampleCAPFeed = """
@@ -437,4 +687,22 @@ private final class OfficialAlertMockURLProtocol: URLProtocol {
     }
 
     override func stopLoading() {}
+}
+
+private final class OfficialAlertNotificationCenterMock: OfficialAlertNotificationCentering {
+    var authorizationState: UNAuthorizationStatus = .authorized
+    private(set) var requests: [UNNotificationRequest] = []
+
+    func requestAuthorization(options _: UNAuthorizationOptions) async throws -> Bool {
+        authorizationState = .authorized
+        return true
+    }
+
+    func authorizationStatus() async -> UNAuthorizationStatus {
+        authorizationState
+    }
+
+    func add(_ request: UNNotificationRequest) async throws {
+        requests.append(request)
+    }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UserNotifications
 
 @MainActor
 final class QuickActionCoordinator {
@@ -39,11 +40,23 @@ final class QuickActionCoordinator {
     }
 }
 
-final class RediM8AppDelegate: NSObject, UIApplicationDelegate {
+final class RediM8AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        UNUserNotificationCenter.current().delegate = self
+        return true
+    }
+
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
         let configuration = UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
         configuration.delegateClass = RediM8SceneDelegate.self
         return configuration
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        [.banner, .list, .sound]
     }
 }
 
@@ -68,12 +81,24 @@ final class RediM8SceneDelegate: UIResponder, UIWindowSceneDelegate {
 @main
 struct RediM8App: App {
     @UIApplicationDelegateAdaptor(RediM8AppDelegate.self) private var appDelegate
-    @StateObject private var appState = AppState()
-    @StateObject private var navigationRouter = NavigationRouter()
+    @StateObject private var appState: AppState
+    @StateObject private var navigationRouter: NavigationRouter
+    private let launchConfiguration: AppLaunchConfiguration
+
+    init() {
+        let launchConfiguration = AppLaunchConfiguration.current()
+        self.launchConfiguration = launchConfiguration
+        _appState = StateObject(wrappedValue: AppState(environment: launchConfiguration.environment))
+        _navigationRouter = StateObject(wrappedValue: NavigationRouter())
+    }
 
     var body: some Scene {
         WindowGroup {
-            RootView(appState: appState, router: navigationRouter)
+            RootView(
+                appState: appState,
+                router: navigationRouter,
+                launchConfiguration: launchConfiguration
+            )
                 .preferredColorScheme(.dark)
         }
     }

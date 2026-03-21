@@ -45,7 +45,7 @@ struct BeaconRuntimeSettings: Equatable {
     )
 }
 
-private struct RelayBacklogEntry: Codable, Equatable, Identifiable {
+struct RelayBacklogEntry: Codable, Equatable, Identifiable {
     let id: String
     var beacon: CommunityBeacon
     var sourcePeerDisplayName: String?
@@ -75,13 +75,6 @@ private struct RelayBacklogEntry: Codable, Equatable, Identifiable {
 
 @MainActor
 final class BeaconService: ObservableObject {
-    private enum StorageKey {
-        static let activeBeacon = "community_beacon.active"
-        static let nearbyBeacons = "community_beacon.nearby"
-        static let localNodeID = "community_beacon.local_node_id"
-        static let relayBacklog = "community_beacon.relay_backlog"
-    }
-
     @Published private(set) var activeBeacon: CommunityBeacon?
     @Published private(set) var nearbyBeacons: [CommunityBeacon]
     @Published private(set) var localNodeID: String
@@ -89,6 +82,8 @@ final class BeaconService: ObservableObject {
     private let meshService: MeshService
     private let locationService: LocationService
     private let store: SQLiteStore?
+    private let sensitiveBeaconStateService: SensitiveBeaconStateService?
+    private let sensitiveBeaconMigrationService: SensitiveBeaconMigrationService?
     private var runtimeSettings: BeaconRuntimeSettings = .default
     private var cancellables = Set<AnyCancellable>()
     private var maintenanceTicker: AnyCancellable?
@@ -99,40 +94,45 @@ final class BeaconService: ObservableObject {
     private var isMeshServiceActive = false
     private var isLocationServiceActive = false
 
-    init(meshService: MeshService, locationService: LocationService, store: SQLiteStore?) {
+    init(
+        meshService: MeshService,
+        locationService: LocationService,
+        store: SQLiteStore?,
+        sensitiveBeaconStateService: SensitiveBeaconStateService? = nil,
+        sensitiveBeaconMigrationService: SensitiveBeaconMigrationService? = nil
+    ) {
         self.meshService = meshService
         self.locationService = locationService
         self.store = store
+        let resolvedSensitiveBeaconStateService = sensitiveBeaconStateService ?? store.map {
+            SensitiveBeaconStateService(
+                secureStore: SecureStore(namespace: "beacon-\($0.storageNamespace)")
+            )
+        }
+        self.sensitiveBeaconStateService = resolvedSensitiveBeaconStateService
+        self.sensitiveBeaconMigrationService = sensitiveBeaconMigrationService ?? {
+            guard let store, let resolvedSensitiveBeaconStateService else {
+                return nil
+            }
+            return SensitiveBeaconMigrationService(
+                store: store,
+                sensitiveBeaconStateService: resolvedSensitiveBeaconStateService
+            )
+        }()
+        activeBeacon = nil
+        nearbyBeacons = []
+        localNodeID = ""
+        relayBacklog = []
 
-        let persistedNodeID: String?
-        if let store {
-            persistedNodeID = try? store.load(String.self, for: StorageKey.localNodeID)
-        } else {
-            persistedNodeID = nil
-        }
-        let nodeID = persistedNodeID ?? Self.generateNodeID()
+        let persistedState = loadPersistedState()
+        let nodeID = persistedState.localNodeID.nilIfBlank ?? Self.generateNodeID()
         localNodeID = nodeID
-        if persistedNodeID == nil {
-            try? store?.save(nodeID, for: StorageKey.localNodeID)
-        }
 
         let now = Date()
-        let storedBeacons: [CommunityBeacon]
-        if let store, let loaded = try? store.load([CommunityBeacon].self, for: StorageKey.nearbyBeacons) {
-            storedBeacons = loaded
-        } else {
-            storedBeacons = []
-        }
-        nearbyBeacons = Self.sorted(Self.pruned(storedBeacons, now: now, excludingNodeID: nodeID))
+        nearbyBeacons = Self.sorted(Self.pruned(persistedState.nearbyBeacons, now: now, excludingNodeID: nodeID))
 
-        let storedActive: CommunityBeacon?
-        if let store {
-            storedActive = try? store.load(CommunityBeacon.self, for: StorageKey.activeBeacon)
-        } else {
-            storedActive = nil
-        }
         let shouldClearStoredActive: Bool
-        if let storedActive, !storedActive.isExpired {
+        if let storedActive = persistedState.activeBeacon, !storedActive.isExpired {
             activeBeacon = storedActive
             shouldClearStoredActive = false
         } else {
@@ -140,19 +140,12 @@ final class BeaconService: ObservableObject {
             shouldClearStoredActive = true
         }
 
-        let storedRelayBacklog: [RelayBacklogEntry]
-        if let store, let loaded = try? store.load([RelayBacklogEntry].self, for: StorageKey.relayBacklog) {
-            storedRelayBacklog = loaded
-        } else {
-            storedRelayBacklog = []
-        }
-        relayBacklog = Self.pruned(storedRelayBacklog, now: now, excludingNodeID: nodeID)
+        relayBacklog = Self.pruned(persistedState.relayBacklog, now: now, excludingNodeID: nodeID)
 
         if shouldClearStoredActive {
-            clearActiveBeaconFromStore()
+            activeBeacon = nil
         }
-        persistNearbyBeacons()
-        persistRelayBacklog()
+        persistState()
 
         meshService.receivedBeacons
             .sink { [weak self] received in
@@ -333,9 +326,8 @@ final class BeaconService: ObservableObject {
         localNodeID = nodeID
         inviteTimestamps = [:]
         clearRelayBacklog()
-        try? store?.save(nodeID, for: StorageKey.localNodeID)
         nearbyBeacons = Self.sorted(Self.pruned(nearbyBeacons, now: .now, excludingNodeID: nodeID))
-        persistNearbyBeacons()
+        persistState()
         syncOperatingServices()
         return nodeID
     }
@@ -659,23 +651,78 @@ final class BeaconService: ObservableObject {
     }
 
     private func persistActiveBeacon() {
-        if let activeBeacon {
-            try? store?.save(activeBeacon, for: StorageKey.activeBeacon)
-        } else {
-            clearActiveBeaconFromStore()
-        }
+        persistState()
     }
 
     private func clearActiveBeaconFromStore() {
-        try? store?.save(Optional<CommunityBeacon>.none, for: StorageKey.activeBeacon)
+        persistState()
     }
 
     private func persistNearbyBeacons() {
-        try? store?.save(nearbyBeacons, for: StorageKey.nearbyBeacons)
+        persistState()
     }
 
     private func persistRelayBacklog() {
-        try? store?.save(relayBacklog, for: StorageKey.relayBacklog)
+        persistState()
+    }
+
+    private func persistState() {
+        let state = SensitiveBeaconState(
+            localNodeID: localNodeID,
+            activeBeacon: activeBeacon,
+            nearbyBeacons: nearbyBeacons,
+            relayBacklog: relayBacklog
+        )
+
+        do {
+            if let sensitiveBeaconStateService {
+                try sensitiveBeaconStateService.saveState(state)
+                try sensitiveBeaconMigrationService?.markMigrationCompleted()
+            } else {
+                try store?.save(localNodeID, for: BeaconStorageKey.localNodeID)
+                try store?.save(activeBeacon, for: BeaconStorageKey.activeBeacon)
+                try store?.save(nearbyBeacons, for: BeaconStorageKey.nearbyBeacons)
+                try store?.save(relayBacklog, for: BeaconStorageKey.relayBacklog)
+            }
+        } catch {
+            RediLogger.persistence.error("Failed to persist secure beacon state: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func loadPersistedState() -> SensitiveBeaconState {
+        do {
+            try sensitiveBeaconMigrationService?.runIfNeeded()
+        } catch {
+            RediLogger.persistence.error("Failed to migrate secure beacon state: \(error.localizedDescription, privacy: .public)")
+        }
+
+        do {
+            if let sensitiveBeaconStateService {
+                return try sensitiveBeaconStateService.loadState()
+            }
+        } catch {
+            RediLogger.persistence.error("Failed to load secure beacon state: \(error.localizedDescription, privacy: .public)")
+        }
+
+        return loadLegacyPersistedState()
+    }
+
+    private func loadLegacyPersistedState() -> SensitiveBeaconState {
+        guard let store else {
+            return .empty
+        }
+
+        let localNodeID = (try? store.load(String.self, for: BeaconStorageKey.localNodeID)) ?? ""
+        let activeBeacon = (try? store.load(Optional<CommunityBeacon>.self, for: BeaconStorageKey.activeBeacon)) ?? nil
+        let nearbyBeacons = (try? store.load([CommunityBeacon].self, for: BeaconStorageKey.nearbyBeacons)) ?? []
+        let relayBacklog = (try? store.load([RelayBacklogEntry].self, for: BeaconStorageKey.relayBacklog)) ?? []
+
+        return SensitiveBeaconState(
+            localNodeID: localNodeID,
+            activeBeacon: activeBeacon,
+            nearbyBeacons: nearbyBeacons,
+            relayBacklog: relayBacklog
+        )
     }
 
     private static func pruned(_ beacons: [CommunityBeacon], now: Date, excludingNodeID nodeID: String) -> [CommunityBeacon] {

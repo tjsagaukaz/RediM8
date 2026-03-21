@@ -14,6 +14,7 @@ extension AppState {
     var scenarioEngine: ScenarioEngine { preparedness.scenarioEngine }
     var prepService: PrepService { preparedness.prepService }
     var preparednessInsightsService: PreparednessInsightsService { preparedness.preparednessInsightsService }
+    var preparednessGearRecommendationService: PreparednessGearRecommendationService { services.preparednessGearRecommendationService }
     var decisionSupportService: DecisionSupportService { preparedness.decisionSupportService }
     var vehicleReadinessService: VehicleReadinessService { preparedness.vehicleReadinessService }
     var waterRuntimeService: WaterRuntimeService { preparedness.waterRuntimeService }

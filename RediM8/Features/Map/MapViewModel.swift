@@ -4,6 +4,53 @@ import Foundation
 import MapKit
 import SwiftUI
 
+enum MapOfficialAlertScope: String, CaseIterable, Hashable, Identifiable {
+    case local
+    case state
+    case australia
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .local:
+            "Local"
+        case .state:
+            "State"
+        case .australia:
+            "Australia"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .local:
+            "Map match"
+        case .state:
+            "Jurisdiction feed"
+        case .australia:
+            "National view"
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .local:
+            "map_marker"
+        case .state:
+            "map"
+        case .australia:
+            "warning"
+        }
+    }
+}
+
+struct MapOfficialAlertSummary: Equatable {
+    let title: String
+    let detail: String
+    let tone: OperationalStatusTone
+}
+
 @MainActor
 final class MapViewModel: ObservableObject {
     @Published private(set) var bundledResources: [ResourceMarker]
@@ -749,6 +796,138 @@ final class MapViewModel: ObservableObject {
         return items
     }
 
+    var hasCachedOfficialAlerts: Bool {
+        officialAlertService.hasCachedData
+    }
+
+    var defaultOfficialAlertJurisdiction: AustralianJurisdiction? {
+        officialAlertService.preferredJurisdiction(
+            currentLocation: currentLocation,
+            installedPacks: installedPacks
+        )
+    }
+
+    var availableOfficialAlertJurisdictions: [AustralianJurisdiction] {
+        var ordered: [AustralianJurisdiction] = []
+
+        if let preferred = defaultOfficialAlertJurisdiction {
+            ordered.append(preferred)
+        }
+
+        for jurisdiction in AustralianJurisdiction.allCases.sorted(by: { $0.title < $1.title }) where !ordered.contains(jurisdiction) {
+            ordered.append(jurisdiction)
+        }
+
+        return ordered
+    }
+
+    func officialAlerts(for scope: MapOfficialAlertScope, jurisdiction: AustralianJurisdiction?) -> [OfficialAlert] {
+        switch scope {
+        case .local:
+            return nearbyOfficialAlerts
+        case .state:
+            guard let jurisdiction else {
+                return []
+            }
+            return officialAlertService.alerts(for: jurisdiction)
+        case .australia:
+            return officialAlertService.australiaWideAlerts()
+        }
+    }
+
+    func officialAlertSummary(for scope: MapOfficialAlertScope, jurisdiction: AustralianJurisdiction?) -> MapOfficialAlertSummary {
+        switch scope {
+        case .local:
+            return MapOfficialAlertSummary(
+                title: officialAlertHeadline,
+                detail: officialAlertDetail,
+                tone: officialAlertTone
+            )
+        case .state:
+            return stateAlertSummary(for: jurisdiction)
+        case .australia:
+            return australiaAlertSummary()
+        }
+    }
+
+    func scopedOfficialAlertTrustItems(for scope: MapOfficialAlertScope, jurisdiction: AustralianJurisdiction?) -> [TrustPillItem] {
+        let alerts = officialAlerts(for: scope, jurisdiction: jurisdiction)
+        var items = [
+            TrustPillItem(title: "Official", tone: .verified),
+            TrustPillItem(title: "Mirrored", tone: .info)
+        ]
+
+        switch scope {
+        case .local:
+            items.append(TrustPillItem(title: "Map-local", tone: .info))
+        case .state:
+            items.append(
+                TrustPillItem(
+                    title: jurisdiction.map { "\($0.shortTitle) scope" } ?? "State scope",
+                    tone: .info
+                )
+            )
+        case .australia:
+            items.append(TrustPillItem(title: "Australia-wide", tone: .info))
+        }
+
+        if let alert = alerts.first {
+            items.append(TrustPillItem(title: alert.scopeTrustLabel, tone: alert.isAreaScoped ? .verified : .caution))
+            items.append(TrustPillItem(title: TrustLayer.freshnessLabel(for: alert.lastUpdated), tone: .neutral))
+        } else if officialAlertService.hasCachedData {
+            items.append(TrustPillItem(title: TrustLayer.freshnessLabel(for: officialAlertService.library.lastUpdated), tone: .neutral))
+            if scope == .state,
+               let jurisdiction,
+               !officialAlertService.cachedJurisdictions.contains(jurisdiction) {
+                items.append(TrustPillItem(title: "Not cached yet", tone: .caution))
+            }
+        } else {
+            items.append(TrustPillItem(title: "Offline cache empty", tone: .caution))
+        }
+
+        return items
+    }
+
+    func officialAlertCountSummary(for scope: MapOfficialAlertScope, jurisdiction: AustralianJurisdiction?) -> String? {
+        let alerts = officialAlerts(for: scope, jurisdiction: jurisdiction)
+        guard !alerts.isEmpty else {
+            return nil
+        }
+
+        switch scope {
+        case .local:
+            return alerts.count == 1
+                ? "1 official alert matched this map area or installed coverage."
+                : "\(alerts.count) official alerts matched this map area or installed coverage."
+        case .state:
+            guard let jurisdiction else {
+                return nil
+            }
+            return alerts.count == 1
+                ? "1 official alert is active in the \(jurisdiction.shortTitle) feed."
+                : "\(alerts.count) official alerts are active in the \(jurisdiction.shortTitle) feed."
+        case .australia:
+            return alerts.count == 1
+                ? "1 official alert is active across cached Australian feeds."
+                : "\(alerts.count) official alerts are active across cached Australian feeds."
+        }
+    }
+
+    func officialAlertScopeLine(for alert: OfficialAlert, scope: MapOfficialAlertScope) -> String {
+        switch scope {
+        case .local:
+            return officialAlertDistanceText(for: alert)
+        case .state:
+            return alert.isAreaScoped ? "\(alert.regionScope) • \(alert.jurisdiction.shortTitle)" : "\(alert.jurisdiction.shortTitle) statewide feed"
+        case .australia:
+            return alert.isAreaScoped ? "\(alert.regionScope) • \(alert.jurisdiction.shortTitle)" : "\(alert.jurisdiction.title) statewide"
+        }
+    }
+
+    func officialAlertUpdatedLine(for alert: OfficialAlert) -> String {
+        "Updated \(DateFormatter.rediM8Short.string(from: alert.lastUpdated))"
+    }
+
     var savedRouteSummary: String {
         guard let firstRoute = savedRoutes.first else {
             return "No saved evacuation route yet. RediM8 can still show shelters and water offline, but route choice becomes manual."
@@ -1264,6 +1443,107 @@ final class MapViewModel: ObservableObject {
             return jurisdiction.title
         }
         return "\(count) jurisdictions"
+    }
+
+    private func stateAlertSummary(for jurisdiction: AustralianJurisdiction?) -> MapOfficialAlertSummary {
+        guard let jurisdiction else {
+            return MapOfficialAlertSummary(
+                title: "State scope unavailable",
+                detail: "Choose a state or territory to review that mirrored official warning feed on the map.",
+                tone: .info
+            )
+        }
+
+        let alerts = officialAlertService.alerts(for: jurisdiction)
+        if let alert = alerts.first {
+            let updated = DateFormatter.rediM8Short.string(from: alert.lastUpdated)
+            if alerts.count == 1 {
+                let detail = alert.isAreaScoped
+                    ? "\(alert.severity.title) in \(alert.regionScope). Updated \(updated)."
+                    : "\(alert.severity.title) statewide feed from \(alert.issuer). Confirm exact areas in the official source. Updated \(updated)."
+                return MapOfficialAlertSummary(
+                    title: alert.title,
+                    detail: detail,
+                    tone: tone(for: alert)
+                )
+            }
+
+            let areaScopedCount = alerts.filter(\.isAreaScoped).count
+            let statewideCount = alerts.count - areaScopedCount
+            return MapOfficialAlertSummary(
+                title: "\(alerts.count) official alerts in \(jurisdiction.shortTitle)",
+                detail: "Highest severity: \(alert.severity.title). \(areaScopedCount) area-scoped, \(statewideCount) statewide feed. Updated \(updated).",
+                tone: tone(for: alert)
+            )
+        }
+
+        if !officialAlertService.hasCachedData {
+            return MapOfficialAlertSummary(
+                title: "Official alerts syncing",
+                detail: "Connect once so RediM8 can cache public warnings for offline map access.",
+                tone: .info
+            )
+        }
+
+        if !officialAlertService.cachedJurisdictions.contains(jurisdiction) {
+            return MapOfficialAlertSummary(
+                title: "\(jurisdiction.shortTitle) feed not cached",
+                detail: "Connect once so RediM8 can mirror \(jurisdiction.title) official warnings for offline access.",
+                tone: .info
+            )
+        }
+
+        return MapOfficialAlertSummary(
+            title: "No active \(jurisdiction.shortTitle) alerts",
+            detail: "Monitoring cached \(jurisdiction.title) warning sources for this map view.",
+            tone: .ready
+        )
+    }
+
+    private func australiaAlertSummary() -> MapOfficialAlertSummary {
+        let alerts = officialAlertService.australiaWideAlerts()
+
+        if let alert = alerts.first {
+            let updated = DateFormatter.rediM8Short.string(from: alert.lastUpdated)
+            if alerts.count == 1 {
+                return MapOfficialAlertSummary(
+                    title: alert.title,
+                    detail: "\(alert.severity.title) in \(alert.jurisdiction.title). Updated \(updated).",
+                    tone: tone(for: alert)
+                )
+            }
+
+            return MapOfficialAlertSummary(
+                title: "\(alerts.count) official alerts across Australia",
+                detail: "Highest severity: \(alert.severity.title). Mirroring cached warning feeds across \(officialCoverageSummary). Updated \(updated).",
+                tone: tone(for: alert)
+            )
+        }
+
+        if !officialAlertService.hasCachedData {
+            return MapOfficialAlertSummary(
+                title: "Official alerts syncing",
+                detail: "Connect once so RediM8 can cache public warnings for offline map access.",
+                tone: .info
+            )
+        }
+
+        return MapOfficialAlertSummary(
+            title: "No active alerts across Australia",
+            detail: "Monitoring cached warning feeds across \(officialCoverageSummary).",
+            tone: .ready
+        )
+    }
+
+    private func tone(for alert: OfficialAlert) -> OperationalStatusTone {
+        switch alert.severity {
+        case .advice:
+            return .info
+        case .watchAndAct:
+            return .caution
+        case .emergencyWarning:
+            return .danger
+        }
     }
 
     func trackSafetyColor(for label: TrackSafetyLabel) -> Color {

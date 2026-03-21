@@ -13,6 +13,9 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertFalse(settings.signalDiscovery.allowsBeaconBroadcasts)
         XCTAssertTrue(settings.signalDiscovery.autoAcceptsMessages)
         XCTAssertEqual(settings.signalDiscovery.rangeMode, .balanced)
+        XCTAssertFalse(settings.preparedness.officialAlertNotificationsEnabled)
+        XCTAssertEqual(settings.preparedness.officialAlertNotificationScope, .local)
+        XCTAssertNil(settings.preparedness.officialAlertNotificationJurisdiction)
         XCTAssertTrue(settings.battery.enablesSurvivalModeAtFifteenPercent)
     }
 
@@ -75,5 +78,24 @@ final class AppSettingsTests: XCTestCase {
             summary,
             "Diabetes, Asthma • Allergies: Peanuts • Medication: Inhaler in top pocket • Blood type: O+ • Uses hearing aid"
         )
+    }
+
+    func testPreparednessSettingsDecodeMissingOfficialAlertNotificationFieldsWithDefaults() throws {
+        let legacyJSON = """
+        {
+          "prepScoreNotificationsEnabled": true,
+          "seventyTwoHourPlanAlertsEnabled": true,
+          "goBagRemindersEnabled": false
+        }
+        """
+
+        let decoded = try JSONDecoder.rediM8.decode(
+            PreparednessSettings.self,
+            from: Data(legacyJSON.utf8)
+        )
+
+        XCTAssertFalse(decoded.officialAlertNotificationsEnabled)
+        XCTAssertEqual(decoded.officialAlertNotificationScope, .local)
+        XCTAssertNil(decoded.officialAlertNotificationJurisdiction)
     }
 }

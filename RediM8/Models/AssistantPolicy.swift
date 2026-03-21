@@ -1,6 +1,22 @@
 import Foundation
 
 enum AssistantIntentTopic: String, CaseIterable, Codable, Equatable {
+    case medicalEmergency = "medical_emergency"
+    case traumaInjury = "trauma_injury"
+    case biteStingToxin = "bite_sting_toxin"
+    case poisoningExposure = "poisoning_exposure"
+    case environmentalExposure = "environmental_exposure"
+    case survivalWater = "survival_water"
+    case survivalFood = "survival_food"
+    case survivalShelter = "survival_shelter"
+    case survivalFire = "survival_fire"
+    case survivalFloodStorm = "survival_flood_storm"
+    case blackoutResponse = "blackout_response"
+    case communicationsResponse = "communications_response"
+    case navigationResponse = "navigation_response"
+    case vehicleResponse = "vehicle_response"
+    case sanitationResponse = "sanitation_response"
+    case goBagResponse = "go_bag_response"
     case snakeBite = "snake_bite"
     case cpr
     case majorBleeding = "major_bleeding"

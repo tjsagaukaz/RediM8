@@ -16,6 +16,8 @@ struct MapView: View {
     @State private var isShowingDirtRoads = false
     @State private var isShowingFireTrails = false
     @State private var isShowingOfficialAlerts = false
+    @State private var selectedOfficialAlertScope: MapOfficialAlertScope = .local
+    @State private var selectedOfficialAlertJurisdiction: AustralianJurisdiction?
     @State private var isShowingBeacons = false
     @State private var isShowingMarkers = false
     @State private var isShowingResources = false
@@ -195,6 +197,49 @@ struct MapView: View {
 
     private var supportLayers: [MapLayer] {
         viewModel.availableLayers.filter { ![.waterPoints, .evacuationPoints, .officialAlerts].contains($0) }
+    }
+
+    private var effectiveOfficialAlertJurisdiction: AustralianJurisdiction? {
+        selectedOfficialAlertJurisdiction
+            ?? viewModel.defaultOfficialAlertJurisdiction
+            ?? viewModel.availableOfficialAlertJurisdictions.first
+    }
+
+    private var selectedOfficialAlertSummary: MapOfficialAlertSummary {
+        viewModel.officialAlertSummary(
+            for: selectedOfficialAlertScope,
+            jurisdiction: effectiveOfficialAlertJurisdiction
+        )
+    }
+
+    private var selectedOfficialAlerts: [OfficialAlert] {
+        viewModel.officialAlerts(
+            for: selectedOfficialAlertScope,
+            jurisdiction: effectiveOfficialAlertJurisdiction
+        )
+    }
+
+    private var officialAlertScopeOptions: [PremiumSegmentedControlOption<MapOfficialAlertScope>] {
+        MapOfficialAlertScope.allCases.map { scope in
+            PremiumSegmentedControlOption(
+                segmentID: scope,
+                title: scope.title,
+                detail: scope.detail,
+                iconName: scope.iconName,
+                accent: officialAlertToneColor(selectedOfficialAlertSummary.tone)
+            )
+        }
+    }
+
+    private var officialAlertLayerSubtitle: String {
+        switch selectedOfficialAlertScope {
+        case .local:
+            return "Mirrored public warnings matched to this map area and installed coverage."
+        case .state:
+            return "Check a state or territory feed for family, travel, or wider operational context."
+        case .australia:
+            return "Scan the national warning picture across cached official feeds."
+        }
     }
 
     private var nextActionRecommendation: MapNextAction {
@@ -1471,42 +1516,12 @@ struct MapView: View {
     private var officialAlertsInspector: some View {
         inspectorGroup(
             title: "Official Alerts",
-            subtitle: "Mirrored public warnings cached for offline map use.",
-            accent: officialAlertColor
+            subtitle: officialAlertLayerSubtitle,
+            accent: officialAlertToneColor(selectedOfficialAlertSummary.tone)
         ) {
-            HStack(alignment: .top, spacing: 12) {
-                RediIcon(viewModel.topOfficialAlert?.kind.systemImage ?? "warning")
-                    .foregroundStyle(officialAlertColor)
-                    .frame(width: 18, height: 18)
-                    .padding(10)
-                    .background(officialAlertColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("OFFICIAL ALERTS")
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(officialAlertColor)
-                    Text(viewModel.officialAlertHeadline)
-                        .font(.headline)
-                        .foregroundStyle(ColorTheme.text)
-                    Text(viewModel.officialAlertDetail)
-                        .font(.subheadline)
-                        .foregroundStyle(ColorTheme.textMuted)
-                }
-
-                Spacer(minLength: 0)
-            }
-
-            TrustPillGroup(items: viewModel.officialAlertOverviewTrustItems)
-
-            if let topOfficialAlert = viewModel.topOfficialAlert {
-                Text(viewModel.officialAlertSafetyNote(for: topOfficialAlert))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("RediM8 mirrors public warnings when a recent snapshot is available. It does not replace official emergency alerts.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            Text("Switch between local, state, and Australia-wide warning views without leaving the map.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
             officialAlertsContent
         }
@@ -1692,11 +1707,11 @@ struct MapView: View {
                 }
             }
 
-            if viewModel.isLayerEnabled(.officialAlerts) || !viewModel.nearbyOfficialAlerts.isEmpty {
+            if viewModel.isLayerEnabled(.officialAlerts) || viewModel.hasCachedOfficialAlerts {
                 CollapsiblePanelCard(
                     title: "Official Alert Layer",
-                    subtitle: "Mirrored public warnings for your current area.",
-                    accent: officialAlertColor,
+                    subtitle: officialAlertLayerSubtitle,
+                    accent: officialAlertToneColor(selectedOfficialAlertSummary.tone),
                     isExpanded: $isShowingOfficialAlerts
                 ) {
                     officialAlertsContent
@@ -1738,19 +1753,104 @@ struct MapView: View {
 
     private var officialAlertsContent: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Official warning issued by emergency authorities. RediM8 mirrors this information and keeps it visible offline after the last successful refresh.")
+            PremiumSegmentedControl(items: officialAlertScopeOptions, selection: $selectedOfficialAlertScope)
+
+            if selectedOfficialAlertScope == .state {
+                officialAlertJurisdictionPicker
+            }
+
+            HStack(alignment: .top, spacing: 12) {
+                RediIcon(selectedOfficialAlerts.first?.kind.systemImage ?? "warning")
+                    .foregroundStyle(officialAlertToneColor(selectedOfficialAlertSummary.tone))
+                    .frame(width: 18, height: 18)
+                    .padding(10)
+                    .background(
+                        officialAlertToneColor(selectedOfficialAlertSummary.tone).opacity(0.14),
+                        in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    )
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("OFFICIAL ALERTS")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(officialAlertToneColor(selectedOfficialAlertSummary.tone))
+                    Text(selectedOfficialAlertSummary.title)
+                        .font(.headline)
+                        .foregroundStyle(ColorTheme.text)
+                    Text(selectedOfficialAlertSummary.detail)
+                        .font(.subheadline)
+                        .foregroundStyle(ColorTheme.textMuted)
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            TrustPillGroup(items: viewModel.scopedOfficialAlertTrustItems(for: selectedOfficialAlertScope, jurisdiction: effectiveOfficialAlertJurisdiction))
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 12) {
+                    officialAlertMetaCard(
+                        title: "Official Feed",
+                        value: selectedOfficialAlerts.first?.issuer ?? "Cached mirror"
+                    )
+                    officialAlertMetaCard(
+                        title: "Scope",
+                        value: selectedOfficialAlertScope == .state
+                            ? (effectiveOfficialAlertJurisdiction?.title ?? "Select a state")
+                            : selectedOfficialAlertScope.title
+                    )
+                }
+
+                VStack(spacing: 12) {
+                    officialAlertMetaCard(
+                        title: "Official Feed",
+                        value: selectedOfficialAlerts.first?.issuer ?? "Cached mirror"
+                    )
+                    officialAlertMetaCard(
+                        title: "Scope",
+                        value: selectedOfficialAlertScope == .state
+                            ? (effectiveOfficialAlertJurisdiction?.title ?? "Select a state")
+                            : selectedOfficialAlertScope.title
+                    )
+                }
+            }
+
+            if let countSummary = viewModel.officialAlertCountSummary(
+                for: selectedOfficialAlertScope,
+                jurisdiction: effectiveOfficialAlertJurisdiction
+            ) {
+                Text(countSummary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if selectedOfficialAlerts.isEmpty {
+                Text("No active alerts are currently listed for this scope.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(14)
+                    .background(Color.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            } else {
+                ForEach(Array(selectedOfficialAlerts.prefix(4))) { alert in
+                    officialAlertRow(alert, scope: selectedOfficialAlertScope)
+                }
+            }
+
+            if selectedOfficialAlerts.count > 4 {
+                Text("Showing the first 4 of \(selectedOfficialAlerts.count) alerts in this scope.")
+                    .font(.caption)
+                    .foregroundStyle(ColorTheme.textMuted)
+            }
+
+            Text("Official source labels remain separate from RediM8's readable summary so you can judge the warning against the issuing agency.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            if viewModel.nearbyOfficialAlerts.isEmpty {
-                Text(viewModel.officialAlertDetail)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            } else {
-                ForEach(viewModel.nearbyOfficialAlerts) { alert in
-                    officialAlertRow(alert)
-                }
+            if selectedOfficialAlertScope == .local {
+                Text("Switch to State or Australia when you need a wider family or travel view.")
+                    .font(.caption)
+                    .foregroundStyle(ColorTheme.textMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
@@ -1771,6 +1871,57 @@ struct MapView: View {
 
             Spacer(minLength: 0)
         }
+    }
+
+    private var officialAlertJurisdictionPicker: some View {
+        Menu {
+            ForEach(viewModel.availableOfficialAlertJurisdictions) { jurisdiction in
+                Button {
+                    selectedOfficialAlertJurisdiction = jurisdiction
+                } label: {
+                    if jurisdiction == effectiveOfficialAlertJurisdiction {
+                        Label(jurisdiction.title, systemImage: "checkmark")
+                    } else {
+                        Text(jurisdiction.title)
+                    }
+                }
+            }
+        } label: {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("STATE FEED")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(ColorTheme.textMuted)
+                    Text(effectiveOfficialAlertJurisdiction?.title ?? "Select a state or territory")
+                        .font(.headline)
+                        .foregroundStyle(ColorTheme.text)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(ColorTheme.textMuted)
+            }
+            .padding(14)
+            .background(Color.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func officialAlertMetaCard(title: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased())
+                .font(.caption.weight(.bold))
+                .foregroundStyle(ColorTheme.textMuted)
+            Text(value)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(ColorTheme.text)
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Color.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private var evacuationPointsContent: some View {
@@ -2228,7 +2379,7 @@ struct MapView: View {
         .background(Color.black.opacity(0.25), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
-    private func officialAlertRow(_ alert: OfficialAlert) -> some View {
+    private func officialAlertRow(_ alert: OfficialAlert, scope: MapOfficialAlertScope) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .top, spacing: 12) {
                 MapAssetIcon(
@@ -2241,7 +2392,7 @@ struct MapView: View {
                     Text(alert.title)
                         .font(.headline)
                         .foregroundStyle(ColorTheme.text)
-                    Text("\(alert.severity.title) • \(viewModel.officialAlertDistanceText(for: alert))")
+                    Text("\(alert.severity.title) • \(viewModel.officialAlertScopeLine(for: alert, scope: scope))")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -2267,9 +2418,13 @@ struct MapView: View {
                     .foregroundStyle(.secondary)
             }
 
+            Text(viewModel.officialAlertUpdatedLine(for: alert))
+                .font(.caption)
+                .foregroundStyle(ColorTheme.textMuted)
+
             Text(viewModel.officialAlertSafetyNote(for: alert))
                 .font(.caption)
-                .foregroundStyle(officialAlertColor)
+                .foregroundStyle(officialAlertToneColor(selectedOfficialAlertSummary.tone))
 
             if let sourceURL = alert.sourceURL {
                 Button("Open Official Source") {
@@ -2373,7 +2528,11 @@ private struct MapPackRow: View {
 
 private extension MapView {
     var officialAlertColor: Color {
-        switch viewModel.officialAlertTone {
+        officialAlertToneColor(viewModel.officialAlertTone)
+    }
+
+    func officialAlertToneColor(_ tone: OperationalStatusTone) -> Color {
+        switch tone {
         case .ready:
             ColorTheme.ready
         case .info:

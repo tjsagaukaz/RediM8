@@ -440,7 +440,7 @@ struct SettingsView: View {
                 "settings.workspace.value.preparedness.progress",
                 "%1$d/%2$d",
                 preparednessEnabledCount,
-                3
+                4
             )
         case .device:
             return appState.batteryStatus.percentageText
@@ -487,7 +487,7 @@ struct SettingsView: View {
     private var preparednessSummaryLine: String {
         L10n.format(
             "settings.workspace.summary.preparedness",
-            "%1$d of 3 reminder systems active for a household of %2$d.",
+            "%1$d of 4 reminder systems active for a household of %2$d.",
             preparednessEnabledCount,
             appState.profile.household.totalPeople
         )
@@ -543,10 +543,38 @@ struct SettingsView: View {
         [
             appState.settings.preparedness.prepScoreNotificationsEnabled,
             appState.settings.preparedness.seventyTwoHourPlanAlertsEnabled,
-            appState.settings.preparedness.goBagRemindersEnabled
+            appState.settings.preparedness.goBagRemindersEnabled,
+            appState.settings.preparedness.officialAlertNotificationsEnabled
         ]
         .filter { $0 }
         .count
+    }
+
+    private var effectiveOfficialAlertNotificationJurisdiction: AustralianJurisdiction? {
+        appState.settings.preparedness.officialAlertNotificationJurisdiction
+            ?? viewModel.defaultOfficialAlertNotificationJurisdiction
+            ?? viewModel.availableOfficialAlertNotificationJurisdictions.first
+    }
+
+    private var officialAlertNotificationScopeOptions: [PremiumSegmentedControlOption<OfficialAlertNotificationScope>] {
+        OfficialAlertNotificationScope.allCases.map { scope in
+            PremiumSegmentedControlOption(
+                segmentID: scope,
+                title: scope.title,
+                detail: scope.subtitle,
+                iconName: {
+                    switch scope {
+                    case .local:
+                        "map_marker"
+                    case .state:
+                        "map"
+                    case .australia:
+                        "warning"
+                    }
+                }(),
+                accent: ColorTheme.accent
+            )
+        }
     }
 
     private var systemDefaultsSection: some View {
@@ -1270,6 +1298,44 @@ struct SettingsView: View {
                 isOn: binding(\.preparedness.goBagRemindersEnabled)
             )
 
+            SettingsDivider()
+
+            SettingsToggleRow(
+                title: L10n.tr("settings.preparedness.official_alert_notifications.title", "Official Alert Notifications"),
+                subtitle: L10n.tr(
+                    "settings.preparedness.official_alert_notifications.subtitle",
+                    "Get notification banners when new official alerts match your chosen scope"
+                ),
+                footnote: L10n.tr(
+                    "settings.preparedness.official_alert_notifications.footnote",
+                    "Use Local for your area, State for family context, or Australia for a wider watch."
+                ),
+                isOn: officialAlertNotificationsBinding
+            )
+
+            if appState.settings.preparedness.officialAlertNotificationsEnabled {
+                SettingsDivider()
+
+                VStack(alignment: .leading, spacing: 12) {
+                    SettingsRowLabel(
+                        title: L10n.tr("settings.preparedness.official_alert_notifications.scope_title", "Notification Scope"),
+                        subtitle: L10n.tr(
+                            "settings.preparedness.official_alert_notifications.scope_subtitle",
+                            "Choose which official warning view can trigger notifications"
+                        )
+                    )
+
+                    PremiumSegmentedControl(
+                        items: officialAlertNotificationScopeOptions,
+                        selection: officialAlertNotificationScopeBinding
+                    )
+
+                    if appState.settings.preparedness.officialAlertNotificationScope == .state {
+                        officialAlertNotificationJurisdictionPicker
+                    }
+                }
+            }
+
             Text(L10n.tr(
                 "settings.preparedness.go_bag.note",
                 "Recommended monthly for households that may need to leave quickly."
@@ -1473,12 +1539,81 @@ struct SettingsView: View {
         }
     }
 
+    private var officialAlertNotificationJurisdictionPicker: some View {
+        Menu {
+            ForEach(viewModel.availableOfficialAlertNotificationJurisdictions) { jurisdiction in
+                Button {
+                    appState.mutateSettings { settings in
+                        settings.preparedness.officialAlertNotificationJurisdiction = jurisdiction
+                    }
+                } label: {
+                    if jurisdiction == effectiveOfficialAlertNotificationJurisdiction {
+                        Label(jurisdiction.title, systemImage: "checkmark")
+                    } else {
+                        Text(jurisdiction.title)
+                    }
+                }
+            }
+        } label: {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.tr("settings.preparedness.official_alert_notifications.state_picker.label", "STATE FEED"))
+                        .font(RediTypography.label)
+                        .tracking(1.2)
+                        .foregroundStyle(ColorTheme.textTertiary)
+                    Text(
+                        effectiveOfficialAlertNotificationJurisdiction?.title
+                            ?? L10n.tr(
+                                "settings.preparedness.official_alert_notifications.state_picker.placeholder",
+                                "Select a state or territory"
+                            )
+                    )
+                    .font(RediTypography.data)
+                    .foregroundStyle(ColorTheme.text)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(ColorTheme.textTertiary)
+            }
+            .padding(RediSpacing.content)
+            .background(Color.black.opacity(0.25), in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
     private func binding<Value>(_ keyPath: WritableKeyPath<AppSettings, Value>) -> Binding<Value> {
         Binding(
             get: { appState.settings[keyPath: keyPath] },
             set: { newValue in
                 appState.mutateSettings { settings in
                     settings[keyPath: keyPath] = newValue
+                }
+            }
+        )
+    }
+
+    private var officialAlertNotificationsBinding: Binding<Bool> {
+        Binding(
+            get: { appState.settings.preparedness.officialAlertNotificationsEnabled },
+            set: { isEnabled in
+                viewModel.setOfficialAlertNotificationsEnabled(isEnabled)
+            }
+        )
+    }
+
+    private var officialAlertNotificationScopeBinding: Binding<OfficialAlertNotificationScope> {
+        Binding(
+            get: { appState.settings.preparedness.officialAlertNotificationScope },
+            set: { newScope in
+                appState.mutateSettings { settings in
+                    settings.preparedness.officialAlertNotificationScope = newScope
+                    if newScope == .state,
+                       settings.preparedness.officialAlertNotificationJurisdiction == nil {
+                        settings.preparedness.officialAlertNotificationJurisdiction = effectiveOfficialAlertNotificationJurisdiction
+                    }
                 }
             }
         )

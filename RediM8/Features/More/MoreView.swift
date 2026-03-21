@@ -3,7 +3,6 @@ import SwiftUI
 enum MoreWorkspace: String, CaseIterable, Identifiable {
     case plan
     case vault
-    case library
     case settings
 
     var id: String { rawValue }
@@ -12,7 +11,6 @@ enum MoreWorkspace: String, CaseIterable, Identifiable {
         switch self {
         case .plan: "Plan"
         case .vault: "Vault"
-        case .library: "Library"
         case .settings: "Settings"
         }
     }
@@ -21,7 +19,6 @@ enum MoreWorkspace: String, CaseIterable, Identifiable {
         switch self {
         case .plan: "Household readiness, supplies, and scenarios"
         case .vault: "Secure identity and emergency documents"
-        case .library: "Offline survival and first aid guides"
         case .settings: "Privacy, signal, maps, and device options"
         }
     }
@@ -30,7 +27,6 @@ enum MoreWorkspace: String, CaseIterable, Identifiable {
         switch self {
         case .plan: "checklist"
         case .vault: "lock.doc.fill"
-        case .library: "books.vertical.fill"
         case .settings: "gearshape.fill"
         }
     }
@@ -42,30 +38,19 @@ struct MoreView: View {
     let scrollToTopRequestID: Int
 
     @State private var selectedWorkspace: MoreWorkspace = .plan
+    @State private var forwardedPlanScrollToTopRequestID = 0
+    @State private var forwardedVaultScrollToTopRequestID = 0
 
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: RediSpacing.section) {
-                    Color.clear
-                        .frame(height: 0)
-                        .id("more-scroll-top")
-
-                    workspacePicker
-
-                    activeWorkspaceContent
-                }
+        VStack(spacing: RediSpacing.section) {
+            workspacePicker
                 .padding(.horizontal, RediSpacing.screen)
                 .padding(.top, RediSpacing.screen)
-                .padding(.bottom, RediLayout.commandDockContentInset)
-            }
-            .scrollIndicators(.hidden)
-            .onChange(of: scrollToTopRequestID) { _, _ in
-                withAnimation(RediMotion.selection) {
-                    proxy.scrollTo("more-scroll-top", anchor: .top)
-                }
-            }
+
+            activeWorkspaceContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
+        .padding(.bottom, RediLayout.commandDockContentInset)
         .navigationTitle("Workspace")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -79,6 +64,9 @@ struct MoreView: View {
                 break
             }
         }
+        .onChange(of: scrollToTopRequestID) { _, _ in
+            forwardScrollToTopToActiveWorkspace()
+        }
     }
 
     private func handlePendingNavigation() {
@@ -89,7 +77,9 @@ struct MoreView: View {
             selectedWorkspace = .vault
             router.selectedTab = .more
         } else if router.selectedTab == .library {
-            selectedWorkspace = .library
+            // Library is no longer user-visible from the More workspace.
+            // Keep legacy deep links safe by falling back to the default workspace.
+            selectedWorkspace = .plan
             router.selectedTab = .more
         }
     }
@@ -168,22 +158,28 @@ struct MoreView: View {
             PlanView(
                 appState: appState,
                 requestedFocus: $router.requestedPlanFocus,
-                scrollToTopRequestID: router.scrollToTopRequestID(for: .plan)
+                scrollToTopRequestID: router.scrollToTopRequestID(for: .plan) + forwardedPlanScrollToTopRequestID
             )
         case .vault:
             SecureVaultView(
                 service: appState.documentVaultService,
                 isProUser: appState.isProUser,
                 storeKitService: appState.storeKitService,
-                scrollToTopRequestID: router.scrollToTopRequestID(for: .vault)
-            )
-        case .library:
-            GuideLibraryView(
-                appState: appState,
-                scrollToTopRequestID: router.scrollToTopRequestID(for: .library)
+                scrollToTopRequestID: router.scrollToTopRequestID(for: .vault) + forwardedVaultScrollToTopRequestID
             )
         case .settings:
             SettingsView(appState: appState)
+        }
+    }
+
+    private func forwardScrollToTopToActiveWorkspace() {
+        switch selectedWorkspace {
+        case .plan:
+            forwardedPlanScrollToTopRequestID += 1
+        case .vault:
+            forwardedVaultScrollToTopRequestID += 1
+        case .settings:
+            break
         }
     }
 }

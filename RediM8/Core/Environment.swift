@@ -15,6 +15,7 @@ struct AppServices {
     let scenarioEngine: ScenarioEngine
     let prepService: PrepService
     let preparednessInsightsService: PreparednessInsightsService
+    let preparednessGearRecommendationService: PreparednessGearRecommendationService
     let decisionSupportService: DecisionSupportService
     let vehicleReadinessService: VehicleReadinessService
     let waterRuntimeService: WaterRuntimeService
@@ -102,16 +103,36 @@ struct AppEnvironment {
         let documentVaultService = DocumentVaultService()
         let preparednessDataService = PreparednessDataService(store: store, bundle: bundle)
         let settingsService = SettingsService(store: store)
-        let familyService = FamilyService(store: store)
+        let sensitiveProfileService: SensitiveProfileService?
+        let sensitiveProfileMigrationService: SensitiveProfileMigrationService?
+        if let store {
+            let secureStore = SecureStore(namespace: "profile-\(store.storageNamespace)")
+            let profileService = SensitiveProfileService(secureStore: secureStore)
+            sensitiveProfileService = profileService
+            sensitiveProfileMigrationService = SensitiveProfileMigrationService(
+                store: store,
+                sensitiveProfileService: profileService
+            )
+        } else {
+            sensitiveProfileService = nil
+            sensitiveProfileMigrationService = nil
+        }
+        let familyService = FamilyService(
+            store: store,
+            sensitiveProfileService: sensitiveProfileService,
+            migrationService: sensitiveProfileMigrationService
+        )
         let guideService = GuideService(dataService: preparednessDataService)
         let assistantIntentClassifier = AssistantIntentClassifier(dataService: preparednessDataService, guideService: guideService)
         let assistantModel = OfflineAssistantModel(bundle: bundle)
         let assistantSafetyFilter = AssistantSafetyFilter()
         let guideSummarizer = GuideSummarizer()
         let assistantAnswerComposer = AssistantAnswerComposer(summarizer: guideSummarizer)
+        let assistantNetworkStatusService = AssistantNetworkStatusService()
         let scenarioEngine = ScenarioEngine(dataService: preparednessDataService)
         let prepService = PrepService()
         let preparednessInsightsService = PreparednessInsightsService()
+        let preparednessGearRecommendationService = PreparednessGearRecommendationService(dataService: preparednessDataService)
         let decisionSupportService = DecisionSupportService()
         let vehicleReadinessService = VehicleReadinessService(store: store)
         let waterRuntimeService = WaterRuntimeService(prepService: prepService)
@@ -150,7 +171,8 @@ struct AppEnvironment {
             beaconService: beaconService,
             mapDataService: mapDataService,
             locationProvider: { locationService.currentLocation },
-            survivalContextService: survivalContextService
+            survivalContextService: survivalContextService,
+            isOfflineProvider: { assistantNetworkStatusService.isOffline }
         )
         let assistantService = AssistantService(
             classifier: assistantIntentClassifier,
@@ -228,6 +250,7 @@ struct AppEnvironment {
             scenarioEngine: scenarioEngine,
             prepService: prepService,
             preparednessInsightsService: preparednessInsightsService,
+            preparednessGearRecommendationService: preparednessGearRecommendationService,
             decisionSupportService: decisionSupportService,
             vehicleReadinessService: vehicleReadinessService,
             waterRuntimeService: waterRuntimeService,

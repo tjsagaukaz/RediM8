@@ -265,12 +265,102 @@ struct PreparednessSettings: Codable, Equatable {
     var prepScoreNotificationsEnabled: Bool
     var seventyTwoHourPlanAlertsEnabled: Bool
     var goBagRemindersEnabled: Bool
+    var officialAlertNotificationsEnabled: Bool
+    var officialAlertNotificationScope: OfficialAlertNotificationScope
+    var officialAlertNotificationJurisdiction: AustralianJurisdiction?
+
+    private enum CodingKeys: String, CodingKey {
+        case prepScoreNotificationsEnabled
+        case seventyTwoHourPlanAlertsEnabled
+        case goBagRemindersEnabled
+        case officialAlertNotificationsEnabled
+        case officialAlertNotificationScope
+        case officialAlertNotificationJurisdiction
+    }
+
+    init(
+        prepScoreNotificationsEnabled: Bool,
+        seventyTwoHourPlanAlertsEnabled: Bool,
+        goBagRemindersEnabled: Bool,
+        officialAlertNotificationsEnabled: Bool,
+        officialAlertNotificationScope: OfficialAlertNotificationScope,
+        officialAlertNotificationJurisdiction: AustralianJurisdiction?
+    ) {
+        self.prepScoreNotificationsEnabled = prepScoreNotificationsEnabled
+        self.seventyTwoHourPlanAlertsEnabled = seventyTwoHourPlanAlertsEnabled
+        self.goBagRemindersEnabled = goBagRemindersEnabled
+        self.officialAlertNotificationsEnabled = officialAlertNotificationsEnabled
+        self.officialAlertNotificationScope = officialAlertNotificationScope
+        self.officialAlertNotificationJurisdiction = officialAlertNotificationJurisdiction
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        prepScoreNotificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .prepScoreNotificationsEnabled) ?? true
+        seventyTwoHourPlanAlertsEnabled = try container.decodeIfPresent(Bool.self, forKey: .seventyTwoHourPlanAlertsEnabled) ?? true
+        goBagRemindersEnabled = try container.decodeIfPresent(Bool.self, forKey: .goBagRemindersEnabled) ?? true
+        officialAlertNotificationsEnabled = try container.decodeIfPresent(Bool.self, forKey: .officialAlertNotificationsEnabled) ?? false
+        officialAlertNotificationScope = try container.decodeIfPresent(OfficialAlertNotificationScope.self, forKey: .officialAlertNotificationScope) ?? .local
+        officialAlertNotificationJurisdiction = try container.decodeIfPresent(AustralianJurisdiction.self, forKey: .officialAlertNotificationJurisdiction)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(prepScoreNotificationsEnabled, forKey: .prepScoreNotificationsEnabled)
+        try container.encode(seventyTwoHourPlanAlertsEnabled, forKey: .seventyTwoHourPlanAlertsEnabled)
+        try container.encode(goBagRemindersEnabled, forKey: .goBagRemindersEnabled)
+        try container.encode(officialAlertNotificationsEnabled, forKey: .officialAlertNotificationsEnabled)
+        try container.encode(officialAlertNotificationScope, forKey: .officialAlertNotificationScope)
+        try container.encodeIfPresent(officialAlertNotificationJurisdiction, forKey: .officialAlertNotificationJurisdiction)
+    }
 
     static let `default` = PreparednessSettings(
         prepScoreNotificationsEnabled: true,
         seventyTwoHourPlanAlertsEnabled: true,
-        goBagRemindersEnabled: true
+        goBagRemindersEnabled: true,
+        officialAlertNotificationsEnabled: false,
+        officialAlertNotificationScope: .local,
+        officialAlertNotificationJurisdiction: nil
     )
+}
+
+enum OfficialAlertNotificationScope: String, CaseIterable, Codable, Identifiable {
+    case local
+    case state
+    case australia
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .local:
+            L10n.tr("settings.preparedness.official_alert_notifications.scope.local", "Local")
+        case .state:
+            L10n.tr("settings.preparedness.official_alert_notifications.scope.state", "State")
+        case .australia:
+            L10n.tr("settings.preparedness.official_alert_notifications.scope.australia", "Australia")
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .local:
+            L10n.tr(
+                "settings.preparedness.official_alert_notifications.scope.local_subtitle",
+                "Alerts matched to your area and installed coverage"
+            )
+        case .state:
+            L10n.tr(
+                "settings.preparedness.official_alert_notifications.scope.state_subtitle",
+                "One state or territory feed for family or travel context"
+            )
+        case .australia:
+            L10n.tr(
+                "settings.preparedness.official_alert_notifications.scope.australia_subtitle",
+                "All cached official feeds across Australia"
+            )
+        }
+    }
 }
 
 struct AssistantSettings: Codable, Equatable {

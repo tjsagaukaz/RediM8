@@ -4,6 +4,10 @@ struct AskRediView: View {
     @StateObject private var viewModel: AssistantViewModel
     @ObservedObject private var appState: AppState
     @State private var scrollTarget = UUID()
+    @State private var areAllTaskShortcutsVisible = false
+    @State private var isGuidanceContextVisible = true
+    @State private var lastGuidanceContextSignature = ""
+    @State private var lastInteractionAt: Date?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let scrollToTopRequestID: Int
@@ -25,46 +29,74 @@ struct AskRediView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: RediSpacing.section) {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: RediSpacing.section) {
+                    Color.clear
+                        .frame(height: 1)
+                        .id("ask-redi-top")
+
+                    if viewModel.hasConversation {
                         advisorBriefingCard
                             .padding(.top, RediSpacing.content)
-                            .id("ask-redi-top")
 
-                        if viewModel.hasConversation {
-                            conversationList
-                        } else {
-                            readyState
-                        }
+                        conversationList
 
-                        Color.clear
-                            .frame(height: 1)
-                            .id(scrollTarget)
-                    }
-                    .padding(.horizontal, RediSpacing.screen)
-                    .padding(.bottom, 80 + RediLayout.commandDockContentInset)
-                }
-                .scrollDismissesKeyboard(.interactively)
-                .onAppear {
-                    viewModel.onAppear()
-                }
-                .onChange(of: viewModel.conversation.count) { _, _ in
-                    scrollTarget = UUID()
-                    DispatchQueue.main.async {
-                        withAnimation(.easeOut(duration: 0.25)) {
-                            proxy.scrollTo(scrollTarget, anchor: .bottom)
+                        if shouldShowPostInteractionSupport {
+                            postInteractionSupport
                         }
+                    } else {
+                        minimalEntryView
+                            .padding(.top, RediSpacing.section * 2)
+                    }
+
+                    Color.clear
+                        .frame(height: 1)
+                        .id(scrollTarget)
+                }
+                .padding(.horizontal, RediSpacing.screen)
+                .padding(.bottom, RediSpacing.section)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .onAppear {
+                viewModel.onAppear()
+                let signature = guidanceContextSignature
+                if lastGuidanceContextSignature.isEmpty {
+                    lastGuidanceContextSignature = signature
+                }
+                isGuidanceContextVisible = shouldShowGuidanceContextOnAppear
+            }
+            .onChange(of: viewModel.conversation.count) { _, _ in
+                scrollTarget = UUID()
+                lastInteractionAt = .now
+                if isGuidanceContextVisible {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        isGuidanceContextVisible = false
                     }
                 }
-                .onChange(of: scrollToTopRequestID) { _, _ in
+                DispatchQueue.main.async {
                     withAnimation(.easeOut(duration: 0.25)) {
-                        proxy.scrollTo("ask-redi-top", anchor: .top)
+                        proxy.scrollTo(scrollTarget, anchor: .bottom)
                     }
                 }
             }
+            .onChange(of: guidanceContextSignature) { oldValue, newValue in
+                guard oldValue != newValue else { return }
+                lastGuidanceContextSignature = newValue
 
+                if viewModel.hasConversation {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        isGuidanceContextVisible = true
+                    }
+                }
+            }
+            .onChange(of: scrollToTopRequestID) { _, _ in
+                withAnimation(.easeOut(duration: 0.25)) {
+                    proxy.scrollTo("ask-redi-top", anchor: .top)
+                }
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             commandInput
         }
         .background(consoleBackground)
@@ -177,6 +209,80 @@ struct AskRediView: View {
         }
     }
 
+    private var minimalEntryView: some View {
+        VStack(alignment: .leading, spacing: RediSpacing.section) {
+            VStack(alignment: .leading, spacing: RediSpacing.tight) {
+                Text("ASK REDI")
+                    .font(RediTypography.label)
+                    .tracking(1.2)
+                    .foregroundStyle(ColorTheme.textSecondary)
+
+                Text("Offline field advisor")
+                    .font(RediTypography.bodyStrong)
+                    .foregroundStyle(ColorTheme.text)
+            }
+
+            Text("Tell me what's happening, and I'll guide you.")
+                .font(RediTypography.heading)
+                .foregroundStyle(ColorTheme.text)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Works offline • Uses last synced alerts when available")
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            minimalEntryQuickActions
+        }
+    }
+
+    private var minimalEntryQuickActions: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: RediSpacing.compact) {
+                minimalEntryQuickAction(
+                    title: "Emergency now",
+                    query: "Emergency right now",
+                    tint: ColorTheme.warning
+                )
+                minimalEntryQuickAction(
+                    title: "Planning",
+                    query: "Planning ahead",
+                    tint: ColorTheme.accent
+                )
+                minimalEntryQuickAction(
+                    title: "Navigation",
+                    query: "Navigation help",
+                    tint: ColorTheme.info
+                )
+            }
+        }
+    }
+
+    private func minimalEntryQuickAction(title: String, query: String, tint: Color) -> some View {
+        Button {
+            viewModel.applySuggestion(query)
+        } label: {
+            Text(title)
+                .font(RediTypography.data)
+                .foregroundStyle(ColorTheme.text)
+                .padding(.horizontal, RediSpacing.content)
+                .padding(.vertical, RediSpacing.compact)
+                .background(
+                    ColorTheme.graphite,
+                    in: RoundedRectangle(cornerRadius: RediRadius.button, style: .continuous)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: RediRadius.button, style: .continuous)
+                        .stroke(tint.opacity(0.24), lineWidth: 0.8)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var postInteractionSupport: some View {
+        readyState
+    }
+
     private var advisorBriefingCard: some View {
         CommandPanel(eyebrow: "Field Advisor") {
             VStack(alignment: .leading, spacing: RediSpacing.content) {
@@ -201,9 +307,40 @@ struct AskRediView: View {
             subtitle: "Start with direct actions when time or signal is limited."
         ) {
             LazyVGrid(columns: topicColumns, spacing: RediSpacing.compact) {
-                ForEach(taskShortcuts) { shortcut in
+                ForEach(visibleTaskShortcuts) { shortcut in
                     topicTile(shortcut)
                 }
+            }
+
+            if prioritizedTaskShortcuts.count > 4 {
+                Button {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        areAllTaskShortcutsVisible.toggle()
+                    }
+                } label: {
+                    HStack(spacing: RediSpacing.tight) {
+                        Image(systemName: areAllTaskShortcutsVisible ? "chevron.up" : "ellipsis")
+                            .font(.system(size: 10, weight: .bold))
+
+                        Text(areAllTaskShortcutsVisible ? "SHOW FEWER TASKS" : "SHOW MORE TASKS")
+                            .font(RediTypography.label)
+                            .tracking(1.2)
+
+                        Spacer(minLength: 0)
+                    }
+                    .foregroundStyle(ColorTheme.textSecondary)
+                    .padding(.horizontal, RediSpacing.content)
+                    .padding(.vertical, RediSpacing.compact)
+                    .background(
+                        ColorTheme.graphite,
+                        in: RoundedRectangle(cornerRadius: RediRadius.button, style: .continuous)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: RediRadius.button, style: .continuous)
+                            .stroke(ColorTheme.divider, lineWidth: 0.5)
+                    )
+                }
+                .buttonStyle(.plain)
             }
         }
     }
@@ -348,10 +485,13 @@ struct AskRediView: View {
 
     private var commandInput: some View {
         VStack(alignment: .leading, spacing: RediSpacing.compact) {
-            guidanceContextStrip
+            if viewModel.hasConversation && isGuidanceContextVisible {
+                guidanceContextStrip
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
 
             HStack(alignment: .bottom, spacing: RediSpacing.compact) {
-                TextField("What do you need help with?", text: $viewModel.draftQuery, axis: .vertical)
+                TextField(viewModel.hasConversation ? "What do you need help with?" : "What's happening right now?", text: $viewModel.draftQuery, axis: .vertical)
                     .lineLimit(1...4)
                     .font(RediTypography.body)
                     .foregroundStyle(ColorTheme.text)
@@ -401,6 +541,14 @@ struct AskRediView: View {
         viewModel.draftQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
+    private var shouldShowPostInteractionSupport: Bool {
+        guard let latestResponse = viewModel.conversation.last?.response else {
+            return false
+        }
+
+        return !latestResponse.isCrisisPresentation && !latestResponse.isElevatedPresentation
+    }
+
     private var statusPillModels: [AskRediStatusPill] {
         let meshCount = appState.meshService.connectedPeers.count
         let alertCount = appState.officialAlertService.library.alerts.count
@@ -429,6 +577,7 @@ struct AskRediView: View {
     private var taskShortcuts: [AskRediTaskShortcut] {
         [
             AskRediTaskShortcut(
+                id: "firstAid",
                 title: "First Aid",
                 detail: "Immediate injury, bite, and bleeding response.",
                 icon: "cross.case.fill",
@@ -436,13 +585,7 @@ struct AskRediView: View {
                 tint: ColorTheme.danger
             ),
             AskRediTaskShortcut(
-                title: "Water & Hydration",
-                detail: "Supply, purification, and rationing guidance.",
-                icon: "drop.fill",
-                query: "Water needed for 3 days (per person)",
-                tint: ColorTheme.info
-            ),
-            AskRediTaskShortcut(
+                id: "fire",
                 title: "Fire / Bushfire",
                 detail: "Movement, shelter, smoke, and evacuation advice.",
                 icon: "flame.fill",
@@ -450,27 +593,15 @@ struct AskRediView: View {
                 tint: ColorTheme.warning
             ),
             AskRediTaskShortcut(
-                title: "Signal & Comms",
-                detail: "Rescue signals, contacts, and fallback comms.",
-                icon: "antenna.radiowaves.left.and.right",
-                query: "How do I signal for rescue?",
-                tint: ColorTheme.accent
+                id: "water",
+                title: "Water & Hydration",
+                detail: "Supply, purification, and rationing guidance.",
+                icon: "drop.fill",
+                query: "Water needed for 3 days (per person)",
+                tint: ColorTheme.info
             ),
             AskRediTaskShortcut(
-                title: "Shelter",
-                detail: "Temporary cover and exposure reduction.",
-                icon: "house.fill",
-                query: "How do I build a survival shelter?",
-                tint: ColorTheme.textTertiary
-            ),
-            AskRediTaskShortcut(
-                title: "Food",
-                detail: "Safe sourcing, storage, and rationing steps.",
-                icon: "leaf.fill",
-                query: "How do I find safe food when stranded?",
-                tint: ColorTheme.textTertiary
-            ),
-            AskRediTaskShortcut(
+                id: "navigation",
                 title: "Navigation",
                 detail: "Direction finding when GPS is unavailable.",
                 icon: "safari.fill",
@@ -478,6 +609,31 @@ struct AskRediView: View {
                 tint: ColorTheme.accent
             ),
             AskRediTaskShortcut(
+                id: "signal",
+                title: "Signal & Comms",
+                detail: "Rescue signals, contacts, and fallback comms.",
+                icon: "antenna.radiowaves.left.and.right",
+                query: "How do I signal for rescue?",
+                tint: ColorTheme.accent
+            ),
+            AskRediTaskShortcut(
+                id: "shelter",
+                title: "Shelter",
+                detail: "Temporary cover and exposure reduction.",
+                icon: "house.fill",
+                query: "How do I build a survival shelter?",
+                tint: ColorTheme.textTertiary
+            ),
+            AskRediTaskShortcut(
+                id: "food",
+                title: "Food",
+                detail: "Safe sourcing, storage, and rationing steps.",
+                icon: "leaf.fill",
+                query: "How do I find safe food when stranded?",
+                tint: ColorTheme.textTertiary
+            ),
+            AskRediTaskShortcut(
+                id: "vehicle",
                 title: "Vehicle",
                 detail: "Stay, leave, recover, or wait for extraction.",
                 icon: "car.fill",
@@ -485,6 +641,45 @@ struct AskRediView: View {
                 tint: ColorTheme.textSecondary
             )
         ]
+    }
+
+    private var prioritizedTaskShortcuts: [AskRediTaskShortcut] {
+        let priorityIDs: [String]
+
+        if let activePrioritySituation = appState.activePrioritySituation {
+            switch activePrioritySituation {
+            case .bushfire:
+                priorityIDs = ["fire", "firstAid", "water", "navigation"]
+            case .flood:
+                priorityIDs = ["water", "navigation", "firstAid", "signal"]
+            case .blackout:
+                priorityIDs = ["signal", "water", "navigation", "vehicle"]
+            case .remoteTravel:
+                priorityIDs = ["navigation", "water", "vehicle", "signal"]
+            }
+        } else if appState.officialAlertService.library.alerts.isEmpty {
+            priorityIDs = ["firstAid", "water", "fire", "navigation"]
+        } else {
+            priorityIDs = ["firstAid", "fire", "water", "navigation"]
+        }
+
+        let rankByID = Dictionary(uniqueKeysWithValues: priorityIDs.enumerated().map { ($0.element, $0.offset) })
+        return taskShortcuts.sorted { left, right in
+            let leftRank = rankByID[left.id] ?? Int.max
+            let rightRank = rankByID[right.id] ?? Int.max
+            if leftRank == rightRank {
+                return left.title < right.title
+            }
+            return leftRank < rightRank
+        }
+    }
+
+    private var visibleTaskShortcuts: [AskRediTaskShortcut] {
+        let shortcuts = prioritizedTaskShortcuts
+        guard !areAllTaskShortcutsVisible else {
+            return shortcuts
+        }
+        return Array(shortcuts.prefix(4))
     }
 
     private var guidanceContextStrip: some View {
@@ -605,6 +800,26 @@ struct AskRediView: View {
             tint: ColorTheme.accent
         )
     }
+
+    private var guidanceContextSignature: String {
+        [
+            guidanceContext.title,
+            guidanceContext.detail,
+            guidanceContext.icon
+        ].joined(separator: "|")
+    }
+
+    private var shouldShowGuidanceContextOnAppear: Bool {
+        guard viewModel.hasConversation else {
+            return true
+        }
+
+        guard let lastInteractionAt else {
+            return false
+        }
+
+        return Date.now.timeIntervalSince(lastInteractionAt) >= 300
+    }
 }
 
 private struct AskRediStatusPill: Identifiable {
@@ -614,7 +829,7 @@ private struct AskRediStatusPill: Identifiable {
 }
 
 private struct AskRediTaskShortcut: Identifiable {
-    let id = UUID()
+    let id: String
     let title: String
     let detail: String
     let icon: String

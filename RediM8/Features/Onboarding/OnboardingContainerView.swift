@@ -75,6 +75,7 @@ struct OnboardingContainerView: View {
                     Text(viewModel.currentStep.heroTitle)
                         .font(.system(size: 28, weight: .black))
                         .foregroundStyle(ColorTheme.text)
+                        .accessibilityIdentifier("onboarding.stepTitle")
                 }
 
                 Spacer()
@@ -83,6 +84,7 @@ struct OnboardingContainerView: View {
                     Button("Close") {
                         appState.isShowingOnboarding = false
                     }
+                    .accessibilityIdentifier("onboarding.closeAction")
                     .buttonStyle(SecondaryActionButtonStyle())
                     .frame(width: 108)
                 }
@@ -123,6 +125,7 @@ struct OnboardingContainerView: View {
                     Button("Back") {
                         viewModel.back()
                     }
+                    .accessibilityIdentifier("onboarding.backAction")
                     .buttonStyle(SecondaryActionButtonStyle())
                     .frame(maxWidth: 150)
                 }
@@ -134,6 +137,7 @@ struct OnboardingContainerView: View {
                         viewModel.next()
                     }
                 }
+                .accessibilityIdentifier("onboarding.primaryAction")
                 .buttonStyle(PrimaryActionButtonStyle())
             }
         }

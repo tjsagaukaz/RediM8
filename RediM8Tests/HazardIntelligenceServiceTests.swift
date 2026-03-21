@@ -249,4 +249,119 @@ final class HazardIntelligenceServiceTests: XCTestCase {
         XCTAssertFalse(service.isRouteFresh(snapshot), "Route should be stale after new hazard added")
         XCTAssertNotNil(service.routeFreshnessWarning(snapshot), "Should produce a warning for stale route")
     }
+
+    @MainActor
+    func testMeshReportsPersistInSecureStoreWhileOfficialReportsStayInSQLite() throws {
+        let context = try makePersistenceContext(testName: #function)
+        let service = HazardIntelligenceService(
+            store: context.store,
+            sensitiveHazardReportService: context.sensitiveHazardReportService,
+            sensitiveHazardReportMigrationService: context.sensitiveHazardReportMigrationService
+        )
+
+        _ = service.addReport(
+            kind: HazardKind.fire,
+            center: CLLocationCoordinate2D(latitude: -27.468, longitude: 153.028),
+            source: .mesh,
+            severity: .high,
+            description: "Mesh fire report"
+        )
+        _ = service.addReport(
+            kind: HazardKind.flood,
+            center: CLLocationCoordinate2D(latitude: -27.47, longitude: 153.03),
+            source: .officialAlert,
+            severity: .critical,
+            description: "Official flood report"
+        )
+
+        let sqliteReports = try context.store.load([HazardIntelligenceService.HazardReport].self, for: HazardStorageKey.reports) ?? []
+        let secureReports = try context.sensitiveHazardReportService.loadReports()
+
+        XCTAssertEqual(sqliteReports.map(\.source), [.officialAlert])
+        XCTAssertEqual(secureReports.map(\.source), [.mesh])
+    }
+
+    @MainActor
+    func testLegacySensitiveHazardReportsMigrateOutOfSQLite() throws {
+        let context = try makePersistenceContext(testName: #function)
+        let meshReport = HazardIntelligenceService.HazardReport(
+            id: UUID(),
+            kind: .fire,
+            center: CLLocationCoordinate2D(latitude: -27.468, longitude: 153.028),
+            radiusMetres: 600,
+            source: .mesh,
+            severity: .high,
+            description: "Mesh fire report",
+            reportedAt: .now,
+            expiresAt: .now.addingTimeInterval(2 * 60 * 60),
+            confirmations: 1,
+            lastConfirmedAt: .now,
+            confidence: .medium
+        )
+        let officialReport = HazardIntelligenceService.HazardReport(
+            id: UUID(),
+            kind: .flood,
+            center: CLLocationCoordinate2D(latitude: -27.47, longitude: 153.03),
+            radiusMetres: 800,
+            source: .officialAlert,
+            severity: .critical,
+            description: "Official flood report",
+            reportedAt: .now,
+            expiresAt: .now.addingTimeInterval(6 * 60 * 60),
+            confirmations: 1,
+            lastConfirmedAt: .now,
+            confidence: .verified
+        )
+
+        try context.store.save([meshReport, officialReport], for: HazardStorageKey.reports)
+
+        let service = HazardIntelligenceService(
+            store: context.store,
+            sensitiveHazardReportService: context.sensitiveHazardReportService,
+            sensitiveHazardReportMigrationService: context.sensitiveHazardReportMigrationService
+        )
+
+        let sqliteReports = try context.store.load([HazardIntelligenceService.HazardReport].self, for: HazardStorageKey.reports) ?? []
+        let secureReports = try context.sensitiveHazardReportService.loadReports()
+        let migrationCompleted = try context.store.load(Bool.self, for: HazardStorageKey.sensitiveMigrationCompleted)
+
+        XCTAssertEqual(Set(service.reports.map(\.source)), Set([.mesh, .officialAlert]))
+        XCTAssertEqual(sqliteReports, [officialReport])
+        XCTAssertEqual(secureReports, [meshReport])
+        XCTAssertEqual(migrationCompleted, true)
+    }
+}
+
+private extension HazardIntelligenceServiceTests {
+    func makePersistenceContext(testName: String) throws -> HazardPersistenceContext {
+        let store = try SQLiteStore(filename: "HazardIntelligenceServiceTests-\(UUID().uuidString).sqlite")
+        let secureBaseURL = URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+            .appendingPathComponent("HazardIntelligenceServiceTests", isDirectory: true)
+            .appendingPathComponent(testName.replacingOccurrences(of: " ", with: "_"), isDirectory: true)
+        try? FileManager.default.removeItem(at: secureBaseURL)
+
+        let secureStore = SecureStore(
+            namespace: "hazard-service-tests",
+            baseURL: secureBaseURL,
+            keyProvider: FixedSecureStoreKeyProvider(byte: 7),
+            fileManager: .default
+        )
+        let sensitiveHazardReportService = SensitiveHazardReportService(secureStore: secureStore)
+        let sensitiveHazardReportMigrationService = SensitiveHazardReportMigrationService(
+            store: store,
+            sensitiveHazardReportService: sensitiveHazardReportService
+        )
+
+        return HazardPersistenceContext(
+            store: store,
+            sensitiveHazardReportService: sensitiveHazardReportService,
+            sensitiveHazardReportMigrationService: sensitiveHazardReportMigrationService
+        )
+    }
+}
+
+private struct HazardPersistenceContext {
+    let store: SQLiteStore
+    let sensitiveHazardReportService: SensitiveHazardReportService
+    let sensitiveHazardReportMigrationService: SensitiveHazardReportMigrationService
 }

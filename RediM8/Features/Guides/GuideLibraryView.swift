@@ -1733,44 +1733,59 @@ private struct GuideDiagramArtwork: View {
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                switch diagram.kind {
-                case .pressureBandage:
-                    pressureBandageArt(in: proxy.size)
-                case .recoveryPosition:
-                    recoveryPositionArt(in: proxy.size)
-                case .bowline:
-                    bowlineArt(in: proxy.size)
-                case .cloveHitch:
-                    cloveHitchArt(in: proxy.size)
-                case .reefKnot:
-                    reefKnotArt(in: proxy.size)
-                case .tarpRidgeline:
-                    tarpRidgelineArt(in: proxy.size)
-                case .compassBearing:
-                    compassBearingArt(in: proxy.size)
-                case .damperMethod:
-                    damperMethodArt(in: proxy.size)
-                case .skilletBread:
-                    skilletBreadArt(in: proxy.size)
-                case .sconeMethod:
-                    sconeMethodArt(in: proxy.size)
-                case .raisedBedLayout:
-                    raisedBedArt(in: proxy.size)
-                case .seedTray:
-                    seedTrayArt(in: proxy.size)
-                case .potatoBag:
-                    potatoBagArt(in: proxy.size)
-                case .waterFilter:
-                    waterFilterArt(in: proxy.size)
-                case .bowDrill, .handDrill, .solarStill, .debrisHut, .leanTo,
-                     .basicSnare, .fishTrap, .groundSignal, .signalFire,
-                     .sunNavigation, .southernCross, .latrinePlacement,
-                     .vehicleShelter, .condensationTrap:
-                    placeholderDiagramArt(kind: diagram.kind, in: proxy.size)
+                if let assetName = diagram.assetName, diagram.kind == .imageAsset {
+                    assetDiagramArt(assetName: assetName, in: proxy.size)
+                } else {
+                    switch diagram.kind {
+                    case .imageAsset:
+                        placeholderDiagramArt(kind: .pressureBandage, in: proxy.size)
+                    case .pressureBandage:
+                        pressureBandageArt(in: proxy.size)
+                    case .recoveryPosition:
+                        recoveryPositionArt(in: proxy.size)
+                    case .bowline:
+                        bowlineArt(in: proxy.size)
+                    case .cloveHitch:
+                        cloveHitchArt(in: proxy.size)
+                    case .reefKnot:
+                        reefKnotArt(in: proxy.size)
+                    case .tarpRidgeline:
+                        tarpRidgelineArt(in: proxy.size)
+                    case .compassBearing:
+                        compassBearingArt(in: proxy.size)
+                    case .damperMethod:
+                        damperMethodArt(in: proxy.size)
+                    case .skilletBread:
+                        skilletBreadArt(in: proxy.size)
+                    case .sconeMethod:
+                        sconeMethodArt(in: proxy.size)
+                    case .raisedBedLayout:
+                        raisedBedArt(in: proxy.size)
+                    case .seedTray:
+                        seedTrayArt(in: proxy.size)
+                    case .potatoBag:
+                        potatoBagArt(in: proxy.size)
+                    case .waterFilter:
+                        waterFilterArt(in: proxy.size)
+                    case .bowDrill, .handDrill, .solarStill, .debrisHut, .leanTo,
+                         .basicSnare, .fishTrap, .groundSignal, .signalFire,
+                         .sunNavigation, .southernCross, .latrinePlacement,
+                         .vehicleShelter, .condensationTrap:
+                        placeholderDiagramArt(kind: diagram.kind, in: proxy.size)
+                    }
                 }
             }
-            .padding(18)
+            .padding(diagram.assetName == nil ? 18 : 8)
         }
+    }
+
+    private func assetDiagramArt(assetName: String, in size: CGSize) -> some View {
+        Image(assetName)
+            .resizable()
+            .interpolation(.high)
+            .scaledToFit()
+            .frame(width: size.width, height: size.height)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     private func pressureBandageArt(in size: CGSize) -> some View {

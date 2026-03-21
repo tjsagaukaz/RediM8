@@ -57,6 +57,9 @@ enum MeshPeerTrustDecision: Equatable {
 
 final class MeshPeerTrustStore {
     private enum StorageKey {
+        // Mesh identity continuity is intentionally stored outside SecureStore.
+        // This key must never contain location, profile linkage, or emergency payload.
+        // If that changes, migrate it into the secure domain before persisting it.
         static let trustedPeerFingerprints = "mesh.trusted-peer-fingerprints.v1"
     }
 
@@ -872,7 +875,7 @@ extension NearbyTransport: MCSessionDelegate {
         guard !decision.allowsConnection else { return }
 
         let message = decision.rejectionMessage(for: peerID.displayName)
-        RediLogger.mesh.error("\(message, privacy: .public)")
+        RediLogger.mesh.error("Blocked untrusted mesh peer connection.")
         Task { @MainActor in
             self.emitSystemMessage(message)
         }

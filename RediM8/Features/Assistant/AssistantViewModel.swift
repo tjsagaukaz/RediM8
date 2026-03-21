@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 @MainActor
 final class AssistantViewModel: ObservableObject {
@@ -107,6 +108,10 @@ final class AssistantViewModel: ObservableObject {
         submitCurrentDraft()
     }
 
+    func submitClarifyingOption(_ option: String) {
+        submit(query: option)
+    }
+
     @discardableResult
     func toggleSavedGuide(_ guideID: String) -> Bool {
         var isSaved = false
@@ -147,6 +152,7 @@ final class AssistantViewModel: ObservableObject {
 
     func handleContextAction(_ action: AssistantContextAction) {
         RediHaptics.selection(enabled: !appState.isStealthModeEnabled)
+        appState.assistant.noteContextAction(action)
 
         switch action {
         case .openMap:
@@ -165,6 +171,13 @@ final class AssistantViewModel: ObservableObject {
 
         case let .openPlanFocus(focus):
             pendingTabAction = PendingTabAction(tab: "plan", planFocus: focus)
+
+        case let .callNumber(number, _):
+            guard let url = URL(string: "tel://\(number)") else {
+                return
+            }
+
+            UIApplication.shared.open(url)
         }
     }
 

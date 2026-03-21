@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SurvivalModeView: View {
     @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @ObservedObject private var appState: AppState
     @ObservedObject private var torchService: TorchService
@@ -29,76 +30,20 @@ struct SurvivalModeView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            VStack(alignment: .leading, spacing: 18) {
-                if appState.isStealthModeEnabled {
-                    StealthModeIndicatorView()
+            Group {
+                if requiresScrollableLayout(in: proxy.size) {
+                    ScrollView {
+                        survivalContent(fixedHeightLayout: false)
+                            .padding(24)
+                            .frame(maxWidth: .infinity, alignment: .top)
+                    }
+                    .scrollIndicators(.hidden)
+                } else {
+                    survivalContent(fixedHeightLayout: true)
+                        .padding(24)
+                        .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
                 }
-
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Low Battery Survival Mode")
-                            .font(RediTypography.screenTitle)
-                            .foregroundStyle(ColorTheme.text)
-                        Text("Battery \(appState.batteryStatus.percentageText) • stripped to essentials only")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button("Exit") {
-                        disable()
-                    }
-                    .buttonStyle(SecondaryActionButtonStyle())
-                    .frame(width: 92)
-                }
-
-                survivalStatusCard
-
-                if let primaryEmergencyContact {
-                    emergencyCallCard(primaryEmergencyContact)
-                }
-
-                LazyVGrid(columns: columns, spacing: 16) {
-                    survivalPrimaryButton(
-                        title: torchService.isTorchOn ? "Flashlight On" : "Flashlight",
-                        detail: torchService.isTorchOn ? "Turn off when you no longer need it." : "Fastest light with one tap.",
-                        systemImage: "flashlight",
-                        tint: ColorTheme.textTertiary
-                    ) {
-                        torchService.toggleTorch()
-                    }
-
-                    survivalPrimaryButton(
-                        title: "Signal Nearby",
-                        detail: "Short mesh check without the full app shell.",
-                        systemImage: "signal",
-                        tint: ColorTheme.textTertiary
-                    ) {
-                        isShowingSignal = true
-                    }
-
-                    survivalPrimaryButton(
-                        title: "Emergency Guides",
-                        detail: "Offline medical and emergency steps.",
-                        systemImage: "first_aid",
-                        tint: ColorTheme.textTertiary
-                    ) {
-                        isShowingGuides = true
-                    }
-
-                    survivalPrimaryButton(
-                        title: "Emergency Contacts",
-                        detail: "Stored locally for offline access.",
-                        systemImage: "family",
-                        tint: ColorTheme.textTertiary
-                    ) {
-                        isShowingContacts = true
-                    }
-                }
-
-                Spacer(minLength: 0)
             }
-            .padding(24)
-            .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
         }
         .background(Color.black.ignoresSafeArea())
         .sheet(isPresented: $isShowingGuides) {
@@ -118,6 +63,84 @@ struct SurvivalModeView: View {
                 SignalView(appState: appState)
             }
         }
+    }
+
+    @ViewBuilder
+    private func survivalContent(fixedHeightLayout: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 18) {
+            if appState.isStealthModeEnabled {
+                StealthModeIndicatorView()
+            }
+
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Low Battery Survival Mode")
+                        .font(RediTypography.screenTitle)
+                        .foregroundStyle(ColorTheme.text)
+                    Text("Battery \(appState.batteryStatus.percentageText) • stripped to essentials only")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Exit") {
+                    disable()
+                }
+                .buttonStyle(SecondaryActionButtonStyle())
+                .frame(width: 92)
+            }
+
+            survivalStatusCard
+
+            if let primaryEmergencyContact {
+                emergencyCallCard(primaryEmergencyContact)
+            }
+
+            LazyVGrid(columns: columns, spacing: 16) {
+                survivalPrimaryButton(
+                    title: torchService.isTorchOn ? "Flashlight On" : "Flashlight",
+                    detail: torchService.isTorchOn ? "Turn off when you no longer need it." : "Fastest light with one tap.",
+                    systemImage: "flashlight",
+                    tint: ColorTheme.textTertiary
+                ) {
+                    torchService.toggleTorch()
+                }
+
+                survivalPrimaryButton(
+                    title: "Signal Nearby",
+                    detail: "Short mesh check without the full app shell.",
+                    systemImage: "signal",
+                    tint: ColorTheme.textTertiary
+                ) {
+                    isShowingSignal = true
+                }
+
+                survivalPrimaryButton(
+                    title: "Emergency Guides",
+                    detail: "Offline medical and emergency steps.",
+                    systemImage: "first_aid",
+                    tint: ColorTheme.textTertiary
+                ) {
+                    isShowingGuides = true
+                }
+
+                survivalPrimaryButton(
+                    title: "Emergency Contacts",
+                    detail: "Stored locally for offline access.",
+                    systemImage: "family",
+                    tint: ColorTheme.textTertiary
+                ) {
+                    isShowingContacts = true
+                }
+            }
+
+            if fixedHeightLayout {
+                Spacer(minLength: 0)
+            }
+        }
+    }
+
+    private func requiresScrollableLayout(in size: CGSize) -> Bool {
+        dynamicTypeSize.isAccessibilitySize || size.height < 720
     }
 
     private var primaryEmergencyContact: EmergencyQuickContact? {

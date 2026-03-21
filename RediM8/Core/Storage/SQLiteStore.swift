@@ -14,12 +14,14 @@ final class SQLiteStore {
     private let queue = DispatchQueue(label: AppConstants.Storage.sqliteQueueLabel)
     private var database: OpaquePointer?
     private let migrationManager: MigrationManager
+    let storageNamespace: String
 
     init(
         filename: String = AppConstants.Storage.databaseFilename,
         migrationManager: MigrationManager = .default
     ) throws {
         self.migrationManager = migrationManager
+        storageNamespace = filename
         let url = try Self.databaseURL(filename: filename)
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),

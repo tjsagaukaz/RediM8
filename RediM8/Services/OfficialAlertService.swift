@@ -1,5 +1,7 @@
+import Combine
 import CoreLocation
 import Foundation
+import UserNotifications
 
 @MainActor
 final class OfficialAlertService: ObservableObject {
@@ -83,6 +85,26 @@ final class OfficialAlertService: ObservableObject {
         }
 
         return "\(coverage.count) jurisdictions cached"
+    }
+
+    func alerts(for jurisdiction: AustralianJurisdiction) -> [OfficialAlert] {
+        activeAlerts.filter { $0.jurisdiction == jurisdiction }
+    }
+
+    func australiaWideAlerts() -> [OfficialAlert] {
+        activeAlerts
+    }
+
+    func preferredJurisdiction(currentLocation: CLLocation?, installedPacks: [OfflineMapPack]) -> AustralianJurisdiction? {
+        if let currentLocation,
+           let jurisdiction = AustralianJurisdiction.containing(currentLocation.coordinate) {
+            return jurisdiction
+        }
+
+        return Self.matchingJurisdictions(currentLocation: currentLocation, installedPacks: installedPacks)
+            .sorted { $0.title < $1.title }
+            .first
+            ?? cachedJurisdictions.sorted { $0.title < $1.title }.first
     }
 
     func refreshIfNeeded(maxAge: TimeInterval = 300) async {
@@ -1278,7 +1300,236 @@ private final class RSSFeedParser: NSObject, XMLParserDelegate {
         )
     }
 
-    private func localName(for elementName: String) -> String {
-        elementName.split(separator: ":").last.map(String.init) ?? elementName
+private func localName(for elementName: String) -> String {
+    elementName.split(separator: ":").last.map(String.init) ?? elementName
+}
+}
+
+protocol OfficialAlertNotificationCentering: AnyObject {
+    func requestAuthorization(options: UNAuthorizationOptions) async throws -> Bool
+    func authorizationStatus() async -> UNAuthorizationStatus
+    func add(_ request: UNNotificationRequest) async throws
+}
+
+extension UNUserNotificationCenter: OfficialAlertNotificationCentering {
+    func authorizationStatus() async -> UNAuthorizationStatus {
+        let settings = await notificationSettings()
+        return settings.authorizationStatus
+    }
+}
+
+enum OfficialAlertNotificationAuthorizationResult: Equatable {
+    case granted
+    case denied
+    case failed
+}
+
+@MainActor
+final class OfficialAlertNotificationService {
+    private enum DefaultsKey {
+        static let deliveredFingerprints = "official_alerts.notifications.delivered_fingerprints"
+    }
+
+    private let officialAlertService: OfficialAlertService
+    private let locationService: LocationService
+    private let mapDataService: MapDataService
+    private let notificationCenter: OfficialAlertNotificationCentering
+    private let userDefaults: UserDefaults
+    private var settings: PreparednessSettings
+    private var lastObservedFingerprints: Set<String>
+    private var cancellables = Set<AnyCancellable>()
+
+    init(
+        officialAlertService: OfficialAlertService,
+        locationService: LocationService,
+        mapDataService: MapDataService,
+        settings: PreparednessSettings,
+        notificationCenter: OfficialAlertNotificationCentering = UNUserNotificationCenter.current(),
+        userDefaults: UserDefaults = .standard
+    ) {
+        self.officialAlertService = officialAlertService
+        self.locationService = locationService
+        self.mapDataService = mapDataService
+        self.settings = settings
+        self.notificationCenter = notificationCenter
+        self.userDefaults = userDefaults
+        lastObservedFingerprints = []
+        resetBaseline()
+
+        officialAlertService.$library
+            .dropFirst()
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    await self?.handleLibraryChange()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    func requestAuthorizationIfNeeded() async -> OfficialAlertNotificationAuthorizationResult {
+        let status = await notificationCenter.authorizationStatus()
+        switch status {
+        case .authorized, .provisional, .ephemeral:
+            return .granted
+        case .denied:
+            return .denied
+        case .notDetermined:
+            do {
+                _ = try await notificationCenter.requestAuthorization(options: [.alert, .badge, .sound])
+                let refreshedStatus = await notificationCenter.authorizationStatus()
+                switch refreshedStatus {
+                case .authorized, .provisional, .ephemeral:
+                    return .granted
+                default:
+                    return .denied
+                }
+            } catch {
+                return .failed
+            }
+        @unknown default:
+            return .denied
+        }
+    }
+
+    func updateSettings(_ settings: PreparednessSettings) {
+        let notificationsChanged = self.settings.officialAlertNotificationsEnabled != settings.officialAlertNotificationsEnabled
+        let scopeChanged = self.settings.officialAlertNotificationScope != settings.officialAlertNotificationScope
+        let jurisdictionChanged = self.settings.officialAlertNotificationJurisdiction != settings.officialAlertNotificationJurisdiction
+
+        self.settings = settings
+
+        if notificationsChanged || scopeChanged || jurisdictionChanged {
+            resetBaseline()
+        }
+    }
+
+    private func handleLibraryChange() async {
+        let currentAlerts = matchingAlerts()
+        let currentFingerprints = Set(currentAlerts.map { alertFingerprint(for: $0) })
+        defer {
+            lastObservedFingerprints = currentFingerprints
+            trimDeliveredFingerprints()
+        }
+
+        guard settings.officialAlertNotificationsEnabled else {
+            return
+        }
+
+        let status = await notificationCenter.authorizationStatus()
+        switch status {
+        case .authorized, .provisional, .ephemeral:
+            break
+        default:
+            return
+        }
+
+        let deliveredFingerprints = loadDeliveredFingerprints()
+        let newAlerts = currentAlerts.filter { alert in
+            let fingerprint = alertFingerprint(for: alert)
+            return !lastObservedFingerprints.contains(fingerprint) && !deliveredFingerprints.contains(fingerprint)
+        }
+
+        guard !newAlerts.isEmpty else {
+            return
+        }
+
+        let request = buildNotificationRequest(for: newAlerts)
+        do {
+            try await notificationCenter.add(request)
+            var updatedFingerprints = deliveredFingerprints
+            newAlerts.forEach { updatedFingerprints.insert(alertFingerprint(for: $0)) }
+            saveDeliveredFingerprints(updatedFingerprints)
+        } catch {
+            RediLogger.alerts.error("Failed to schedule official alert notification: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func matchingAlerts() -> [OfficialAlert] {
+        switch settings.officialAlertNotificationScope {
+        case .local:
+            return officialAlertService.nearbyAlerts(
+                currentLocation: locationService.currentLocation,
+                installedPacks: installedPacks()
+            )
+        case .state:
+            guard let jurisdiction = effectiveJurisdiction else {
+                return []
+            }
+            return officialAlertService.alerts(for: jurisdiction)
+        case .australia:
+            return officialAlertService.australiaWideAlerts()
+        }
+    }
+
+    private var effectiveJurisdiction: AustralianJurisdiction? {
+        settings.officialAlertNotificationJurisdiction
+            ?? officialAlertService.preferredJurisdiction(
+                currentLocation: locationService.currentLocation,
+                installedPacks: installedPacks()
+            )
+    }
+
+    private func installedPacks() -> [OfflineMapPack] {
+        let packIDs = mapDataService.loadInstalledPackIDs()
+        return mapDataService.packs(withIDs: packIDs)
+    }
+
+    private func resetBaseline() {
+        lastObservedFingerprints = Set(matchingAlerts().map { alertFingerprint(for: $0) })
+        trimDeliveredFingerprints()
+    }
+
+    private func buildNotificationRequest(for alerts: [OfficialAlert]) -> UNNotificationRequest {
+        let content = UNMutableNotificationContent()
+        content.sound = .default
+        content.threadIdentifier = "official-alerts"
+
+        let highestSeverityAlert = alerts.sorted { lhs, rhs in
+            if lhs.severity.rank != rhs.severity.rank {
+                return lhs.severity.rank < rhs.severity.rank
+            }
+            return lhs.lastUpdated > rhs.lastUpdated
+        }.first ?? alerts[0]
+
+        if alerts.count == 1 {
+            let alert = alerts[0]
+            content.title = alert.title
+            content.body = "\(alert.severity.title) in \(alert.regionScope). Open RediM8 for the latest official detail."
+        } else {
+            content.title = "\(alerts.count) new official alerts"
+            content.body = "\(scopeLabel) updated. Highest severity: \(highestSeverityAlert.severity.title). Open RediM8 for details."
+        }
+
+        let identifier = "official-alert-\(Int(Date().timeIntervalSince1970))"
+        return UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
+    }
+
+    private var scopeLabel: String {
+        switch settings.officialAlertNotificationScope {
+        case .local:
+            return "Local warning view"
+        case .state:
+            return effectiveJurisdiction.map { "\($0.shortTitle) feed" } ?? "State feed"
+        case .australia:
+            return "Australia-wide warning view"
+        }
+    }
+
+    private func alertFingerprint(for alert: OfficialAlert) -> String {
+        "\(alert.id)|\(Int(alert.issuedAt.timeIntervalSince1970))"
+    }
+
+    private func loadDeliveredFingerprints() -> Set<String> {
+        Set(userDefaults.stringArray(forKey: DefaultsKey.deliveredFingerprints) ?? [])
+    }
+
+    private func saveDeliveredFingerprints(_ fingerprints: Set<String>) {
+        userDefaults.set(Array(fingerprints.sorted()), forKey: DefaultsKey.deliveredFingerprints)
+    }
+
+    private func trimDeliveredFingerprints() {
+        let activeFingerprints = Set(officialAlertService.activeAlerts.map { alertFingerprint(for: $0) })
+        let retainedFingerprints = loadDeliveredFingerprints().intersection(activeFingerprints)
+        saveDeliveredFingerprints(retainedFingerprints)
     }
 }

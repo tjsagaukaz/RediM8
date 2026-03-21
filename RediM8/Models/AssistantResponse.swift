@@ -14,6 +14,7 @@ enum AssistantContextAction: Equatable {
     case openGuide(guideID: String)
     case openTab(String)
     case openPlanFocus(String)
+    case callNumber(number: String, label: String)
 }
 
 struct AssistantContextItem: Identifiable, Equatable {
@@ -51,6 +52,11 @@ struct AssistantContextSection: Identifiable, Equatable {
 }
 
 struct AssistantResponse: Identifiable, Equatable {
+    enum PresentationStyle: Equatable {
+        case operational
+        case entryPrompt
+    }
+
     enum SourceMode: String, Equatable {
         case deterministic
         case summarized
@@ -67,6 +73,7 @@ struct AssistantResponse: Identifiable, Equatable {
     let trustLabel: AssistantTrustLabel?
     let answerMode: AssistantAnswerMode
     let sourceMode: SourceMode
+    let presentationStyle: PresentationStyle
     let summary: String
     let steps: [String]
     let safetyNotes: [String]
@@ -79,6 +86,10 @@ struct AssistantResponse: Identifiable, Equatable {
     let interpretationNote: String?
     let usedOfflineModel: Bool
     let contextSections: [AssistantContextSection]
+    let situationSnapshot: AssistantSituationSnapshot?
+    let advisorContextStatus: AdvisorContextStatus
+    let usesOperationalTrustContext: Bool
+    let clarifyingQuestion: AssistantClarifyingQuestion?
 
     init(
         id: UUID = UUID(),
@@ -90,6 +101,7 @@ struct AssistantResponse: Identifiable, Equatable {
         trustLabel: AssistantTrustLabel?,
         answerMode: AssistantAnswerMode,
         sourceMode: SourceMode,
+        presentationStyle: PresentationStyle = .operational,
         summary: String,
         steps: [String],
         safetyNotes: [String] = [],
@@ -101,7 +113,17 @@ struct AssistantResponse: Identifiable, Equatable {
         fallbackExplanation: String? = nil,
         interpretationNote: String? = nil,
         usedOfflineModel: Bool = false,
-        contextSections: [AssistantContextSection] = []
+        contextSections: [AssistantContextSection] = [],
+        situationSnapshot: AssistantSituationSnapshot? = nil,
+        advisorContextStatus: AdvisorContextStatus = .init(
+            source: .generalGuidance,
+            freshnessMinutes: nil,
+            isOffline: false,
+            hazard: nil,
+            routeStatus: nil
+        ),
+        usesOperationalTrustContext: Bool = false,
+        clarifyingQuestion: AssistantClarifyingQuestion? = nil
     ) {
         self.id = id
         self.query = query
@@ -112,6 +134,7 @@ struct AssistantResponse: Identifiable, Equatable {
         self.trustLabel = trustLabel
         self.answerMode = answerMode
         self.sourceMode = sourceMode
+        self.presentationStyle = presentationStyle
         self.summary = summary
         self.steps = steps
         self.safetyNotes = safetyNotes
@@ -124,10 +147,158 @@ struct AssistantResponse: Identifiable, Equatable {
         self.interpretationNote = interpretationNote
         self.usedOfflineModel = usedOfflineModel
         self.contextSections = contextSections
+        self.situationSnapshot = situationSnapshot
+        self.advisorContextStatus = advisorContextStatus
+        self.usesOperationalTrustContext = usesOperationalTrustContext
+        self.clarifyingQuestion = clarifyingQuestion
     }
 
     var primaryGuide: Guide? {
         relatedGuides.first
+    }
+
+    var hasHazardWarning: Bool {
+        contextSections.contains(where: \.isHazardWarning)
+    }
+
+    var panelSubtitle: String {
+        if let clarifyingQuestion {
+            return "\(panelSubtitleBase) One quick question can tighten the next steps: \(clarifyingQuestion.prompt)"
+        }
+        return panelSubtitleBase
+    }
+
+    private var panelSubtitleBase: String {
+        if isEntryPromptPresentation {
+            return "Ask about emergencies, planning, or navigation to get grounded offline guidance."
+        }
+
+        if advisorContextStatus.source != .generalGuidance {
+            return "Guidance shaped from bundled offline references and current conditions."
+        }
+
+        switch sourceMode {
+        case .deterministic:
+            return "Immediate steps grounded in bundled offline guidance."
+        case .summarized:
+            return usedOfflineModel
+                ? "Guide-grounded guidance with an on-device wording pass."
+                : "Guide-grounded guidance shaped from bundled offline references."
+        case .retrievalOnly:
+            return "Direct offline guidance from bundled RediM8 references."
+        case .fallback:
+            return "Closest bundled offline guidance for this question."
+        }
+    }
+
+    var situationHeading: String {
+        isEntryPromptPresentation ? "Start Here" : "What Matters Right Now"
+    }
+
+    var actionsHeading: String {
+        "Do This Next"
+    }
+
+    var avoidHeading: String {
+        "Avoid This"
+    }
+
+    var contextHeading: String {
+        hasHazardWarning ? "Supporting Context" : "Local Context"
+    }
+
+    var sourceHeading: String {
+        "Source & Trust"
+    }
+
+    var guidesHeading: String {
+        primaryGuide == nil ? "Related Guides" : "Open Full Guides"
+    }
+
+    var questionHeading: String {
+        isEntryPromptPresentation ? "Choose A Direction" : "Refine This"
+    }
+
+    var presentationMode: AssistantSituationMode {
+        situationSnapshot?.mode ?? .normal
+    }
+
+    var isEntryPromptPresentation: Bool {
+        presentationStyle == .entryPrompt
+    }
+
+    var isCrisisPresentation: Bool {
+        presentationMode == .crisis
+    }
+
+    var isElevatedPresentation: Bool {
+        presentationMode == .elevated
+    }
+
+    var visibleSteps: [String] {
+        switch presentationMode {
+        case .crisis:
+            return Array(steps.prefix(3))
+        case .elevated:
+            return Array(steps.prefix(5))
+        case .prep, .normal:
+            return steps
+        }
+    }
+
+    var visibleSafetyNotes: [String] {
+        switch presentationMode {
+        case .crisis:
+            return Array(safetyNotes.prefix(1))
+        case .elevated:
+            return Array(safetyNotes.prefix(2))
+        case .prep, .normal:
+            return safetyNotes
+        }
+    }
+
+    var shouldCollapseSecondaryContentByDefault: Bool {
+        !isEntryPromptPresentation
+    }
+
+    var shouldPrioritizePrimaryActionRow: Bool {
+        if isEntryPromptPresentation {
+            return false
+        }
+        return isCrisisPresentation || isElevatedPresentation
+    }
+
+    var shouldShowTrustStrip: Bool {
+        !isEntryPromptPresentation && usesOperationalTrustContext
+    }
+
+    var shouldShowOperationalMetadata: Bool {
+        !isEntryPromptPresentation
+    }
+
+    var trustStripTitle: String {
+        advisorContextStatus.title
+    }
+
+    var trustStripDetail: String? {
+        advisorContextStatus.detail
+    }
+
+    var deliveryModeTitle: String {
+        if hasHazardWarning || riskBand == .critical {
+            return "Immediate"
+        }
+
+        switch sourceMode {
+        case .deterministic:
+            return "Guide-linked"
+        case .summarized:
+            return "Contextual"
+        case .retrievalOnly:
+            return "Direct"
+        case .fallback:
+            return "Fallback"
+        }
     }
 
     var confidenceTitle: String {

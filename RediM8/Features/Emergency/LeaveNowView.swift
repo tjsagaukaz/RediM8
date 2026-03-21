@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LeaveNowView: View {
     @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @StateObject private var viewModel: LeaveNowViewModel
     let dismiss: () -> Void
     let openMap: () -> Void
@@ -21,84 +22,20 @@ struct LeaveNowView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .top) {
-                    Spacer()
-                    Button("Close") {
-                        dismiss()
+            Group {
+                if requiresScrollableLayout(in: proxy.size) {
+                    ScrollView {
+                        leaveNowContent(in: proxy.size, fixedHeightLayout: false)
+                            .padding(24)
+                            .frame(maxWidth: .infinity, alignment: .top)
                     }
-                    .buttonStyle(SecondaryActionButtonStyle())
-                    .frame(width: 110)
+                    .scrollIndicators(.hidden)
+                } else {
+                    leaveNowContent(in: proxy.size, fixedHeightLayout: true)
+                        .padding(24)
+                        .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
                 }
-
-                CinematicBanner("evacuation_staging", height: 180)
-
-                ModeHeroCard(
-                    eyebrow: "Evacuation Flow",
-                    title: "LEAVE NOW",
-                    subtitle: "Large actions only. No scrolling. Do the essentials first, then jump straight to map, call, or signal.",
-                    iconName: "route",
-                    accent: ColorTheme.danger,
-                    backgroundAssetName: "emergency_mode_gear"
-                ) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(viewModel.summaryLine)
-                            .font(RediTypography.bodyStrong)
-                            .foregroundStyle(ColorTheme.text)
-                        Text(viewModel.nextStepLine)
-                            .font(.subheadline)
-                            .foregroundStyle(ColorTheme.textMuted)
-
-                        ReadinessMeter(value: prepProgress, tint: departureStatusTint, height: 10)
-
-                        HStack(spacing: 10) {
-                            departureBadge(
-                                title: "\(completedPrepCount) / \(prepActions.count) prep done",
-                                tint: departureStatusTint
-                            )
-                            departureBadge(
-                                title: departureStatusTitle,
-                                tint: departureStatusTint
-                            )
-                        }
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Before You Move")
-                        .font(RediTypography.sectionTitle)
-                        .foregroundStyle(ColorTheme.text)
-                    Text("Finish the essentials you still can. If officials say leave, go even if this list is incomplete.")
-                        .font(RediTypography.body)
-                        .foregroundStyle(ColorTheme.textMuted)
-
-                    VStack(spacing: 12) {
-                        ForEach(prepActions) { action in
-                            prepActionButton(
-                                action: action,
-                                minHeight: max(68, (proxy.size.height - 470) / CGFloat(max(prepActions.count, 1)))
-                            )
-                        }
-                    }
-                }
-
-                if let evacuationAction {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Final Departure")
-                            .font(RediTypography.sectionTitle)
-                            .foregroundStyle(ColorTheme.text)
-                        Text(departureStatusDetail)
-                            .font(RediTypography.body)
-                            .foregroundStyle(ColorTheme.textMuted)
-
-                        finalDepartureButton(action: evacuationAction)
-                    }
-                }
-
-                Spacer(minLength: 6)
             }
-            .padding(24)
-            .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .top)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             OperationalStatusRail(items: viewModel.statusItems, accent: ColorTheme.danger)
@@ -135,6 +72,99 @@ struct LeaveNowView: View {
             }
         }
         .background(ColorTheme.background.ignoresSafeArea())
+    }
+
+    @ViewBuilder
+    private func leaveNowContent(in size: CGSize, fixedHeightLayout: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top) {
+                Spacer()
+                Button("Close") {
+                    dismiss()
+                }
+                .buttonStyle(SecondaryActionButtonStyle())
+                .frame(width: 110)
+            }
+
+            CinematicBanner("evacuation_staging", height: 180)
+
+            ModeHeroCard(
+                eyebrow: "Evacuation Flow",
+                title: "LEAVE NOW",
+                subtitle: fixedHeightLayout
+                    ? "Large actions only. No scrolling. Do the essentials first, then jump straight to map, call, or signal."
+                    : "Large actions first. Scroll only if needed to reach every departure step.",
+                iconName: "route",
+                accent: ColorTheme.danger,
+                backgroundAssetName: "emergency_mode_gear"
+            ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(viewModel.summaryLine)
+                        .font(RediTypography.bodyStrong)
+                        .foregroundStyle(ColorTheme.text)
+                    Text(viewModel.nextStepLine)
+                        .font(.subheadline)
+                        .foregroundStyle(ColorTheme.textMuted)
+
+                    ReadinessMeter(value: prepProgress, tint: departureStatusTint, height: 10)
+
+                    HStack(spacing: 10) {
+                        departureBadge(
+                            title: "\(completedPrepCount) / \(prepActions.count) prep done",
+                            tint: departureStatusTint
+                        )
+                        departureBadge(
+                            title: departureStatusTitle,
+                            tint: departureStatusTint
+                        )
+                    }
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Before You Move")
+                    .font(RediTypography.sectionTitle)
+                    .foregroundStyle(ColorTheme.text)
+                Text("Finish the essentials you still can. If officials say leave, go even if this list is incomplete.")
+                    .font(RediTypography.body)
+                    .foregroundStyle(ColorTheme.textMuted)
+
+                VStack(spacing: 12) {
+                    ForEach(prepActions) { action in
+                        prepActionButton(
+                            action: action,
+                            minHeight: prepActionMinimumHeight(in: size, fixedHeightLayout: fixedHeightLayout)
+                        )
+                    }
+                }
+            }
+
+            if let evacuationAction {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Final Departure")
+                        .font(RediTypography.sectionTitle)
+                        .foregroundStyle(ColorTheme.text)
+                    Text(departureStatusDetail)
+                        .font(RediTypography.body)
+                        .foregroundStyle(ColorTheme.textMuted)
+
+                    finalDepartureButton(action: evacuationAction)
+                }
+            }
+
+            if fixedHeightLayout {
+                Spacer(minLength: 6)
+            }
+        }
+    }
+
+    private func prepActionMinimumHeight(in size: CGSize, fixedHeightLayout: Bool) -> CGFloat {
+        guard fixedHeightLayout else { return 68 }
+        return max(68, (size.height - 470) / CGFloat(max(prepActions.count, 1)))
+    }
+
+    private func requiresScrollableLayout(in size: CGSize) -> Bool {
+        dynamicTypeSize.isAccessibilitySize || size.height < 780
     }
 
     private func callEmergencyServices() {

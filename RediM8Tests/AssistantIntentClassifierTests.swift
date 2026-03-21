@@ -24,7 +24,6 @@ final class AssistantIntentClassifierTests: XCTestCase {
         let classification = classifier.classify("How do I treat a snake bite in Australia?")
 
         XCTAssertEqual(classification.policyID, "snake_bite")
-        XCTAssertEqual(classification.topic, .snakeBite)
         XCTAssertEqual(classification.riskBand, .critical)
         XCTAssertEqual(classification.preferredMode, .deterministicStepCard)
         XCTAssertEqual(classification.modeWhenGenerationDisabled, .deterministicStepCard)
@@ -41,7 +40,7 @@ final class AssistantIntentClassifierTests: XCTestCase {
 
         let classification = classifier.classify("What should I do during bushfire evacuation?")
 
-        XCTAssertEqual(classification.topic, .bushfireEvacuation)
+        XCTAssertEqual(classification.policyID, "bushfire_evacuation")
         XCTAssertEqual(classification.preferredMode, .deterministicStepCard)
         XCTAssertTrue(classification.matchedGuideIDs.contains("bushfire_leave_early_plan"))
         XCTAssertTrue(classification.matchedGuideIDs.contains("household_evacuation_quick_start"))
@@ -55,7 +54,7 @@ final class AssistantIntentClassifierTests: XCTestCase {
 
         let classification = classifier.classify("How much water do I need for 3 days in extreme heat?")
 
-        XCTAssertEqual(classification.topic, .waterPlanning)
+        XCTAssertEqual(classification.policyID, "water_planning")
         XCTAssertEqual(classification.riskBand, .advisory)
         XCTAssertEqual(classification.preferredMode, .summarizedRetrieval)
         XCTAssertEqual(classification.modeWhenGenerationDisabled, .retrievalOnlyCard)
@@ -70,7 +69,7 @@ final class AssistantIntentClassifierTests: XCTestCase {
 
         let classification = classifier.classify("How do I use a generator safely after a storm?")
 
-        XCTAssertEqual(classification.topic, .unknown)
+        XCTAssertNil(classification.policyID)
         XCTAssertEqual(classification.riskBand, .unknown)
         XCTAssertEqual(classification.preferredMode, .guideFallback)
         XCTAssertEqual(classification.modeWhenGenerationDisabled, .guideFallback)

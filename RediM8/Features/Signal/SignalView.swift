@@ -33,6 +33,7 @@ struct SignalView: View {
     @State private var isSignalPulseActive = false
     @State private var selectedWorkspace: SignalWorkspace = .communicate
     @State private var assistantContext: AssistantLaunchContext?
+    @State private var signalScrollOffset: CGFloat = 0
     private let quickMessageTemplates = ["NEED WATER", "SAFE LOCATION", "FIRE NEARBY", "NEED PICKUP"]
 
     init(appState: AppState, scrollToTopRequestID: Int = 0) {
@@ -42,50 +43,70 @@ struct SignalView: View {
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    Color.clear
-                        .frame(height: 0)
-                        .id(SignalScrollAnchor.top)
+        ZStack(alignment: .bottom) {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 18) {
+                        Color.clear
+                            .frame(height: 0)
+                            .id(SignalScrollAnchor.top)
+                            .background(
+                                GeometryReader { proxy in
+                                    Color.clear.preference(
+                                        key: SignalScrollOffsetPreferenceKey.self,
+                                        value: proxy.frame(in: .named(SignalScrollSpace.name)).minY
+                                    )
+                                }
+                            )
 
-                    if viewModel.isStealthModeEnabled {
-                        StealthModeIndicatorView()
+                        if viewModel.isStealthModeEnabled {
+                            StealthModeIndicatorView()
+                        }
+
+                        if viewModel.isAnonymousModeEnabled {
+                            HiddenModeIndicatorView(actionTitle: "Turn Off") {
+                                viewModel.disableHiddenMode()
+                            }
+                        }
+
+                        CinematicBanner("signal_vehicle_link", height: 160)
+
+                        meshStatusBanner
+
+                        signalCommandCenterCard
+                        signalWorkspaceDeck
+                        activeWorkspaceContent
                     }
-
-                    if viewModel.isAnonymousModeEnabled {
-                        HiddenModeIndicatorView(actionTitle: "Turn Off") {
-                            viewModel.disableHiddenMode()
+                    .padding(20)
+                    .padding(.bottom, signalContentBottomInset)
+                }
+                .coordinateSpace(name: SignalScrollSpace.name)
+                .onChange(of: scrollToTopRequestID) { _, _ in
+                    DispatchQueue.main.async {
+                        withAnimation(RediMotion.selection) {
+                            proxy.scrollTo(SignalScrollAnchor.top, anchor: .top)
                         }
                     }
-
-                    CinematicBanner("signal_vehicle_link", height: 160)
-
-                    meshStatusBanner
-
-                    signalCommandCenterCard
-                    signalWorkspaceDeck
-                    activeWorkspaceContent
                 }
-                .padding(20)
+                .onPreferenceChange(SignalScrollOffsetPreferenceKey.self) { offset in
+                    signalScrollOffset = offset
+                }
             }
-            .onChange(of: scrollToTopRequestID) { _, _ in
-                DispatchQueue.main.async {
-                    withAnimation(RediMotion.selection) {
-                        proxy.scrollTo(SignalScrollAnchor.top, anchor: .top)
-                    }
-                }
+
+            if shouldShowSignalCommandDock {
+                signalCommandDock
+                    .padding(.horizontal, RediSpacing.screen)
+                    .padding(.bottom, max(RediSpacing.content, RediLayout.commandDockContentInset))
+                    .scaleEffect(signalDockScale, anchor: .bottom)
+                    .offset(y: signalDockVerticalOffset)
+                    .opacity(signalDockOpacity)
+                    .animation(reduceMotion ? nil : RediMotion.selection, value: signalDockCollapseProgress)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .navigationTitle("Signal")
         .safeAreaInset(edge: .top, spacing: 0) {
             OperationalStatusRail(items: viewModel.statusItems, accent: signalStatusColor)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            signalCommandDock
-                .padding(.horizontal, RediSpacing.screen)
-                .padding(.top, 6)
-                .padding(.bottom, 80)
         }
         .background(
             ColorTheme.panel
@@ -137,6 +158,37 @@ struct SignalView: View {
                 }
             }
         }
+    }
+
+    private var shouldShowSignalCommandDock: Bool {
+        selectedWorkspace == .communicate
+    }
+
+    private var signalContentBottomInset: CGFloat {
+        if shouldShowSignalCommandDock {
+            return 80 + RediLayout.commandDockContentInset
+        }
+
+        return RediLayout.commandDockContentInset
+    }
+
+    private var signalDockCollapseProgress: CGFloat {
+        guard shouldShowSignalCommandDock else { return 0 }
+
+        let downwardTravel = max(0, -signalScrollOffset)
+        return min(1, downwardTravel / 72)
+    }
+
+    private var signalDockScale: CGFloat {
+        1 - (signalDockCollapseProgress * 0.08)
+    }
+
+    private var signalDockVerticalOffset: CGFloat {
+        signalDockCollapseProgress * 20
+    }
+
+    private var signalDockOpacity: Double {
+        Double(1 - (signalDockCollapseProgress * 0.08))
     }
 
     private var broadcastDockButton: some View {
@@ -2197,31 +2249,54 @@ struct SignalView: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            RediCommandCard(
-                title: title,
-                detail: detail,
-                systemImage: systemImage,
-                tint: tint,
-                badge: status,
-                prominence: commandProminence(for: prominence),
-                layout: .rail,
-                isEnabled: isEnabled,
-                minHeight: 66
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(isEnabled ? tint : ColorTheme.textTertiary)
+                    .frame(width: 18, height: 18)
+                    .padding(8)
+                    .background((isEnabled ? tint : ColorTheme.textTertiary).opacity(0.14), in: RoundedRectangle(cornerRadius: RediRadius.button, style: .continuous))
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(isEnabled ? ColorTheme.text : ColorTheme.textSecondary)
+                        .lineLimit(2)
+
+                    Text(status.uppercased())
+                        .font(.caption2.weight(.black))
+                        .foregroundStyle(isEnabled ? tint : ColorTheme.textTertiary)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 9)
+            .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
+            .background(
+                Color.black.opacity(backgroundOpacity(for: prominence, isEnabled: isEnabled)),
+                in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                    .stroke((isEnabled ? tint : ColorTheme.dividerStrong).opacity(0.16), lineWidth: 1)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(CardPressButtonStyle())
         .disabled(!isEnabled)
         .accessibilityLabel("\(title), \(status). \(detail)")
     }
 
-    private func commandProminence(for prominence: SignalDockButtonProminence) -> RediCommandCardProminence {
+    private func backgroundOpacity(for prominence: SignalDockButtonProminence, isEnabled: Bool) -> Double {
+        guard isEnabled else { return 0.16 }
+
         switch prominence {
         case .critical:
-            .critical
+            return 0.24
         case .accented:
-            .accented
+            return 0.2
         case .standard:
-            .neutral
+            return 0.16
         }
     }
 }
@@ -2232,6 +2307,18 @@ private struct SignalFailureRowModel: Identifiable {
     let detail: String
     let iconName: String
     let tint: Color
+}
+
+private enum SignalScrollSpace {
+    static let name = "signal-scroll"
+}
+
+private struct SignalScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
 }
 
 private enum SignalDockButtonProminence {

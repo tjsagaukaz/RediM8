@@ -120,7 +120,9 @@ final class NavigationRouter: ObservableObject {
 
     func openLibrary() {
         requestedPlanFocus = nil
-        selectedTab = .library
+        // The full library is now hidden from primary user navigation.
+        // Keep legacy calls stable by resolving them to More.
+        selectedTab = .more
     }
 
     func openMap() {

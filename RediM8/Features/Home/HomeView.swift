@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct HomeView: View {
+    @Environment(\.openURL) private var openURL
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @StateObject private var viewModel: HomeViewModel
     private let appState: AppState
@@ -12,7 +13,10 @@ struct HomeView: View {
     @State private var isShowingOperationalInsights = false
     @State private var isShowingPriorityTools = false
     @State private var isShowingBushfireReadiness = false
+    @State private var isShowingOfficialAlerts = true
     @State private var isShowingQuickAccess = false
+    @State private var selectedOfficialAlertScope: HomeOfficialAlertScope = .local
+    @State private var selectedOfficialAlertJurisdiction: AustralianJurisdiction?
 
     init(appState: AppState, router: NavigationRouter, scrollToTopRequestID: Int) {
         self.appState = appState
@@ -39,6 +43,8 @@ struct HomeView: View {
 
                     // MARK: — GLANCE ZONE (above fold)
 
+                    todayReadinessCard
+
                     todayNextStepCard
 
                     if let safeModeSummary = viewModel.safeModeSummary {
@@ -46,8 +52,6 @@ struct HomeView: View {
                     } else {
                         todayLocalStatusCard
                     }
-
-                    todayReadinessCard
 
                     if !appState.profile.isProfileFullyComplete {
                         ProfileCompletionCard(profile: appState.profile) { step in
@@ -62,6 +66,7 @@ struct HomeView: View {
                     // MARK: — BROWSE ZONE (progressive detail)
 
                     homeStatusRail
+                    officialAlertsPanel
 
                     if appState.emergencyUnlockState.isVisible {
                         emergencyUnlockCard
@@ -133,6 +138,7 @@ struct HomeView: View {
                 } label: {
                     Image(systemName: "gearshape.fill")
                 }
+                .accessibilityIdentifier("home.settings")
             }
         }
         .background(Color.clear)
@@ -246,8 +252,71 @@ struct HomeView: View {
         )
     }
 
+    private var effectiveOfficialAlertJurisdiction: AustralianJurisdiction? {
+        selectedOfficialAlertJurisdiction
+            ?? viewModel.defaultOfficialAlertJurisdiction
+            ?? viewModel.availableOfficialAlertJurisdictions.first
+    }
+
+    private var selectedOfficialAlertSummary: OfficialAlertHomeSummary {
+        viewModel.officialAlertSummary(
+            for: selectedOfficialAlertScope,
+            jurisdiction: effectiveOfficialAlertJurisdiction
+        )
+    }
+
+    private var selectedOfficialAlerts: [OfficialAlert] {
+        viewModel.officialAlerts(
+            for: selectedOfficialAlertScope,
+            jurisdiction: effectiveOfficialAlertJurisdiction
+        )
+    }
+
+    private var officialAlertsPanelSubtitle: String {
+        switch selectedOfficialAlertScope {
+        case .local:
+            return L10n.tr(
+                "home.official_alerts.panel.subtitle.local",
+                "Warnings matched to your area and current coverage."
+            )
+        case .state:
+            return L10n.tr(
+                "home.official_alerts.panel.subtitle.state",
+                "Check a state or territory feed for family and travel context."
+            )
+        case .australia:
+            return L10n.tr(
+                "home.official_alerts.panel.subtitle.australia",
+                "Scan the national warning picture across cached official feeds."
+            )
+        }
+    }
+
+    private var officialAlertScopeOptions: [PremiumSegmentedControlOption<HomeOfficialAlertScope>] {
+        HomeOfficialAlertScope.allCases.map { scope in
+            PremiumSegmentedControlOption(
+                segmentID: scope,
+                title: scope.title,
+                detail: scope.detail,
+                iconName: scope.iconName,
+                accent: officialAlertToneColor(selectedOfficialAlertSummary.tone)
+            )
+        }
+    }
+
     private var homeStatusRail: some View {
         SystemStatusRail(items: homeStatusItems, accent: ColorTheme.accent)
+    }
+
+    private var officialAlertsPanel: some View {
+        CollapsiblePanelCard(
+            title: L10n.tr("home.official_alerts.panel.title", "Official Alerts"),
+            subtitle: officialAlertsPanelSubtitle,
+            accent: officialAlertToneColor(selectedOfficialAlertSummary.tone),
+            isExpanded: $isShowingOfficialAlerts
+        ) {
+            officialAlertsCardContent
+        }
     }
 
     private var homeStatusItems: [OperationalStatusItem] {
@@ -490,7 +559,8 @@ struct HomeView: View {
     private var todayReadinessCard: some View {
         let readinessTint = readinessColor(for: viewModel.prepScore.overall)
 
-        return CommandPanel(
+        return CinematicCommandPanel(
+            assetName: "preparedness_flatlay",
             eyebrow: L10n.tr("home.today.readiness.eyebrow", "Preparedness Status")
         ) {
             HStack(alignment: .top, spacing: RediSpacing.content) {
@@ -621,7 +691,11 @@ struct HomeView: View {
     }
 
     private var todayLocalStatusCard: some View {
-        CommandPanel(eyebrow: L10n.tr("home.today.local_status.eyebrow", "Local Status")) {
+        CinematicCommandPanel(
+            assetName: "community_storm_town",
+            eyebrow: L10n.tr("home.today.local_status.eyebrow", "Local Status"),
+            bannerHeight: 140
+        ) {
             VStack(alignment: .leading, spacing: RediSpacing.content) {
                 HStack(alignment: .center, spacing: RediSpacing.compact) {
                     Circle()
@@ -663,13 +737,19 @@ struct HomeView: View {
 
     private var officialAlertsCardContent: some View {
         VStack(alignment: .leading, spacing: RediSpacing.content) {
+            PremiumSegmentedControl(items: officialAlertScopeOptions, selection: $selectedOfficialAlertScope)
+
+            if selectedOfficialAlertScope == .state {
+                officialAlertJurisdictionPicker
+            }
+
             HStack(alignment: .top, spacing: RediSpacing.content) {
-                RediIcon(viewModel.nearbyOfficialAlerts.first?.kind.systemImage ?? "warning")
-                    .foregroundStyle(officialAlertToneColor(viewModel.officialAlertSummary.tone))
+                RediIcon(selectedOfficialAlerts.first?.kind.systemImage ?? "warning")
+                    .foregroundStyle(officialAlertToneColor(selectedOfficialAlertSummary.tone))
                     .frame(width: 18, height: 18)
                     .padding(10)
                     .background(
-                        officialAlertToneColor(viewModel.officialAlertSummary.tone).opacity(0.14),
+                        officialAlertToneColor(selectedOfficialAlertSummary.tone).opacity(0.14),
                         in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
                     )
 
@@ -677,11 +757,11 @@ struct HomeView: View {
                     Text(L10n.tr("home.official_alerts.label", "OFFICIAL ALERTS"))
                         .font(RediTypography.label)
                         .tracking(1.2)
-                        .foregroundStyle(officialAlertToneColor(viewModel.officialAlertSummary.tone))
-                    Text(viewModel.officialAlertSummary.title)
+                        .foregroundStyle(officialAlertToneColor(selectedOfficialAlertSummary.tone))
+                    Text(selectedOfficialAlertSummary.title)
                         .font(RediTypography.heading)
                         .foregroundStyle(ColorTheme.text)
-                    Text(viewModel.officialAlertSummary.detail)
+                    Text(selectedOfficialAlertSummary.detail)
                         .font(RediTypography.body)
                         .foregroundStyle(ColorTheme.textSecondary)
                 }
@@ -689,46 +769,72 @@ struct HomeView: View {
                 Spacer(minLength: 0)
             }
 
-            TrustPillGroup(items: viewModel.officialAlertTrustItems)
+            TrustPillGroup(items: viewModel.officialAlertTrustItems(for: selectedOfficialAlertScope, jurisdiction: effectiveOfficialAlertJurisdiction))
 
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: RediSpacing.content) {
                     alertMetaPanel(
                         title: L10n.tr("home.official_alerts.meta.official_feed", "Official Feed"),
-                        value: viewModel.nearbyOfficialAlerts.first?.issuer
+                        value: selectedOfficialAlerts.first?.issuer
                             ?? L10n.tr("home.official_alerts.meta.cached_mirror", "Cached mirror")
                     )
                     alertMetaPanel(
-                        title: L10n.tr("home.official_alerts.meta.redim8", "RediM8"),
-                        value: viewModel.nearbyOfficialAlerts.isEmpty
-                            ? L10n.tr("home.official_alerts.meta.monitoring_cache", "Monitoring cache")
-                            : L10n.tr("home.official_alerts.meta.readable_summary_only", "Readable summary only")
+                        title: L10n.tr("home.official_alerts.meta.scope", "Scope"),
+                        value: selectedOfficialAlertScope == .state
+                            ? (effectiveOfficialAlertJurisdiction?.title ?? L10n.tr("home.official_alerts.scope.none", "Select a state"))
+                            : selectedOfficialAlertScope.title
                     )
                 }
 
                 VStack(spacing: RediSpacing.content) {
                     alertMetaPanel(
                         title: L10n.tr("home.official_alerts.meta.official_feed", "Official Feed"),
-                        value: viewModel.nearbyOfficialAlerts.first?.issuer
+                        value: selectedOfficialAlerts.first?.issuer
                             ?? L10n.tr("home.official_alerts.meta.cached_mirror", "Cached mirror")
                     )
                     alertMetaPanel(
-                        title: L10n.tr("home.official_alerts.meta.redim8", "RediM8"),
-                        value: viewModel.nearbyOfficialAlerts.isEmpty
-                            ? L10n.tr("home.official_alerts.meta.monitoring_cache", "Monitoring cache")
-                            : L10n.tr("home.official_alerts.meta.readable_summary_only", "Readable summary only")
+                        title: L10n.tr("home.official_alerts.meta.scope", "Scope"),
+                        value: selectedOfficialAlertScope == .state
+                            ? (effectiveOfficialAlertJurisdiction?.title ?? L10n.tr("home.official_alerts.scope.none", "Select a state"))
+                            : selectedOfficialAlertScope.title
                     )
                 }
             }
 
-            if viewModel.nearbyOfficialAlerts.count > 1 {
-                Text(L10n.format(
-                    "home.official_alerts.match_count",
-                    "%d official alerts matched your current area or jurisdiction.",
-                    viewModel.nearbyOfficialAlerts.count
-                ))
+            if let countSummary = viewModel.officialAlertCountSummary(
+                for: selectedOfficialAlertScope,
+                jurisdiction: effectiveOfficialAlertJurisdiction
+            ) {
+                Text(countSummary)
                     .font(RediTypography.caption)
                     .foregroundStyle(ColorTheme.textSecondary)
+            }
+
+            if selectedOfficialAlerts.isEmpty {
+                Text(L10n.tr(
+                    "home.official_alerts.empty_state",
+                    "No active alerts are currently listed for this scope."
+                ))
+                .font(RediTypography.body)
+                .foregroundStyle(ColorTheme.textSecondary)
+                .padding(RediSpacing.card)
+                .homeInsetSurface(cornerRadius: RediRadius.card)
+            } else {
+                VStack(alignment: .leading, spacing: RediSpacing.content) {
+                    ForEach(Array(selectedOfficialAlerts.prefix(3))) { alert in
+                        officialAlertRow(alert)
+                    }
+                }
+
+                if selectedOfficialAlerts.count > 3 {
+                    Text(L10n.format(
+                        "home.official_alerts.more_results",
+                        "Showing the first 3 of %d alerts in this scope.",
+                        selectedOfficialAlerts.count
+                    ))
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.textTertiary)
+                }
             }
 
             Text(L10n.tr(
@@ -738,10 +844,12 @@ struct HomeView: View {
                 .font(RediTypography.caption)
                 .foregroundStyle(ColorTheme.textTertiary)
 
-            Button(L10n.tr("home.official_alerts.view_on_map", "View on Map")) {
-                router.openMap()
+            if selectedOfficialAlertScope == .local {
+                Button(L10n.tr("home.official_alerts.view_on_map", "View on Map")) {
+                    router.openMap()
+                }
+                .buttonStyle(SecondaryActionButtonStyle())
             }
-            .buttonStyle(SecondaryActionButtonStyle())
         }
     }
 
@@ -2279,6 +2387,102 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(RediSpacing.content)
+        .homeInsetSurface(cornerRadius: RediRadius.card)
+    }
+
+    private var officialAlertJurisdictionPicker: some View {
+        Menu {
+            ForEach(viewModel.availableOfficialAlertJurisdictions) { jurisdiction in
+                Button {
+                    selectedOfficialAlertJurisdiction = jurisdiction
+                } label: {
+                    if jurisdiction == effectiveOfficialAlertJurisdiction {
+                        Label(jurisdiction.title, systemImage: "checkmark")
+                    } else {
+                        Text(jurisdiction.title)
+                    }
+                }
+            }
+        } label: {
+            HStack(alignment: .center, spacing: RediSpacing.content) {
+                VStack(alignment: .leading, spacing: RediSpacing.micro) {
+                    Text(L10n.tr("home.official_alerts.state_picker.label", "STATE FEED"))
+                        .font(RediTypography.label)
+                        .tracking(1.2)
+                        .foregroundStyle(ColorTheme.textTertiary)
+                    Text(
+                        effectiveOfficialAlertJurisdiction?.title
+                            ?? L10n.tr("home.official_alerts.state_picker.placeholder", "Select a state or territory")
+                    )
+                    .font(RediTypography.data)
+                    .foregroundStyle(ColorTheme.text)
+                }
+
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(ColorTheme.textTertiary)
+            }
+            .padding(RediSpacing.content)
+            .homeInsetSurface(cornerRadius: RediRadius.card)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func officialAlertRow(_ alert: OfficialAlert) -> some View {
+        VStack(alignment: .leading, spacing: RediSpacing.content) {
+            HStack(alignment: .top, spacing: RediSpacing.content) {
+                RediIcon(alert.kind.systemImage)
+                    .foregroundStyle(officialAlertToneColor(selectedOfficialAlertSummary.tone))
+                    .frame(width: 18, height: 18)
+                    .padding(10)
+                    .background(
+                        officialAlertToneColor(selectedOfficialAlertSummary.tone).opacity(0.14),
+                        in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
+                    )
+
+                VStack(alignment: .leading, spacing: RediSpacing.micro) {
+                    Text(alert.title)
+                        .font(RediTypography.bodyStrong)
+                        .foregroundStyle(ColorTheme.text)
+                    Text("\(alert.severity.title) • \(viewModel.officialAlertScopeLine(for: alert))")
+                        .font(RediTypography.caption)
+                        .foregroundStyle(ColorTheme.textSecondary)
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            Text(alert.message)
+                .font(RediTypography.body)
+                .foregroundStyle(ColorTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let instruction = alert.instruction?.nilIfBlank {
+                Text(instruction)
+                    .font(RediTypography.caption)
+                    .foregroundStyle(ColorTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Text(viewModel.officialAlertUpdatedLine(for: alert))
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textTertiary)
+
+            Text(viewModel.officialAlertSafetyNote(for: alert))
+                .font(RediTypography.caption)
+                .foregroundStyle(officialAlertToneColor(selectedOfficialAlertSummary.tone))
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let sourceURL = alert.sourceURL {
+                Button(L10n.tr("home.official_alerts.open_source", "Open Official Source")) {
+                    openURL(sourceURL)
+                }
+                .buttonStyle(SecondaryActionButtonStyle())
+            }
+        }
+        .padding(RediSpacing.card)
         .homeInsetSurface(cornerRadius: RediRadius.card)
     }
 

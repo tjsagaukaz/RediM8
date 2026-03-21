@@ -11,6 +11,7 @@ final class PlanViewModel: ObservableObject {
     @Published private(set) var emergencyPlan: Emergency72HourPlan
     @Published private(set) var waterRuntimeEstimate: WaterRuntimeEstimate
     @Published private(set) var forgottenItems: [ForgottenItemInsight] = []
+    @Published private(set) var preparednessGearRecommendations: [PreparednessGearRecommendation] = []
     @Published private(set) var expiryReminders: [SupplyExpiryReminder] = []
     @Published private(set) var familyRoleTasks: [FamilyRoleTask] = []
     @Published var completedEmergencyChecklistItemIDs: Set<String>
@@ -24,6 +25,7 @@ final class PlanViewModel: ObservableObject {
     private let waterPointService: WaterPointService
     private let waterRuntimeService: WaterRuntimeService
     private let preparednessInsightsService: PreparednessInsightsService
+    private let preparednessGearRecommendationService: PreparednessGearRecommendationService
     private var cancellables = Set<AnyCancellable>()
 
     init(appState: AppState) {
@@ -41,6 +43,7 @@ final class PlanViewModel: ObservableObject {
         waterPointService = appState.waterPointService
         waterRuntimeService = appState.waterRuntimeService
         preparednessInsightsService = appState.preparednessInsightsService
+        preparednessGearRecommendationService = appState.preparednessGearRecommendationService
         draft = initialDraft
         emergencyPlan = initialPlan
         waterRuntimeEstimate = initialWaterEstimate
@@ -77,6 +80,20 @@ final class PlanViewModel: ObservableObject {
             .dropFirst()
             .sink { [weak self] ids in
                 self?.appState.emergencyPlanService.saveCompletedChecklistItemIDs(ids)
+            }
+            .store(in: &cancellables)
+
+        appState.$prepScore
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.refreshPreparednessGearRecommendations(for: self.draft)
+            }
+            .store(in: &cancellables)
+
+        appState.$activePrioritySituation
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.refreshPreparednessGearRecommendations(for: self.draft)
             }
             .store(in: &cancellables)
 
@@ -188,6 +205,31 @@ final class PlanViewModel: ObservableObject {
         locationService.stop()
     }
 
+    var isPreparednessGearSuppressed: Bool {
+        appState.activePrioritySituation != nil
+    }
+
+    func prepareRecommendations(
+        for gearTypes: [GearType],
+        scenarioOverrides: [ScenarioKind] = [],
+        includeBundle: Bool = true
+    ) -> [PreparednessGearRecommendation] {
+        preparednessGearRecommendationService.recommendations(
+            for: draft,
+            prepScore: appState.prepScore,
+            emergencyPlan: emergencyPlan,
+            forgottenItems: forgottenItems,
+            activePrioritySituation: appState.activePrioritySituation,
+            constrainedTo: gearTypes,
+            scenarioOverrides: scenarioOverrides,
+            includeBundle: includeBundle
+        )
+    }
+
+    func guides(ids: [String]) -> [Guide] {
+        appState.guideService.guides(ids: ids)
+    }
+
     private func refreshDerivedState(for profile: UserProfile) {
         scenarioTasks = appState.scenarioEngine.personalizedTasks(for: profile)
         recommendedGear = appState.scenarioEngine.recommendedGear(for: profile)
@@ -197,9 +239,20 @@ final class PlanViewModel: ObservableObject {
             scenarios: appState.scenarioEngine.selectedScenarios(for: profile.selectedScenarios)
         )
         forgottenItems = preparednessInsightsService.forgottenItems(for: profile)
+        refreshPreparednessGearRecommendations(for: profile)
         expiryReminders = preparednessInsightsService.expiryReminders(for: profile)
         familyRoleTasks = preparednessInsightsService.familyRoleTasks(for: profile)
         refreshWaterSourceGuidance()
+    }
+
+    private func refreshPreparednessGearRecommendations(for profile: UserProfile) {
+        preparednessGearRecommendations = preparednessGearRecommendationService.recommendations(
+            for: profile,
+            prepScore: appState.prepScore,
+            emergencyPlan: emergencyPlan,
+            forgottenItems: forgottenItems,
+            activePrioritySituation: appState.activePrioritySituation
+        )
     }
 
     private func refreshWaterSourceGuidance() {

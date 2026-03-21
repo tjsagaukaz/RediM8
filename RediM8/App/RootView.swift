@@ -5,11 +5,13 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject var appState: AppState
     @ObservedObject var router: NavigationRouter
+    private let launchConfiguration: AppLaunchConfiguration
     @State private var loadedTabs: Set<AppTab>
 
-    init(appState: AppState, router: NavigationRouter) {
+    init(appState: AppState, router: NavigationRouter, launchConfiguration: AppLaunchConfiguration) {
         self.appState = appState
         self.router = router
+        self.launchConfiguration = launchConfiguration
         _loadedTabs = State(initialValue: [router.selectedTab])
     }
 
@@ -38,8 +40,10 @@ struct RootView: View {
             appState.startIfNeeded()
             QuickActionCoordinator.shared.bind(appState: appState)
             router.handlePendingQuickAction(from: appState)
-            Task {
-                await appState.officialAlertService.refreshIfNeeded()
+            if !launchConfiguration.disablesAutomaticAlertRefresh {
+                Task {
+                    await appState.officialAlertService.refreshIfNeeded()
+                }
             }
         }
         .onChange(of: appState.pendingQuickAction) { _, _ in
@@ -62,9 +66,20 @@ struct RootView: View {
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
-            guard newPhase == .background else { return }
-            appState.documentVaultService.lock()
-            router.handleBackgroundTransition(appState: appState)
+            switch newPhase {
+            case .active:
+                guard !launchConfiguration.disablesAutomaticAlertRefresh else {
+                    return
+                }
+                Task {
+                    await appState.officialAlertService.refreshIfNeeded()
+                }
+            case .background:
+                appState.documentVaultService.lock()
+                router.handleBackgroundTransition(appState: appState)
+            default:
+                break
+            }
         }
         .overlay {
             if appState.isStealthModeEnabled {

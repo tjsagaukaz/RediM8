@@ -30,6 +30,27 @@ final class SettingsViewModel: ObservableObject {
         return count == 1 ? "1 pack installed" : "\(count) packs installed"
     }
 
+    var defaultOfficialAlertNotificationJurisdiction: AustralianJurisdiction? {
+        appState.officialAlertService.preferredJurisdiction(
+            currentLocation: appState.locationService.currentLocation,
+            installedPacks: appState.mapDataService.packs(withIDs: appState.mapDataService.loadInstalledPackIDs())
+        )
+    }
+
+    var availableOfficialAlertNotificationJurisdictions: [AustralianJurisdiction] {
+        var ordered: [AustralianJurisdiction] = []
+
+        if let preferred = defaultOfficialAlertNotificationJurisdiction {
+            ordered.append(preferred)
+        }
+
+        for jurisdiction in AustralianJurisdiction.allCases.sorted(by: { $0.title < $1.title }) where !ordered.contains(jurisdiction) {
+            ordered.append(jurisdiction)
+        }
+
+        return ordered
+    }
+
     func toggleStealthMode(_ isEnabled: Bool) {
         let wasEnabled = appState.isStealthModeEnabled
         if isEnabled {
@@ -73,6 +94,53 @@ final class SettingsViewModel: ObservableObject {
             title: "Emergency-Safe Defaults Restored",
             message: "This device now uses approximate location sharing, balanced signal behavior, critical map layers, and visible emergency-safe communication settings."
         )
+    }
+
+    func setOfficialAlertNotificationsEnabled(_ isEnabled: Bool) {
+        guard isEnabled else {
+            appState.mutateSettings { settings in
+                settings.preparedness.officialAlertNotificationsEnabled = false
+            }
+            notice = SettingsNotice(
+                title: "Official Alert Notifications Off",
+                message: "RediM8 will stop sending notification banners for mirrored official alerts."
+            )
+            return
+        }
+
+        Task { @MainActor in
+            let result = await appState.officialAlertNotificationService.requestAuthorizationIfNeeded()
+            switch result {
+            case .granted:
+                appState.mutateSettings { settings in
+                    settings.preparedness.officialAlertNotificationsEnabled = true
+                    if settings.preparedness.officialAlertNotificationScope == .state,
+                       settings.preparedness.officialAlertNotificationJurisdiction == nil {
+                        settings.preparedness.officialAlertNotificationJurisdiction = self.defaultOfficialAlertNotificationJurisdiction
+                    }
+                }
+                notice = SettingsNotice(
+                    title: "Official Alert Notifications On",
+                    message: "RediM8 will notify you when new official alerts match your selected scope."
+                )
+            case .denied:
+                appState.mutateSettings { settings in
+                    settings.preparedness.officialAlertNotificationsEnabled = false
+                }
+                notice = SettingsNotice(
+                    title: "Notifications Not Allowed",
+                    message: "Enable notifications for RediM8 in iPhone Settings if you want alert banners."
+                )
+            case .failed:
+                appState.mutateSettings { settings in
+                    settings.preparedness.officialAlertNotificationsEnabled = false
+                }
+                notice = SettingsNotice(
+                    title: "Notification Setup Failed",
+                    message: "RediM8 could not request notification access right now. Try again in a moment."
+                )
+            }
+        }
     }
 
     func exportPreparednessReport() {

@@ -50,6 +50,17 @@
                ReferencedContainer = "container:RediM8.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "38B674B1D51A3359E74F254A"
+               BuildableName = "RediM8UITests.xctest"
+               BlueprintName = "RediM8UITests"
+               ReferencedContainer = "container:RediM8.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>
