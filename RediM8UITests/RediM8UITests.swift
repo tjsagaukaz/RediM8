@@ -1,14 +1,23 @@
 import XCTest
 
 final class RediM8UITests: XCTestCase {
+    private static let appBundleIdentifier = "au.com.redim8.app"
+    private static let launchSettleDelay: TimeInterval = 1.0
+
     override func setUpWithError() throws {
         continueAfterFailure = false
+        terminateRunningAppIfNeeded()
+    }
+
+    override func tearDownWithError() throws {
+        terminateRunningAppIfNeeded()
+        try super.tearDownWithError()
     }
 
     func testFirstRunOnboardingCompletesAndShowsHome() {
         let app = makeApp()
 
-        app.launch()
+        launchApp(app)
 
         let primaryAction = app.buttons["onboarding.primaryAction"]
         XCTAssertTrue(app.staticTexts["onboarding.stepTitle"].waitForExistence(timeout: 5))
@@ -32,7 +41,7 @@ final class RediM8UITests: XCTestCase {
     func testScenarioSelectionPersistsWhenMovingBackFromActivation() {
         let app = makeApp()
 
-        app.launch()
+        launchApp(app)
 
         let primaryAction = app.buttons["onboarding.primaryAction"]
         primaryAction.tap()
@@ -55,7 +64,7 @@ final class RediM8UITests: XCTestCase {
     func testHomeShowsUnavailableOfficialAlertsStateWhenNoCacheExists() {
         let app = makeHomeReadyApp(officialAlertScenario: .unavailable)
 
-        app.launch()
+        launchApp(app)
 
         XCTAssertTrue(app.scrollViews["home.root"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.otherElements["home.todayLocalStatus.card"].exists)
@@ -69,7 +78,7 @@ final class RediM8UITests: XCTestCase {
     func testHomeShowsRecoveredCachedAlertState() {
         let app = makeHomeReadyApp(officialAlertScenario: .cachedNearbyWarning)
 
-        app.launch()
+        launchApp(app)
 
         XCTAssertTrue(app.scrollViews["home.root"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.otherElements["home.todayLocalStatus.card"].exists)
@@ -86,7 +95,7 @@ final class RediM8UITests: XCTestCase {
     func testEmergencyModeEntryFromHomeIsFastAndFocused() {
         let app = makeHomeReadyApp()
 
-        app.launch()
+        launchApp(app)
         app.buttons["home.commandTools.toggle"].tap()
 
         let trigger = app.buttons["home.emergencyModeTrigger"]
@@ -104,7 +113,7 @@ final class RediM8UITests: XCTestCase {
     func testEmergencyModeDefaultStateStaysMinimal() {
         let app = makeEmergencyModeApp()
 
-        app.launch()
+        launchApp(app)
 
         XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.buttons["emergency.mode.close"].exists)
@@ -117,7 +126,7 @@ final class RediM8UITests: XCTestCase {
     func testEmergencyModeSuppressesProAndGearUpsell() {
         let app = makeEmergencyModeApp()
 
-        app.launch()
+        launchApp(app)
 
         XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
         XCTAssertFalse(app.buttons["Open Pro Tools"].exists)
@@ -128,7 +137,7 @@ final class RediM8UITests: XCTestCase {
     func testEmergencyModeExitRestoresHomeState() {
         let app = makeHomeReadyApp()
 
-        app.launch()
+        launchApp(app)
         app.buttons["home.commandTools.toggle"].tap()
         app.buttons["home.emergencyModeTrigger"].tap()
 
@@ -143,7 +152,7 @@ final class RediM8UITests: XCTestCase {
     func testEmergencyModeCanBeReenteredAfterQuickExit() {
         let app = makeHomeReadyApp()
 
-        app.launch()
+        launchApp(app)
         app.buttons["home.commandTools.toggle"].tap()
 
         let trigger = app.buttons["home.emergencyModeTrigger"]
@@ -160,7 +169,7 @@ final class RediM8UITests: XCTestCase {
     func testEmergencyModeSurvivesBackgroundAndForeground() {
         let app = makeEmergencyModeApp()
 
-        app.launch()
+        launchApp(app)
         XCTAssertTrue(app.scrollViews["emergency.mode.root"].waitForExistence(timeout: 2))
 
         XCUIDevice.shared.press(.home)
@@ -173,7 +182,7 @@ final class RediM8UITests: XCTestCase {
     func testMapShowsFallbackStateWhenNoOfflinePackIsInstalled() {
         let app = makeMapReadyApp(mapScenario: .noInstalledPack)
 
-        app.launch()
+        launchApp(app)
 
         XCTAssertTrue(app.scrollViews["map.root"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.staticTexts["map.statusHeadline"].label, "Offline fallback active")
@@ -183,7 +192,7 @@ final class RediM8UITests: XCTestCase {
     func testMapPackPanelShowsFallbackCoverageContext() {
         let app = makeMapReadyApp(mapScenario: .noInstalledPack)
 
-        app.launch()
+        launchApp(app)
 
         XCTAssertTrue(app.scrollViews["map.root"].waitForExistence(timeout: 5))
         let packsToggle = app.buttons["map.packs.toggle"]
@@ -198,7 +207,7 @@ final class RediM8UITests: XCTestCase {
     func testMapShowsGracefulFallbackWhenLocalBasemapIsUnavailable() {
         let app = makeMapReadyApp(mapScenario: .basemapUnavailable)
 
-        app.launch()
+        launchApp(app)
 
         XCTAssertTrue(app.scrollViews["map.root"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.staticTexts["map.statusHeadline"].label, "Offline fallback active")
@@ -331,6 +340,25 @@ final class RediM8UITests: XCTestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
         return condition()
+    }
+
+    private func launchApp(_ app: XCUIApplication) {
+        terminateRunningAppIfNeeded()
+        Thread.sleep(forTimeInterval: Self.launchSettleDelay)
+        app.launch()
+    }
+
+    private func terminateRunningAppIfNeeded() {
+        let app = XCUIApplication(bundleIdentifier: Self.appBundleIdentifier)
+        guard app.state != .notRunning, app.state != .unknown else {
+            return
+        }
+
+        app.terminate()
+        _ = waitUntil(timeout: 5) {
+            app.state == .notRunning || app.state == .unknown
+        }
+        Thread.sleep(forTimeInterval: Self.launchSettleDelay)
     }
 
     private func switchValueIsOn(_ element: XCUIElement) -> Bool {

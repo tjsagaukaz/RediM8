@@ -42,23 +42,5 @@ jobs:
 
       - name: Test
         run: |
-          set -euo pipefail
-
-          destination="$(
-            xcodebuild -project RediM8.xcodeproj -scheme RediM8 -showdestinations 2>/dev/null \
-              | grep -m1 'platform:iOS Simulator,.*name:iPhone' \
-              | sed -E 's/.*id:([^,}]+).*/platform=iOS Simulator,id=\1/'
-          )"
-
-          if [ -z "$destination" ]; then
-            echo "No iOS Simulator destination found"
-            exit 1
-          fi
-
-          echo "Using simulator destination: $destination"
-
-          xcodebuild test \
-            -project RediM8.xcodeproj \
-            -scheme RediM8 \
-            -destination "$destination" \
-            CODE_SIGNING_ALLOWED=NO
+          chmod +x scripts/run-ios-tests.sh
+          DESTINATION='platform=iOS Simulator,name=iPhone 16e,OS=26.2' scripts/run-ios-tests.sh

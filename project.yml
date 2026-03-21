@@ -105,6 +105,9 @@ targets:
       - target: RediM8
     settings:
       base:
+        BUNDLE_LOADER: ""
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_NAME: RediM8UITests
         PRODUCT_MODULE_NAME: RediM8UITests
+        TEST_HOST: ""
+        TEST_TARGET_NAME: RediM8
