@@ -58,6 +58,8 @@ struct CommandPanel<Content: View, Actions: View>: View {
             RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
                 .stroke(ColorTheme.divider, lineWidth: 0.5)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(eyebrow)
     }
 }
 
@@ -94,4 +96,50 @@ struct InlineActionButton: View {
         }
         .buttonStyle(.plain)
     }
+}
+
+// MARK: - Previews
+
+#Preview("CommandPanel — With Actions") {
+    CommandPanel(eyebrow: "Water Supply") {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("STORED")
+                    .font(RediTypography.label)
+                    .foregroundStyle(ColorTheme.textTertiary)
+                Spacer()
+                Text("12 gal")
+                    .font(RediTypography.data)
+                    .foregroundStyle(ColorTheme.text)
+            }
+            HStack {
+                Text("TARGET")
+                    .font(RediTypography.label)
+                    .foregroundStyle(ColorTheme.textTertiary)
+                Spacer()
+                Text("21 gal")
+                    .font(RediTypography.data)
+                    .foregroundStyle(ColorTheme.ready)
+            }
+        }
+    } actions: {
+        HStack(spacing: 8) {
+            InlineActionButton(title: "Log Refill") {}
+            InlineActionButton(title: "Set Target") {}
+        }
+    }
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
+}
+
+#Preview("CommandPanel — No Actions") {
+    CommandPanel(eyebrow: "Comm Status") {
+        Text("All channels operational")
+            .font(RediTypography.body)
+            .foregroundStyle(ColorTheme.ready)
+    }
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
 }

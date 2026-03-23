@@ -76,7 +76,9 @@ final class MapService {
         guard let store else {
             return []
         }
-        return (try? store.load([ResourceMarker].self, for: MapStorageKey.userMarkers)) ?? []
+        return RediLogger.spatial.tryOrNil("Load user markers", operation: {
+            try store.load([ResourceMarker].self, for: MapStorageKey.userMarkers) ?? []
+        }) ?? []
     }
 
     func saveUserMarkers(_ markers: [ResourceMarker]) {

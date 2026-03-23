@@ -108,7 +108,6 @@ final class OfflineBasemapService: ObservableObject {
     private let explicitFallbackStyleURL: URL?
     private let managedPackageRoot: URL
     private let activePackageFileURL: URL
-    private let session: URLSession
     private let catalog: OfflineBasemapCatalog
 
     @Published private(set) var configuration: Configuration
@@ -123,8 +122,7 @@ final class OfflineBasemapService: ObservableObject {
         fileManager: FileManager = .default,
         searchRoots: [URL]? = nil,
         generatedStyleDirectory: URL? = nil,
-        fallbackStyleURL: URL? = nil,
-        session: URLSession = .shared
+        fallbackStyleURL: URL? = nil
     ) {
         self.bundle = bundle
         self.fileManager = fileManager
@@ -137,7 +135,6 @@ final class OfflineBasemapService: ObservableObject {
         self.generatedStyleDirectory = generatedStyleDirectory
             ?? fileManager.temporaryDirectory.appendingPathComponent("RediM8OfflineBasemap", isDirectory: true)
         explicitFallbackStyleURL = fallbackStyleURL
-        self.session = session
         managedPackageRoot = resolvedManagedRoot
         activePackageFileURL = resolvedManagedRoot.appendingPathComponent(Constants.activePackageFilename)
         do {
@@ -308,11 +305,13 @@ final class OfflineBasemapService: ObservableObject {
             return
         }
 
-        let packageDirectories = ((try? fileManager.contentsOfDirectory(
-            at: managedPackageRoot,
-            includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]
-        )) ?? [])
+        let packageDirectories = (RediLogger.basemap.tryOrDefault([], "List managed packages") {
+            try fileManager.contentsOfDirectory(
+                at: managedPackageRoot,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            )
+        })
             .filter { url in
                 (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
             }
@@ -456,7 +455,9 @@ final class OfflineBasemapService: ObservableObject {
     }
 
     private func writeEmergencyFallbackStyle() -> URL {
-        try? fileManager.createDirectory(at: generatedStyleDirectory, withIntermediateDirectories: true, attributes: nil)
+        RediLogger.basemap.tryOrNil("Create fallback style directory") {
+            try fileManager.createDirectory(at: generatedStyleDirectory, withIntermediateDirectories: true, attributes: nil)
+        }
         let fallbackURL = generatedStyleDirectory.appendingPathComponent("emergency-fallback-style.json")
         let fallbackDocument: [String: Any] = [
             "version": 8,
@@ -477,8 +478,10 @@ final class OfflineBasemapService: ObservableObject {
             ]
         ]
 
-        if let data = try? JSONSerialization.data(withJSONObject: fallbackDocument, options: [.prettyPrinted, .sortedKeys]) {
-            try? data.write(to: fallbackURL, options: .atomic)
+        if let data = RediLogger.basemap.tryOrNil("Serialize fallback style", operation: {
+            try JSONSerialization.data(withJSONObject: fallbackDocument, options: [.prettyPrinted, .sortedKeys])
+        }) {
+            RediLogger.basemap.tryOrNil("Write fallback style") { try data.write(to: fallbackURL, options: .atomic) }
         }
         return fallbackURL
     }
@@ -658,29 +661,40 @@ final class OfflineBasemapService: ObservableObject {
         return collapsed.isEmpty ? "offline-basemap" : collapsed.lowercased()
     }
 
+    // Network methods removed — offline architecture.
+    // Basemap packages must be pre-installed via bundled resources or side-loading.
+
     private func fetchData(from url: URL) async throws -> Data {
-        let (data, response) = try await session.data(from: url)
-        try validateResponse(response)
-        return data
+        // Offline-only: only file:// URLs are supported
+        guard url.isFileURL else {
+            throw CocoaError(
+                .fileReadUnsupportedScheme,
+                userInfo: [NSLocalizedDescriptionKey: "Network downloads are disabled. Only local file URLs are supported."]
+            )
+        }
+        return try Data(contentsOf: url)
     }
 
     private func downloadFile(from url: URL, toRelativePath relativePath: String, inside rootDirectory: URL) async throws {
+        guard url.isFileURL else {
+            throw CocoaError(
+                .fileReadUnsupportedScheme,
+                userInfo: [NSLocalizedDescriptionKey: "Network downloads are disabled. Only local file URLs are supported."]
+            )
+        }
         let destinationURL = try destinationURL(for: relativePath, inside: rootDirectory)
         try fileManager.createDirectory(at: destinationURL.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
         if fileManager.fileExists(atPath: destinationURL.path) {
             try fileManager.removeItem(at: destinationURL)
         }
-
-        let (temporaryURL, response) = try await session.download(from: url)
-        try validateResponse(response)
-        try fileManager.moveItem(at: temporaryURL, to: destinationURL)
+        try fileManager.copyItem(at: url, to: destinationURL)
     }
 
     private func validateTrustedRemoteURL(_ url: URL, label: String) throws {
-        guard let scheme = url.scheme?.lowercased(), scheme == "https" else {
+        guard url.isFileURL else {
             throw CocoaError(
                 .fileReadUnsupportedScheme,
-                userInfo: [NSLocalizedDescriptionKey: "The basemap \(label) must use HTTPS."]
+                userInfo: [NSLocalizedDescriptionKey: "Network access is disabled. The basemap \(label) must be a local file."]
             )
         }
     }
@@ -773,7 +787,9 @@ final class OfflineBasemapService: ObservableObject {
     }
 
     private func activePackageID() -> String? {
-        guard let contents = try? String(contentsOf: activePackageFileURL, encoding: .utf8) else {
+        guard let contents = RediLogger.basemap.tryOrNil("Read active package ID", operation: {
+            try String(contentsOf: activePackageFileURL, encoding: .utf8)
+        }) else {
             return nil
         }
         let trimmed = contents.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -848,12 +864,14 @@ final class OfflineBasemapService: ObservableObject {
     }
 
     private static func managedPackageRoot(fileManager: FileManager) -> URL {
-        let applicationSupportRoot = (try? fileManager.url(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )) ?? fileManager.temporaryDirectory
+        let applicationSupportRoot = RediLogger.basemap.tryOrDefault(fileManager.temporaryDirectory, "Resolve app support directory") {
+            try fileManager.url(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true
+            )
+        }
 
         return applicationSupportRoot
             .appendingPathComponent("RediM8", isDirectory: true)

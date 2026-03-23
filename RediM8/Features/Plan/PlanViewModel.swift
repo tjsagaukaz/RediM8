@@ -18,6 +18,8 @@ final class PlanViewModel: ObservableObject {
     @Published private(set) var nearbyWaterSources: [NearbyWaterPoint] = []
     @Published private(set) var waterSourceContext = ""
     @Published private(set) var waterSourceStatusMessage: String?
+    @Published private(set) var lastError: AppError?
+    @Published private(set) var systemState: SystemState = .healthy
 
     private let appState: AppState
     private let locationService: LocationService
@@ -239,6 +241,7 @@ final class PlanViewModel: ObservableObject {
                 Task { @MainActor [weak self] in
                     guard let self else { return }
                     await self.handleLocationUpdate(location)
+                    self.recalculateSystemState()
                 }
             }
             .store(in: &cancellables)
@@ -247,6 +250,16 @@ final class PlanViewModel: ObservableObject {
     private func handleLocationUpdate(_ location: CLLocation?) async {
         await refreshNearbyWaterNetworkResources(for: location)
         refreshWaterSourceGuidance()
+    }
+
+    private func recalculateSystemState() {
+        if locationService.currentLocation == nil {
+            systemState = .degraded(reason: "Location unavailable — water source guidance may be limited")
+            lastError = .serviceUnavailable(service: "Location")
+        } else {
+            systemState = .healthy
+            lastError = nil
+        }
     }
 
     private func refreshDerivedState(for profile: UserProfile) {

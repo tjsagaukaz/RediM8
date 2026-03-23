@@ -224,7 +224,18 @@ struct RootView: View {
             .rediSheetPresentation()
         }
         .fullScreenCover(isPresented: onboardingPresentationBinding) {
-            OnboardingContainerView(appState: appState)
+            if appState.isElevatedThreat {
+                EmergencyBootstrapView(
+                    appState: appState,
+                    completeBootstrap: {
+                        appState.completeOnboarding(with: appState.profile.markedOnboarded())
+                    },
+                    openMap: { router.openMap() },
+                    openSignal: { router.openSignalNearby() }
+                )
+            } else {
+                OnboardingContainerView(appState: appState)
+            }
         }
     }
 

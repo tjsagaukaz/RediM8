@@ -270,6 +270,8 @@ struct PanelCard<Content: View>: View {
             RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous)
                 .stroke(ColorTheme.divider, lineWidth: 0.5)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(title ?? "Panel")
     }
 }
 
@@ -371,6 +373,8 @@ struct HeroPanel<Content: View>: View {
             RoundedRectangle(cornerRadius: RediRadius.hero, style: .continuous)
                 .stroke(ColorTheme.dividerStrong, lineWidth: 0.5)
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(title)
     }
 }
 
@@ -421,4 +425,72 @@ extension View {
             .presentationCornerRadius(RediRadius.hero)
             .presentationDragIndicator(.visible)
     }
+}
+
+// MARK: - Previews
+
+#Preview("PanelCard") {
+    PanelCard(title: "Water Supply", subtitle: "3-day reserve status") {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("12 gallons stored")
+                .font(RediTypography.data)
+                .foregroundStyle(ColorTheme.text)
+            Text("Target: 21 gallons (7 gal/person)")
+                .font(RediTypography.caption)
+                .foregroundStyle(ColorTheme.textSecondary)
+        }
+    }
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
+}
+
+#Preview("HeroPanel") {
+    HeroPanel(
+        eyebrow: "Readiness",
+        title: "You're 72% Ready",
+        subtitle: "Improve your water and medical supplies to reach full readiness.",
+        iconName: "shield.lefthalf.filled",
+        accent: ColorTheme.ready
+    ) {
+        HStack(spacing: 12) {
+            Text("View Details")
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.accent)
+        }
+    }
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
+}
+
+#Preview("RediCommandCard — Block") {
+    VStack(spacing: 12) {
+        RediCommandCard(
+            title: "Build a Kit",
+            detail: "Assemble your 72-hour emergency kit",
+            systemImage: "bag.fill",
+            tint: ColorTheme.accent,
+            badge: "Start",
+            layout: .block
+        )
+        RediCommandCard(
+            title: "Evacuation Plan",
+            detail: "Set rally points and escape routes",
+            systemImage: "figure.run",
+            tint: ColorTheme.warning,
+            badge: "Priority",
+            layout: .rail
+        )
+        RediCommandCard(
+            title: "Disabled Action",
+            systemImage: "lock.fill",
+            tint: ColorTheme.accent,
+            layout: .block,
+            isEnabled: false
+        )
+    }
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
 }

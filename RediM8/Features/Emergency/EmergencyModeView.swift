@@ -16,6 +16,7 @@ struct EmergencyModeView: View {
     @State private var isShowingSecondaryTools = false
     @State private var installedPackCount = 0
     @State private var didLoadInstalledPackCount = false
+    @AccessibilityFocusState private var isHeaderFocused: Bool
 
     private var bushfireSteps: [String] {
         [
@@ -46,6 +47,7 @@ struct EmergencyModeView: View {
                 }
 
                 emergencyHeader
+                    .accessibilityFocused($isHeaderFocused)
                 primaryLaneCard
                 secondarySupportCard
             }
@@ -53,6 +55,14 @@ struct EmergencyModeView: View {
             .padding(.top, 12)
             .padding(.bottom, 24)
             .frame(maxWidth: .infinity, alignment: .top)
+            .accessibilityAction(named: "Leave Now") { openLeaveNow() }
+            .accessibilityAction(named: "Open Offline Map") { openMap() }
+            .accessibilityAction(named: "Call Emergency Services") { callEmergencyServices() }
+            .accessibilityAction(named: "Signal Nearby") { openSignal() }
+            .accessibilityAction(named: "Emergency Documents") { isShowingEmergencyDocuments = true }
+            .accessibilityAction(named: "Emergency Contacts") { isShowingContacts = true }
+            .accessibilityAction(named: "Blackout Mode") { openBlackout() }
+            .accessibilityAction(named: "First Aid Guides") { isShowingFirstAidLibrary = true }
         }
         .accessibilityIdentifier("emergency.mode.root")
         .scrollIndicators(.hidden)
@@ -63,6 +73,7 @@ struct EmergencyModeView: View {
         .task {
             installedPackCount = appState.mapDataService.loadInstalledPackIDs().count
             didLoadInstalledPackCount = true
+            isHeaderFocused = true
         }
         .sheet(isPresented: $isShowingFirstAidLibrary) {
             NavigationStack {

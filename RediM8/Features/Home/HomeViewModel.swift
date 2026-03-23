@@ -97,6 +97,9 @@ final class HomeViewModel: ObservableObject {
     @Published private(set) var safeModeSummary: SafeModeHomeSummary?
     @Published private(set) var connectedMeshPeerCount: Int = 0
     @Published private(set) var hasLocationFix = false
+    @Published private(set) var isRefreshingAlerts = false
+    @Published private(set) var lastError: AppError?
+    @Published private(set) var systemState: SystemState = .healthy
 
     private let appState: AppState
     private let officialAlertService: OfficialAlertService
@@ -168,6 +171,7 @@ final class HomeViewModel: ObservableObject {
                     self.refreshWaterGuidance(for: self.profile)
                     self.refreshPriorityMode(for: self.profile)
                     self.refreshOfficialAlerts()
+                    self.recalculateSystemState()
                 }
             }
             .store(in: &cancellables)
@@ -197,6 +201,9 @@ final class HomeViewModel: ObservableObject {
                 self?.refreshOfficialAlerts()
             }
             .store(in: &cancellables)
+
+        officialAlertService.$isRefreshing
+            .assign(to: &$isRefreshingAlerts)
 
         appState.meshService.$connectedPeers
             .sink { [weak self] peers in
@@ -454,8 +461,9 @@ final class HomeViewModel: ObservableObject {
             return
         }
 
-        Task {
-            await officialAlertService.refreshIfNeeded()
+        Task { @MainActor [weak self] in
+            await self?.officialAlertService.refreshIfNeeded()
+            self?.recalculateSystemState()
         }
     }
 
@@ -508,6 +516,26 @@ final class HomeViewModel: ObservableObject {
 
     private func exportReadinessReportPDF() throws -> URL {
         try appState.readinessReportService.exportPDF(for: readinessReport)
+    }
+
+    private func recalculateSystemState() {
+        var reasons: [String] = []
+
+        if let alertError = officialAlertService.lastRefreshError, !officialAlertService.hasCachedData {
+            reasons.append("Alerts: \(alertError)")
+        }
+        if !hasLocationFix {
+            reasons.append("Location unavailable")
+        }
+
+        if reasons.isEmpty {
+            systemState = .healthy
+            lastError = nil
+        } else {
+            let combined = reasons.joined(separator: ". ")
+            systemState = .degraded(reason: combined)
+            lastError = .serviceUnavailable(service: combined)
+        }
     }
 
     private func refreshDerivedState(for profile: UserProfile, prepScore: PrepScore) {

@@ -6,15 +6,20 @@ struct SituationHeader: View {
     @ObservedObject var appState: AppState
     let isEmergencyActive: Bool
 
+    @State private var isShowingSystemDetail = false
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: RediSpacing.content) {
-                headerItem(label: "REDIM8", value: "")
-                    .foregroundStyle(ColorTheme.accent)
+                systemConfidenceItem
 
                 headerDivider
 
                 headerItem(label: "STATUS", value: statusValue, color: statusColor)
+
+                headerDivider
+
+                headerItem(label: "THREAT", value: threatValue, color: threatColor)
 
                 headerDivider
 
@@ -23,10 +28,6 @@ struct SituationHeader: View {
                 headerDivider
 
                 headerItem(label: "POWER", value: powerValue)
-
-                headerDivider
-
-                headerItem(label: "THREAT", value: threatValue, color: threatColor)
             }
             .padding(.horizontal, RediSpacing.screen)
         }
@@ -54,6 +55,8 @@ struct SituationHeader: View {
                     .foregroundStyle(color)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(value.isEmpty ? label : "\(label): \(value)")
     }
 
     private var headerDivider: some View {
@@ -97,5 +100,132 @@ struct SituationHeader: View {
         let alertCount = appState.officialAlertService.library.alerts.count
         if alertCount > 0 { return ColorTheme.warning }
         return ColorTheme.ready
+    }
+
+    // MARK: - System Confidence
+
+    private var systemConfidenceResult: SystemConfidenceResult {
+        SystemConfidenceResult.evaluate(appState: appState)
+    }
+
+    private var systemConfidenceColor: Color {
+        switch systemConfidenceResult.confidence {
+        case .high: ColorTheme.ready
+        case .limited: ColorTheme.warning
+        case .degraded: ColorTheme.danger
+        }
+    }
+
+    private var systemConfidenceItem: some View {
+        Button {
+            if systemConfidenceResult.confidence != .high {
+                isShowingSystemDetail.toggle()
+            }
+        } label: {
+            HStack(spacing: RediSpacing.micro) {
+                Text("SYS")
+                    .font(RediTypography.label)
+                    .tracking(1.2)
+                    .foregroundStyle(ColorTheme.textTertiary)
+
+                Text(systemConfidenceResult.confidence.label.uppercased())
+                    .font(RediTypography.data)
+                    .foregroundStyle(systemConfidenceColor)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("System confidence: \(systemConfidenceResult.confidence.label)")
+        .accessibilityHint(systemConfidenceResult.confidence != .high ? "Tap for details" : "")
+        .popover(isPresented: $isShowingSystemDetail, arrowEdge: .top) {
+            systemConfidencePopover
+        }
+    }
+
+    private var systemConfidencePopover: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(systemConfidenceColor)
+                    .frame(width: 8, height: 8)
+                Text("System \(systemConfidenceResult.confidence.label)")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(ColorTheme.text)
+            }
+
+            ForEach(systemConfidenceResult.reasons, id: \.self) { reason in
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(systemConfidenceColor)
+                    Text(reason)
+                        .font(.system(size: 13))
+                        .foregroundStyle(ColorTheme.textSecondary)
+                }
+            }
+        }
+        .padding(12)
+        .frame(minWidth: 180)
+        .background(ColorTheme.charcoal)
+        .presentationCompactAdaptation(.popover)
+    }
+}
+
+// MARK: - System Confidence Model
+
+/// App-wide trust indicator derived from subsystem health.
+/// HIGH = all critical systems operational.
+/// LIMITED = some degradation (no GPS, stale data, no mesh).
+/// DEGRADED = multiple critical systems unavailable.
+enum SystemConfidence {
+    case high
+    case limited
+    case degraded
+
+    var label: String {
+        switch self {
+        case .high: "High"
+        case .limited: "Limited"
+        case .degraded: "Degraded"
+        }
+    }
+}
+
+/// Result of evaluating system confidence — includes the level AND specific reasons.
+struct SystemConfidenceResult {
+    let confidence: SystemConfidence
+    let reasons: [String]
+
+    var summary: String {
+        if reasons.isEmpty { return "All systems operational" }
+        return reasons.joined(separator: " · ")
+    }
+
+    /// Evaluates current system health from AppState subsystems.
+    @MainActor static func evaluate(appState: AppState) -> SystemConfidenceResult {
+        var reasons: [String] = []
+
+        // GPS availability
+        if appState.signal.locationService.currentLocation == nil {
+            reasons.append("GPS unavailable")
+        }
+
+        // Battery critical
+        if let level = appState.batteryStatus.level, level < 0.1 {
+            reasons.append("Battery critical")
+        }
+
+        // Mesh connectivity
+        if appState.signal.meshService.connectedPeers.isEmpty {
+            reasons.append("No mesh peers")
+        }
+
+        let confidence: SystemConfidence = switch reasons.count {
+        case 0: .high
+        case 1: .limited
+        default: .degraded
+        }
+
+        return SystemConfidenceResult(confidence: confidence, reasons: reasons)
     }
 }

@@ -208,12 +208,17 @@ private final class FileProtectedSecureStoreKeyProvider: SecureStoreKeyProviding
     }
 
     private static func defaultBaseURL(fileManager: FileManager, namespace: String) -> URL {
-        let applicationSupportURL = (try? fileManager.url(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )) ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+        let applicationSupportURL = RediLogger.persistence.tryOrDefault(
+            URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true),
+            "Resolve app support for secure keys"
+        ) {
+            try fileManager.url(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true
+            )
+        }
 
         return applicationSupportURL
             .appendingPathComponent("RediM8SecureKeys", isDirectory: true)
@@ -334,12 +339,17 @@ final class SecureStore {
     }
 
     private static func defaultBaseURL(fileManager: FileManager, namespace: String) -> URL {
-        let applicationSupportURL = (try? fileManager.url(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask,
-            appropriateFor: nil,
-            create: true
-        )) ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
+        let applicationSupportURL = RediLogger.persistence.tryOrDefault(
+            URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true),
+            "Resolve app support for secure store"
+        ) {
+            try fileManager.url(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true
+            )
+        }
 
         return applicationSupportURL
             .appendingPathComponent("RediM8Secure", isDirectory: true)

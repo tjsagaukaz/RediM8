@@ -449,10 +449,10 @@ final class AnalogSignalService: ObservableObject {
         let sampleRate32 = UInt32(sampleRate)
 
         var wave = Data()
-        wave.append("RIFF".data(using: .ascii)!)
+        wave.append(Data("RIFF".utf8))
         wave.append(Self.bytes(of: riffSize))
-        wave.append("WAVE".data(using: .ascii)!)
-        wave.append("fmt ".data(using: .ascii)!)
+        wave.append(Data("WAVE".utf8))
+        wave.append(Data("fmt ".utf8))
         wave.append(Self.bytes(of: formatChunkSize))
         wave.append(Self.bytes(of: audioFormat))
         wave.append(Self.bytes(of: channelCount))
@@ -460,7 +460,7 @@ final class AnalogSignalService: ObservableObject {
         wave.append(Self.bytes(of: byteRate))
         wave.append(Self.bytes(of: blockAlign))
         wave.append(Self.bytes(of: bitsPerSample))
-        wave.append("data".data(using: .ascii)!)
+        wave.append(Data("data".utf8))
         wave.append(Self.bytes(of: dataSize))
         wave.append(pcm)
         return wave

@@ -123,8 +123,11 @@ final class ElevationService {
             throw ElevationError.invalidFormat
         }
 
-        let elevations: [Int16] = data.withUnsafeBytes { buffer in
-            let ptr = buffer.baseAddress!.advanced(by: headerSize)
+        let elevations: [Int16] = try data.withUnsafeBytes { buffer in
+            guard let baseAddress = buffer.baseAddress else {
+                throw ElevationError.invalidFormat
+            }
+            let ptr = baseAddress.advanced(by: headerSize)
                 .assumingMemoryBound(to: Int16.self)
             return Array(UnsafeBufferPointer(start: ptr, count: Int(cols) * Int(rows)))
         }

@@ -92,6 +92,8 @@ final class SignalViewModel: ObservableObject {
     @Published private(set) var currentLocation: CLLocation?
     @Published private(set) var isStealthModeEnabled = false
     @Published private(set) var scannerSnapshot: SituationalScannerSnapshot = .inactive
+    @Published private(set) var lastError: AppError?
+    @Published private(set) var systemState: SystemState = .healthy
 
     private let appState: AppState
     private let meshService: MeshService
@@ -198,6 +200,15 @@ final class SignalViewModel: ObservableObject {
             .store(in: &cancellables)
 
         seedAccountabilityCircleIfNeeded()
+
+        // Reactively compute system state from mesh + location
+        meshService.$connectedPeers
+            .combineLatest(locationService.$currentLocation)
+            .sink { [weak self] peers, location in
+                guard let self else { return }
+                self.recalculateSystemState(connectedPeers: peers, location: location)
+            }
+            .store(in: &cancellables)
     }
 
     var deviceName: String {
@@ -853,6 +864,32 @@ final class SignalViewModel: ObservableObject {
             "Approximate location"
         case .precise:
             "Precise location"
+        }
+    }
+
+    private func recalculateSystemState(connectedPeers: [MeshPeer], location: CLLocation?) {
+        var reasons: [String] = []
+
+        if connectedPeers.isEmpty && nearbyPeers.isEmpty {
+            reasons.append("No mesh peers detected")
+        }
+        if location == nil {
+            reasons.append("Location unavailable")
+        }
+        if let errorMessage = analogSignalService.lastErrorMessage {
+            reasons.append("Signal: \(errorMessage)")
+        }
+
+        if reasons.isEmpty {
+            systemState = .healthy
+            lastError = nil
+        } else if connectedPeers.isEmpty && nearbyPeers.isEmpty && location == nil {
+            systemState = .unavailable(reason: reasons.joined(separator: ". "))
+            lastError = .serviceUnavailable(service: "Mesh network and location")
+        } else {
+            let combined = reasons.joined(separator: ". ")
+            systemState = .degraded(reason: combined)
+            lastError = .serviceUnavailable(service: combined)
         }
     }
 

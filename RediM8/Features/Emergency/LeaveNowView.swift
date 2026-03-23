@@ -7,6 +7,7 @@ struct LeaveNowView: View {
     let dismiss: () -> Void
     let openMap: () -> Void
     let openSignal: () -> Void
+    @AccessibilityFocusState private var isHeroFocused: Bool
 
     init(
         appState: AppState,
@@ -72,6 +73,10 @@ struct LeaveNowView: View {
             }
         }
         .background(ColorTheme.background.ignoresSafeArea())
+        .accessibilityAction(named: "Open Offline Map") { openMap() }
+        .accessibilityAction(named: "Call Emergency Services") { callEmergencyServices() }
+        .accessibilityAction(named: "Signal Nearby") { openSignal() }
+        .onAppear { isHeroFocused = true }
     }
 
     @ViewBuilder
@@ -84,6 +89,7 @@ struct LeaveNowView: View {
                 }
                 .buttonStyle(SecondaryActionButtonStyle())
                 .frame(width: 110)
+                .accessibilityFocused($isHeroFocused)
             }
 
             CinematicBanner("evacuation_staging", height: 180)

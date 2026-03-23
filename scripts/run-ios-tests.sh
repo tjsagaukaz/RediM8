@@ -16,6 +16,8 @@ echo "Resetting DerivedData at $DERIVED_DATA_PATH..."
 mkdir -p "$DERIVED_DATA_PATH"
 find "$DERIVED_DATA_PATH" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
 
+ENABLE_CODE_COVERAGE="${ENABLE_CODE_COVERAGE:-NO}"
+
 COMMON_ARGS=(
   -project RediM8.xcodeproj
   -scheme RediM8
@@ -23,6 +25,7 @@ COMMON_ARGS=(
   -parallel-testing-enabled NO
   -maximum-concurrent-test-simulator-destinations 1
   -maximum-parallel-testing-workers 1
+  -enableCodeCoverage "$ENABLE_CODE_COVERAGE"
   CODE_SIGNING_ALLOWED=NO
 )
 

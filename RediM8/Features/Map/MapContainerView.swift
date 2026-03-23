@@ -39,104 +39,95 @@ struct MapContainerView: View {
     }
 
     var body: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    Color.clear
-                        .frame(height: 0)
-                        .id(MapScrollAnchor.top)
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                // MARK: Pinned map surface — always visible, top ~48% of screen
+                pinnedMapSurface(height: geometry.size.height * 0.48)
 
-                    if viewModel.isStealthModeEnabled {
-                        StealthModeIndicatorView()
-                    }
+                // MARK: Scrollable controls and data below the map
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Color.clear
+                                .frame(height: 0)
+                                .id(MapScrollAnchor.top)
 
-                    CinematicBanner("map_remote_track", height: 160)
+                            if viewModel.isStealthModeEnabled {
+                                StealthModeIndicatorView()
+                            }
 
-                    MapNextActionPanelView(recommendation: nextActionRecommendation)
+                            MapNextActionPanelView(recommendation: nextActionRecommendation)
 
-                    MapStatusBannerView(
-                        tone: MapTonePalette.color(for: viewModel.mapStatusTone),
-                        headline: viewModel.mapStatusHeadline,
-                        detail: viewModel.mapStatusDetail
-                    )
+                            if let hazardError = viewModel.hazardFeedLastRefreshError {
+                                OfflineFallbackBanner(reason: hazardError)
+                            }
 
-                    MapOperationalSurfaceSection(
-                        viewModel: viewModel,
-                        appState: appState,
-                        officialAlertColor: officialAlertColor,
-                        mapFailureRows: mapFailureRows,
-                        surfaceMode: surfaceModeBinding,
-                        isShowingFullScreenMap: $isShowingFullScreenMap,
-                        isShowingLayers: $isShowingLayers,
-                        isShowingMapBrief: $isShowingMapBrief,
-                        isShowingRouteInspector: $isShowingRouteInspector,
-                        isShowingNearestResource: $isShowingNearestResource,
-                        isShowingRoutePlanner: $isShowingRoutePlanner,
-                        isShowingEvacuationPlan: $isShowingEvacuationPlan
-                    )
+                            mapControlsSection
 
-                    if viewModel.isLayerEnabled(.evacuationPoints), let selectedShelter = viewModel.selectedShelter {
-                        PanelCard(title: "Selected Evacuation Point", subtitle: "Tapped directly from the offline map") {
-                            ShelterCard(
-                                shelter: selectedShelter,
-                                distanceText: viewModel.distanceText(to: selectedShelter.coordinate),
-                                tint: viewModel.shelterTint(for: selectedShelter.type),
-                                isSelected: true,
-                                trustItems: viewModel.shelterTrustItems(for: selectedShelter),
-                                openNavigation: {
-                                    guard let url = viewModel.shelterNavigationURL(for: selectedShelter) else {
-                                        return
-                                    }
-                                    openURL(url)
+                            if viewModel.isLayerEnabled(.evacuationPoints), let selectedShelter = viewModel.selectedShelter {
+                                PanelCard(title: "Selected Evacuation Point", subtitle: "Tapped directly from the offline map") {
+                                    ShelterCard(
+                                        shelter: selectedShelter,
+                                        distanceText: viewModel.distanceText(to: selectedShelter.coordinate),
+                                        tint: viewModel.shelterTint(for: selectedShelter.type),
+                                        isSelected: true,
+                                        trustItems: viewModel.shelterTrustItems(for: selectedShelter),
+                                        openNavigation: {
+                                            guard let url = viewModel.shelterNavigationURL(for: selectedShelter) else {
+                                                return
+                                            }
+                                            openURL(url)
+                                        }
+                                    )
                                 }
+                            }
+
+                            MapInspectorSectionsView(
+                                viewModel: viewModel,
+                                mapFailureRows: mapFailureRows,
+                                openEvacuationRoutes: openEvacuationRoutes,
+                                isShowingMapBrief: $isShowingMapBrief,
+                                isShowingRouteInspector: $isShowingRouteInspector,
+                                selectedOfficialAlertScope: $selectedOfficialAlertScope,
+                                selectedOfficialAlertJurisdiction: $selectedOfficialAlertJurisdiction
                             )
+
+                            if !appState.isElevatedThreat {
+                                MapAdvancedSectionsView(
+                                    viewModel: viewModel,
+                                    isShowingMapPacks: $isShowingMapPacks,
+                                    isShowingLayers: $isShowingLayers,
+                                    isShowingLegend: $isShowingLegend,
+                                    isShowingEvacuationPoints: $isShowingEvacuationPoints,
+                                    isShowingWaterPoints: $isShowingWaterPoints,
+                                    isShowingDirtRoads: $isShowingDirtRoads,
+                                    isShowingFireTrails: $isShowingFireTrails,
+                                    isShowingOfficialAlerts: $isShowingOfficialAlerts,
+                                    isShowingBeacons: $isShowingBeacons,
+                                    isShowingMarkers: $isShowingMarkers,
+                                    isShowingResources: $isShowingResources,
+                                    selectedOfficialAlertScope: $selectedOfficialAlertScope,
+                                    selectedOfficialAlertJurisdiction: $selectedOfficialAlertJurisdiction
+                                )
+                            }
+                        }
+                        .padding(.horizontal, RediSpacing.screen)
+                        .padding(.top, 10)
+                        .padding(.bottom, RediLayout.commandDockContentInset)
+                    }
+                    .scrollIndicators(.hidden)
+                    .onChange(of: scrollToTopRequestID) { _, _ in
+                        DispatchQueue.main.async {
+                            withAnimation(RediMotion.selection) {
+                                proxy.scrollTo(MapScrollAnchor.top, anchor: .top)
+                            }
                         }
                     }
-
-                    MapInspectorSectionsView(
-                        viewModel: viewModel,
-                        mapFailureRows: mapFailureRows,
-                        openEvacuationRoutes: openEvacuationRoutes,
-                        isShowingMapBrief: $isShowingMapBrief,
-                        isShowingRouteInspector: $isShowingRouteInspector,
-                        selectedOfficialAlertScope: $selectedOfficialAlertScope,
-                        selectedOfficialAlertJurisdiction: $selectedOfficialAlertJurisdiction
-                    )
-
-                    MapAdvancedSectionsView(
-                        viewModel: viewModel,
-                        isShowingMapPacks: $isShowingMapPacks,
-                        isShowingLayers: $isShowingLayers,
-                        isShowingLegend: $isShowingLegend,
-                        isShowingEvacuationPoints: $isShowingEvacuationPoints,
-                        isShowingWaterPoints: $isShowingWaterPoints,
-                        isShowingDirtRoads: $isShowingDirtRoads,
-                        isShowingFireTrails: $isShowingFireTrails,
-                        isShowingOfficialAlerts: $isShowingOfficialAlerts,
-                        isShowingBeacons: $isShowingBeacons,
-                        isShowingMarkers: $isShowingMarkers,
-                        isShowingResources: $isShowingResources,
-                        selectedOfficialAlertScope: $selectedOfficialAlertScope,
-                        selectedOfficialAlertJurisdiction: $selectedOfficialAlertJurisdiction
-                    )
-                }
-                .padding(.horizontal, RediSpacing.screen)
-                .padding(.top, RediSpacing.screen)
-                .padding(.bottom, RediLayout.commandDockContentInset)
-            }
-            .accessibilityIdentifier("map.root")
-            .onChange(of: scrollToTopRequestID) { _, _ in
-                DispatchQueue.main.async {
-                    withAnimation(RediMotion.selection) {
-                        proxy.scrollTo(MapScrollAnchor.top, anchor: .top)
-                    }
                 }
             }
         }
+        .accessibilityIdentifier("map.root")
         .navigationTitle("Map")
-        .safeAreaInset(edge: .top, spacing: 0) {
-            OperationalStatusRail(items: mapStatusItems, accent: ColorTheme.textTertiary)
-        }
         .background(
             LinearGradient(
                 colors: [Color.black, Color(red: 0.03, green: 0.08, blue: 0.12)],
@@ -195,6 +186,88 @@ struct MapContainerView: View {
                     }
             }
             .rediSheetPresentation()
+        }
+    }
+
+    // MARK: - Pinned Map Surface
+
+    private func pinnedMapSurface(height: CGFloat) -> some View {
+        MapSurfaceCanvasView(viewModel: viewModel)
+            .frame(height: height)
+            .clipped()
+            .overlay(alignment: .topLeading) {
+                MapModeBadgeView(
+                    tint: viewModel.surfaceTint,
+                    title: viewModel.mapModeOverlayTitle,
+                    detail: viewModel.mapModeOverlayDetail
+                )
+                .padding(12)
+            }
+            .overlay(alignment: .topTrailing) {
+                VStack(alignment: .trailing, spacing: 8) {
+                    Button {
+                        isShowingFullScreenMap = true
+                    } label: {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(ColorTheme.text)
+                            .padding(10)
+                            .background(Color.black.opacity(0.86), in: Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                            )
+                    }
+
+                    if viewModel.currentLocation != nil {
+                        MapHeadingBadgeView(text: viewModel.headingText)
+                    }
+                }
+                .padding(12)
+            }
+            .overlay(alignment: .bottomLeading) {
+                MapCompactSummaryView(
+                    tone: MapTonePalette.color(for: viewModel.mapConfidenceTone),
+                    value: viewModel.mapConfidenceValue.uppercased(),
+                    detail: viewModel.mapConfidenceOverlayDetail
+                )
+                .padding(12)
+            }
+            .overlay(alignment: .bottomTrailing) {
+                Button {
+                    viewModel.recenter()
+                } label: {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(viewModel.currentLocation != nil ? ColorTheme.accent : ColorTheme.textTertiary)
+                        .padding(10)
+                        .background(Color.black.opacity(0.86), in: Circle())
+                        .overlay(
+                            Circle()
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        )
+                }
+                .padding(12)
+            }
+    }
+
+    // MARK: - Map Controls (Below Pinned Map)
+
+    private var mapControlsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            MapOperationalSurfaceSection(
+                viewModel: viewModel,
+                appState: appState,
+                officialAlertColor: officialAlertColor,
+                mapFailureRows: mapFailureRows,
+                surfaceMode: surfaceModeBinding,
+                isShowingLayers: $isShowingLayers,
+                isShowingMapBrief: $isShowingMapBrief,
+                isShowingRouteInspector: $isShowingRouteInspector,
+                isShowingNearestResource: $isShowingNearestResource,
+                isShowingRoutePlanner: $isShowingRoutePlanner,
+                isShowingEvacuationPlan: $isShowingEvacuationPlan
+            )
         }
     }
 
@@ -281,35 +354,6 @@ struct MapContainerView: View {
             tint: ColorTheme.textTertiary,
             action: { isShowingFullScreenMap = true }
         )
-    }
-
-    private var mapStatusItems: [OperationalStatusItem] {
-        [
-            OperationalStatusItem(
-                iconName: "warning",
-                label: "Official",
-                value: viewModel.officialAlertStatusValue,
-                tone: viewModel.officialAlertTone
-            ),
-            OperationalStatusItem(
-                iconName: "map_marker",
-                label: "Map",
-                value: viewModel.basemapOperationalValue,
-                tone: viewModel.basemapOperationalTone
-            ),
-            OperationalStatusItem(
-                iconName: "route",
-                label: "Routes",
-                value: viewModel.savedRoutes.isEmpty ? "No saved routes" : "\(viewModel.savedRoutes.count) saved",
-                tone: viewModel.savedRoutes.isEmpty ? .caution : .ready
-            ),
-            OperationalStatusItem(
-                iconName: "scope",
-                label: "Confidence",
-                value: viewModel.mapConfidenceValue,
-                tone: viewModel.mapConfidenceTone
-            )
-        ]
     }
 
     private var mapFailureRows: [(title: String, detail: String)] {

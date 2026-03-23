@@ -45,7 +45,6 @@ struct MapOperationalSurfaceSection: View {
     let officialAlertColor: Color
     let mapFailureRows: [(title: String, detail: String)]
     @Binding var surfaceMode: MapSurfaceMode
-    @Binding var isShowingFullScreenMap: Bool
     @Binding var isShowingLayers: Bool
     @Binding var isShowingMapBrief: Bool
     @Binding var isShowingRouteInspector: Bool
@@ -59,7 +58,6 @@ struct MapOperationalSurfaceSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            embeddedMapSurface
             mapQuickStatusStrip
             mapSurfaceSelector
             mapPriorityCallout
@@ -84,54 +82,6 @@ struct MapOperationalSurfaceSection: View {
             )
         }
         .buttonStyle(CardPressButtonStyle())
-    }
-
-    private var embeddedMapSurface: some View {
-        MapSurfaceCanvasView(viewModel: viewModel)
-            .frame(height: 520)
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(alignment: .topLeading) {
-                MapModeBadgeView(
-                    tint: viewModel.surfaceTint,
-                    title: viewModel.mapModeOverlayTitle,
-                    detail: viewModel.mapModeOverlayDetail
-                )
-                .padding(12)
-            }
-            .overlay(alignment: .topTrailing) {
-                VStack(alignment: .trailing, spacing: 8) {
-                    Button {
-                        isShowingFullScreenMap = true
-                    } label: {
-                        Image(systemName: "arrow.up.left.and.arrow.down.right")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(ColorTheme.text)
-                            .padding(12)
-                            .background(Color.black.opacity(0.86), in: Circle())
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                            )
-                    }
-
-                    if viewModel.currentLocation != nil {
-                        MapHeadingBadgeView(text: viewModel.headingText)
-                    }
-                }
-                .padding(12)
-            }
-            .overlay(alignment: .bottomLeading) {
-                MapCompactSummaryView(
-                    tone: MapTonePalette.color(for: viewModel.mapConfidenceTone),
-                    value: viewModel.mapConfidenceValue.uppercased(),
-                    detail: viewModel.mapConfidenceOverlayDetail
-                )
-                .padding(12)
-            }
-            .overlay(alignment: .bottomTrailing) {
-                MapReferenceOverlayView(viewModel: viewModel)
-                    .padding(12)
-            }
     }
 
     private var mapSurfaceSelector: some View {
@@ -249,21 +199,6 @@ struct MapOperationalSurfaceSection: View {
                         systemImage: "location.fill",
                         tint: ColorTheme.textTertiary,
                         badge: viewModel.currentLocation == nil ? "Waiting" : "Live",
-                        prominence: .neutral,
-                        minHeight: 102
-                    )
-                }
-                .buttonStyle(CardPressButtonStyle())
-
-                Button {
-                    isShowingFullScreenMap = true
-                } label: {
-                    RediCommandCard(
-                        title: "Full Screen",
-                        detail: "Open the live map canvas with the maximum visible field area.",
-                        systemImage: "arrow.up.left.and.arrow.down.right",
-                        tint: ColorTheme.textTertiary,
-                        badge: "Canvas",
                         prominence: .neutral,
                         minHeight: 102
                     )

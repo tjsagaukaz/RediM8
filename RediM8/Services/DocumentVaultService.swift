@@ -166,12 +166,14 @@ final class DocumentVaultService: ObservableObject {
         if let baseURL {
             resolvedBaseURL = baseURL
         } else {
-            let applicationSupportURL = try? fileManager.url(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask,
-                appropriateFor: nil,
-                create: true
-            )
+            let applicationSupportURL = RediLogger.vault.tryOrNil("Resolve app support for vault", operation: {
+                try fileManager.url(
+                    for: .applicationSupportDirectory,
+                    in: .userDomainMask,
+                    appropriateFor: nil,
+                    create: true
+                )
+            })
             resolvedBaseURL = applicationSupportURL?
                 .appendingPathComponent("RediM8Vault", isDirectory: true)
                 ?? URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("RediM8Vault", isDirectory: true)
@@ -187,13 +189,15 @@ final class DocumentVaultService: ObservableObject {
             try ensureStorageDirectories()
             metadata = try loadMetadata()
         } catch {
-            RediLogger.vault.error("Failed to create vault storage directories: \(error.localizedDescription, privacy: .public)")
+            RediLogger.vault.fault("Failed to create vault storage directories: \(error.localizedDescription, privacy: .public)")
         }
     }
 
     deinit {
         let defaultFileManager = FileManager.default
-        previewURLs.forEach { try? defaultFileManager.removeItem(at: $0) }
+        previewURLs.forEach { url in
+            RediLogger.vault.tryOrNil("Clean up preview on deinit") { try defaultFileManager.removeItem(at: url) }
+        }
     }
 
     var categories: [VaultCategory] {
@@ -228,7 +232,9 @@ final class DocumentVaultService: ObservableObject {
         isUnlocked = false
         state = .empty
         unlockedKey = nil
-        previewURLs.forEach { try? fileManager.removeItem(at: $0) }
+        previewURLs.forEach { url in
+            RediLogger.vault.tryOrNil("Clean up preview on lock") { try fileManager.removeItem(at: url) }
+        }
         previewURLs.removeAll()
     }
 
@@ -327,7 +333,7 @@ final class DocumentVaultService: ObservableObject {
 
     func releaseTemporaryPreviewURL(_ url: URL) {
         guard previewURLs.contains(url) else { return }
-        try? fileManager.removeItem(at: url)
+        RediLogger.vault.tryOrNil("Release preview file") { try fileManager.removeItem(at: url) }
         previewURLs.remove(url)
     }
 

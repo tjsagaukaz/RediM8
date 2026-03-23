@@ -207,8 +207,7 @@ final class PredictiveCollapseService: ObservableObject {
         guard snapshots.count >= Config.minSnapshotsForPrediction else { return 0 }
 
         let recent = Array(snapshots.suffix(Config.minSnapshotsForPrediction))
-        let first = recent.first!
-        let last = recent.last!
+        guard let first = recent.first, let last = recent.last else { return 0 }
 
         let timeDelta = last.timestamp.timeIntervalSince(first.timestamp)
         guard timeDelta > 10 else { return 0 } // Need meaningful time span
@@ -222,8 +221,7 @@ final class PredictiveCollapseService: ObservableObject {
         guard snapshots.count >= Config.minSnapshotsForPrediction else { return 0 }
 
         let recent = Array(snapshots.suffix(Config.minSnapshotsForPrediction))
-        let first = recent.first!
-        let last = recent.last!
+        guard let first = recent.first, let last = recent.last else { return 0 }
 
         return Double(last.maxSeverityRank - first.maxSeverityRank)
     }
@@ -233,10 +231,7 @@ final class PredictiveCollapseService: ObservableObject {
         guard snapshots.count >= 2 else { return 0 }
 
         let recent = Array(snapshots.suffix(min(5, snapshots.count)))
-        guard recent.count >= 2 else { return 0 }
-
-        let first = recent.first!
-        let last = recent.last!
+        guard recent.count >= 2, let first = recent.first, let last = recent.last else { return 0 }
 
         // Only meaningful if routes were available at some point
         guard first.totalRouteCount > 0 else { return 0 }
@@ -309,9 +304,9 @@ final class PredictiveCollapseService: ObservableObject {
             let currentCount = Double(max(currentSnapshot.hazardCount, 1))
             let minutesToDouble = currentCount / growthRate
             // Scale by inverse probability — higher prob = sooner
-            timeToFailure = minutesToDouble * 60 * (1.0 - probability + 0.1)
-            // Cap at reasonable bounds
-            timeToFailure = max(60, min(timeToFailure!, 3600 * 2)) // 1 min to 2 hours
+            let rawTTF = minutesToDouble * 60 * (1.0 - probability + 0.1)
+            // Cap at reasonable bounds: 1 min to 2 hours
+            timeToFailure = max(60, min(rawTTF, 3600 * 2))
         }
 
         return (probability, timeToFailure)

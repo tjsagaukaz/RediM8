@@ -712,10 +712,18 @@ final class BeaconService: ObservableObject {
             return .empty
         }
 
-        let localNodeID = (try? store.load(String.self, for: BeaconStorageKey.localNodeID)) ?? ""
-        let activeBeacon = (try? store.load(Optional<CommunityBeacon>.self, for: BeaconStorageKey.activeBeacon)) ?? nil
-        let nearbyBeacons = (try? store.load([CommunityBeacon].self, for: BeaconStorageKey.nearbyBeacons)) ?? []
-        let relayBacklog = (try? store.load([RelayBacklogEntry].self, for: BeaconStorageKey.relayBacklog)) ?? []
+        let localNodeID = RediLogger.mesh.tryOrNil("Load beacon node ID", operation: {
+            try store.load(String.self, for: BeaconStorageKey.localNodeID) ?? ""
+        }) ?? ""
+        let activeBeacon: CommunityBeacon? = RediLogger.mesh.tryOrNil("Load active beacon", operation: {
+            try store.load(CommunityBeacon.self, for: BeaconStorageKey.activeBeacon) ?? nil
+        }) ?? nil
+        let nearbyBeacons = RediLogger.mesh.tryOrNil("Load nearby beacons", operation: {
+            try store.load([CommunityBeacon].self, for: BeaconStorageKey.nearbyBeacons) ?? []
+        }) ?? []
+        let relayBacklog = RediLogger.mesh.tryOrNil("Load relay backlog", operation: {
+            try store.load([RelayBacklogEntry].self, for: BeaconStorageKey.relayBacklog) ?? []
+        }) ?? []
 
         return SensitiveBeaconState(
             localNodeID: localNodeID,

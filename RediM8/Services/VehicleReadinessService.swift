@@ -20,7 +20,9 @@ final class VehicleReadinessService: ObservableObject {
 
     init(store: SQLiteStore?) {
         self.store = store
-        let storedIDs = (try? store?.load([String].self, for: StorageKey.completedItems)) ?? []
+        let storedIDs = RediLogger.preparedness.tryOrDefault([], "Load vehicle kit items") {
+            try store?.load([String].self, for: StorageKey.completedItems) ?? []
+        }
         completedItemIDs = Set(storedIDs)
     }
 
@@ -76,7 +78,9 @@ final class VehicleReadinessService: ObservableObject {
         } else {
             completedItemIDs.remove(itemID)
         }
-        try? store?.save(completedItemIDs.sorted(), for: StorageKey.completedItems)
+        RediLogger.preparedness.tryOrNil("Save vehicle kit items") {
+            try store?.save(completedItemIDs.sorted(), for: StorageKey.completedItems)
+        }
     }
 
     private var templates: [VehicleKitTemplate] {

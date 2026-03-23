@@ -55,80 +55,11 @@ struct HomeView: View {
                         .frame(height: 0)
                         .id(HomeScrollAnchor.top)
 
-                    if appState.isStealthModeEnabled {
-                        StealthModeIndicatorView()
-                    }
-
-                    if appState.settings.privacy.isAnonymousModeEnabled {
-                        HiddenModeIndicatorView()
-                    }
-
-                    todayReadinessCard
-
-                    todayNextStepCard
-
-                    if let safeModeSummary = viewModel.safeModeSummary {
-                        safeModeCard(summary: safeModeSummary)
+                    if isElevatedMode {
+                        elevatedModeContent
                     } else {
-                        todayLocalStatusCard
+                        calmModeContent
                     }
-
-                    if !appState.profile.isProfileFullyComplete {
-                        ProfileCompletionCard(profile: appState.profile) { step in
-                            router.openProfileStep(step)
-                        }
-                    }
-
-                    quickAccessHubCard
-
-                    homeStatusRail
-                    officialAlertsPanel
-
-                    if appState.emergencyUnlockState.isVisible {
-                        emergencyUnlockCard
-                    }
-
-                    if shouldShowOperationalInsights {
-                        CollapsiblePanelCard(
-                            title: L10n.tr("home.section.operational_insights.title", "Operational Insights"),
-                            subtitle: L10n.tr(
-                                "home.section.operational_insights.subtitle",
-                                "Forgotten items, expiry reminders, and water guidance."
-                            ),
-                            accent: ColorTheme.textTertiary,
-                            isExpanded: $isShowingOperationalInsights
-                        ) {
-                            operationalInsightsContent
-                        }
-                    }
-
-                    CollapsiblePanelCard(
-                        title: L10n.tr("home.section.priority_situations.title", "Priority Situations"),
-                        subtitle: viewModel.priorityModeSummary?.subtitle ?? L10n.tr(
-                            "home.section.priority_situations.subtitle",
-                            "Activate a live situation to surface the right actions."
-                        ),
-                        accent: ColorTheme.textTertiary,
-                        isExpanded: $isShowingPriorityTools
-                    ) {
-                        priorityModeCard
-                    }
-
-                    if viewModel.isBushfireModeEnabled {
-                        CollapsiblePanelCard(
-                            title: L10n.tr("home.section.bushfire_readiness.title", "Bushfire Readiness"),
-                            subtitle: L10n.tr(
-                                "home.section.bushfire_readiness.subtitle",
-                                "Bushfire scenario preparation and checklists."
-                            ),
-                            accent: ColorTheme.textTertiary,
-                            isExpanded: $isShowingBushfireReadiness
-                        ) {
-                            bushfireModeCard
-                        }
-                    }
-
-                    compactProBanner
                 }
                 .padding(.horizontal, RediSpacing.screen)
                 .padding(.top, RediSpacing.screen)
@@ -222,6 +153,158 @@ struct HomeView: View {
             withAnimation(RediMotion.selection) {
                 proxy.scrollTo(HomeScrollAnchor.top, anchor: .top)
             }
+        }
+    }
+
+    // MARK: - Calm Mode (Day-to-Day Dashboard)
+
+    /// True when the user is still in early setup.
+    /// Graduates when ANY of these become true:
+    /// - Prep score reaches 30% (data-based)
+    /// - Profile is over 50% complete (action-based)
+    /// - More than 3 days since onboarding (time-based)
+    /// This prevents dumping full system complexity on a user who completed
+    /// profile fields quickly but hasn't internalized the system yet.
+    var isEarlyStageUser: Bool {
+        guard viewModel.prepScore.overall < 30 else { return false }
+        guard appState.profile.profileCompletionFraction < 0.5 else { return false }
+
+        if let onboardedAt = appState.profile.lastCompletedOnboardingAt {
+            let daysSinceOnboarding = Date.now.timeIntervalSince(onboardedAt) / 86400
+            if daysSinceOnboarding > 3 { return false }
+        }
+
+        return true
+    }
+
+    @ViewBuilder
+    var calmModeContent: some View {
+        if appState.isStealthModeEnabled {
+            StealthModeIndicatorView()
+        }
+
+        if appState.settings.privacy.isAnonymousModeEnabled {
+            HiddenModeIndicatorView()
+        }
+
+        if isEarlyStageUser {
+            earlyStageContent
+        } else {
+            operationalContent
+        }
+    }
+
+    // MARK: - Early Stage (First 5 Minutes)
+
+    /// Encouraging, progress-oriented dashboard for new users.
+    /// No deficit metrics. No "0%". Just guided next steps.
+    @ViewBuilder
+    private var earlyStageContent: some View {
+        earlyStageWelcomeCard
+
+        todayNextStepCard
+
+        ProfileCompletionCard(profile: appState.profile) { step in
+            router.openProfileStep(step)
+        }
+
+        todayLocalStatusCard
+
+        officialAlertsPanel
+
+        quickAccessHubCard
+    }
+
+    private var earlyStageWelcomeCard: some View {
+        CommandPanel(eyebrow: "Getting Started") {
+            VStack(alignment: .leading, spacing: RediSpacing.content) {
+                Text("Let's get you ready")
+                    .font(.system(size: 24, weight: .black))
+                    .foregroundStyle(ColorTheme.text)
+
+                Text("Complete a few quick steps to build your emergency baseline. RediM8 gets more useful with every detail you add.")
+                    .font(RediTypography.body)
+                    .foregroundStyle(ColorTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                let completedSteps = appState.profile.profileCompletionSteps.filter(\.isComplete).count
+                let totalSteps = appState.profile.profileCompletionSteps.count
+
+                HStack(spacing: RediSpacing.content) {
+                    ReadinessMeter(
+                        value: appState.profile.profileCompletionFraction,
+                        tint: ColorTheme.accent,
+                        height: 6
+                    )
+
+                    Text("\(completedSteps)/\(totalSteps)")
+                        .font(RediTypography.data)
+                        .foregroundStyle(ColorTheme.accent)
+                        .layoutPriority(1)
+                }
+
+                TrustPillGroup(items: [
+                    TrustPillItem(title: "Works offline now", tone: .verified),
+                    TrustPillItem(title: "Emergency tools ready", tone: .verified),
+                    TrustPillItem(title: "Refine anytime", tone: .info)
+                ])
+            }
+        }
+    }
+
+    // MARK: - Operational Mode (Established Users)
+
+    /// Full system-truth dashboard for users who have built their baseline.
+    @ViewBuilder
+    private var operationalContent: some View {
+        todayReadinessCard
+
+        todayNextStepCard
+
+        todayLocalStatusCard
+
+        if !appState.profile.isProfileFullyComplete {
+            ProfileCompletionCard(profile: appState.profile) { step in
+                router.openProfileStep(step)
+            }
+        }
+
+        quickAccessHubCard
+
+        officialAlertsPanel
+
+        if appState.emergencyUnlockState.isVisible {
+            emergencyUnlockCard
+        }
+
+        if hasAdvancedContent {
+            CollapsiblePanelCard(
+                title: "Advanced",
+                subtitle: "Insights, priority situations, and scenario readiness.",
+                accent: ColorTheme.textTertiary,
+                isExpanded: $isShowingOperationalInsights
+            ) {
+                advancedSectionContent
+            }
+        }
+
+        compactProBanner
+    }
+
+    private var hasAdvancedContent: Bool {
+        shouldShowOperationalInsights || viewModel.priorityModeSummary != nil || viewModel.isBushfireModeEnabled
+    }
+
+    @ViewBuilder
+    private var advancedSectionContent: some View {
+        if shouldShowOperationalInsights {
+            operationalInsightsContent
+        }
+
+        priorityModeCard
+
+        if viewModel.isBushfireModeEnabled {
+            bushfireModeCard
         }
     }
 }

@@ -83,3 +83,31 @@ struct TacticalTextFieldStyle: TextFieldStyle {
             .tint(ColorTheme.accent)
     }
 }
+
+// MARK: - Previews
+
+#Preview("Button Styles") {
+    VStack(spacing: 16) {
+        Button("Primary Action") {}
+            .buttonStyle(PrimaryActionButtonStyle())
+
+        Button("Secondary Action") {}
+            .buttonStyle(SecondaryActionButtonStyle())
+
+        Button("Emergency Action") {}
+            .buttonStyle(EmergencyActionButtonStyle())
+
+        Button("Card Press") {
+            Text("Card Content")
+                .font(RediTypography.bodyStrong)
+                .foregroundStyle(ColorTheme.text)
+                .frame(maxWidth: .infinity, minHeight: 56)
+                .background(ColorTheme.panel)
+                .clipShape(RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+        }
+        .buttonStyle(CardPressButtonStyle())
+    }
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
+}

@@ -140,10 +140,8 @@ extension HomeView {
     }
 
     var todayLocalStatusCard: some View {
-        CinematicCommandPanel(
-            assetName: "community_storm_town",
-            eyebrow: L10n.tr("home.today.local_status.eyebrow", "Local Status"),
-            bannerHeight: 140
+        CommandPanel(
+            eyebrow: L10n.tr("home.today.local_status.eyebrow", "Local Status")
         ) {
             VStack(alignment: .leading, spacing: RediSpacing.content) {
                 HStack(alignment: .center, spacing: RediSpacing.compact) {
@@ -158,6 +156,18 @@ extension HomeView {
                         .accessibilityIdentifier("home.todayLocalStatus.title")
                 }
                 .accessibilityElement(children: .combine)
+
+                if viewModel.isRefreshingAlerts {
+                    HStack(spacing: RediSpacing.compact) {
+                        ProgressView()
+                            .tint(ColorTheme.accent)
+                            .scaleEffect(0.7)
+                        Text("Checking official feeds…")
+                            .font(RediTypography.caption)
+                            .foregroundStyle(ColorTheme.textTertiary)
+                    }
+                    .transition(.opacity)
+                }
 
                 Text(viewModel.officialAlertSummary.detail)
                     .font(RediTypography.body)

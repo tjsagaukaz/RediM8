@@ -33,19 +33,16 @@ final class OfficialAlertService: ObservableObject {
     @Published private(set) var lastRefreshError: String?
 
     private let store: SQLiteStore?
-    private let session: URLSession
     private let feedSources: [FeedSource]
 
     init(
         store: SQLiteStore?,
-        session: URLSession = .shared,
         feedSources: [FeedSource]? = nil,
         cachedLibrary: OfficialAlertLibrary? = nil,
         initialLastRefreshError: String? = nil
     ) {
         self.store = store
-        self.session = session
-        self.feedSources = feedSources ?? Self.defaultFeedSources
+        self.feedSources = feedSources ?? []
         if let cachedLibrary {
             library = cachedLibrary
         } else if let store {
@@ -112,96 +109,14 @@ final class OfficialAlertService: ObservableObject {
             ?? cachedJurisdictions.sorted { $0.title < $1.title }.first
     }
 
+    /// Offline-only: refresh is a no-op. Alert data comes from cached local storage only.
     func refreshIfNeeded(maxAge: TimeInterval = 300) async {
-        guard !isRefreshing else {
-            return
-        }
-
-        let cacheAge = Date().timeIntervalSince(library.lastUpdated)
-        guard !hasCachedData || cacheAge > maxAge else {
-            return
-        }
-
-        await refresh()
+        // Offline architecture: no network calls. Cached data persists from last session.
     }
 
+    /// Offline-only: refresh is a no-op.
     func refresh() async {
-        guard !isRefreshing else {
-            return
-        }
-
-        let refreshStartTime = CFAbsoluteTimeGetCurrent()
-        var mergedAlerts: [OfficialAlert] = []
-        var availableSources: [OfficialAlertSource] = []
-        var failures: [FeedSource] = []
-        isRefreshing = true
-        defer {
-            isRefreshing = false
-            let elapsed = Int((CFAbsoluteTimeGetCurrent() - refreshStartTime) * 1000)
-            RediLogger.performance.debug(
-                "Official alert refresh completed in \(elapsed, privacy: .public) ms (\(availableSources.count, privacy: .public) sources, \(mergedAlerts.count, privacy: .public) alerts, \(failures.count, privacy: .public) failures)"
-            )
-        }
-
-        for source in feedSources {
-            do {
-                let request = URLRequest(url: source.url, cachePolicy: .reloadRevalidatingCacheData, timeoutInterval: 15)
-                let (data, response) = try await session.data(for: request)
-                if let httpResponse = response as? HTTPURLResponse, !(200 ..< 300).contains(httpResponse.statusCode) {
-                    throw URLError(.badServerResponse)
-                }
-
-                let librarySource = OfficialAlertSource(
-                    id: source.id,
-                    name: source.name,
-                    jurisdiction: source.jurisdiction,
-                    urlString: source.url.absoluteString
-                )
-                let alerts = try Self.parseFeed(data, source: librarySource, format: source.format)
-                mergedAlerts.append(contentsOf: alerts)
-                availableSources.append(librarySource)
-            } catch {
-                RediLogger.alerts.error("Failed to refresh official alerts from \(source.name, privacy: .public): \(error.localizedDescription, privacy: .public)")
-                failures.append(source)
-            }
-        }
-
-        if mergedAlerts.isEmpty {
-            if availableSources.isEmpty, !hasCachedData {
-                lastRefreshError = Self.noCachedAlertsMessage
-            } else if availableSources.isEmpty, !failures.isEmpty {
-                lastRefreshError = Self.cachedSnapshotMessage
-            }
-        }
-
-        guard !availableSources.isEmpty else {
-            return
-        }
-
-        library = mergedLibrary(
-            refreshedAlerts: mergedAlerts,
-            refreshedSources: availableSources,
-            failures: failures,
-            referenceDate: .now
-        )
-        if let store {
-            do {
-                try store.save(library, for: StorageKey.library)
-            } catch {
-                RediLogger.alerts.error("Failed to cache official alerts: \(error.localizedDescription, privacy: .public)")
-            }
-        }
-
-        if failures.isEmpty {
-            lastRefreshError = nil
-        } else {
-            let failedJurisdictions = Set(failures.map(\.jurisdiction))
-            if failedJurisdictions.count == 1, let jurisdiction = failedJurisdictions.first {
-                lastRefreshError = "Some \(jurisdiction.title) official feeds could not be refreshed. Showing the latest successful snapshot."
-            } else {
-                lastRefreshError = "Some official feeds could not be refreshed. Showing the latest successful snapshot."
-            }
-        }
+        // Offline architecture: no network calls.
     }
 
     #if DEBUG
@@ -212,40 +127,7 @@ final class OfficialAlertService: ObservableObject {
     }
     #endif
 
-    private func mergedLibrary(
-        refreshedAlerts: [OfficialAlert],
-        refreshedSources: [OfficialAlertSource],
-        failures: [FeedSource],
-        referenceDate: Date
-    ) -> OfficialAlertLibrary {
-        let preservedSourceMatches: (OfficialAlert, FeedSource) -> Bool = { alert, source in
-            alert.jurisdiction == source.jurisdiction
-                && (alert.sourceName == source.name || alert.sourceURLString == source.url.absoluteString)
-        }
-        let preservedSources = failures.map { failedSource in
-            library.sources.first(where: { $0.id == failedSource.id })
-                ?? OfficialAlertSource(
-                    id: failedSource.id,
-                    name: failedSource.name,
-                    jurisdiction: failedSource.jurisdiction,
-                    urlString: failedSource.url.absoluteString
-                )
-        }
-        let preservedAlerts = library.alerts.filter { alert in
-            failures.contains(where: { preservedSourceMatches(alert, $0) })
-        }
-
-        let combinedSources = (refreshedSources + preservedSources).reduce(into: [OfficialAlertSource]()) { result, source in
-            guard !result.contains(where: { $0.id == source.id }) else { return }
-            result.append(source)
-        }
-
-        return OfficialAlertLibrary(
-            lastUpdated: referenceDate,
-            sources: combinedSources,
-            alerts: Self.deduplicate(alerts: refreshedAlerts + preservedAlerts)
-        )
-    }
+    // mergedLibrary removed — offline architecture has no remote refresh to merge
 
     func nearbyAlerts(currentLocation: CLLocation?, installedPacks: [OfflineMapPack]) -> [OfficialAlert] {
         let activeAlerts = activeAlerts
@@ -557,73 +439,7 @@ final class OfficialAlertService: ObservableObject {
         }
     }
 
-    nonisolated private static let defaultFeedSources: [FeedSource] = {
-        let raw: [(id: String, name: String, jurisdiction: AustralianJurisdiction, urlString: String, format: FeedFormat)] = [
-            (
-                "act_cap_warnings",
-                "ACT ESA Official Warnings",
-                .act,
-                "https://data.esa.act.gov.au/feeds/esa-cap-incidents.xml",
-                .cap
-            ),
-            (
-                "nsw_cap_warnings",
-                "NSW RFS Official Warnings",
-                .nsw,
-                "https://www.rfs.nsw.gov.au/feeds/majorIncidentsCAP.xml",
-                .cap
-            ),
-            (
-                "nt_bom_land_warnings",
-                "Northern Territory Official Weather Warnings",
-                .nt,
-                "https://www.bom.gov.au/fwo/IDZ00062.warnings_land_nt.xml",
-                .rss
-            ),
-            (
-                "qld_cap_warnings",
-                "Queensland Official Warnings",
-                .qld,
-                "https://publiccontent-qld-alerts.s3.ap-southeast-2.amazonaws.com/content/Feeds/StormFloodCycloneWarnings/StormWarnings_capau.xml",
-                .cap
-            ),
-            (
-                "sa_cap_warnings",
-                "South Australia Official Warnings",
-                .sa,
-                "https://data.eso.sa.gov.au/prod/cfs/criimson/alertsa-fire.xml",
-                .cap
-            ),
-            (
-                "tas_incidents",
-                "Tasmania Official Incidents",
-                .tas,
-                "https://api.alert.tas.gov.au/jsonapi/incidents?sort=-changed&page%5Blimit%5D=50&include=agency,incident_type",
-                .tasIncidentsJSON
-            ),
-            (
-                "vic_incidents",
-                "Victoria Official Incidents",
-                .vic,
-                "https://data.emergency.vic.gov.au/Show?pageId=getIncidentJSON",
-                .vicIncidentsJSON
-            ),
-            (
-                "wa_warnings",
-                "Western Australia Official Warnings",
-                .wa,
-                "https://api.emergency.wa.gov.au/v1/warnings",
-                .waWarningsJSON
-            )
-        ]
-        return raw.compactMap { item in
-            guard let url = URL(string: item.urlString) else {
-                RediLogger.alerts.error("Invalid feed source URL skipped: \(item.urlString, privacy: .public)")
-                return nil
-            }
-            return FeedSource(id: item.id, name: item.name, jurisdiction: item.jurisdiction, url: url, format: item.format)
-        }
-    }()
+    // Remote feed sources removed — offline architecture uses only cached local data
 
     private static func sort(lhs: OfficialAlert, rhs: OfficialAlert) -> Bool {
         if lhs.severity.rank != rhs.severity.rank {

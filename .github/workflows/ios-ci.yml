@@ -41,3 +41,28 @@ jobs:
         run: |
           chmod +x scripts/run-ios-tests.sh
           DESTINATION='platform=iOS Simulator,name=iPhone 16e,OS=26.2' scripts/run-ios-tests.sh
+        env:
+          ENABLE_CODE_COVERAGE: YES
+
+      - name: Collect code coverage
+        if: always()
+        run: |
+          RESULT_BUNDLE=$(find ~/Library/Developer/Xcode/DerivedData -name "*.xcresult" -maxdepth 3 2>/dev/null | head -1)
+          if [ -n "$RESULT_BUNDLE" ]; then
+            echo "### Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            xcrun xccov view --report --only-targets "$RESULT_BUNDLE" 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "Coverage data not available" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No xcresult bundle found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            ~/Library/Developer/Xcode/DerivedData/**/Logs/Test/*.xcresult
+          retention-days: 7
+          if-no-files-found: ignore

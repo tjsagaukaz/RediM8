@@ -9,6 +9,11 @@ struct RediM8ProView: View {
     private let catalog = RediM8MonetizationCatalog.launch
     private let emergencyUnlockState: EmergencyUnlockState
 
+    // MARK: - Constants
+    private static let privacyURL = URL(string: "https://redim8.com.au/privacy")
+    private static let termsURL = URL(string: "https://redim8.com.au/terms")
+    private static let manageSubURL = URL(string: "https://apps.apple.com/account/subscriptions")
+
     @State private var purchaseError: String?
     @State private var isShowingError = false
     @State private var hasEntered = false
@@ -232,36 +237,35 @@ struct RediM8ProView: View {
             Group {
                 if dynamicTypeSize.isAccessibilitySize {
                     VStack(alignment: .leading, spacing: 8) {
-                        Link(L10n.tr("paywall.terms.privacy_policy", "Privacy Policy"), destination: URL(string: "https://redim8.com.au/privacy")!)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(ColorTheme.textTertiary)
-
-                        Link(L10n.tr("paywall.terms.terms_of_use", "Terms of Use"), destination: URL(string: "https://redim8.com.au/terms")!)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(ColorTheme.textTertiary)
-
-                        Link(L10n.tr("paywall.terms.manage_subscription", "Manage Subscription"), destination: URL(string: "https://apps.apple.com/account/subscriptions")!)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(ColorTheme.textTertiary)
+                        legalLinks
                     }
                 } else {
                     HStack(spacing: 12) {
-                        Link(L10n.tr("paywall.terms.privacy_policy", "Privacy Policy"), destination: URL(string: "https://redim8.com.au/privacy")!)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(ColorTheme.textTertiary)
-
-                        Link(L10n.tr("paywall.terms.terms_of_use", "Terms of Use"), destination: URL(string: "https://redim8.com.au/terms")!)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(ColorTheme.textTertiary)
-
-                        Link(L10n.tr("paywall.terms.manage_subscription", "Manage Subscription"), destination: URL(string: "https://apps.apple.com/account/subscriptions")!)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(ColorTheme.textTertiary)
+                        legalLinks
                     }
                 }
             }
         }
         .padding(.top, 4)
+    }
+
+    @ViewBuilder
+    private var legalLinks: some View {
+        if let url = Self.privacyURL {
+            Link(L10n.tr("paywall.terms.privacy_policy", "Privacy Policy"), destination: url)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(ColorTheme.textTertiary)
+        }
+        if let url = Self.termsURL {
+            Link(L10n.tr("paywall.terms.terms_of_use", "Terms of Use"), destination: url)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(ColorTheme.textTertiary)
+        }
+        if let url = Self.manageSubURL {
+            Link(L10n.tr("paywall.terms.manage_subscription", "Manage Subscription"), destination: url)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(ColorTheme.textTertiary)
+        }
     }
 
     private var featuresCard: some View {

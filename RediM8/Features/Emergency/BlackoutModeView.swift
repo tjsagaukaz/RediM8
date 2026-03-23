@@ -16,6 +16,7 @@ struct BlackoutModeView: View {
     @State private var isShowingBushfireReference = false
     @State private var isShowingEmergencyCards = false
     @State private var isShowingAdditionalContacts = false
+    @AccessibilityFocusState private var isTitleFocused: Bool
 
     init(appState: AppState, dismiss: @escaping () -> Void, switchToTab: @escaping (AppTab) -> Void) {
         self.appState = appState
@@ -56,6 +57,7 @@ struct BlackoutModeView: View {
                             Text("Blackout Mode")
                                 .font(RediTypography.screenTitle)
                                 .foregroundStyle(ColorTheme.text)
+                                .accessibilityFocused($isTitleFocused)
                             Text("\(viewModel.headingText) • \(viewModel.orientationSummary)")
                                 .font(RediTypography.body)
                                 .foregroundStyle(ColorTheme.textMuted)
@@ -183,7 +185,16 @@ struct BlackoutModeView: View {
         .transaction { transaction in
             transaction.disablesAnimations = true
         }
-        .onAppear { viewModel.onAppear() }
+        .accessibilityAction(named: "Toggle Flashlight") { viewModel.toggleTorch() }
+        .accessibilityAction(named: "Call Emergency") { callPrimaryEmergencyContact() }
+        .accessibilityAction(named: "First Aid Guides") { isShowingFirstAid = true }
+        .accessibilityAction(named: "Open Offline Map") { switchToTab(.map) }
+        .accessibilityAction(named: "Signal Nearby") { switchToTab(.signal) }
+        .accessibilityAction(named: "Emergency Contacts") { isShowingContacts = true }
+        .onAppear {
+            viewModel.onAppear()
+            isTitleFocused = true
+        }
         .onDisappear { viewModel.onDisappear() }
         .sheet(isPresented: $isShowingFirstAid) {
             NavigationStack {

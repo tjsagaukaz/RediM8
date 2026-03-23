@@ -72,6 +72,7 @@ private struct TrustPill: View {
                 RoundedRectangle(cornerRadius: RediRadius.chip, style: .continuous)
                     .stroke(ColorTheme.divider, lineWidth: 0.5)
             )
+            .accessibilityLabel("\(item.title), \(item.tone.rawValue)")
     }
 
     private var foreground: Color {
@@ -82,6 +83,93 @@ private struct TrustPill: View {
         case .caution: ColorTheme.warning
         case .danger: ColorTheme.danger
         }
+    }
+}
+
+// MARK: - Data Confidence
+
+/// Indicates how much the user should trust a displayed value.
+/// Attach to any metric, status, or data point in the UI.
+enum DataConfidence: String, Equatable, Hashable, Sendable {
+    /// Value comes from a live, verified source (GPS lock, live API, direct sensor).
+    case exact
+    /// Value is derived, interpolated, or comes from a partially-available source.
+    case estimated
+    /// Value was accurate at some point but may no longer reflect current conditions.
+    case stale
+}
+
+extension DataConfidence {
+    var label: String {
+        switch self {
+        case .exact: "Exact"
+        case .estimated: "Estimated"
+        case .stale: "Stale"
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .exact: "checkmark.circle.fill"
+        case .estimated: "questionmark.circle.fill"
+        case .stale: "clock.fill"
+        }
+    }
+}
+
+/// Tiny inline confidence indicator — a colored dot with optional icon.
+/// Use next to any data value to signal its trustworthiness.
+struct ConfidenceIndicator: View {
+    let confidence: DataConfidence
+
+    var body: some View {
+        Image(systemName: confidence.systemImage)
+            .font(.system(size: 8, weight: .bold))
+            .foregroundStyle(tint)
+            .accessibilityLabel("Confidence: \(confidence.label)")
+    }
+
+    private var tint: Color {
+        switch confidence {
+        case .exact: ColorTheme.ready
+        case .estimated: ColorTheme.warning
+        case .stale: ColorTheme.textTertiary
+        }
+    }
+}
+
+/// Pairs a display value with its confidence level for type-safe propagation.
+struct ConfidentValue: Equatable {
+    let text: String
+    let confidence: DataConfidence
+
+    static func exact(_ text: String) -> ConfidentValue { .init(text: text, confidence: .exact) }
+    static func estimated(_ text: String) -> ConfidentValue { .init(text: text, confidence: .estimated) }
+    static func stale(_ text: String) -> ConfidentValue { .init(text: text, confidence: .stale) }
+}
+
+/// Text view that renders a value with its inline confidence indicator.
+struct ConfidentText: View {
+    let value: ConfidentValue
+    let font: Font
+    let color: Color
+
+    init(_ value: ConfidentValue, font: Font = RediTypography.data, color: Color = ColorTheme.text) {
+        self.value = value
+        self.font = font
+        self.color = color
+    }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(value.text)
+                .font(font)
+                .foregroundStyle(color)
+
+            ConfidenceIndicator(confidence: value.confidence)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(value.text), \(value.confidence.label)")
     }
 }
 
@@ -96,6 +184,7 @@ struct OperationalStatusItem: Identifiable, Equatable {
     let label: String
     let value: String
     let tone: OperationalStatusTone
+    var confidence: DataConfidence?
     var id: String { "\(label)-\(value)" }
 }
 
@@ -159,10 +248,17 @@ private struct SystemStatusChip: View {
                     .tracking(1.2)
                     .foregroundStyle(ColorTheme.textTertiary)
                     .lineLimit(1)
-                Text(item.value)
-                    .font(RediTypography.data)
-                    .foregroundStyle(ColorTheme.text)
-                    .lineLimit(1)
+
+                HStack(spacing: 4) {
+                    Text(item.value)
+                        .font(RediTypography.data)
+                        .foregroundStyle(ColorTheme.text)
+                        .lineLimit(1)
+
+                    if let confidence = item.confidence {
+                        ConfidenceIndicator(confidence: confidence)
+                    }
+                }
             }
         }
         .padding(.horizontal, 10)
@@ -175,7 +271,7 @@ private struct SystemStatusChip: View {
         )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(item.label)
-        .accessibilityValue(item.value)
+        .accessibilityValue("\(item.value)\(item.confidence.map { ", \($0.label)" } ?? "")")
     }
 
     private func color(for tone: OperationalStatusTone) -> Color {
@@ -218,6 +314,9 @@ struct ReadinessMeter: View {
         .frame(height: height)
         .onAppear { updateDisplayedValue(initial: true) }
         .onChange(of: clampedValue) { _, _ in updateDisplayedValue(initial: false) }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Progress")
+        .accessibilityValue("\(Int(clampedValue * 100)) percent")
     }
 
     private func updateDisplayedValue(initial: Bool) {
@@ -276,6 +375,9 @@ struct ReadinessRing: View {
         .frame(width: size, height: size)
         .onAppear { updateDisplayedValue(initial: true) }
         .onChange(of: clampedValue) { _, _ in updateDisplayedValue(initial: false) }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(subtitle)
+        .accessibilityValue(title)
     }
 
     private func updateDisplayedValue(initial: Bool) {
@@ -504,6 +606,9 @@ struct CollapsiblePanelCard<Content: View>: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier(accessibilityIdentifier ?? "")
+            .accessibilityLabel("\(title), \(isExpanded ? "expanded" : "collapsed")")
+            .accessibilityHint(isExpanded ? "Double tap to collapse" : "Double tap to expand")
+            .accessibilityAddTraits(.isButton)
 
             if isExpanded {
                 Rectangle()
@@ -691,6 +796,9 @@ struct MapPackCoveragePreview: View {
             }
         }
         .frame(height: 80)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(pack.name) \(pack.kind.title)")
+        .accessibilityValue(isInstalled ? "Coverage ready" : "Coverage optional")
     }
 
     private func normalizedRatio(value: Double, maxValue: Double) -> Double {
@@ -713,4 +821,52 @@ struct MapPackCoveragePreview: View {
         }
         .stroke(ColorTheme.dividerSubtle, lineWidth: 0.5)
     }
+}
+
+// MARK: - Previews
+
+#Preview("StatusBadge — All Tiers") {
+    HStack(spacing: 12) {
+        StatusBadge(tier: .notReady)
+        StatusBadge(tier: .improving)
+        StatusBadge(tier: .prepared)
+        StatusBadge(tier: .highlyPrepared)
+    }
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
+}
+
+#Preview("ReadinessMeter") {
+    VStack(spacing: 16) {
+        ReadinessMeter(value: 0.25, tint: ColorTheme.danger)
+        ReadinessMeter(value: 0.55, tint: ColorTheme.warning)
+        ReadinessMeter(value: 0.85, tint: ColorTheme.ready)
+    }
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
+}
+
+#Preview("ReadinessRing") {
+    HStack(spacing: 24) {
+        ReadinessRing(value: 0.72, tint: ColorTheme.ready, title: "72%", subtitle: "Ready")
+        ReadinessRing(value: 0.38, tint: ColorTheme.warning, title: "38%", subtitle: "Partial")
+    }
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
+}
+
+#Preview("TrustPillGroup") {
+    TrustPillGroup(items: [
+        TrustPillItem(title: "Verified Source", tone: .verified),
+        TrustPillItem(title: "FEMA", tone: .info),
+        TrustPillItem(title: "Unverified", tone: .caution),
+        TrustPillItem(title: "Expired", tone: .danger),
+        TrustPillItem(title: "Community", tone: .neutral),
+    ])
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
 }

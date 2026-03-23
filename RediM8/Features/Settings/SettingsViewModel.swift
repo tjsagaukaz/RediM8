@@ -12,6 +12,8 @@ final class SettingsViewModel: ObservableObject {
     @Published var isShowingResetNodeAlert = false
     @Published var isShowingClearCacheAlert = false
     @Published var isShowingEmergencySafeDefaultsAlert = false
+    @Published private(set) var lastError: AppError?
+    @Published private(set) var systemState: SystemState = .healthy
 
     let appState: AppState
 
@@ -139,6 +141,8 @@ final class SettingsViewModel: ObservableObject {
                     title: "Notification Setup Failed",
                     message: "RediM8 could not request notification access right now. Try again in a moment."
                 )
+                lastError = .permissionDenied(type: "Notification")
+                systemState = .degraded(reason: "Notification permission could not be obtained")
             }
         }
     }

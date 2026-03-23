@@ -49,3 +49,17 @@ struct ScoreBar: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#Preview("ScoreBar") {
+    VStack(spacing: 16) {
+        ScoreBar(score: CategoryScore(category: .water, score: 85))
+        ScoreBar(score: CategoryScore(category: .food, score: 52))
+        ScoreBar(score: CategoryScore(category: .medical, score: 20))
+        ScoreBar(score: CategoryScore(category: .power, score: 94))
+    }
+    .padding()
+    .background(ColorTheme.background)
+    .preferredColorScheme(.dark)
+}

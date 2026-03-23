@@ -97,12 +97,16 @@ final class EmergencyPlanService {
             return []
         }
 
-        let stored = (try? store.load([String].self, for: StorageKey.completedChecklist)) ?? []
+        let stored = RediLogger.preparedness.tryOrNil("Load emergency checklist", operation: {
+            try store.load([String].self, for: StorageKey.completedChecklist) ?? []
+        }) ?? []
         return Set(stored)
     }
 
     func saveCompletedChecklistItemIDs(_ ids: Set<String>) {
-        try? store?.save(ids.sorted(), for: StorageKey.completedChecklist)
+        RediLogger.preparedness.tryOrNil("Save emergency checklist") {
+            try store?.save(ids.sorted(), for: StorageKey.completedChecklist)
+        }
     }
 
     private func buildSupplyTargets(for profile: UserProfile, waterRequired: Double) -> [EmergencySupplyTarget] {

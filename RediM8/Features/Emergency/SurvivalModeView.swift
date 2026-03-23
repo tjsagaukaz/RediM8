@@ -12,6 +12,7 @@ struct SurvivalModeView: View {
     @State private var isShowingSignal = false
     @State private var isShowingGuides = false
     @State private var isShowingContacts = false
+    @AccessibilityFocusState private var isTitleFocused: Bool
 
     init(appState: AppState, disable: @escaping () -> Void) {
         self.appState = appState
@@ -46,6 +47,13 @@ struct SurvivalModeView: View {
             }
         }
         .background(Color.black.ignoresSafeArea())
+        .accessibilityAction(named: "Call Emergency") {
+            if let url = primaryEmergencyContact?.dialURL { openURL(url) }
+        }
+        .accessibilityAction(named: "Toggle Flashlight") { torchService.toggleTorch() }
+        .accessibilityAction(named: "Signal Nearby") { isShowingSignal = true }
+        .accessibilityAction(named: "Emergency Guides") { isShowingGuides = true }
+        .accessibilityAction(named: "Emergency Contacts") { isShowingContacts = true }
         .sheet(isPresented: $isShowingGuides) {
             NavigationStack {
                 GuideLibraryView(appState: appState, highlightedCategory: .firstAid)
@@ -77,6 +85,8 @@ struct SurvivalModeView: View {
                     Text("Low Battery Survival Mode")
                         .font(RediTypography.screenTitle)
                         .foregroundStyle(ColorTheme.text)
+                        .accessibilityFocused($isTitleFocused)
+                        .onAppear { isTitleFocused = true }
                     Text("Battery \(appState.batteryStatus.percentageText) • stripped to essentials only")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)

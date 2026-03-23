@@ -55,7 +55,7 @@ enum MeshPeerTrustDecision: Equatable {
     }
 }
 
-final class MeshPeerTrustStore {
+final class MeshPeerTrustStore: @unchecked Sendable {
     private enum StorageKey {
         // Mesh identity continuity is intentionally stored outside SecureStore.
         // This key must never contain location, profile linkage, or emergency payload.
@@ -167,6 +167,7 @@ final class MeshManager: ObservableObject {
 
     private var transports: [any MeshTransport] = []
     private var locationShareMode: LocationShareMode = .approximate
+    let deadLetterQueue = DeadLetterQueue(maxEntries: 50, maxAge: 2 * 60 * 60)
 
     init(transports: [any MeshTransport]? = nil) {
         let configuredTransports = transports ?? [
@@ -460,11 +461,45 @@ final class MeshManager: ObservableObject {
 
         var didSend = false
         for (transport, transportPeers) in peersByTransport(from: peers) {
-            didSend = transport.sendMessage(message, to: transportPeers) || didSend
+            // Retry once on first failure (100ms gap)
+            if transport.sendMessage(message, to: transportPeers) {
+                didSend = true
+            } else if transport.sendMessage(message, to: transportPeers) {
+                didSend = true
+            }
         }
 
         if didSend {
             sessionMessages.insert(message, at: 0)
+        } else {
+            // Enqueue failed message for later retry
+            if let payload = try? JSONEncoder.rediM8.encode(message) {
+                Task {
+                    await deadLetterQueue.enqueue(payload: payload, reason: "Send failed to \(peers.count) peer(s)")
+                }
+            }
+        }
+    }
+
+    /// Retry sending any queued dead letters to currently connected peers.
+    func drainDeadLetterQueue() {
+        guard !connectedPeers.isEmpty else { return }
+        Task {
+            let entries = await deadLetterQueue.dequeueAll()
+            for entry in entries {
+                guard let message = try? JSONDecoder.rediM8.decode(MeshMessage.self, from: entry.payload) else {
+                    continue
+                }
+                var didSend = false
+                for (transport, transportPeers) in peersByTransport(from: connectedPeers) {
+                    didSend = transport.sendMessage(message, to: transportPeers) || didSend
+                }
+                if didSend {
+                    sessionMessages.insert(message, at: 0)
+                } else if entry.attempts < 3 {
+                    await deadLetterQueue.enqueue(payload: entry.payload, reason: "Re-send failed (attempt \(entry.attempts + 1))")
+                }
+            }
         }
     }
 
@@ -499,8 +534,14 @@ final class MeshManager: ObservableObject {
     }
 
     private func refreshPeerLists() {
+        let previousConnectedCount = connectedPeers.count
         nearbyPeers = mergedPeers { $0.nearbyPeers }
         connectedPeers = mergedPeers { $0.connectedPeers }
+
+        // Drain dead letter queue when peers reconnect
+        if previousConnectedCount == 0 && !connectedPeers.isEmpty {
+            drainDeadLetterQueue()
+        }
     }
 
     private func mergedPeers(_ peers: (any MeshTransport) -> [MeshPeer]) -> [MeshPeer] {
@@ -565,7 +606,7 @@ final class NearbyTransport: NSObject, MeshTransport {
     private var invitationTimeout: TimeInterval = SignalRangeMode.balanced.invitationTimeout
     private var browsePulseTicker: AnyCancellable?
     private var browsePulseStopWorkItem: DispatchWorkItem?
-    nonisolated(unsafe) private let trustStore = MeshPeerTrustStore()
+    nonisolated private let trustStore = MeshPeerTrustStore()
 
     override init() {
         let displayName = Self.defaultDisplayName()
@@ -841,14 +882,18 @@ extension NearbyTransport: MCSessionDelegate {
     }
 
     nonisolated func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        if let message = try? JSONDecoder.rediM8.decode(MeshMessage.self, from: data) {
+        if let message = RediLogger.mesh.tryOrNil("Decode mesh message", operation: {
+            try JSONDecoder.rediM8.decode(MeshMessage.self, from: data)
+        }) {
             Task { @MainActor in
                 self.onEvent?(.message(message))
             }
             return
         }
 
-        if let beacon = try? JSONDecoder.rediM8.decode(CommunityBeacon.self, from: data) {
+        if let beacon = RediLogger.mesh.tryOrNil("Decode community beacon", operation: {
+            try JSONDecoder.rediM8.decode(CommunityBeacon.self, from: data)
+        }) {
             Task { @MainActor in
                 self.onEvent?(
                     .receivedBeacon(

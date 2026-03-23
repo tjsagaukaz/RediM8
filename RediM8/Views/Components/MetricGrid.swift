@@ -97,3 +97,19 @@ struct MetricGrid: View {
         }
     }
 }
+
+// MARK: - Previews
+
+#Preview("MetricGrid") {
+    MetricGrid(items: [
+        MetricItem(label: "Water", value: "12 gal", status: .ready),
+        MetricItem(label: "Food", value: "3 days", status: .warning),
+        MetricItem(label: "Medical", value: "Kit OK", status: .ready),
+        MetricItem(label: "Power", value: "14%", status: .danger),
+        MetricItem(label: "Comms", value: "Online", status: .normal),
+        MetricItem(label: "Evac", value: "No Plan", status: .danger),
+    ])
+    .padding()
+    .background(ColorTheme.panel)
+    .preferredColorScheme(.dark)
+}

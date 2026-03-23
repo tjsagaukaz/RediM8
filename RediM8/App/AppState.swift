@@ -28,6 +28,10 @@ final class AppState: ObservableObject {
     @Published private(set) var proEntitlement: ProEntitlement = .free
 
     var isProUser: Bool { proEntitlement.isPro }
+
+    /// True when a high-severity, area-scoped official alert is active near the user.
+    /// Views should strip non-essential content and surface emergency actions when this is true.
+    var isElevatedThreat: Bool { emergencyUnlockState.isActive }
     let officialAlertNotificationService: OfficialAlertNotificationService
 
     let featureFlags: AppFeatureFlags

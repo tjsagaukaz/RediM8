@@ -24,25 +24,16 @@ struct WaterPointGuide: Equatable {
 }
 
 final class WaterPointService {
-    private enum NetworkConfig {
-        // swiftlint:disable:next force_unwrap
-        static let endpoint = URL(string: "https://overpass-api.de/api/interpreter")!
-        static let refreshMaxAge: TimeInterval = 15 * 60
-        static let displayMaxAge: TimeInterval = 6 * 60 * 60
-        static let cacheReuseDistanceMetres: CLLocationDistance = 2_500
-        static let maxResults = 24
+    private enum Config {
         static let duplicateDistanceMetres: CLLocationDistance = 180
-        static let radiusSequence = [4_000, 12_000]
     }
 
     private let waterPointDataset: WaterPointDataset
     private let spatialIndex: SpatialIndex<WaterPoint>
-    private let session: URLSession
-    private var nearbyNetworkCache: NearbyWaterNetworkCache?
 
     private(set) var lastNearbyNetworkError: String?
 
-    init(bundle: Bundle = .main, session: URLSession = .shared) {
+    init(bundle: Bundle = .main) {
         let dataset: WaterPointDataset
         do {
             dataset = try bundle.decode("WaterPoints.json", as: WaterPointDataset.self)
@@ -52,11 +43,10 @@ final class WaterPointService {
         }
         self.waterPointDataset = dataset
         self.spatialIndex = SpatialIndex(items: dataset.waterPoints) { $0.coordinate.coordinate }
-        self.session = session
     }
 
     var lastUpdated: Date {
-        max(waterPointDataset.lastUpdated, nearbyNetworkCache?.fetchedAt ?? .distantPast)
+        waterPointDataset.lastUpdated
     }
 
     var didLoadOfflineData: Bool {
@@ -68,7 +58,7 @@ final class WaterPointService {
     }
 
     var hasNearbyNetworkData: Bool {
-        !(nearbyNetworkCache?.points.isEmpty ?? true)
+        false
     }
 
     func waterPoints(
@@ -76,20 +66,7 @@ final class WaterPointService {
         near coordinate: CLLocationCoordinate2D? = nil,
         kinds: Set<WaterPointKind> = []
     ) -> [WaterPoint] {
-        let offlinePoints = offlineWaterPoints(for: installedPackIDs, kinds: kinds)
-
-        guard let coordinate else {
-            return offlinePoints
-        }
-
-        let networkPoints = (cachedNearbyNetworkPoints(near: coordinate, maxAge: NetworkConfig.displayMaxAge) ?? [])
-            .filter { kinds.isEmpty || kinds.contains($0.kind) }
-
-        return mergeOfflineAndNetworkPoints(
-            offlinePoints,
-            networkPoints,
-            referenceCoordinate: coordinate
-        )
+        offlineWaterPoints(for: installedPackIDs, kinds: kinds)
     }
 
     func nearbyWaterPoints(
@@ -99,7 +76,7 @@ final class WaterPointService {
         limit: Int = 3
     ) -> [NearbyWaterPoint] {
         // Use R-tree for fast nearest-neighbor query on offline data
-        let offlineResults = spatialIndex.nearest(to: coordinate, limit: limit * 4)
+        Array(spatialIndex.nearest(to: coordinate, limit: limit * 4)
             .filter { entry in
                 let point = entry.item
                 guard isFeatureAvailable(point.packIDs, within: installedPackIDs) else { return false }
@@ -107,28 +84,7 @@ final class WaterPointService {
             }
             .sorted { $0.distanceMetres < $1.distanceMetres }
             .prefix(limit)
-            .map { NearbyWaterPoint(point: $0.item, distanceMetres: $0.distanceMetres) }
-
-        // Merge with network nearby results if available
-        let networkPoints = cachedNearbyNetworkPoints(near: coordinate, maxAge: NetworkConfig.displayMaxAge) ?? []
-        guard !networkPoints.isEmpty else {
-            return Array(offlineResults)
-        }
-
-        let anchor = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        let networkResults = networkPoints
-            .filter { kinds.isEmpty || kinds.contains($0.kind) }
-            .map { point in
-                NearbyWaterPoint(
-                    point: point,
-                    distanceMetres: anchor.distance(from: CLLocation(latitude: point.coordinate.latitude, longitude: point.coordinate.longitude))
-                )
-            }
-
-        return (Array(offlineResults) + networkResults)
-            .sorted { $0.distanceMetres < $1.distanceMetres }
-            .prefix(limit)
-            .map { $0 }
+            .map { NearbyWaterPoint(point: $0.item, distanceMetres: $0.distanceMetres) })
     }
 
     func guide(
@@ -154,44 +110,18 @@ final class WaterPointService {
         }
 
         let includesNetworkNearby = nearbySources.contains { $0.point.availability == .networkNearby }
-        let context: String
-        if currentLocation != nil, includesNetworkNearby, !installedPackIDs.isEmpty {
-            context = "Sorted from your current location using live nearby map data, with offline packs as fallback."
-        } else if currentLocation != nil, includesNetworkNearby {
-            context = "Sorted from your current location using live nearby map data."
-        } else {
-            context = anchor.context
-        }
+        let context = anchor.context
 
         return WaterPointGuide(nearbySources: nearbySources, context: context)
     }
 
+    /// Offline-only: no network refresh. Returns empty — all data is from bundled datasets.
     @MainActor
     func refreshNearbyNetworkData(
         near coordinate: CLLocationCoordinate2D,
         force: Bool = false
     ) async -> [WaterPoint] {
-        if !force,
-           let cachedPoints = cachedNearbyNetworkPoints(near: coordinate, maxAge: NetworkConfig.refreshMaxAge),
-           !cachedPoints.isEmpty
-        {
-            lastNearbyNetworkError = nil
-            return cachedPoints
-        }
-
-        do {
-            let points = try await fetchNearbyNetworkData(near: coordinate)
-            nearbyNetworkCache = NearbyWaterNetworkCache(
-                anchor: coordinate,
-                fetchedAt: .now,
-                points: points
-            )
-            lastNearbyNetworkError = nil
-            return points
-        } catch {
-            lastNearbyNetworkError = "Live nearby water search is unavailable right now."
-            return cachedNearbyNetworkPoints(near: coordinate, maxAge: NetworkConfig.displayMaxAge) ?? []
-        }
+        []
     }
 
     private func offlineWaterPoints(
@@ -206,159 +136,7 @@ final class WaterPointService {
         }
     }
 
-    private func cachedNearbyNetworkPoints(
-        near coordinate: CLLocationCoordinate2D,
-        maxAge: TimeInterval
-    ) -> [WaterPoint]? {
-        guard let nearbyNetworkCache,
-              nearbyNetworkCache.matches(
-                  coordinate: coordinate,
-                  maxAge: maxAge,
-                  reuseDistanceMetres: NetworkConfig.cacheReuseDistanceMetres
-              )
-        else {
-            return nil
-        }
-
-        return nearbyNetworkCache.points
-    }
-
-    private func mergeOfflineAndNetworkPoints(
-        _ offlinePoints: [WaterPoint],
-        _ networkPoints: [WaterPoint],
-        referenceCoordinate: CLLocationCoordinate2D
-    ) -> [WaterPoint] {
-        guard !networkPoints.isEmpty else {
-            return offlinePoints
-        }
-
-        var merged = offlinePoints
-        for point in networkPoints.sorted(by: { distance(from: referenceCoordinate, to: $0.location) < distance(from: referenceCoordinate, to: $1.location) }) {
-            let duplicatesOfflinePoint = merged.contains { existing in
-                guard metresBetween(existing.location, point.location) <= NetworkConfig.duplicateDistanceMetres else {
-                    return false
-                }
-                if existing.kind == point.kind {
-                    return true
-                }
-                return existing.name.normalizedLookupKey == point.name.normalizedLookupKey
-            }
-            if !duplicatesOfflinePoint {
-                merged.append(point)
-            }
-        }
-        return merged
-    }
-
-    private func fetchNearbyNetworkData(
-        near coordinate: CLLocationCoordinate2D
-    ) async throws -> [WaterPoint] {
-        var bestCandidates: [RankedWaterCandidate] = []
-
-        for radius in NetworkConfig.radiusSequence {
-            let candidates = try await fetchNearbyNetworkData(near: coordinate, radiusMetres: radius)
-            if !candidates.isEmpty {
-                bestCandidates = candidates
-                if candidates.count >= 6 {
-                    break
-                }
-            }
-        }
-
-        return deduplicate(candidates: bestCandidates)
-            .prefix(NetworkConfig.maxResults)
-            .map(\.point)
-    }
-
-    private func fetchNearbyNetworkData(
-        near coordinate: CLLocationCoordinate2D,
-        radiusMetres: Int
-    ) async throws -> [RankedWaterCandidate] {
-        let requestBody = Self.waterOverpassQuery(
-            latitude: coordinate.latitude,
-            longitude: coordinate.longitude,
-            radiusMetres: radiusMetres
-        )
-
-        var request = URLRequest(url: NetworkConfig.endpoint)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 20
-        request.cachePolicy = .reloadIgnoringLocalCacheData
-        request.setValue("application/x-www-form-urlencoded; charset=utf-8", forHTTPHeaderField: "Content-Type")
-        request.setValue("RediM8/1.0", forHTTPHeaderField: "User-Agent")
-        request.httpBody = "data=\(requestBody.percentEncodedForFormBody)".data(using: .utf8)
-
-        let (data, response) = try await session.data(for: request)
-        if let httpResponse = response as? HTTPURLResponse, !(200 ..< 300).contains(httpResponse.statusCode) {
-            throw URLError(.badServerResponse)
-        }
-
-        let payload = try JSONDecoder().decode(OverpassResponse.self, from: data)
-        let anchor = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-
-        return payload.elements.compactMap { element in
-            let classification = Self.classifyWaterElement(element)
-            guard let classification else {
-                return nil
-            }
-
-            let resolvedCoordinate = Self.coordinate(for: element, relativeTo: coordinate, closesGeometry: classification.closesGeometry)
-            guard let resolvedCoordinate else {
-                return nil
-            }
-
-            let point = WaterPoint(
-                id: "osm_water_\(element.type)_\(element.id)",
-                name: Self.name(for: element.tags ?? [:], kind: classification.kind),
-                kind: classification.kind,
-                coordinate: GeoPoint(latitude: resolvedCoordinate.latitude, longitude: resolvedCoordinate.longitude),
-                packIDs: [],
-                quality: classification.quality,
-                notes: Self.notes(for: element.tags ?? [:], kind: classification.kind, quality: classification.quality),
-                source: "Live nearby open map data (OSM / Overpass)",
-                availability: .networkNearby,
-                sourceKind: .openMapData,
-                lastUpdated: .now
-            )
-
-            return RankedWaterCandidate(
-                point: point,
-                distanceMetres: anchor.distance(from: CLLocation(latitude: resolvedCoordinate.latitude, longitude: resolvedCoordinate.longitude))
-            )
-        }
-        .sorted {
-            if $0.distanceMetres == $1.distanceMetres {
-                return $0.point.name < $1.point.name
-            }
-            return $0.distanceMetres < $1.distanceMetres
-        }
-    }
-
-    private func deduplicate(candidates: [RankedWaterCandidate]) -> [RankedWaterCandidate] {
-        var kept: [RankedWaterCandidate] = []
-
-        for candidate in candidates {
-            let isDuplicate = kept.contains { existing in
-                guard metresBetween(existing.point.location, candidate.point.location) <= NetworkConfig.duplicateDistanceMetres else {
-                    return false
-                }
-
-                if existing.point.name.normalizedLookupKey == candidate.point.name.normalizedLookupKey {
-                    return true
-                }
-
-                return existing.point.kind == candidate.point.kind
-                    && existing.point.name.isGenericNearbyLabel
-                    && candidate.point.name.isGenericNearbyLabel
-            }
-
-            if !isDuplicate {
-                kept.append(candidate)
-            }
-        }
-
-        return kept
-    }
+    // Network methods removed — offline architecture uses bundled data only
 
     private func anchorContext(
         installedPacks: [OfflineMapPack],
@@ -385,188 +163,8 @@ final class WaterPointService {
         featurePackIDs.isEmpty || !Set(featurePackIDs).isDisjoint(with: installedPackIDs)
     }
 
-    private static func waterOverpassQuery(
-        latitude: Double,
-        longitude: Double,
-        radiusMetres: Int
-    ) -> String {
-        let latitudeString = String(format: "%.5f", latitude)
-        let longitudeString = String(format: "%.5f", longitude)
-
-        return """
-        [out:json][timeout:25];
-        (
-          node(around:\(radiusMetres),\(latitudeString),\(longitudeString))[amenity=drinking_water];
-          node(around:\(radiusMetres),\(latitudeString),\(longitudeString))[man_made~"^(water_tap|water_well|water_tank)$"];
-          node(around:\(radiusMetres),\(latitudeString),\(longitudeString))[natural=spring];
-          way(around:\(radiusMetres),\(latitudeString),\(longitudeString))[waterway~"^(river|stream|canal|drain)$"];
-          way(around:\(radiusMetres),\(latitudeString),\(longitudeString))[natural=water];
-          way(around:\(radiusMetres),\(latitudeString),\(longitudeString))[water~"^(lake|pond|reservoir)$"];
-        );
-        out body geom tags;
-        """
-    }
-
-    private static func classifyWaterElement(_ element: OverpassElement) -> WaterElementClassification? {
-        let tags = element.tags ?? [:]
-
-        if tags["amenity"] == "drinking_water" || tags["man_made"] == "water_tap" {
-            return WaterElementClassification(kind: .communityTap, quality: .drinkingWater, closesGeometry: false)
-        }
-
-        if tags["man_made"] == "water_well" {
-            return WaterElementClassification(kind: .boreWater, quality: .unknownQuality, closesGeometry: false)
-        }
-
-        if tags["man_made"] == "water_tank" {
-            return WaterElementClassification(kind: .waterTank, quality: .unknownQuality, closesGeometry: false)
-        }
-
-        if tags["natural"] == "spring" {
-            return WaterElementClassification(kind: .riverCreek, quality: .seasonal, closesGeometry: false)
-        }
-
-        if let waterway = tags["waterway"], ["river", "stream", "canal", "drain"].contains(waterway) {
-            return WaterElementClassification(kind: .riverCreek, quality: tags["intermittent"] == "yes" ? .seasonal : .unknownQuality, closesGeometry: false)
-        }
-
-        if tags["natural"] == "water" || tags["water"] != nil {
-            return WaterElementClassification(kind: .riverCreek, quality: .unknownQuality, closesGeometry: true)
-        }
-
-        return nil
-    }
-
-    private static func coordinate(
-        for element: OverpassElement,
-        relativeTo anchor: CLLocationCoordinate2D,
-        closesGeometry: Bool
-    ) -> CLLocationCoordinate2D? {
-        if let lat = element.lat, let lon = element.lon {
-            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
-        }
-
-        if let geometry = element.geometry, !geometry.isEmpty {
-            return nearestCoordinate(in: geometry, to: anchor, closesGeometry: closesGeometry)
-        }
-
-        if let center = element.center {
-            return center.coordinate
-        }
-
-        return nil
-    }
-
-    private static func name(for tags: [String: String], kind: WaterPointKind) -> String {
-        if let name = tags["name"]?.nilIfBlank {
-            return name
-        }
-
-        if tags["amenity"] == "drinking_water" || tags["man_made"] == "water_tap" {
-            return "Nearby Drinking Water"
-        }
-
-        if tags["man_made"] == "water_well" {
-            return "Nearby Water Well"
-        }
-
-        if tags["man_made"] == "water_tank" {
-            return "Nearby Water Tank"
-        }
-
-        if tags["natural"] == "spring" {
-            return "Nearby Spring"
-        }
-
-        if let waterway = tags["waterway"] {
-            switch waterway {
-            case "river":
-                return "Nearby River Access"
-            case "stream":
-                return "Nearby Stream Access"
-            case "canal":
-                return "Nearby Canal Access"
-            default:
-                return "Nearby Waterway Access"
-            }
-        }
-
-        if let water = tags["water"] {
-            switch water {
-            case "reservoir":
-                return "Nearby Reservoir Edge"
-            case "pond":
-                return "Nearby Pond Edge"
-            default:
-                return "Nearby Waterbody Edge"
-            }
-        }
-
-        if tags["natural"] == "water" {
-            return "Nearby Waterbody Edge"
-        }
-
-        return kind.title
-    }
-
-    private static func notes(
-        for tags: [String: String],
-        kind: WaterPointKind,
-        quality: WaterQualityLabel
-    ) -> String {
-        var notes: [String] = []
-
-        if let description = tags["description"]?.nilIfBlank {
-            notes.append(description)
-        }
-
-        if let access = tags["access"]?.nilIfBlank, access != "yes" {
-            notes.append("Access tagged as \(access).")
-        }
-
-        if tags["intermittent"] == "yes" || quality == .seasonal {
-            notes.append("Flow or availability may be seasonal.")
-        }
-
-        if notes.isEmpty {
-            switch kind {
-            case .communityTap, .campgroundWater, .townWaterPoint:
-                notes.append("Nearby tap or potable water point from open map data. Confirm access and drinkability on site.")
-            case .boreWater, .waterTank, .rainwaterTank, .stockTrough:
-                notes.append("Nearby stored or extracted water source from open map data. Treat before drinking unless locally confirmed.")
-            case .riverCreek:
-                notes.append("Nearby natural surface water from open map data. Treat before drinking and confirm safe access on site.")
-            }
-        }
-
-        return notes.joined(separator: " ")
-    }
-}
-
-private struct RankedWaterCandidate {
-    let point: WaterPoint
-    let distanceMetres: CLLocationDistance
-}
-
-private struct NearbyWaterNetworkCache {
-    let anchor: CLLocationCoordinate2D
-    let fetchedAt: Date
-    let points: [WaterPoint]
-
-    func matches(
-        coordinate: CLLocationCoordinate2D,
-        maxAge: TimeInterval,
-        reuseDistanceMetres: CLLocationDistance
-    ) -> Bool {
-        Date().timeIntervalSince(fetchedAt) <= maxAge
-            && metresBetween(anchor, coordinate) <= reuseDistanceMetres
-    }
-}
-
-private struct WaterElementClassification {
-    let kind: WaterPointKind
-    let quality: WaterQualityLabel
-    let closesGeometry: Bool
+    // All Overpass query, classification, name, and notes methods removed
+    // — offline architecture uses pre-curated bundled data only
 }
 
 struct OverpassResponse: Decodable {
