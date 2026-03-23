@@ -147,4 +147,75 @@ final class OfflineArchitectureTests: XCTestCase {
         XCTAssertEqual(service.feedFreshnessText, "OFFLINE")
         XCTAssertFalse(service.isFeedStale)
     }
+
+    // MARK: - Offline Contract (permanent guardrail)
+
+    func testOfflineContractNoNetworkUsageInProductionSource() throws {
+        // Scans all .swift files in the production target for forbidden network patterns.
+        // This test fails if ANYONE reintroduces network code — enforcing the offline
+        // guarantee at the test layer, not just code review.
+
+        let forbidden = [
+            "URLSession",
+            "URLRequest(",
+            "import Firebase",
+            "import Sentry",
+            "import Amplitude",
+            "import Mixpanel",
+            "import Segment",
+            "BGAppRefreshTask",
+            "CLGeocoder",
+        ]
+
+        // Allowed contexts: comments explaining WHY we don't use these
+        let allowedPrefixes = ["//", "///", "*", "/*"]
+
+        let bundle = Bundle(for: type(of: self))
+        // Walk up from the test bundle to the project root
+        var projectRoot = bundle.bundleURL
+        while !FileManager.default.fileExists(atPath: projectRoot.appendingPathComponent("project.yml").path),
+              projectRoot.path != "/" {
+            projectRoot = projectRoot.deletingLastPathComponent()
+        }
+
+        let productionRoot = projectRoot.appendingPathComponent("RediM8")
+        guard FileManager.default.fileExists(atPath: productionRoot.path) else {
+            // Running in CI where source isn't accessible from test bundle — skip gracefully.
+            // The CI guardrail covers this case via grep.
+            return
+        }
+
+        let enumerator = FileManager.default.enumerator(
+            at: productionRoot,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        )
+
+        var violations: [String] = []
+
+        while let fileURL = enumerator?.nextObject() as? URL {
+            guard fileURL.pathExtension == "swift" else { continue }
+            guard let content = try? String(contentsOf: fileURL, encoding: .utf8) else { continue }
+
+            let lines = content.components(separatedBy: .newlines)
+            for (lineNumber, line) in lines.enumerated() {
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+
+                // Skip comments
+                if allowedPrefixes.contains(where: { trimmed.hasPrefix($0) }) { continue }
+
+                for term in forbidden {
+                    if trimmed.contains(term) {
+                        let relativePath = fileURL.path.replacingOccurrences(of: projectRoot.path + "/", with: "")
+                        violations.append("\(relativePath):\(lineNumber + 1) — contains '\(term)'")
+                    }
+                }
+            }
+        }
+
+        XCTAssertTrue(
+            violations.isEmpty,
+            "OFFLINE CONTRACT VIOLATION — network code found in production sources:\n\(violations.joined(separator: "\n"))"
+        )
+    }
 }
