@@ -28,6 +28,29 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: Offline architecture guardrail
+        run: |
+          echo "Checking for network code in production sources..."
+          VIOLATIONS=""
+          if grep -r "URLSession" --include="*.swift" RediM8/App RediM8/Core RediM8/Features RediM8/Models RediM8/Services RediM8/Systems RediM8/Utilities RediM8/Views; then
+            VIOLATIONS="${VIOLATIONS}URLSession found in production code\n"
+          fi
+          if grep -rE "^import (Firebase|Sentry|Amplitude|Mixpanel|Segment)" --include="*.swift" RediM8/; then
+            VIOLATIONS="${VIOLATIONS}Banned analytics/crash SDK import found\n"
+          fi
+          if grep -r "BGAppRefreshTask" --include="*.swift" RediM8/; then
+            VIOLATIONS="${VIOLATIONS}Background fetch task found\n"
+          fi
+          if grep -r "CLGeocoder" --include="*.swift" RediM8/; then
+            VIOLATIONS="${VIOLATIONS}CLGeocoder (network geocoding) found\n"
+          fi
+          if [ -n "$VIOLATIONS" ]; then
+            echo "❌ OFFLINE ARCHITECTURE VIOLATION"
+            echo -e "$VIOLATIONS"
+            exit 1
+          fi
+          echo "✅ Offline architecture check passed"
+
       - name: Build
         run: >
           xcodebuild
