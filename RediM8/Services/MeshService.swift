@@ -28,19 +28,47 @@ struct MeshTransportConfiguration: Equatable {
     var usesLowFrequencyBrowsing: Bool
 }
 
+// MARK: - Trust Level
+
+/// The user-controllable trust level for a known mesh peer.
+enum MeshPeerTrustLevel: String, Codable, Equatable, CaseIterable {
+    /// First encounter — not yet reviewed by the user.
+    case unknown
+    /// User has explicitly verified this peer (e.g. confirmed in person).
+    case verified
+    /// User has explicitly blocked this peer. Connections and messages are rejected.
+    case blocked
+}
+
+/// A known mesh peer with identity and trust metadata.
+struct KnownMeshPeer: Identifiable, Codable, Equatable {
+    let id: String // normalized display name
+    let displayName: String
+    let fingerprint: String
+    var trustLevel: MeshPeerTrustLevel
+    let firstSeenAt: Date
+    var lastSeenAt: Date
+}
+
 enum MeshPeerTrustDecision: Equatable {
     case trustedFirstUse
     case trustedKnownPeer
+    case trustedVerifiedPeer
     case rejectedMissingCertificate
     case rejectedChangedIdentity
+    case rejectedBlocked
 
     var allowsConnection: Bool {
         switch self {
-        case .trustedFirstUse, .trustedKnownPeer:
+        case .trustedFirstUse, .trustedKnownPeer, .trustedVerifiedPeer:
             true
-        case .rejectedMissingCertificate, .rejectedChangedIdentity:
+        case .rejectedMissingCertificate, .rejectedChangedIdentity, .rejectedBlocked:
             false
         }
+    }
+
+    var isVerified: Bool {
+        self == .trustedVerifiedPeer
     }
 
     func rejectionMessage(for peerDisplayName: String) -> String {
@@ -49,7 +77,9 @@ enum MeshPeerTrustDecision: Equatable {
             return "Blocked \(peerDisplayName) because RediM8 could not verify that device's mesh identity."
         case .rejectedChangedIdentity:
             return "Blocked \(peerDisplayName) because that device's mesh identity changed since the last trusted connection."
-        case .trustedFirstUse, .trustedKnownPeer:
+        case .rejectedBlocked:
+            return "Blocked \(peerDisplayName) because you previously blocked this device."
+        case .trustedFirstUse, .trustedKnownPeer, .trustedVerifiedPeer:
             return ""
         }
     }
@@ -61,6 +91,7 @@ final class MeshPeerTrustStore: @unchecked Sendable {
         // This key must never contain location, profile linkage, or emergency payload.
         // If that changes, migrate it into the secure domain before persisting it.
         static let trustedPeerFingerprints = "mesh.trusted-peer-fingerprints.v1"
+        static let knownPeers = "mesh.known-peers.v1"
     }
 
     private let defaults: UserDefaults
@@ -68,7 +99,10 @@ final class MeshPeerTrustStore: @unchecked Sendable {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        migrateFromFingerprintOnlyStoreIfNeeded()
     }
+
+    // MARK: - Evaluate
 
     func evaluate(certificateChain: [Any]?, peerDisplayName: String) -> MeshPeerTrustDecision {
         evaluate(
@@ -79,32 +113,181 @@ final class MeshPeerTrustStore: @unchecked Sendable {
 
     func evaluate(fingerprint: String?, peerDisplayName: String) -> MeshPeerTrustDecision {
         guard let fingerprint else {
+            logTrustDecision(.rejectedMissingCertificate, peer: peerDisplayName)
             return .rejectedMissingCertificate
         }
 
-        let normalizedPeerName = Self.normalizedPeerName(peerDisplayName)
+        let normalizedName = Self.normalizedPeerName(peerDisplayName)
         lock.lock()
         defer { lock.unlock() }
 
-        var trustedFingerprints = storedFingerprints()
-        if let storedFingerprint = trustedFingerprints[normalizedPeerName] {
-            return storedFingerprint == fingerprint ? .trustedKnownPeer : .rejectedChangedIdentity
+        var peers = loadKnownPeers()
+
+        if let existing = peers[normalizedName] {
+            // Blocked peer — reject immediately regardless of fingerprint
+            if existing.trustLevel == .blocked {
+                logTrustDecision(.rejectedBlocked, peer: peerDisplayName)
+                return .rejectedBlocked
+            }
+
+            // Fingerprint mismatch — identity changed
+            if existing.fingerprint != fingerprint {
+                logTrustDecision(.rejectedChangedIdentity, peer: peerDisplayName)
+                return .rejectedChangedIdentity
+            }
+
+            // Update last seen
+            var updated = existing
+            updated.lastSeenAt = .now
+            peers[normalizedName] = updated
+            saveKnownPeers(peers)
+
+            let decision: MeshPeerTrustDecision = existing.trustLevel == .verified
+                ? .trustedVerifiedPeer
+                : .trustedKnownPeer
+            logTrustDecision(decision, peer: peerDisplayName)
+            return decision
         }
 
-        trustedFingerprints[normalizedPeerName] = fingerprint
-        defaults.set(trustedFingerprints, forKey: StorageKey.trustedPeerFingerprints)
+        // First encounter — trust on first use
+        let newPeer = KnownMeshPeer(
+            id: normalizedName,
+            displayName: peerDisplayName,
+            fingerprint: fingerprint,
+            trustLevel: .unknown,
+            firstSeenAt: .now,
+            lastSeenAt: .now
+        )
+        peers[normalizedName] = newPeer
+        saveKnownPeers(peers)
+        logTrustDecision(.trustedFirstUse, peer: peerDisplayName)
         return .trustedFirstUse
     }
 
-    private func storedFingerprints() -> [String: String] {
-        defaults.dictionary(forKey: StorageKey.trustedPeerFingerprints) as? [String: String] ?? [:]
+    // MARK: - Trust Level for Sender
+
+    /// Returns the trust level for a peer by display name. Used for message gating.
+    func trustLevel(for peerDisplayName: String) -> MeshPeerTrustLevel {
+        let normalizedName = Self.normalizedPeerName(peerDisplayName)
+        lock.lock()
+        defer { lock.unlock() }
+        return loadKnownPeers()[normalizedName]?.trustLevel ?? .unknown
     }
 
-    private static func normalizedPeerName(_ peerDisplayName: String) -> String {
+    // MARK: - Peer Management
+
+    /// Returns all known peers, sorted by display name.
+    func knownPeers() -> [KnownMeshPeer] {
+        lock.lock()
+        defer { lock.unlock() }
+        return loadKnownPeers().values
+            .sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
+    }
+
+    /// Mark a peer as verified. Only works for known peers with matching fingerprint.
+    func verify(peerDisplayName: String) {
+        mutatePeer(peerDisplayName) { $0.trustLevel = .verified }
+        DiagnosticStore.shared.log(.recovery, error: nil, context: [
+            "service": "mesh",
+            "detail": "Peer verified: \(peerDisplayName)",
+            "systemState": "healthy"
+        ])
+    }
+
+    /// Block a peer. Blocks connections and drops all messages from this peer.
+    func block(peerDisplayName: String) {
+        mutatePeer(peerDisplayName) { $0.trustLevel = .blocked }
+        DiagnosticStore.shared.log(.degraded, error: nil, context: [
+            "service": "mesh",
+            "detail": "Peer blocked: \(peerDisplayName)",
+            "systemState": "degraded"
+        ])
+    }
+
+    /// Reset a peer back to unknown trust. Does not remove the fingerprint.
+    func revokeTrust(peerDisplayName: String) {
+        mutatePeer(peerDisplayName) { $0.trustLevel = .unknown }
+    }
+
+    /// Completely forget a peer — removes fingerprint and all trust data.
+    func forget(peerDisplayName: String) {
+        let normalizedName = Self.normalizedPeerName(peerDisplayName)
+        lock.lock()
+        defer { lock.unlock() }
+        var peers = loadKnownPeers()
+        peers.removeValue(forKey: normalizedName)
+        saveKnownPeers(peers)
+    }
+
+    /// Returns the short fingerprint (first 8 hex chars) for display purposes.
+    func shortFingerprint(for peerDisplayName: String) -> String? {
+        let normalizedName = Self.normalizedPeerName(peerDisplayName)
+        lock.lock()
+        defer { lock.unlock() }
+        guard let fp = loadKnownPeers()[normalizedName]?.fingerprint else { return nil }
+        return String(fp.prefix(16))
+    }
+
+    // MARK: - Private
+
+    private func mutatePeer(_ peerDisplayName: String, mutation: (inout KnownMeshPeer) -> Void) {
+        let normalizedName = Self.normalizedPeerName(peerDisplayName)
+        lock.lock()
+        defer { lock.unlock() }
+        var peers = loadKnownPeers()
+        guard var peer = peers[normalizedName] else { return }
+        mutation(&peer)
+        peers[normalizedName] = peer
+        saveKnownPeers(peers)
+    }
+
+    private func loadKnownPeers() -> [String: KnownMeshPeer] {
+        guard let data = defaults.data(forKey: StorageKey.knownPeers) else { return [:] }
+        return (try? JSONDecoder().decode([String: KnownMeshPeer].self, from: data)) ?? [:]
+    }
+
+    private func saveKnownPeers(_ peers: [String: KnownMeshPeer]) {
+        if let data = try? JSONEncoder().encode(peers) {
+            defaults.set(data, forKey: StorageKey.knownPeers)
+        }
+    }
+
+    /// One-time migration from the v1 fingerprint-only store to the new known peers store.
+    private func migrateFromFingerprintOnlyStoreIfNeeded() {
+        lock.lock()
+        defer { lock.unlock() }
+        guard defaults.data(forKey: StorageKey.knownPeers) == nil else { return }
+        let legacyFingerprints = defaults.dictionary(forKey: StorageKey.trustedPeerFingerprints) as? [String: String] ?? [:]
+        guard !legacyFingerprints.isEmpty else { return }
+
+        var peers: [String: KnownMeshPeer] = [:]
+        for (normalizedName, fingerprint) in legacyFingerprints {
+            peers[normalizedName] = KnownMeshPeer(
+                id: normalizedName,
+                displayName: normalizedName,
+                fingerprint: fingerprint,
+                trustLevel: .unknown,
+                firstSeenAt: .now,
+                lastSeenAt: .now
+            )
+        }
+        saveKnownPeers(peers)
+    }
+
+    private func logTrustDecision(_ decision: MeshPeerTrustDecision, peer: String) {
+        guard !decision.allowsConnection else { return }
+        DiagnosticStore.shared.log(.error, error: nil, context: [
+            "service": "mesh",
+            "detail": "Trust decision for \(peer): \(decision)",
+            "systemState": "degraded"
+        ])
+    }
+
+    static func normalizedPeerName(_ peerDisplayName: String) -> String {
         peerDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
-    private static func fingerprint(for certificateChain: [Any]?) -> String? {
+    static func fingerprint(for certificateChain: [Any]?) -> String? {
         guard let certificateData = certificateChain?.lazy.compactMap(Self.certificateData(from:)).first else {
             return nil
         }
@@ -399,9 +582,78 @@ final class MeshManager: ObservableObject {
         sessionMessages.filter { $0.kind == .hazardReport && $0.hazardReport != nil }
     }
 
-    /// Keep mesh hazard reports informational until peer trust is implemented.
+    /// Returns hazard zones ONLY from verified peers.
+    /// Unknown and blocked peers' hazard reports are visible in the message log
+    /// but never promoted to routing-affecting hazard zones.
     var hazardZonesFromMesh: [OfflineRoutingService.HazardZone] {
-        []
+        sessionMessages
+            .filter { $0.kind == .hazardReport }
+            .compactMap { message -> OfflineRoutingService.HazardZone? in
+                guard let report = message.hazardReport else { return nil }
+                // Only trust hazard data from verified peers
+                guard peerTrustLevel(for: message.sender) == .verified else { return nil }
+                guard let kind = OfflineRoutingService.HazardZone.HazardKind(rawValue: report.kind) else { return nil }
+                return OfflineRoutingService.HazardZone(
+                    center: CLLocationCoordinate2D(latitude: report.latitude, longitude: report.longitude),
+                    radiusMetres: report.radiusMetres,
+                    penalty: 10.0,
+                    kind: kind
+                )
+            }
+    }
+
+    /// Returns the trust level for a message sender.
+    func peerTrustLevel(for senderDisplayName: String) -> MeshPeerTrustLevel {
+        guard let nearbyTransport = transports.first(where: { $0.id == "nearby" }) as? NearbyTransport else {
+            return .unknown
+        }
+        return nearbyTransport.trustStore.trustLevel(for: senderDisplayName)
+    }
+
+    // MARK: - Peer Trust Management
+
+    /// All known peers with their trust status.
+    var knownPeers: [KnownMeshPeer] {
+        guard let nearbyTransport = transports.first(where: { $0.id == "nearby" }) as? NearbyTransport else {
+            return []
+        }
+        return nearbyTransport.trustStore.knownPeers()
+    }
+
+    /// Verify a peer — promotes their hazard reports to routing-grade trust.
+    func verifyPeer(_ displayName: String) {
+        guard let nearbyTransport = transports.first(where: { $0.id == "nearby" }) as? NearbyTransport else { return }
+        nearbyTransport.trustStore.verify(peerDisplayName: displayName)
+        objectWillChange.send()
+    }
+
+    /// Block a peer — drops their connections and future messages.
+    func blockPeer(_ displayName: String) {
+        guard let nearbyTransport = transports.first(where: { $0.id == "nearby" }) as? NearbyTransport else { return }
+        nearbyTransport.trustStore.block(peerDisplayName: displayName)
+        // Remove blocked peer's messages from session
+        sessionMessages.removeAll { $0.sender.lowercased() == displayName.lowercased() }
+        objectWillChange.send()
+    }
+
+    /// Revoke trust back to unknown.
+    func revokePeerTrust(_ displayName: String) {
+        guard let nearbyTransport = transports.first(where: { $0.id == "nearby" }) as? NearbyTransport else { return }
+        nearbyTransport.trustStore.revokeTrust(peerDisplayName: displayName)
+        objectWillChange.send()
+    }
+
+    /// Completely forget a peer.
+    func forgetPeer(_ displayName: String) {
+        guard let nearbyTransport = transports.first(where: { $0.id == "nearby" }) as? NearbyTransport else { return }
+        nearbyTransport.trustStore.forget(peerDisplayName: displayName)
+        objectWillChange.send()
+    }
+
+    /// Short fingerprint for UI display.
+    func shortFingerprint(for displayName: String) -> String? {
+        guard let nearbyTransport = transports.first(where: { $0.id == "nearby" }) as? NearbyTransport else { return nil }
+        return nearbyTransport.trustStore.shortFingerprint(for: displayName)
     }
 
     func sendBeacon(_ beacon: CommunityBeacon) {
@@ -506,6 +758,12 @@ final class MeshManager: ObservableObject {
     private func handle(_ event: MeshTransportEvent) {
         switch event {
         case let .message(message):
+            // Trust gate: drop messages from blocked peers
+            if peerTrustLevel(for: message.sender) == .blocked {
+                RediLogger.mesh.debug("Dropped message from blocked peer: \(message.sender, privacy: .public)")
+                return
+            }
+
             // Rate limit: drop messages from spammy senders
             if isRateLimited(sender: message.sender) { return }
             recordMessage(from: message.sender)
@@ -606,7 +864,7 @@ final class NearbyTransport: NSObject, MeshTransport {
     private var invitationTimeout: TimeInterval = SignalRangeMode.balanced.invitationTimeout
     private var browsePulseTicker: AnyCancellable?
     private var browsePulseStopWorkItem: DispatchWorkItem?
-    nonisolated private let trustStore = MeshPeerTrustStore()
+    nonisolated let trustStore = MeshPeerTrustStore()
 
     override init() {
         let displayName = Self.defaultDisplayName()

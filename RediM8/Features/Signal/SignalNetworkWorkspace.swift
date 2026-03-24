@@ -265,6 +265,7 @@ struct SignalNetworkWorkspaceView: View {
         VStack(spacing: 16) {
             nearbySituationReportsPanel
             nearbyUsersPanel
+            peerTrustPanel
         }
     }
 
@@ -366,18 +367,25 @@ struct SignalNetworkWorkspaceView: View {
             } else {
                 VStack(spacing: 12) {
                     ForEach(viewModel.nearbyPeers) { peer in
-                        SignalViewHelpers.signalInsetCard(tint: viewModel.connectedPeers.contains(peer) ? ColorTheme.accent : ColorTheme.warning) {
+                        let trust = viewModel.meshService.peerTrustLevel(for: peer.displayName)
+                        let isConnected = viewModel.connectedPeers.contains(peer)
+                        let tint = peerTintColor(trust: trust, isConnected: isConnected)
+
+                        SignalViewHelpers.signalInsetCard(tint: tint) {
                             HStack(alignment: .center, spacing: 12) {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(peer.displayName)
-                                        .font(RediTypography.heading)
-                                        .foregroundStyle(ColorTheme.text)
-                                    Text(viewModel.connectedPeers.contains(peer) ? "Connected" : "Discovered")
+                                    HStack(spacing: 6) {
+                                        Text(peer.displayName)
+                                            .font(RediTypography.heading)
+                                            .foregroundStyle(ColorTheme.text)
+                                        peerTrustBadge(trust)
+                                    }
+                                    Text(isConnected ? "Connected" : "Discovered")
                                         .font(RediTypography.body)
                                         .foregroundStyle(.secondary)
                                 }
                                 Spacer()
-                                if viewModel.connectedPeers.contains(peer) {
+                                if isConnected {
                                     Button("Send Signal") {
                                         viewModel.sendDirect(to: peer)
                                     }
@@ -397,6 +405,78 @@ struct SignalNetworkWorkspaceView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var peerTrustPanel: some View {
+        let knownPeers = viewModel.meshService.knownPeers
+        return PanelCard(
+            title: "Peer Trust",
+            subtitle: knownPeers.isEmpty ? "No known mesh peers" : "\(knownPeers.count) known device(s)"
+        ) {
+            if knownPeers.isEmpty {
+                Text("Peers appear here after their first mesh connection. You can verify, block, or forget devices to control what data you trust.")
+                    .font(RediTypography.body)
+                    .foregroundStyle(.secondary)
+            } else {
+                NavigationLink {
+                    MeshPeerTrustManagementView(meshService: viewModel.meshService)
+                } label: {
+                    SettingsNavigationRow(
+                        title: "Manage Trusted Devices",
+                        subtitle: trustSummaryText(knownPeers),
+                        value: "Open"
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+
+            Text("Only verified peers can contribute hazard data to routing. Unknown peers' reports are visible but informational only.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func trustSummaryText(_ peers: [KnownMeshPeer]) -> String {
+        let verified = peers.filter { $0.trustLevel == .verified }.count
+        let blocked = peers.filter { $0.trustLevel == .blocked }.count
+        var parts: [String] = []
+        if verified > 0 { parts.append("\(verified) verified") }
+        if blocked > 0 { parts.append("\(blocked) blocked") }
+        let unknown = peers.count - verified - blocked
+        if unknown > 0 { parts.append("\(unknown) unverified") }
+        return parts.joined(separator: ", ")
+    }
+
+    @ViewBuilder
+    private func peerTrustBadge(_ trust: MeshPeerTrustLevel) -> some View {
+        switch trust {
+        case .verified:
+            Text("VERIFIED")
+                .font(RediTypography.label)
+                .tracking(1.0)
+                .foregroundStyle(ColorTheme.ready)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 1)
+                .background(ColorTheme.ready.opacity(0.15), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+        case .blocked:
+            Text("BLOCKED")
+                .font(RediTypography.label)
+                .tracking(1.0)
+                .foregroundStyle(ColorTheme.danger)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 1)
+                .background(ColorTheme.danger.opacity(0.15), in: RoundedRectangle(cornerRadius: 4, style: .continuous))
+        case .unknown:
+            EmptyView()
+        }
+    }
+
+    private func peerTintColor(trust: MeshPeerTrustLevel, isConnected: Bool) -> Color {
+        switch trust {
+        case .blocked: return ColorTheme.danger
+        case .verified: return isConnected ? ColorTheme.ready : ColorTheme.accent
+        case .unknown: return isConnected ? ColorTheme.accent : ColorTheme.warning
         }
     }
 

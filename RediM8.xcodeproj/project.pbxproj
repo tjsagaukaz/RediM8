@@ -311,6 +311,7 @@
 		F9FCB6DC21C3E81047CEFF3D /* BowDrillDiagrams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47FD56046A1AF4086683FE89 /* BowDrillDiagrams.swift */; };
 		FADB8AD92D2EDB11B038F887 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7509D09DA8B59EB4732F4B5A /* Localizable.strings */; };
 		FB957897231686E8E47B6F71 /* DiagnosticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863F1E9296C4FCDD8196A7D3 /* DiagnosticsView.swift */; };
+		FBDA50C4250C34B279E81385 /* MeshPeerTrustManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2665ECC64FE76FD8981DF569 /* MeshPeerTrustManagementView.swift */; };
 		FC9E7AFD322E28A56A644B1C /* AssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 493102A27AB4C727B65B9D2C /* AssistantView.swift */; };
 		FE92381F55957A998C7A80ED /* DecisionSupportServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016AD175858523E0D5B66BF9 /* DecisionSupportServiceTests.swift */; };
 		FEA83AC05A07A382E6736B1B /* DatabaseSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CA0F81B27CFD2710D8ED3B /* DatabaseSchema.swift */; };
@@ -393,6 +394,7 @@
 		25D7CB9B79DF0F37C90DFE81 /* PlanViewTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanViewTypes.swift; sourceTree = "<group>"; };
 		2619DE2C2FAA65B077305B4C /* SpatialIndexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpatialIndexTests.swift; sourceTree = "<group>"; };
 		261BBAAAD0188C1ED68C12A7 /* HiddenModeIndicatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HiddenModeIndicatorView.swift; sourceTree = "<group>"; };
+		2665ECC64FE76FD8981DF569 /* MeshPeerTrustManagementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeshPeerTrustManagementView.swift; sourceTree = "<group>"; };
 		29FAABC8520CD8EC4189DB8D /* AskRediView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskRediView.swift; sourceTree = "<group>"; };
 		2AA7EF573830E88E4685ACDB /* MapPacks.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = MapPacks.json; sourceTree = "<group>"; };
 		2AF025FAC2B916E72850ECB5 /* MapOperationalSurfaceSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapOperationalSurfaceSection.swift; sourceTree = "<group>"; };
@@ -886,6 +888,7 @@
 			isa = PBXGroup;
 			children = (
 				F644AD730E90E37E70D48971 /* AnalogSignalModeView.swift */,
+				2665ECC64FE76FD8981DF569 /* MeshPeerTrustManagementView.swift */,
 				E68BF844D634AF550B812318 /* SignalCommunicateWorkspace.swift */,
 				8D5A1D158FB2CBFFB5F4FAD4 /* SignalNetworkWorkspace.swift */,
 				FE3515069A85A4A810C5FFFD /* SignalSupportViews.swift */,
@@ -1474,6 +1477,7 @@
 				84442D3B2670AF97B07B0A68 /* MapViewModel+Resources.swift in Sources */,
 				AB2BC8C0A981C5EB2F54E91D /* MapViewModel.swift in Sources */,
 				62E627AE17B3C411C1BE9535 /* MeshMessage.swift in Sources */,
+				FBDA50C4250C34B279E81385 /* MeshPeerTrustManagementView.swift in Sources */,
 				ADB2B507F6419F2176B42B04 /* MeshService.swift in Sources */,
 				08503D6BE2ACDEF89061A62B /* MetricGrid.swift in Sources */,
 				A719B742E0419BB74B77F948 /* MigrationManager.swift in Sources */,

@@ -96,7 +96,7 @@ final class SignalViewModel: ObservableObject {
     @Published private(set) var systemState: SystemState = .healthy
 
     private let appState: AppState
-    private let meshService: MeshService
+    let meshService: MeshService
     private let beaconService: BeaconService
     private let locationService: LocationService
     private let analogSignalService: AnalogSignalService
