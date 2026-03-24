@@ -49,6 +49,14 @@ final class WaterPointService {
         waterPointDataset.lastUpdated
     }
 
+    var dataFreshness: DataFreshness {
+        TrustLayer.dataFreshness(lastUpdated: lastUpdated, sourceKind: .curatedBundle)
+    }
+
+    var freshnessImpactMessage: String {
+        "Water availability may be incorrect"
+    }
+
     var didLoadOfflineData: Bool {
         !waterPointDataset.waterPoints.isEmpty
     }

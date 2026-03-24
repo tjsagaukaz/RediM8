@@ -62,6 +62,16 @@ struct MapContainerView: View {
                                 OfflineFallbackBanner(reason: hazardError)
                             }
 
+                            if let feature = viewModel.selectedFeature {
+                                MapFeatureDetailSheet(
+                                    feature: feature,
+                                    currentLocation: viewModel.currentLocation,
+                                    onDismiss: { viewModel.selectFeature(nil) }
+                                )
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                                .animation(.easeInOut(duration: 0.25), value: viewModel.selectedFeature?.id)
+                            }
+
                             mapControlsSection
 
                             if viewModel.isLayerEnabled(.evacuationPoints), let selectedShelter = viewModel.selectedShelter {
@@ -248,6 +258,23 @@ struct MapContainerView: View {
                         )
                 }
                 .padding(12)
+            }
+            .overlay(alignment: .top) {
+                if let fallbackMessage = viewModel.networkFallbackMessage {
+                    HStack(spacing: 6) {
+                        Image(systemName: "wifi.slash")
+                            .font(.caption2.weight(.bold))
+                        Text(fallbackMessage)
+                            .font(RediTypography.caption)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(ColorTheme.warning.opacity(0.92), in: Capsule())
+                    .padding(.top, 48)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .animation(.easeInOut(duration: 0.3), value: viewModel.networkFallbackMessage != nil)
+                }
             }
     }
 

@@ -438,8 +438,33 @@ extension MapViewModel {
     }
 
     func setSurfaceMode(_ mode: MapSurfaceMode) {
+        // User explicitly chose a mode — clear any pending auto-restore
+        preferredSurfaceModeBeforeFallback = nil
+        networkFallbackMessage = nil
         appState.mutateSettings { settings in
             settings.maps.surfaceMode = mode
+        }
+    }
+
+    /// Automatically switches to tactical when network drops while on Apple tiles.
+    /// Restores the user's preferred mode when network returns.
+    func handleNetworkStatusChange(isOffline: Bool) {
+        if isOffline && surfaceMode.usesAppleTiles {
+            // Network lost while using live/hybrid — auto-fallback to tactical
+            preferredSurfaceModeBeforeFallback = surfaceMode
+            networkFallbackMessage = "Switched to offline map — no signal detected"
+            appState.mutateSettings { settings in
+                settings.maps.surfaceMode = .tactical
+            }
+            RediLogger.basemap.info("Auto-fallback to tactical surface — network unavailable")
+        } else if !isOffline, let preferred = preferredSurfaceModeBeforeFallback {
+            // Network returned — restore user's preferred mode
+            preferredSurfaceModeBeforeFallback = nil
+            networkFallbackMessage = nil
+            appState.mutateSettings { settings in
+                settings.maps.surfaceMode = preferred
+            }
+            RediLogger.basemap.info("Restored \(preferred.rawValue, privacy: .public) surface — network available")
         }
     }
 
@@ -447,6 +472,27 @@ extension MapViewModel {
         appState.mutateSettings { settings in
             settings.maps.showsDistanceRings.toggle()
         }
+    }
+
+    // MARK: - Route Hazard Monitoring
+
+    /// Checks whether saved route snapshots are stale due to new hazard reports.
+    /// Publishes a warning if any computed routes are no longer fresh.
+    func checkRouteCompromised() {
+        let hazardService = appState.hazardIntelligenceService
+        let staleSnapshots = hazardService.routeSnapshots.filter { !hazardService.isRouteFresh($0) }
+
+        if let worst = staleSnapshots.first {
+            routeCompromisedWarning = hazardService.routeFreshnessWarning(worst)
+        } else {
+            routeCompromisedWarning = nil
+        }
+    }
+
+    // MARK: - Feature Selection
+
+    func selectFeature(_ feature: MapSelectedFeature?) {
+        selectedFeature = feature
     }
 
     // MARK: - Offline Pack Actions

@@ -60,6 +60,29 @@ final class MapDataService {
             .max() ?? .distantPast
     }
 
+    /// Worst-case freshness across all bundled sub-services.
+    var dataFreshness: DataFreshness {
+        serviceFreshnessEntries.map(\.freshness).max(by: { $0.severity < $1.severity }) ?? .current
+    }
+
+    /// Impact message from the stalest sub-service, explaining *why* the staleness matters.
+    var freshnessImpactMessage: String? {
+        guard let worst = serviceFreshnessEntries.filter({ $0.freshness.shouldWarn }).max(by: { $0.freshness.severity < $1.freshness.severity }) else {
+            return nil
+        }
+        return worst.impact
+    }
+
+    private var serviceFreshnessEntries: [(freshness: DataFreshness, impact: String)] {
+        [
+            (waterPointService.dataFreshness, waterPointService.freshnessImpactMessage),
+            (fireTrailService.dataFreshness, fireTrailService.freshnessImpactMessage),
+            (shelterService.dataFreshness, shelterService.freshnessImpactMessage),
+            (TrustLayer.dataFreshness(lastUpdated: trackDataset.lastUpdated, sourceKind: .curatedBundle), "Track data may not reflect current conditions"),
+            (TrustLayer.dataFreshness(lastUpdated: packCatalog.lastUpdated, sourceKind: .curatedBundle), "Map pack coverage may be incomplete")
+        ]
+    }
+
     var didLoadOfflineData: Bool {
         !trackDataset.tracks.isEmpty
             || fireTrailService.didLoadOfflineData

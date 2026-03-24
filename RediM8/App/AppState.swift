@@ -26,6 +26,7 @@ final class AppState: ObservableObject {
     @Published private(set) var activePrioritySituation: PrioritySituation?
     @Published private(set) var emergencyUnlockState: EmergencyUnlockState
     @Published private(set) var proEntitlement: ProEntitlement = .free
+    @Published private(set) var isNetworkOffline = false
 
     var isProUser: Bool { proEntitlement.isPro }
 
@@ -389,6 +390,12 @@ final class AppState: ObservableObject {
         services.storeKitService.$entitlement
             .sink { [weak self] entitlement in
                 self?.proEntitlement = entitlement
+            }
+            .store(in: &cancellables)
+
+        services.networkStatusService.$isOffline
+            .sink { [weak self] isOffline in
+                self?.isNetworkOffline = isOffline
             }
             .store(in: &cancellables)
     }

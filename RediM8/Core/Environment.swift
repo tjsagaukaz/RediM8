@@ -42,6 +42,7 @@ struct AppServices {
     let predictiveCollapseService: PredictiveCollapseService
     let autoGuidanceService: AutoGuidanceService
     let storeKitService: StoreKitService
+    let networkStatusService: AssistantNetworkStatusService
 }
 
 @MainActor
@@ -276,7 +277,8 @@ struct AppEnvironment {
             safeZoneService: safeZoneService,
             predictiveCollapseService: predictiveCollapseService,
             autoGuidanceService: autoGuidanceService,
-            storeKitService: storeKitService
+            storeKitService: storeKitService,
+            networkStatusService: assistantNetworkStatusService
         )
     }
 }

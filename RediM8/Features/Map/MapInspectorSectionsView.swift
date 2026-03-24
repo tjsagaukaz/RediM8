@@ -167,6 +167,12 @@ struct MapInspectorSectionsView: View {
                     .font(.caption)
                     .foregroundStyle(ColorTheme.text)
 
+                DataFreshnessIndicator(
+                    freshness: viewModel.mapDataService.dataFreshness,
+                    lastUpdated: viewModel.mapDataService.lastUpdated,
+                    impactMessage: viewModel.mapDataService.freshnessImpactMessage
+                )
+
                 Text(TrustLayer.mapFreshnessNotice)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -231,8 +237,28 @@ struct MapInspectorSectionsView: View {
         MapInspectorGroup(
             title: "Saved Evacuation Routes",
             subtitle: "Offline route notes from your plan.",
-            accent: viewModel.savedRoutes.isEmpty ? ColorTheme.warning : ColorTheme.ready
+            accent: routeInspectorAccent
         ) {
+            if let warning = viewModel.routeCompromisedWarning {
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(ColorTheme.danger)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("ROUTE COMPROMISED")
+                            .font(RediTypography.label)
+                            .tracking(1.0)
+                            .foregroundStyle(ColorTheme.danger)
+                        Text(warning)
+                            .font(RediTypography.caption)
+                            .foregroundStyle(ColorTheme.textSecondary)
+                    }
+                }
+                .padding(RediSpacing.content)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(ColorTheme.danger.opacity(0.08), in: RoundedRectangle(cornerRadius: RediRadius.card, style: .continuous))
+            }
+
             Text(viewModel.savedRouteSummary)
                 .font(.subheadline)
                 .foregroundStyle(ColorTheme.text)
@@ -273,6 +299,13 @@ struct MapInspectorSectionsView: View {
                 }
             }
         }
+    }
+
+    private var routeInspectorAccent: Color {
+        if viewModel.routeCompromisedWarning != nil {
+            return ColorTheme.danger
+        }
+        return viewModel.savedRoutes.isEmpty ? ColorTheme.warning : ColorTheme.ready
     }
 
     private var officialAlertsInspector: some View {

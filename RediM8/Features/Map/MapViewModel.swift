@@ -88,6 +88,13 @@ final class MapViewModel: ObservableObject {
     @Published private(set) var hazardFeedIsFetching: Bool
     @Published private(set) var lastError: AppError?
     @Published private(set) var systemState: SystemState = .healthy
+    @Published var networkFallbackMessage: String?
+    @Published var routeCompromisedWarning: String?
+    @Published var selectedFeature: MapSelectedFeature?
+
+    /// The surface mode the user chose before an automatic network fallback.
+    /// When non-nil, the map auto-switched to tactical and will restore this mode when network returns.
+    var preferredSurfaceModeBeforeFallback: MapSurfaceMode?
 
     let appState: AppState
     let officialAlertService: OfficialAlertService
@@ -235,6 +242,20 @@ final class MapViewModel: ObservableObject {
                 self.basemapStyleURL = configuration.styleURL
                 self.isPremiumBasemapActive = configuration.isPremiumActive
                 self.offlineBasemapStatusMessage = configuration.statusMessage
+            }
+            .store(in: &cancellables)
+
+        appState.$isNetworkOffline
+            .removeDuplicates()
+            .sink { [weak self] isOffline in
+                guard let self else { return }
+                self.handleNetworkStatusChange(isOffline: isOffline)
+            }
+            .store(in: &cancellables)
+
+        appState.hazardIntelligenceService.$reports
+            .sink { [weak self] _ in
+                self?.checkRouteCompromised()
             }
             .store(in: &cancellables)
     }

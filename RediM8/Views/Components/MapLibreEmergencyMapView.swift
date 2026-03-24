@@ -24,6 +24,7 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
     let showsDistanceRings: Bool
     let animatesRegionChanges: Bool
     let onSelectShelter: (String?) -> Void
+    var onSelectFeature: ((MapSelectedFeature?) -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -847,12 +848,89 @@ struct MapLibreEmergencyMapView: UIViewRepresentable {
             }
 
             let point = recognizer.location(in: mapView)
-            let features = mapView.visibleFeatures(at: point, styleLayerIdentifiers: Set([LayerID.shelters]))
-            let selectedShelterID = features
-                .compactMap { $0.attribute(forKey: FeatureKey.id) as? String }
-                .first
 
-            parent.onSelectShelter(selectedShelterID)
+            // Query all interactive feature layers
+            let interactiveLayers: Set<String> = [
+                LayerID.shelters, LayerID.waterPoints, LayerID.resources,
+                LayerID.officialAlerts, LayerID.beacons
+            ]
+
+            let features = mapView.visibleFeatures(at: point, styleLayerIdentifiers: interactiveLayers)
+
+            guard let feature = features.first else {
+                parent.onSelectShelter(nil)
+                parent.onSelectFeature?(nil)
+                return
+            }
+
+            let featureID = feature.attribute(forKey: FeatureKey.id) as? String
+            let title = feature.attribute(forKey: FeatureKey.title) as? String
+            let subtitle = feature.attribute(forKey: FeatureKey.subtitle) as? String
+            let kind = feature.attribute(forKey: FeatureKey.kind) as? String
+            let quality = feature.attribute(forKey: FeatureKey.quality) as? String
+
+            // Determine which layer was hit
+            let layerID = feature.attributes["layer_id"] as? String
+            let featureLayer: MapSelectedFeature.FeatureLayer
+            if let layerID {
+                switch layerID {
+                case LayerID.shelters: featureLayer = .shelter
+                case LayerID.waterPoints: featureLayer = .waterPoint
+                case LayerID.resources: featureLayer = .resource
+                case LayerID.officialAlerts: featureLayer = .officialAlert
+                case LayerID.beacons: featureLayer = .beacon
+                default: featureLayer = .unknown
+                }
+            } else {
+                // Fallback: determine by querying each layer individually
+                let shelterHit = mapView.visibleFeatures(at: point, styleLayerIdentifiers: [LayerID.shelters])
+                let waterHit = mapView.visibleFeatures(at: point, styleLayerIdentifiers: [LayerID.waterPoints])
+                let alertHit = mapView.visibleFeatures(at: point, styleLayerIdentifiers: [LayerID.officialAlerts])
+                let beaconHit = mapView.visibleFeatures(at: point, styleLayerIdentifiers: [LayerID.beacons])
+                let resourceHit = mapView.visibleFeatures(at: point, styleLayerIdentifiers: [LayerID.resources])
+
+                if shelterHit.contains(where: { $0.attribute(forKey: FeatureKey.id) as? String == featureID }) {
+                    featureLayer = .shelter
+                } else if waterHit.contains(where: { $0.attribute(forKey: FeatureKey.id) as? String == featureID }) {
+                    featureLayer = .waterPoint
+                } else if alertHit.contains(where: { $0.attribute(forKey: FeatureKey.id) as? String == featureID }) {
+                    featureLayer = .officialAlert
+                } else if beaconHit.contains(where: { $0.attribute(forKey: FeatureKey.id) as? String == featureID }) {
+                    featureLayer = .beacon
+                } else if resourceHit.contains(where: { $0.attribute(forKey: FeatureKey.id) as? String == featureID }) {
+                    featureLayer = .resource
+                } else {
+                    featureLayer = .unknown
+                }
+            }
+
+            // Legacy shelter selection path
+            if featureLayer == .shelter {
+                parent.onSelectShelter(featureID)
+            } else {
+                parent.onSelectShelter(nil)
+            }
+
+            // New generic feature selection
+            if let title {
+                let coordinate: CLLocationCoordinate2D?
+                if let pointFeature = feature as? MLNPointFeature {
+                    coordinate = pointFeature.coordinate
+                } else {
+                    coordinate = nil
+                }
+
+                let selected = MapSelectedFeature(
+                    id: featureID ?? UUID().uuidString,
+                    title: title,
+                    subtitle: subtitle,
+                    kind: kind,
+                    quality: quality,
+                    layer: featureLayer,
+                    coordinate: coordinate
+                )
+                parent.onSelectFeature?(selected)
+            }
         }
     }
 

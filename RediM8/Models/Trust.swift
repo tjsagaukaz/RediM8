@@ -55,6 +55,92 @@ struct TrustPolicySection: Identifiable, Equatable {
     let lines: [String]
 }
 
+// MARK: - Data Freshness Model
+
+/// Represents how trustworthy a dataset is based on its age.
+/// Drives UI warnings and trust score adjustments.
+enum DataFreshness: String, CaseIterable, Equatable {
+    /// Data is within expected update cycle — no warning needed.
+    case current
+    /// Data is getting older but still usable — subtle indicator.
+    case aging
+    /// Data is significantly old — visible warning recommended.
+    case stale
+    /// Data has not been updated in a long time — strong warning, lower trust.
+    case outdated
+
+    var label: String {
+        switch self {
+        case .current: "Current"
+        case .aging: "Aging"
+        case .stale: "May be outdated"
+        case .outdated: "Outdated"
+        }
+    }
+
+    var warningText: String? {
+        switch self {
+        case .current, .aging: nil
+        case .stale: "This data has not been updated recently. Conditions may have changed."
+        case .outdated: "This data is significantly outdated and may no longer be accurate. Verify on the ground."
+        }
+    }
+
+    /// Source-specific impact message explaining *why* staleness matters for this data type.
+    /// Turns a passive "data is old" warning into a decision-aware signal.
+    static func impactMessage(for sourceKind: MapFeatureSourceKind) -> String {
+        switch sourceKind {
+        case .curatedBundle:
+            "Route accessibility and water availability may be incorrect"
+        case .baselineFacility:
+            "Shelter locations or capacity may have changed"
+        case .openMapData:
+            "Map features may no longer match real-world conditions"
+        case .official:
+            "Official alert boundaries or status may have changed"
+        }
+    }
+
+    /// Whether the UI should display a visible freshness warning.
+    var shouldWarn: Bool {
+        self == .stale || self == .outdated
+    }
+
+    /// Severity rank for comparison (higher = worse).
+    var severity: Int {
+        switch self {
+        case .current: 0
+        case .aging: 1
+        case .stale: 2
+        case .outdated: 3
+        }
+    }
+
+    /// Age thresholds in days, varying by source type.
+    struct Thresholds {
+        let currentDays: Double
+        let agingDays: Double
+        let staleDays: Double
+    }
+
+    static func thresholds(for sourceKind: MapFeatureSourceKind) -> Thresholds {
+        switch sourceKind {
+        case .curatedBundle:
+            // Bundled datasets are expected to be refreshed with app updates
+            Thresholds(currentDays: 90, agingDays: 180, staleDays: 365)
+        case .baselineFacility:
+            // Facility data (shelters, etc.) changes less frequently
+            Thresholds(currentDays: 180, agingDays: 365, staleDays: 730)
+        case .openMapData:
+            // OSM-derived data can drift faster
+            Thresholds(currentDays: 60, agingDays: 120, staleDays: 270)
+        case .official:
+            // Official sources are generally authoritative longer
+            Thresholds(currentDays: 180, agingDays: 365, staleDays: 730)
+        }
+    }
+}
+
 enum TrustLayer {
     static let safetyLimitationsLines = [
         "RediM8 is an assistive preparedness and emergency information tool.",
@@ -293,6 +379,25 @@ enum TrustLayer {
         "",
         "RediM8 Pty Ltd, Australia."
     ]
+
+    // MARK: - Data Freshness
+
+    /// Evaluates the freshness of a bundled dataset based on its age and source type.
+    /// Used to surface trust-appropriate warnings when data may be outdated.
+    static func dataFreshness(lastUpdated: Date, sourceKind: MapFeatureSourceKind = .curatedBundle, reference: Date = .now) -> DataFreshness {
+        let ageInDays = reference.timeIntervalSince(lastUpdated) / 86_400
+        let thresholds = DataFreshness.thresholds(for: sourceKind)
+
+        if ageInDays < thresholds.currentDays {
+            return .current
+        } else if ageInDays < thresholds.agingDays {
+            return .aging
+        } else if ageInDays < thresholds.staleDays {
+            return .stale
+        } else {
+            return .outdated
+        }
+    }
 
     static let beaconVerificationReminder = "Information shared through community reports may not be verified. Always confirm when possible."
     static let blackoutSafetyReminder = "If you are in immediate danger, contact emergency services."

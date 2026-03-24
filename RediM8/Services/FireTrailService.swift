@@ -16,6 +16,14 @@ final class FireTrailService {
         trailDataset.lastUpdated
     }
 
+    var dataFreshness: DataFreshness {
+        TrustLayer.dataFreshness(lastUpdated: lastUpdated, sourceKind: .curatedBundle)
+    }
+
+    var freshnessImpactMessage: String {
+        "Route accessibility may be inaccurate"
+    }
+
     var didLoadOfflineData: Bool {
         !trailDataset.tracks.isEmpty
     }

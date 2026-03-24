@@ -2,11 +2,12 @@ import CoreLocation
 import Foundation
 import Network
 
-final class AssistantNetworkStatusService {
-    @MainActor private(set) var isOffline = false
+@MainActor
+final class AssistantNetworkStatusService: ObservableObject {
+    @Published private(set) var isOffline = false
 
-    private let monitor: NWPathMonitor
-    private let queue = DispatchQueue(label: "au.com.redim8.assistant.network")
+    private nonisolated let monitor: NWPathMonitor
+    private nonisolated let queue = DispatchQueue(label: "au.com.redim8.assistant.network")
 
     init(monitor: NWPathMonitor = NWPathMonitor()) {
         self.monitor = monitor
@@ -18,7 +19,7 @@ final class AssistantNetworkStatusService {
         monitor.start(queue: queue)
     }
 
-    deinit {
+    nonisolated deinit {
         monitor.cancel()
     }
 }

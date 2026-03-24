@@ -297,6 +297,12 @@ struct OfflineDataManagementView: View {
                 )
             }
 
+            DataFreshnessIndicator(
+                freshness: appState.mapDataService.dataFreshness,
+                lastUpdated: appState.mapDataService.lastUpdated,
+                impactMessage: appState.mapDataService.freshnessImpactMessage
+            )
+
             Text(TrustLayer.mapFreshnessNotice)
                 .font(.caption)
                 .foregroundStyle(ColorTheme.textFaint)

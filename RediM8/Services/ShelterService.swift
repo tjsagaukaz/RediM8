@@ -44,6 +44,14 @@ final class ShelterService {
         shelterDataset.lastUpdated
     }
 
+    var dataFreshness: DataFreshness {
+        TrustLayer.dataFreshness(lastUpdated: lastUpdated, sourceKind: .baselineFacility)
+    }
+
+    var freshnessImpactMessage: String {
+        "Shelter locations or capacity may have changed"
+    }
+
     var didLoadOfflineData: Bool {
         !shelterDataset.shelters.isEmpty
     }

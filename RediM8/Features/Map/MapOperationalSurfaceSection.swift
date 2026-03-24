@@ -135,9 +135,9 @@ struct MapOperationalSurfaceSection: View {
 
                 MapSummaryCardView(
                     title: "Routes",
-                    value: viewModel.savedRoutes.isEmpty ? "NO SAVED ROUTES" : "ROUTE READY",
-                    detail: viewModel.savedRoutes.first ?? "Create one before conditions change.",
-                    accent: viewModel.savedRoutes.isEmpty ? ColorTheme.warning : ColorTheme.ready
+                    value: routeStatusValue,
+                    detail: routeStatusDetail,
+                    accent: routeStatusAccent
                 )
 
                 MapSummaryCardView(
@@ -274,6 +274,29 @@ struct MapOperationalSurfaceSection: View {
             )
         }
     }
+
+    // MARK: - Route Status (Hazard-Aware)
+
+    private var routeStatusValue: String {
+        if viewModel.routeCompromisedWarning != nil {
+            return "ROUTE COMPROMISED"
+        }
+        return viewModel.savedRoutes.isEmpty ? "NO SAVED ROUTES" : "ROUTE READY"
+    }
+
+    private var routeStatusDetail: String {
+        if let warning = viewModel.routeCompromisedWarning {
+            return warning
+        }
+        return viewModel.savedRoutes.first ?? "Create one before conditions change."
+    }
+
+    private var routeStatusAccent: Color {
+        if viewModel.routeCompromisedWarning != nil {
+            return ColorTheme.danger
+        }
+        return viewModel.savedRoutes.isEmpty ? ColorTheme.warning : ColorTheme.ready
+    }
 }
 
 struct MapSurfaceCanvasView: View {
@@ -323,7 +346,8 @@ struct MapSurfaceCanvasView: View {
                     showsUserLocation: viewModel.currentLocation != nil,
                     showsDistanceRings: viewModel.showsDistanceRings,
                     animatesRegionChanges: !viewModel.reducesMapAnimations,
-                    onSelectShelter: viewModel.selectShelter(withID:)
+                    onSelectShelter: viewModel.selectShelter(withID:),
+                    onSelectFeature: viewModel.selectFeature(_:)
                 )
             }
         }
